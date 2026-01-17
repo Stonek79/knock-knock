@@ -1,0 +1,9 @@
+.loading {
+    padding: 1rem;
+}
+
+.nav {
+    padding: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+}

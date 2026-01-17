@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "inkeepMcp": {
+      "url": "https://mcp.inkeep.com/zod/mcp"
+    },
+    "tanstack": {
+      "url": "https://tanstack.com/api/mcp"
+    }
+  }
+}
