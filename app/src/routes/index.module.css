@@ -1,0 +1,70 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1; /* Take up remaining space */
+    padding: var(--space-lg);
+    text-align: center;
+}
+
+.title {
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    margin-bottom: 0;
+    margin-top: 0;
+    background: linear-gradient(
+        to right,
+        var(--primary) 0%,
+        var(--foreground) 50%,
+        var(--primary) 100%
+    );
+    background-size: 200% auto; /* Allows for potential animation later */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent; /* Fallback needs thought, but okay for now */
+    color: var(--primary); /* Fallback */
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    max-width: 600px;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: 1fr; /* Mobile: 1 Column */
+    gap: var(--space-md); /* Mobile: Smaller gap */
+    margin-bottom: var(--space-md);
+    width: 100%;
+    max-width: 1000px; /* Increased max-width for 3 columns */
+}
+
+/* Tablet & Desktop: 3 Columns */
+@media (min-width: 768px) {
+    .features {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-xl); /* Larger gap */
+    }
+}
+
+.featureCard {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    text-align: left;
+}
+
+.featureCard h3 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.ctaButton {
+    min-width: 200px;
+    font-size: 1.125rem;
+    padding: 1rem 2rem;
+}

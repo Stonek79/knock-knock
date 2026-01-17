@@ -7,4 +7,5 @@ export const auth = {
     sending: 'Sending...',
     pleaseLogIn: 'Please log in',
     initializationError: 'Auth initialization failed',
+    signIn: 'Sign In',
 } as const;

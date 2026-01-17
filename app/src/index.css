@@ -3,33 +3,80 @@
         "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, sans-serif;
 
-    /* Light Theme (Default) */
-    --color-bg: #ffffff;
-    --color-text: #0f172a;
-    --color-primary: #2563eb;
-    --color-primary-fg: #ffffff;
-    --color-muted: #f1f5f9;
-    --color-muted-fg: #64748b;
-    --color-border: #e2e8f0;
+    /* Light Theme (Default)    /* Light Theme (Default) */
+    --background: #ffffff;
+    --foreground: #0f172a;
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --border: #e2e8f0;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --surface: #f8fafc; /* Added surface var */
 
     /* Radix UI overrides if needed */
+
+    /* --- Responsive System (Mobile First) --- */
+
+    /* Spacing */
+    --space-xs: 0.5rem; /* 8px */
+    --space-sm: 0.75rem; /* 12px */
+    --space-md: 1rem; /* 16px */
+    --space-lg: 1.5rem; /* 24px */
+    --space-xl: 2rem; /* 32px */
+    --space-2xl: 3rem; /* 48px */
+
+    /* Radius */
+    --radius-sm: 0.25rem; /* 4px */
+    --radius-md: 0.375rem; /* 6px */
+    --radius-lg: 0.5rem; /* 8px */
+    --radius-full: 9999px;
+
+    /* Typography */
+    --text-sm: 0.875rem; /* 14px */
+    --text-base: 1rem; /* 16px */
+    --text-lg: 1.125rem; /* 18px */
+    --text-xl: 1.25rem; /* 20px */
+    --text-2xl: 1.5rem; /* 24px */
+    --text-3xl: 1.875rem; /* 30px */
+    --text-4xl: 2.25rem; /* 36px */
+}
+
+/* Desktop Overrides (min-width: 1024px) */
+@media (min-width: 1024px) {
+    :root {
+        /* Spacing Scale Up */
+        --space-lg: 2rem;
+        --space-xl: 3rem;
+        --space-2xl: 4rem;
+
+        /* Typography Scale Up */
+        --text-xl: 1.5rem;
+        --text-2xl: 2rem;
+        --text-3xl: 2.5rem;
+        --text-4xl: 3rem;
+    }
 }
 
 [data-theme="dark"] {
-    --color-bg: #020617;
-    --color-text: #f8fafc;
-    --color-primary: #3b82f6;
-    --color-primary-fg: #ffffff;
-    --color-muted: #1e293b;
-    --color-muted-fg: #94a3b8;
-    --color-border: #1e293b;
+    --background: #020617;
+    --foreground: #f8fafc;
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --border: #1e293b;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #ffffff;
+    --surface: #0f172a;
 }
 
 body {
     margin: 0;
     font-family: var(--font-sans);
-    background-color: var(--color-bg);
-    color: var(--color-text);
+    background-color: var(--background);
+    color: var(--foreground);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }

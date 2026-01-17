@@ -2,9 +2,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-weight: 500;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     line-height: 1.25rem;
     padding: 0.5rem 1rem;
     transition: all 0.2s;
@@ -18,8 +18,8 @@
 }
 
 .primary {
-    background-color: var(--color-primary);
-    color: var(--color-primary-fg);
+    background-color: var(--primary);
+    color: var(--primary-foreground);
 }
 
 .primary:hover:not(:disabled) {
@@ -27,15 +27,15 @@
 }
 
 .secondary {
-    background-color: var(--color-muted);
-    color: var(--color-muted-fg);
+    background-color: var(--muted);
+    color: var(--muted-foreground);
 }
 
 .ghost {
     background-color: transparent;
-    color: var(--color-text);
+    color: var(--foreground);
 }
 
 .ghost:hover:not(:disabled) {
-    background-color: var(--color-muted);
+    background-color: var(--muted);
 }

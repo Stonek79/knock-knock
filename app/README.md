@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# Knock-Knock: Secure PWA Messenger
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A privacy-focused PWA messenger with End-to-End Encryption (E2EE), built with React 19, Supabase, and Web Crypto API.
 
-Currently, two official plugins are available:
+## Core Features
+1.  **E2E Encryption**: Messages are encrypted on the device (Web Crypto API + X25519/AES-GCM). Keys never leave the browser.
+2.  **Privacy**: Zero-knowledge architecture. The server stores only encrypted blobs.
+3.  **PWA**: Installable on iOS/Android/Desktop. Offline-first architecture.
+4.  **Ghost Mode**: Ephemeral chats that disappear after closing.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Technology Stack
+-   **Frontend**: React 19, TypeScript, Vite.
+-   **Routing**: TanStack Router.
+-   **State**: Zustand + TanStack Query.
+-   **Crypto**: Native Web Crypto API (SubtleCrypto).
+-   **Backend**: Supabase (Auth, DB, Realtime).
 
-## React Compiler
+## Development Rules
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Mobile First
+-   Development must follow the **Mobile First** principle.
+-   Styles should target mobile screens by default.
+-   Use `@media (min-width: 768px)` for tablet/desktop overrides.
+-   Ensure touch targets are at least 44px.
 
-## Expanding the ESLint configuration
+### 2. File & Component Structure
+-   **Component Folder Pattern**: Each component resides in its own folder with its styles.
+    ```
+    src/components/profile/
+    ├── ProfileForm/
+    │   ├── index.tsx
+    │   └── ProfileForm.module.css
+    ```
+-   **Routes**: `src/routes` contains only layout/routing logic. Business logic should be in `src/components`.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 3. Workflow & Git
+-   **Git Push**: The User handles all commits and pushes manually. The AI agent does not run git commands.
+-   **Communication**: Russian language is used for all collaboration.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 4. Dev Mode
+-   The project supports a **Dev Mode** without a backend connection.
+-   If `.env` is missing, the app initializes in "Mock Mode" for UI development.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Prerequisites
+-   Node.js 20+
+-   npm
+
+### Installation
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Development
+```bash
+npm run dev
 ```
+For full functionality, copy `.env.example` to `.env` and fill in Supabase credentials.
+If no `.env` is provided, the app runs in **Mock Mode**.

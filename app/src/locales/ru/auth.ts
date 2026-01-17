@@ -7,4 +7,5 @@ export const auth = {
     sending: 'Отправка...',
     pleaseLogIn: 'Пожалуйста, войдите в систему',
     initializationError: 'Ошибка инициализации авторизации',
+    signIn: 'Войти',
 } as const;
