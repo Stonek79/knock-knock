@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '@radix-ui/themes/styles.css';
+import { Theme } from '@radix-ui/themes';
 import './lib/i18n';
 import './index.css';
 
@@ -26,9 +28,11 @@ if (!rootElement.innerHTML) {
     const root = createRoot(rootElement);
     root.render(
         <StrictMode>
-            <QueryClientProvider client={queryClient}>
-                <RouterProvider router={router} />
-            </QueryClientProvider>
+            <Theme accentColor="blue" grayColor="slate" radius="medium">
+                <QueryClientProvider client={queryClient}>
+                    <RouterProvider router={router} />
+                </QueryClientProvider>
+            </Theme>
         </StrictMode>,
     );
 }

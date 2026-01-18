@@ -8,4 +8,8 @@ export const auth = {
     pleaseLogIn: 'Please log in',
     initializationError: 'Auth initialization failed',
     signIn: 'Sign In',
+    errors: {
+        serverUnreachable:
+            'Server is unreachable. Please check your internet connection or VPN.',
+    },
 } as const;

@@ -1,14 +1,16 @@
+import { Flex, Text } from '@radix-ui/themes';
 import { useForm } from '@tanstack/react-form';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { DB_TABLES, VALIDATION } from '@/lib/constants';
+import { profileSchema } from '@/lib/schemas/profile';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/auth';
-import styles from './ProfileForm.module.css';
 
 /**
  * Форма редактирования профиля пользователя.
@@ -17,6 +19,11 @@ export function ProfileForm() {
     const { t } = useTranslation();
     const { user } = useAuthStore();
     const queryClient = useQueryClient();
+
+    const [statusMessage, setStatusMessage] = useState<{
+        type: 'success' | 'error';
+        text: string;
+    } | null>(null);
 
     // Получение данных профиля
     const { data: profile } = useQuery({
@@ -42,94 +49,129 @@ export function ProfileForm() {
         },
         onSubmit: async ({ value }) => {
             if (!user) return;
+            setStatusMessage(null);
 
             const { error } = await supabase.from(DB_TABLES.PROFILES).upsert({
                 id: user.id,
                 username: value.username,
                 display_name: value.display_name,
                 updated_at: new Date().toISOString(),
-                // Ключи не трогаем здесь, они управляются через SecuritySettings (или при создании)
             });
 
             if (error) {
-                alert(error.message);
+                setStatusMessage({ type: 'error', text: error.message });
             } else {
                 queryClient.invalidateQueries({ queryKey: ['profile'] });
-                alert(t('profile.profileUpdated'));
+                setStatusMessage({
+                    type: 'success',
+                    text: t('profile.profileUpdated'),
+                });
             }
         },
     });
 
     return (
-        <form
-            onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-            }}
-            className={styles.form}
-        >
-            <form.Field
-                name="username"
-                validators={{
-                    onChange: z.string().min(VALIDATION.USERNAME_MIN_LENGTH, {
-                        message: t('validation.usernameMin', {
-                            min: VALIDATION.USERNAME_MIN_LENGTH,
-                        }),
-                    }),
+        <Flex direction="column" gap="4" style={{ maxWidth: 400 }}>
+            {statusMessage && (
+                <Alert
+                    variant={
+                        statusMessage.type === 'success'
+                            ? 'success'
+                            : 'destructive'
+                    }
+                >
+                    <AlertTitle>
+                        {statusMessage.type === 'success'
+                            ? t('common.success')
+                            : t('common.error')}
+                    </AlertTitle>
+                    <AlertDescription>{statusMessage.text}</AlertDescription>
+                </Alert>
+            )}
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    form.handleSubmit();
                 }}
             >
-                {(field) => (
-                    <div className={styles.field}>
-                        <Label htmlFor="username">
-                            {t('profile.username')}
-                        </Label>
-                        <Input
-                            id="username"
-                            name={field.name}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            required
-                        />
-                        {field.state.meta.isTouched &&
-                        field.state.meta.errors.length ? (
-                            <p className={styles.error}>
-                                {field.state.meta.errors.join(', ')}
-                            </p>
-                        ) : null}
-                    </div>
-                )}
-            </form.Field>
+                <Flex direction="column" gap="4">
+                    <form.Field
+                        name="username"
+                        validators={{
+                            onChange: profileSchema.shape.username,
+                        }}
+                    >
+                        {(field) => (
+                            <Flex direction="column" gap="2">
+                                <Label htmlFor="username">
+                                    {t('profile.username')}
+                                </Label>
+                                <Input
+                                    id="username"
+                                    name={field.name}
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
+                                    required
+                                />
+                                {field.state.meta.isTouched &&
+                                field.state.meta.errors.length ? (
+                                    <Text color="red" size="1">
+                                        {field.state.meta.errors
+                                            .map((err) =>
+                                                t(String(err), {
+                                                    min: VALIDATION.USERNAME_MIN_LENGTH,
+                                                }),
+                                            )
+                                            .join(', ')}
+                                    </Text>
+                                ) : null}
+                            </Flex>
+                        )}
+                    </form.Field>
 
-            <form.Field name="display_name">
-                {(field) => (
-                    <div className={styles.field}>
-                        <Label htmlFor="display_name">
-                            {t('profile.displayName')}
-                        </Label>
-                        <Input
-                            id="display_name"
-                            name={field.name}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                        />
-                    </div>
-                )}
-            </form.Field>
+                    <form.Field name="display_name">
+                        {(field) => (
+                            <Flex direction="column" gap="2">
+                                <Label htmlFor="display_name">
+                                    {t('profile.displayName')}
+                                </Label>
+                                <Input
+                                    id="display_name"
+                                    name={field.name}
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
+                                />
+                            </Flex>
+                        )}
+                    </form.Field>
 
-            <form.Subscribe
-                selector={(state) => [state.canSubmit, state.isSubmitting]}
-            >
-                {([canSubmit, isSubmitting]) => (
-                    <Button type="submit" disabled={!canSubmit}>
-                        {isSubmitting
-                            ? t('common.saving')
-                            : t('profile.saveProfile')}
-                    </Button>
-                )}
-            </form.Subscribe>
-        </form>
+                    <form.Subscribe
+                        selector={(state) => [
+                            state.canSubmit,
+                            state.isSubmitting,
+                        ]}
+                    >
+                        {([canSubmit, isSubmitting]) => (
+                            <Button
+                                type="submit"
+                                disabled={!canSubmit}
+                                variant="solid"
+                            >
+                                {isSubmitting
+                                    ? t('common.saving')
+                                    : t('profile.saveProfile')}
+                            </Button>
+                        )}
+                    </form.Subscribe>
+                </Flex>
+            </form>
+        </Flex>
     );
 }

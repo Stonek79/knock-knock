@@ -1,12 +1,13 @@
-import { useRef, useState } from 'react';
+import { Box, Flex, Heading } from '@radix-ui/themes';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { useFileDownloader } from '@/hooks/useFileDownloader';
 import { useKeystore } from '@/hooks/useKeystore';
 import type { KeyBackup } from '@/lib/crypto';
-import styles from './SecuritySettings.module.css';
 
 /**
  * Компонент настроек безопасности профиля.
@@ -22,18 +23,26 @@ export function SecuritySettings() {
     const { downloadJson } = useFileDownloader();
 
     const [backupPassword, setBackupPassword] = useState('');
+    const [statusMessage, setStatusMessage] = useState<{
+        type: 'success' | 'error';
+        text: string;
+    } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Скачивание бэкапа
     const handleDownloadBackup = async () => {
+        setStatusMessage(null);
         if (!backupPassword) {
-            alert(t('profile.enterBackupPassword'));
+            setStatusMessage({
+                type: 'error',
+                text: t('profile.enterBackupPassword'),
+            });
             return;
         }
 
         const backup = await exportKeys(backupPassword);
         if (!backup) {
-            alert(t('profile.backupError'));
+            setStatusMessage({ type: 'error', text: t('profile.backupError') });
             return;
         }
 
@@ -41,16 +50,23 @@ export function SecuritySettings() {
         downloadJson(backup, filename);
 
         setBackupPassword('');
-        alert(t('profile.backupCreated'));
+        setStatusMessage({
+            type: 'success',
+            text: t('profile.backupCreated'),
+        });
     };
 
     // Восстановление из файла
-    const handleRestoreBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleRestoreBackup = (e: ChangeEvent<HTMLInputElement>) => {
+        setStatusMessage(null);
         const file = e.target.files?.[0];
         if (!file) return;
 
         if (!backupPassword) {
-            alert(t('profile.enterBackupPassword'));
+            setStatusMessage({
+                type: 'error',
+                text: t('profile.enterBackupPassword'),
+            });
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
@@ -61,11 +77,17 @@ export function SecuritySettings() {
                 const text = evt.target?.result as string;
                 const backupData = JSON.parse(text) as KeyBackup;
                 await restoreKeys(backupData, backupPassword);
-                alert(t('profile.pkeysRestored'));
+                setStatusMessage({
+                    type: 'success',
+                    text: t('profile.pkeysRestored'),
+                });
                 setBackupPassword('');
             } catch (err) {
                 console.error(err);
-                alert(t('profile.restoreError'));
+                setStatusMessage({
+                    type: 'error',
+                    text: t('profile.restoreError'),
+                });
             } finally {
                 if (fileInputRef.current) fileInputRef.current.value = '';
             }
@@ -74,9 +96,32 @@ export function SecuritySettings() {
     };
 
     return (
-        <div className={styles.securitySection}>
-            <h2>{t('profile.securityTitle')}</h2>
-            <div className={styles.field}>
+        <Box mt="8" pt="8" style={{ borderTop: '1px solid var(--gray-a6)' }}>
+            <Heading size="4" mb="4">
+                {t('profile.securityTitle')}
+            </Heading>
+
+            {statusMessage && (
+                <Box mb="4">
+                    <Alert
+                        variant={
+                            statusMessage.type === 'success'
+                                ? 'success'
+                                : 'destructive'
+                        }
+                    >
+                        <AlertTitle>
+                            {statusMessage.type === 'success'
+                                ? t('common.success')
+                                : t('common.error')}
+                        </AlertTitle>
+                        <AlertDescription>
+                            {statusMessage.text}
+                        </AlertDescription>
+                    </Alert>
+                </Box>
+            )}
+            <Flex direction="column" gap="2" mb="4">
                 <Label htmlFor="backupPassword">
                     {t('profile.backupPassword')}
                 </Label>
@@ -87,8 +132,8 @@ export function SecuritySettings() {
                     value={backupPassword}
                     onChange={(e) => setBackupPassword(e.target.value)}
                 />
-            </div>
-            <div className={styles.actions}>
+            </Flex>
+            <Flex gap="3" wrap="wrap" mt="4">
                 <Button
                     type="button"
                     onClick={handleDownloadBackup}
@@ -113,7 +158,7 @@ export function SecuritySettings() {
                     style={{ display: 'none' }}
                     onChange={handleRestoreBackup}
                 />
-            </div>
-        </div>
+            </Flex>
+        </Box>
     );
 }

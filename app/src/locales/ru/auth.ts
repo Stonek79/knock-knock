@@ -8,4 +8,8 @@ export const auth = {
     pleaseLogIn: 'Пожалуйста, войдите в систему',
     initializationError: 'Ошибка инициализации авторизации',
     signIn: 'Войти',
+    errors: {
+        serverUnreachable:
+            'Сервер недоступен. Проверьте ваше интернет-соединение или VPN.',
+    },
 } as const;

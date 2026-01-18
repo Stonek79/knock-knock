@@ -1,19 +1,20 @@
+import { Box, Card, Flex, Heading, Text } from '@radix-ui/themes';
 import { useForm } from '@tanstack/react-form';
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { ROUTES } from '@/lib/constants';
+import { logger } from '@/lib/logger';
+import { loginSchema } from '@/lib/schemas/auth';
 import { supabase } from '@/lib/supabase';
 
 export const Route = createFileRoute(ROUTES.LOGIN)({
     component: LoginPage,
 });
-
-import { useTranslation } from 'react-i18next';
-import styles from './login.module.css';
 
 /**
  * Страница входа в приложение.
@@ -22,6 +23,7 @@ import styles from './login.module.css';
 function LoginPage() {
     const { t } = useTranslation();
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const form = useForm({
         defaultValues: {
@@ -29,109 +31,154 @@ function LoginPage() {
         },
 
         onSubmit: async ({ value }) => {
-            const { error } = await supabase.auth.signInWithOtp({
-                email: value.email,
-                options: {
-                    // Перенаправление на главную после входа
-                    emailRedirectTo: window.location.origin,
-                },
-            });
+            setSubmitError(null);
+            try {
+                logger.info('Attempting login', { email: value.email });
+                const { error } = await supabase.auth.signInWithOtp({
+                    email: value.email,
+                    options: {
+                        emailRedirectTo: window.location.origin,
+                    },
+                });
 
-            if (error) {
-                alert(error.message);
-            } else {
-                setIsSubmitted(true);
+                if (error) {
+                    logger.warn('Login failed', error);
+                    let message = error.message;
+                    if (
+                        message.includes('Failed to fetch') ||
+                        message.includes('NetworkError')
+                    ) {
+                        message = t('auth.errors.serverUnreachable');
+                    }
+                    setSubmitError(message);
+                } else {
+                    logger.info('Magic link sent successfully');
+                    setIsSubmitted(true);
+                }
+            } catch (err) {
+                logger.error('Login exception', err);
+
+                let message = 'An unexpected error occurred';
+                if (err instanceof Error) {
+                    if (
+                        err.message.includes('Failed to fetch') ||
+                        err.message.includes('NetworkError')
+                    ) {
+                        message = t('auth.errors.serverUnreachable');
+                    } else {
+                        message = err.message;
+                    }
+                }
+                setSubmitError(message);
             }
         },
     });
 
-    // Если пользователь уже авторизован? Корневой роут (Root) должен обработать редирект,
-    // или мы можем проверить сессию здесь.
-
     if (isSubmitted) {
         return (
-            <div className={styles.container}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>{t('auth.checkEmail')}</h1>
-                    <p className={styles.subtitle}>{t('auth.magicLinkSent')}</p>
-                </div>
-            </div>
+            <Flex align="center" justify="center" flexGrow="1" p="4">
+                <Card size="4" style={{ width: '100%', maxWidth: 450 }}>
+                    <Flex direction="column" gap="4" align="center">
+                        <Heading size="6" align="center">
+                            {t('auth.checkEmail')}
+                        </Heading>
+                        <Text align="center" color="gray">
+                            {t('auth.magicLinkSent')}
+                        </Text>
+                    </Flex>
+                </Card>
+            </Flex>
         );
     }
 
     return (
-        <div className={styles.container}>
-            <div className={styles.card}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>{t('auth.welcomeBack')}</h1>
-                    <p className={styles.subtitle}>
-                        {t('auth.signInToAccount')}
-                    </p>
-                </div>
+        <Flex align="center" justify="center" flexGrow="1" p="4">
+            <Card size="4" style={{ width: '100%', maxWidth: 450 }}>
+                <Flex direction="column" gap="5">
+                    <Box>
+                        <Heading size="6" align="center" mb="2">
+                            {t('auth.welcomeBack')}
+                        </Heading>
+                        <Text as="p" align="center" color="gray">
+                            {t('auth.signInToAccount')}
+                        </Text>
+                    </Box>
 
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        form.handleSubmit();
-                    }}
-                    className={styles.form}
-                >
-                    <form.Field
-                        name="email"
-                        validators={{
-                            onChange: z.email({
-                                message: t('validation.emailInvalid'),
-                            }),
+                    {submitError && (
+                        <Alert variant="destructive">
+                            <AlertTitle>{t('auth.error')}</AlertTitle>
+                            <AlertDescription>{submitError}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            form.handleSubmit();
                         }}
                     >
-                        {(field) => (
-                            <div className={styles.field}>
-                                <Label htmlFor={field.name}>
-                                    {t('common.email')}
-                                </Label>
-                                <Input
-                                    id={field.name}
-                                    name={field.name}
-                                    value={field.state.value}
-                                    onBlur={field.handleBlur}
-                                    onChange={(e) =>
-                                        field.handleChange(e.target.value)
-                                    }
-                                    placeholder="name@example.com"
-                                    type="email"
-                                    required
-                                />
-                                {field.state.meta.isTouched &&
-                                field.state.meta.errors.length ? (
-                                    <p className={styles.error}>
-                                        {field.state.meta.errors.join(', ')}
-                                    </p>
-                                ) : null}
-                            </div>
-                        )}
-                    </form.Field>
-
-                    <form.Subscribe
-                        selector={(state) => [
-                            state.canSubmit,
-                            state.isSubmitting,
-                        ]}
-                    >
-                        {([canSubmit, isSubmitting]) => (
-                            <Button
-                                type="submit"
-                                className={styles.button}
-                                disabled={!canSubmit}
+                        <Flex direction="column" gap="4">
+                            <form.Field
+                                name="email"
+                                validators={{
+                                    onChange: loginSchema.shape.email,
+                                }}
                             >
-                                {isSubmitting
-                                    ? t('auth.sending')
-                                    : t('auth.signInWithEmail')}
-                            </Button>
-                        )}
-                    </form.Subscribe>
-                </form>
-            </div>
-        </div>
+                                {(field) => (
+                                    <Flex direction="column" gap="2">
+                                        <Label htmlFor={field.name}>
+                                            {t('common.email')}
+                                        </Label>
+                                        <Input
+                                            id={field.name}
+                                            name={field.name}
+                                            value={field.state.value}
+                                            onBlur={field.handleBlur}
+                                            onChange={(e) =>
+                                                field.handleChange(
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="name@example.com"
+                                            // type="email" // types usually inferred or passed to root, but let's check input prop consumption
+                                        />
+                                        {field.state.meta.isTouched &&
+                                        field.state.meta.errors.length ? (
+                                            <Text color="red" size="1">
+                                                {field.state.meta.errors.join(
+                                                    ', ',
+                                                )}
+                                            </Text>
+                                        ) : null}
+                                    </Flex>
+                                )}
+                            </form.Field>
+
+                            <form.Subscribe
+                                selector={(state) => [
+                                    state.canSubmit,
+                                    state.isSubmitting,
+                                ]}
+                            >
+                                {([canSubmit, isSubmitting]) => (
+                                    <Button
+                                        type="submit"
+                                        disabled={!canSubmit}
+                                        variant="solid"
+                                        size="3"
+                                        style={{ width: '100%' }}
+                                    >
+                                        {isSubmitting
+                                            ? t('auth.sending')
+                                            : t('auth.signInWithEmail')}
+                                    </Button>
+                                )}
+                            </form.Subscribe>
+                        </Flex>
+                    </form>
+                </Flex>
+            </Card>
+        </Flex>
     );
 }
