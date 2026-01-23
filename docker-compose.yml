@@ -1,0 +1,27 @@
+services:
+  app:
+    image: ghcr.io/stonek79/knock-knock-app:latest
+    container_name: knock-knock-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/alex/.docker/config.json:/config.json
+    command: --interval 300 --cleanup knock-knock-app
+    environment:
+      - WATCHTOWER_NOTIFICATIONS=shoutrrr
+      # Можно добавить уведомления в Telegram позже
