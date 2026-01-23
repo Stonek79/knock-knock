@@ -1,0 +1,53 @@
+.chatContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: var(--space-4);
+}
+
+.emptyIconBox {
+    padding: var(--space-6);
+    border-radius: 50%;
+    background-color: var(--blue-3);
+    color: var(--blue-9);
+    margin-bottom: var(--space-4);
+}
+
+.placeholderText {
+    max-width: 300px;
+    text-align: center;
+}
+
+/* Room Layout */
+.roomWrapper {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px);
+}
+
+.roomHeader {
+    padding: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--gray-5);
+    background-color: var(--color-background);
+}
+
+.privacyBanner {
+    padding: var(--space-2) var(--space-3);
+    background-color: var(--orange-2);
+    border-bottom: 1px solid var(--orange-4);
+}
+
+.messageArea {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.inputArea {
+    background-color: var(--color-background);
+}

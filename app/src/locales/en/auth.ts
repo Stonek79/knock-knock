@@ -8,8 +8,14 @@ export const auth = {
     pleaseLogIn: 'Please log in',
     initializationError: 'Auth initialization failed',
     signIn: 'Sign In',
+    error: 'Authentication Error',
     errors: {
         serverUnreachable:
             'Server is unreachable. Please check your internet connection or VPN.',
+        invalidCredentials:
+            'Invalid authentication credentials. Check your keys sync.',
+        sendEmailFailed:
+            'Failed to send confirmation email. Check server config.',
+        unknown: 'An unexpected error occurred.',
     },
-} as const;
+};

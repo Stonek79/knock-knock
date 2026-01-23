@@ -7,12 +7,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { ROUTES } from '@/lib/constants';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { logger } from '@/lib/logger';
 import { loginSchema } from '@/lib/schemas/auth';
 import { supabase } from '@/lib/supabase';
+import styles from './login.module.css';
 
-export const Route = createFileRoute(ROUTES.LOGIN)({
+export const Route = createFileRoute('/login/')({
     component: LoginPage,
 });
 
@@ -43,41 +44,26 @@ function LoginPage() {
 
                 if (error) {
                     logger.warn('Login failed', error);
-                    let message = error.message;
-                    if (
-                        message.includes('Failed to fetch') ||
-                        message.includes('NetworkError')
-                    ) {
-                        message = t('auth.errors.serverUnreachable');
-                    }
-                    setSubmitError(message);
+                    setSubmitError(getAuthErrorMessage(error));
                 } else {
                     logger.info('Magic link sent successfully');
                     setIsSubmitted(true);
                 }
             } catch (err) {
                 logger.error('Login exception', err);
-
-                let message = 'An unexpected error occurred';
+                // Explicit logging for debugging if needed, but keeping it clean for user
                 if (err instanceof Error) {
-                    if (
-                        err.message.includes('Failed to fetch') ||
-                        err.message.includes('NetworkError')
-                    ) {
-                        message = t('auth.errors.serverUnreachable');
-                    } else {
-                        message = err.message;
-                    }
+                    console.error('RAW_LOGIN_ERROR:', err.message);
                 }
-                setSubmitError(message);
+                setSubmitError(getAuthErrorMessage(err));
             }
         },
     });
 
     if (isSubmitted) {
         return (
-            <Flex align="center" justify="center" flexGrow="1" p="4">
-                <Card size="4" style={{ width: '100%', maxWidth: 450 }}>
+            <div className={styles.loginPage}>
+                <Card size="4" className={styles.loginCard}>
                     <Flex direction="column" gap="4" align="center">
                         <Heading size="6" align="center">
                             {t('auth.checkEmail')}
@@ -87,13 +73,13 @@ function LoginPage() {
                         </Text>
                     </Flex>
                 </Card>
-            </Flex>
+            </div>
         );
     }
 
     return (
-        <Flex align="center" justify="center" flexGrow="1" p="4">
-            <Card size="4" style={{ width: '100%', maxWidth: 450 }}>
+        <div className={styles.loginPage}>
+            <Card size="4" className={styles.loginCard}>
                 <Flex direction="column" gap="5">
                     <Box>
                         <Heading size="6" align="center" mb="2">
@@ -118,7 +104,7 @@ function LoginPage() {
                             form.handleSubmit();
                         }}
                     >
-                        <Flex direction="column" gap="4">
+                        <div className={styles.formContainer}>
                             <form.Field
                                 name="email"
                                 validators={{
@@ -141,7 +127,6 @@ function LoginPage() {
                                                 )
                                             }
                                             placeholder="name@example.com"
-                                            // type="email" // types usually inferred or passed to root, but let's check input prop consumption
                                         />
                                         {field.state.meta.isTouched &&
                                         field.state.meta.errors.length ? (
@@ -167,7 +152,7 @@ function LoginPage() {
                                         disabled={!canSubmit}
                                         variant="solid"
                                         size="3"
-                                        style={{ width: '100%' }}
+                                        className={styles.submitButton}
                                     >
                                         {isSubmitting
                                             ? t('auth.sending')
@@ -175,10 +160,10 @@ function LoginPage() {
                                     </Button>
                                 )}
                             </form.Subscribe>
-                        </Flex>
+                        </div>
                     </form>
                 </Flex>
             </Card>
-        </Flex>
+        </div>
     );
 }

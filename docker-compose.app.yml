@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    ports:
+      - "3000:3000"
+    restart: always
+    networks:
+      - supabase_network
+
+networks:
+  supabase_network:
+    external: true
+    name: docker_default # Or the actual name of your Supabase network

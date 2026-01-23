@@ -1,33 +1,23 @@
-.container {
-    max-width: 28rem; /* max-w-md */
-    margin-left: auto;
-    margin-right: auto;
-    padding: var(--space-md);
+.profilePage {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: var(--space-4);
 }
 
-.title {
-    font-size: var(--text-2xl); /* text-2xl */
-    font-weight: 700;
-    margin-bottom: var(--space-md); /* mb-4 */
+.backLink {
+    text-decoration: none;
+    color: var(--accent-9);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
 }
 
-.userInfo {
-    margin-bottom: var(--space-lg); /* mb-6 */
+.signOutCard {
+    margin-bottom: var(--space-6);
 }
 
-.form {
+.infoFlex {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md); /* space-y-4 */
-}
-
-.field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs); /* space-y-2 */
-}
-
-.error {
-    font-size: 0.875rem;
-    color: #ef4444; /* red-500 */
+    gap: var(--space-4);
 }

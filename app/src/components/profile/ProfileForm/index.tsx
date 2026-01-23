@@ -71,7 +71,7 @@ export function ProfileForm() {
     });
 
     return (
-        <Flex direction="column" gap="4" style={{ maxWidth: 400 }}>
+        <Flex direction="column" gap="4" maxWidth="400px">
             {statusMessage && (
                 <Alert
                     variant={

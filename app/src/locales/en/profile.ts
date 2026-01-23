@@ -4,4 +4,9 @@ export const profile = {
     displayName: 'Display Name',
     saveProfile: 'Save Profile',
     profileUpdated: 'Profile updated!',
+    securityTitle: 'Security',
+    backupPassword: 'Backup Password',
+    backupPasswordPlaceholder: 'Enter password to encrypt backup',
+    downloadBackup: 'Download Backup',
+    restoreBackup: 'Restore from Backup',
 } as const;

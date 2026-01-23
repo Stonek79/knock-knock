@@ -1,14 +1,13 @@
-import type { FileRoutesByPath } from '@tanstack/react-router';
-
 /** Название приложения */
 export const APP_NAME = 'Knock-Knock';
 
 /** Пути маршрутизации приложения */
-export const ROUTES: { [key: string]: keyof FileRoutesByPath | undefined } = {
+export const ROUTES = {
     HOME: '/',
-    LOGIN: '/login/',
-    PROFILE: '/profile/',
-};
+    LOGIN: '/login',
+    PROFILE: '/profile',
+    CHAT_LIST: '/chat',
+} as const;
 
 /** Константы валидации форм */
 export const VALIDATION = {
@@ -18,4 +17,8 @@ export const VALIDATION = {
 /** Названия таблиц базы данных Supabase */
 export const DB_TABLES = {
     PROFILES: 'profiles',
+    ROOMS: 'rooms',
+    ROOM_MEMBERS: 'room_members',
+    ROOM_KEYS: 'room_keys',
+    MESSAGES: 'messages',
 } as const;

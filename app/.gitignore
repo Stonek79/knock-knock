@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.local
+.env.production
+.env.example
+/infra
 
 # Auto-generated files
 src/routeTree.gen.ts

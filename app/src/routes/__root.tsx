@@ -2,6 +2,7 @@ import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useKeySync } from '@/hooks/useKeySync';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/auth';
 import styles from './__root.module.css';
@@ -13,6 +14,9 @@ export const Route = createRootRoute({
 function RootComponent() {
     const { t } = useTranslation();
     const { initialize, loading } = useAuthStore();
+
+    // Автоматическая генерация и синхронизация ключей P2P
+    useKeySync();
 
     useEffect(() => {
         initialize();

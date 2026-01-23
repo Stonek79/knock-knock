@@ -1,0 +1,22 @@
+.loginPage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    padding: var(--space-4);
+}
+
+.loginCard {
+    width: 100%;
+    max-width: 450px;
+}
+
+.formContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.submitButton {
+    width: 100%;
+}

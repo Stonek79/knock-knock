@@ -49,4 +49,5 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         return <RadixButton ref={ref} variant={themeVariant} {...props} />;
     },
 );
+
 Button.displayName = 'Button';

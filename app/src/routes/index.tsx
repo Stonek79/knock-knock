@@ -13,9 +13,9 @@ function Index() {
     const { t } = useTranslation();
     const { user, loading } = useAuthStore();
 
-    // Если пользователь уже вошел, перенаправляем в Профиль (позже в чаты)
+    // Если пользователь уже вошел, перенаправляем в список чатов (WhatsApp style)
     if (!loading && user) {
-        return <Navigate to={ROUTES.PROFILE as string} />;
+        return <Navigate to={ROUTES.CHAT_LIST as string} />;
     }
 
     return (

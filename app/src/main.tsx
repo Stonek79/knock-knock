@@ -23,8 +23,8 @@ declare module '@tanstack/react-router' {
 /** Клиент для TanStack Query */
 const queryClient = new QueryClient();
 
-const rootElement = document.getElementById('root')!;
-if (!rootElement.innerHTML) {
+const rootElement = document.getElementById('root');
+if (rootElement && !rootElement.innerHTML) {
     const root = createRoot(rootElement);
     root.render(
         <StrictMode>
