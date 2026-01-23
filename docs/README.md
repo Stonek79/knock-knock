@@ -7,9 +7,8 @@
 - `/infra` — Конфигурации инфраструктуры (Docker, Nginx, WireGuard).
 - `/docs` — Проектные правила и технические спецификации.
 
-## Полезные ссылки
+- [Инструкция по деплою](file:///Users/alexstone/WebstormProjects/knock-knock/docs/DEPLOYMENT.md)
 - [Правила проекта](file:///Users/alexstone/WebstormProjects/knock-knock/docs/RULES.md)
-- [Инструкция по деплою (Walkthrough)](file:///Users/alexstone/.gemini/antigravity/brain/ef808250-1e01-4de5-9579-58c84118c72a/walkthrough.md)
 
 ## Как запустить локально
 ```bash

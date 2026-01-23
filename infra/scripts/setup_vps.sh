@@ -3,42 +3,33 @@
 # Configuration
 DOMAIN_API="api.knok-knok.ru"
 DOMAIN_WEB="knok-knok.ru"
-EMAIL="alexstone@example.com" # Replace with real email if needed for LetsEncrypt notifications
-TUNNEL_PORT_API=8080
-TUNNEL_PORT_WEB=3000
+EMAIL="alexstone@mail.ru" # Обновите на ваш реальный email
 
-# Update & Install Nginx/Certbot
+# 1. Update & Install Dependencies
 apt update && apt upgrade -y
-apt install -y nginx certbot python3-certbot-nginx ufw
+apt install -y nginx certbot python3-certbot-nginx firewalld wireguard wireguard-tools
 
-# Configure Firewall (Allow SSH & Nginx)
-ufw allow OpenSSH
-ufw allow 'Nginx Full'
-ufw allow 8443/tcp
-ufw --force enable
+# 2. Configure Firewall
+systemctl enable --now firewalld
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=https
+firewall-cmd --permanent --add-port=8443/tcp
+firewall-cmd --permanent --add-port=51821/udp
+firewall-cmd --reload
 
-# Enable GatewayPorts for SSH Tunneling
-sed -i 's/#GatewayPorts no/GatewayPorts yes/' /etc/ssh/sshd_config
-sed -i 's/GatewayPorts no/GatewayPorts yes/' /etc/ssh/sshd_config
-# If not present at all, append it
-grep -q "GatewayPorts yes" /etc/ssh/sshd_config || echo "GatewayPorts yes" >> /etc/ssh/sshd_config
-service ssh restart
-
-# Obtain SSL Certificates (Cert Only mode, using temporary Nginx config)
-# We do this BEFORE writing our custom 8443 config to avoid conflict
-systemctl stop nginx
+# 3. Obtain SSL Certificates
 certbot certonly --standalone -d $DOMAIN_API --non-interactive --agree-tos -m $EMAIL --expand
 certbot certonly --standalone -d $DOMAIN_WEB -d www.$DOMAIN_WEB --non-interactive --agree-tos -m $EMAIL --expand
-systemctl start nginx
 
-# Create Nginx Config for API (Supabase) - Port 8443
+# 4. Create WireGuard Keys (if not exist)
+mkdir -p ~/wireguard_keys
+if [ ! -f ~/wireguard_keys/private_vps ]; then
+    wg genkey | tee ~/wireguard_keys/private_vps | wg pubkey > ~/wireguard_keys/public_vps
+fi
+
+# 5. Setup Nginx Configs
+# [API Config with CORS]
 cat > /etc/nginx/sites-available/$DOMAIN_API <<EOF
-server {
-    listen 80;
-    server_name $DOMAIN_API;
-    return 301 https://\$host:8443\$request_uri;
-}
-
 server {
     listen 8443 ssl;
     server_name $DOMAIN_API;
@@ -47,26 +38,26 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_API/privkey.pem;
 
     location / {
-        proxy_pass http://127.0.0.1:$TUNNEL_PORT_API;
+        if (\$request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' 'https://$DOMAIN_WEB:8443' always;
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE, PATCH' always;
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,apikey' always;
+            return 204;
+        }
+
+        add_header 'Access-Control-Allow-Origin' 'https://$DOMAIN_WEB:8443' always;
+        proxy_pass http://10.0.0.2:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
 EOF
 
-# Create Nginx Config for WEB (Frontend) - Port 8443
+# [Web Config]
 cat > /etc/nginx/sites-available/$DOMAIN_WEB <<EOF
-server {
-    listen 80;
-    server_name $DOMAIN_WEB www.$DOMAIN_WEB;
-    return 301 https://\$host:8443\$request_uri;
-}
-
 server {
     listen 8443 ssl;
     server_name $DOMAIN_WEB www.$DOMAIN_WEB;
@@ -75,21 +66,19 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_WEB/privkey.pem;
 
     location / {
-        proxy_pass http://127.0.0.1:$TUNNEL_PORT_WEB;
+        proxy_pass http://10.0.0.2:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
 EOF
 
-# Test & Restart Nginx (Apply new 8443 config)
+ln -s /etc/nginx/sites-available/$DOMAIN_API /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/$DOMAIN_WEB /etc/nginx/sites-enabled/
+
 nginx -t && systemctl restart nginx
 
-echo "✅ VPS Configuration Complete!"
-echo "Make sure to run your tunnels from your laptop:"
-echo "ssh -R $TUNNEL_PORT_API:localhost:8000 -R $TUNNEL_PORT_WEB:localhost:5173 user@vps-ip"
+echo "✅ VPS Setup Complete!"
+echo "Your WireGuard Public Key: $(cat ~/wireguard_keys/public_vps)"

@@ -1,10 +1,9 @@
 [Interface]
-Address = 10.0.0.2/24
 PrivateKey = <HOME_SERVER_PRIVATE_KEY>
-# Keep connection alive
-PersistentKeepalive = 25
+Address = 10.0.0.2/32
 
 [Peer]
 PublicKey = <VPS_PUBLIC_KEY>
-Endpoint = <VPS_PUBLIC_IP>:51820
-AllowedIPs = 10.0.0.1/32
+Endpoint = <VPS_PUBLIC_IP>:51821
+AllowedIPs = 10.0.0.0/24
+PersistentKeepalive = 25
