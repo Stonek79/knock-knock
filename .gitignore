@@ -1,4 +1,4 @@
-/infra
+# /infra removed to allow CI/CD access to configs
 node_modules/
 .DS_Store
 .idea
