@@ -3,18 +3,16 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY app/package*.json ./app/
+# Copy package files from the app directory
+COPY app/package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy source code
-COPY . .
+# Copy app source code
+COPY app/ .
 
 # Build the app
-WORKDIR /app/app
 RUN npm run build
 
 # Production stage
