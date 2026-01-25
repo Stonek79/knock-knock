@@ -63,12 +63,9 @@ jobs:
           proxy_host: ${{ secrets.SSH_PROXY_HOST }}
           proxy_username: ${{ secrets.SSH_PROXY_USER }}
           proxy_key: ${{ secrets.SSH_PROXY_KEY }}
-          # Игнорируем проверку известных хостов, так как это динамический CI/CD
-          # и мы доверяем нашему туннелю
           proxy_port: 22
           script_stop: true
-          use_insecure_cipher: true
-          proxy_use_insecure_cipher: true
+          debug: true
           script: |
             cd ~/WebstormProjects/knock-knock
             docker compose pull app
