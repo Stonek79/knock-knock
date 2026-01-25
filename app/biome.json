@@ -26,5 +26,12 @@
             "allowComments": true,
             "allowTrailingCommas": false
         }
-    }
+    },
+    "overrides": [
+        {
+            "includes": ["src/lib/mock/**"],
+            "linter": { "enabled": false },
+            "formatter": { "enabled": false }
+        }
+    ]
 }

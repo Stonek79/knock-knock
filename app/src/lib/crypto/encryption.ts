@@ -27,7 +27,10 @@ export async function wrapRoomKey(
 }> {
     // 1. Эфемерная пара
     const ephemeralKeyPair = (await subtle.generateKey(
-        { name: 'X25519' },
+        {
+            name: 'ECDH',
+            namedCurve: 'P-256',
+        },
         true,
         ['deriveKey', 'deriveBits'],
     )) as CryptoKeyPair;
@@ -94,7 +97,10 @@ export async function unwrapRoomKey(
     const ephemeralPub = await subtle.importKey(
         'raw',
         encryptedData.ephemeralPublicKey,
-        { name: 'X25519' },
+        {
+            name: 'ECDH',
+            namedCurve: 'P-256',
+        },
         false,
         [],
     );

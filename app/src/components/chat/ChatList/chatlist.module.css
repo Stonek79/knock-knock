@@ -1,0 +1,75 @@
+.chatList {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.chatListItem {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chatListItem:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.chatListItem:active {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.chatInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.loadingContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.emptyContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    gap: 16px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.unreadBadge {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #00a884;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Время последнего сообщения */
+.chatTime {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 12px;
+}
+
+/* Превью последнего сообщения */
+.lastMessage {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Имя контакта */
+.chatName {
+    color: white;
+}

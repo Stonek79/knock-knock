@@ -4,6 +4,19 @@
     min-height: 100dvh;
 }
 
+/* Мобильный layout с тёмной темой WhatsApp */
+.mobileLayout {
+    background: #111b21;
+    color: white;
+}
+
+/* Отступ снизу для мобильной навигации */
+@media (max-width: 768px) {
+    .layout {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
+    }
+}
+
 .loading {
     display: flex;
     justify-content: center;

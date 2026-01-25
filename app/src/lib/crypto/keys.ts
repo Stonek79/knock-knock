@@ -7,13 +7,14 @@
 const subtle = window.crypto.subtle;
 
 /**
- * Генерирует пару ключей Ed25519 (для подписей).
+ * Генерирует пару ключей ECDSA P-256 (для подписей).
  * Ключи извлекаемы (extractable), чтобы можно было сохранить резервную копию.
  */
 export async function generateIdentityKeyPair(): Promise<CryptoKeyPair> {
     return (await subtle.generateKey(
         {
-            name: 'Ed25519',
+            name: 'ECDSA',
+            namedCurve: 'P-256',
         },
         true, // extractable
         ['sign', 'verify'],
@@ -21,12 +22,13 @@ export async function generateIdentityKeyPair(): Promise<CryptoKeyPair> {
 }
 
 /**
- * Генерирует пару ключей X25519 (для шифрования/обмена).
+ * Генерирует пару ключей ECDH P-256 (для шифрования/обмена).
  */
 export async function generatePreKeyPair(): Promise<CryptoKeyPair> {
     return (await subtle.generateKey(
         {
-            name: 'X25519',
+            name: 'ECDH',
+            namedCurve: 'P-256',
         },
         true, // extractable
         ['deriveKey', 'deriveBits'],
@@ -42,7 +44,7 @@ export async function deriveSharedSecret(
 ): Promise<ArrayBuffer> {
     return await subtle.deriveBits(
         {
-            name: 'X25519',
+            name: 'ECDH',
             public: theirPublicKey,
         },
         myPrivateKey,
@@ -51,7 +53,7 @@ export async function deriveSharedSecret(
 }
 
 /**
- * Подписывает сообщение с помощью Ed25519.
+ * Подписывает сообщение с помощью ECDSA.
  */
 export async function signMessage(
     message: Uint8Array | ArrayBuffer,
@@ -59,7 +61,8 @@ export async function signMessage(
 ): Promise<ArrayBuffer> {
     return await subtle.sign(
         {
-            name: 'Ed25519',
+            name: 'ECDSA',
+            hash: { name: 'SHA-256' },
         },
         privateKey,
         message as BufferSource,
@@ -67,7 +70,7 @@ export async function signMessage(
 }
 
 /**
- * Проверяет подпись Ed25519.
+ * Проверяет подпись ECDSA.
  */
 export async function verifySignature(
     message: Uint8Array | ArrayBuffer,
@@ -76,7 +79,8 @@ export async function verifySignature(
 ): Promise<boolean> {
     return await subtle.verify(
         {
-            name: 'Ed25519',
+            name: 'ECDSA',
+            hash: { name: 'SHA-256' },
         },
         publicKey,
         signature as BufferSource,
@@ -94,19 +98,22 @@ export async function exportPublicKey(key: CryptoKey): Promise<ArrayBuffer> {
 /**
  * Импортирует публичный ключ из Raw формата.
  * @param keyData - Байты ключа
- * @param algorithm - 'Ed25519' или 'X25519'
+ * @param algorithm - 'ECDSA' или 'ECDH'
  */
 export async function importPublicKey(
     keyData: ArrayBuffer | Uint8Array,
-    algorithm: 'Ed25519' | 'X25519',
+    algorithm: 'ECDSA' | 'ECDH',
 ): Promise<CryptoKey> {
     const usage: KeyUsage[] =
-        algorithm === 'Ed25519' ? ['verify'] : ['deriveKey', 'deriveBits'];
+        algorithm === 'ECDSA' ? ['verify'] : ['deriveKey', 'deriveBits'];
 
     return await subtle.importKey(
         'raw',
         keyData as BufferSource,
-        { name: algorithm },
+        {
+            name: algorithm,
+            namedCurve: 'P-256',
+        },
         true,
         usage,
     );

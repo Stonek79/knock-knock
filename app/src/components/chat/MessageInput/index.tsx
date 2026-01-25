@@ -1,5 +1,5 @@
 import { Button, TextArea } from '@radix-ui/themes';
-import { SendHorizontal } from 'lucide-react';
+import { Mic, Paperclip, SendHorizontal } from 'lucide-react';
 import { type KeyboardEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './message-input.module.css';
@@ -20,8 +20,10 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
     const [message, setMessage] = useState('');
     const [sending, setSending] = useState(false);
 
+    const hasText = message.trim().length > 0;
+
     const handleSend = async () => {
-        if (!message.trim() || sending || disabled) return;
+        if (!hasText || sending || disabled) return;
 
         setSending(true);
         try {
@@ -41,25 +43,48 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
 
     return (
         <div className={styles.inputWrapper}>
+            {/* Кнопка вложений (Слева) */}
+            <Button
+                variant="ghost"
+                className={`${styles.actionButton} ${styles.iconButton}`}
+                disabled={disabled}
+                type="button"
+            >
+                <Paperclip size={20} />
+            </Button>
+
             <TextArea
-                size="3"
-                variant="surface"
-                placeholder={t('chat.typeMessage', 'Введите сообщение...')}
+                size="2"
+                variant="soft"
+                placeholder={t('chat.typeMessage', 'Сообщение')}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={disabled || sending}
                 className={styles.textArea}
             />
-            <Button
-                size="3"
-                radius="full"
-                onClick={handleSend}
-                disabled={!message.trim() || disabled || sending}
-                className={styles.sendButton}
-            >
-                <SendHorizontal size={22} />
-            </Button>
+
+            {/* Микрофон или Отправка (Справа) */}
+            {hasText ? (
+                <Button
+                    size="2"
+                    radius="full"
+                    onClick={handleSend}
+                    disabled={disabled || sending}
+                    className={`${styles.actionButton} ${styles.sendButton}`}
+                >
+                    <SendHorizontal size={18} />
+                </Button>
+            ) : (
+                <Button
+                    variant="ghost"
+                    className={`${styles.actionButton} ${styles.iconButton}`}
+                    disabled={disabled} // Можно включить, когда будет реализована запись голоса
+                    type="button"
+                >
+                    <Mic size={22} />
+                </Button>
+            )}
         </div>
     );
 }

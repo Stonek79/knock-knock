@@ -1,12 +1,18 @@
 /** Название приложения */
-export const APP_NAME = 'Knock-Knock';
+export const APP_NAME = 'KnokKnok';
 
+/** Версия приложения */
+export const APP_VERSION = '0.1.0';
 /** Пути маршрутизации приложения */
 export const ROUTES = {
     HOME: '/',
     LOGIN: '/login',
     PROFILE: '/profile',
     CHAT_LIST: '/chat',
+    CONTACTS: '/contacts',
+    SETTINGS: '/settings',
+    FAVORITES: '/favorites',
+    CALLS: '/calls',
 } as const;
 
 /** Константы валидации форм */

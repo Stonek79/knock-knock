@@ -1,0 +1,28 @@
+.container {
+    text-align: center;
+    background: var(--color-background);
+}
+
+.iconBox {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-4), var(--blue-6));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--blue-11);
+}
+
+.title {
+    color: var(--gray-12);
+}
+
+.description {
+    max-width: 300px;
+    color: var(--gray-11);
+}
+
+.addButton {
+    margin-top: 16px;
+}

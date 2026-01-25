@@ -1,6 +1,10 @@
 export { auth } from './auth';
+export { calls } from './calls';
 export { chat } from './chat';
 export { common } from './common';
+export { contacts } from './contacts';
 export { errors } from './errors';
+export { favorites } from './favorites';
+export { nav } from './nav';
 export { profile } from './profile';
 export { validation } from './validation';

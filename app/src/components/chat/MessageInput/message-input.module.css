@@ -1,33 +1,74 @@
 @media (max-width: 600px) {
     .inputWrapper {
-        padding: var(--space-2);
-        gap: var(--space-2);
+        padding: 8px 12px;
+        gap: 8px;
     }
 }
 
 .inputWrapper {
     display: flex;
-    gap: var(--space-3);
+    gap: 12px;
     align-items: flex-end;
-    padding: var(--space-3);
-    border-top: 1px solid var(--gray-5);
+    padding: 16px 24px;
+    border-top: 1px solid var(--gray-4);
     background-color: var(--color-background);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .textArea {
     flex: 1;
     min-height: 40px;
-    max-height: 150px;
-    background-color: var(--gray-2);
+    max-height: 120px;
+    background-color: var(--gray-3);
+    border-radius: 20px;
+    padding: 10px 16px;
+    border: none;
+    resize: none;
+    font-size: 15px;
+    line-height: 20px;
 }
 
-.sendButton {
-    height: 44px;
-    width: 44px;
-    min-width: 44px; /* Prevent shrinking */
+.textArea:focus {
+    outline: 2px solid var(--accent-8);
+    background-color: var(--color-background);
+}
+
+.actionButton {
+    height: 40px;
+    width: 40px;
+    min-width: 40px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.sendButton {
+    background-color: var(--accent-9);
+    color: white;
+}
+
+.sendButton:hover {
+    background-color: var(--accent-10);
+    transform: scale(1.05);
+}
+
+.sendButton:disabled {
+    background-color: var(--gray-6);
+    color: var(--gray-3);
+    transform: none;
+}
+
+.iconButton {
+    color: var(--gray-11);
+    background: transparent;
+}
+
+.iconButton:hover {
+    background-color: var(--gray-4);
+    color: var(--gray-12);
 }

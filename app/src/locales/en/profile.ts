@@ -9,4 +9,9 @@ export const profile = {
     backupPasswordPlaceholder: 'Enter password to encrypt backup',
     downloadBackup: 'Download Backup',
     restoreBackup: 'Restore from Backup',
+    settings: 'Settings',
+    about: 'About',
+    notifications: 'Notifications',
+    language: 'Language',
+    theme: 'Theme',
 } as const;

@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { DB_TABLES } from '@/lib/constants';
 import { decryptMessage } from '@/lib/crypto/messages';
 import { logger } from '@/lib/logger';
-import { supabase } from '@/lib/supabase';
+import { isMock, supabase } from '@/lib/supabase';
 import type { Message } from '@/lib/types/chat';
 import { useAuthStore } from '@/stores/auth';
 import { MessageBubble } from '../MessageBubble';
@@ -47,6 +47,10 @@ export function MessageList({ roomId, roomKey }: MessageListProps) {
 
             const decrypted: DecryptedMessage[] = [];
             for (const msg of data as Message[]) {
+                if (isMock) {
+                    decrypted.push({ ...msg, content: msg.content });
+                    continue;
+                }
                 try {
                     const content = await decryptMessage(
                         msg.content,
@@ -80,6 +84,20 @@ export function MessageList({ roomId, roomKey }: MessageListProps) {
                 },
                 async (payload) => {
                     const newMsg = payload.new as Message;
+                    if (isMock) {
+                        const decryptedNewMsg: DecryptedMessage = {
+                            ...newMsg,
+                            content: newMsg.content,
+                        };
+                        queryClient.setQueryData(
+                            ['messages', roomId],
+                            (old: DecryptedMessage[] | undefined) => [
+                                ...(old || []),
+                                decryptedNewMsg,
+                            ],
+                        );
+                        return;
+                    }
                     try {
                         const content = await decryptMessage(
                             newMsg.content,

@@ -11,9 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
+import { Route as FavoritesIndexRouteImport } from './routes/favorites/index'
+import { Route as ContactsIndexRouteImport } from './routes/contacts/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as CallsIndexRouteImport } from './routes/calls/index'
 import { Route as ChatRoomIdRouteImport } from './routes/chat/$roomId'
 
 const ChatRoute = ChatRouteImport.update({
@@ -26,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileIndexRoute = ProfileIndexRouteImport.update({
   id: '/profile/',
   path: '/profile/',
@@ -36,10 +45,25 @@ const LoginIndexRoute = LoginIndexRouteImport.update({
   path: '/login/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FavoritesIndexRoute = FavoritesIndexRouteImport.update({
+  id: '/favorites/',
+  path: '/favorites/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactsIndexRoute = ContactsIndexRouteImport.update({
+  id: '/contacts/',
+  path: '/contacts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ChatRoute,
+} as any)
+const CallsIndexRoute = CallsIndexRouteImport.update({
+  id: '/calls/',
+  path: '/calls/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoomIdRoute = ChatRoomIdRouteImport.update({
   id: '/$roomId',
@@ -51,25 +75,37 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRouteWithChildren
   '/chat/$roomId': typeof ChatRoomIdRoute
+  '/calls/': typeof CallsIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/contacts/': typeof ContactsIndexRoute
+  '/favorites/': typeof FavoritesIndexRoute
   '/login/': typeof LoginIndexRoute
   '/profile/': typeof ProfileIndexRoute
+  '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat/$roomId': typeof ChatRoomIdRoute
+  '/calls': typeof CallsIndexRoute
   '/chat': typeof ChatIndexRoute
+  '/contacts': typeof ContactsIndexRoute
+  '/favorites': typeof FavoritesIndexRoute
   '/login': typeof LoginIndexRoute
   '/profile': typeof ProfileIndexRoute
+  '/settings': typeof SettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/chat': typeof ChatRouteWithChildren
   '/chat/$roomId': typeof ChatRoomIdRoute
+  '/calls/': typeof CallsIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/contacts/': typeof ContactsIndexRoute
+  '/favorites/': typeof FavoritesIndexRoute
   '/login/': typeof LoginIndexRoute
   '/profile/': typeof ProfileIndexRoute
+  '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -77,26 +113,47 @@ export interface FileRouteTypes {
     | '/'
     | '/chat'
     | '/chat/$roomId'
+    | '/calls/'
     | '/chat/'
+    | '/contacts/'
+    | '/favorites/'
     | '/login/'
     | '/profile/'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat/$roomId' | '/chat' | '/login' | '/profile'
+  to:
+    | '/'
+    | '/chat/$roomId'
+    | '/calls'
+    | '/chat'
+    | '/contacts'
+    | '/favorites'
+    | '/login'
+    | '/profile'
+    | '/settings'
   id:
     | '__root__'
     | '/'
     | '/chat'
     | '/chat/$roomId'
+    | '/calls/'
     | '/chat/'
+    | '/contacts/'
+    | '/favorites/'
     | '/login/'
     | '/profile/'
+    | '/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRouteWithChildren
+  CallsIndexRoute: typeof CallsIndexRoute
+  ContactsIndexRoute: typeof ContactsIndexRoute
+  FavoritesIndexRoute: typeof FavoritesIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
   ProfileIndexRoute: typeof ProfileIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -115,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/': {
       id: '/profile/'
       path: '/profile'
@@ -129,12 +193,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/favorites/': {
+      id: '/favorites/'
+      path: '/favorites'
+      fullPath: '/favorites/'
+      preLoaderRoute: typeof FavoritesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts/': {
+      id: '/contacts/'
+      path: '/contacts'
+      fullPath: '/contacts/'
+      preLoaderRoute: typeof ContactsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat/': {
       id: '/chat/'
       path: '/'
       fullPath: '/chat/'
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof ChatRoute
+    }
+    '/calls/': {
+      id: '/calls/'
+      path: '/calls'
+      fullPath: '/calls/'
+      preLoaderRoute: typeof CallsIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/chat/$roomId': {
       id: '/chat/$roomId'
@@ -161,8 +246,12 @@ const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRouteWithChildren,
+  CallsIndexRoute: CallsIndexRoute,
+  ContactsIndexRoute: ContactsIndexRoute,
+  FavoritesIndexRoute: FavoritesIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
   ProfileIndexRoute: ProfileIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

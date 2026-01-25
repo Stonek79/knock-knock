@@ -6,7 +6,22 @@ import i18n from '@/lib/i18n';
  * @returns The translated error message.
  */
 export function getAuthErrorMessage(error: unknown): string {
-    const message = error instanceof Error ? error.message : String(error);
+    let message = '';
+
+    if (error instanceof Error) {
+        message = error.message;
+    } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error
+    ) {
+        message = String((error as { message: unknown }).message);
+    } else if (typeof error === 'string') {
+        message = error;
+    } else {
+        message = 'Unknown error';
+    }
+
     const lowerMsg = message.toLowerCase();
 
     if (

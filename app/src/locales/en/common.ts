@@ -7,6 +7,7 @@ export const common = {
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
+    back: 'Back',
     appDescription: 'Secure PWA Messenger with End-to-End Encryption.',
     features: {
         e2e: {

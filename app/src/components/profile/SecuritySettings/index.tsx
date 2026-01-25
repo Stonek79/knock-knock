@@ -1,5 +1,5 @@
 import { Box, Card, Flex, Heading, Separator, Text } from '@radix-ui/themes';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { type ChangeEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
@@ -30,19 +30,15 @@ export function SecuritySettings() {
         initialized: keysInitialized,
         exportKeys,
         restoreKeys,
-        publicKeyEd25519,
-        publicKeyX25519,
     } = useKeystore();
     const { downloadJson } = useFileDownloader();
     const { user } = useAuthStore();
-    const queryClient = useQueryClient();
 
     const [backupPassword, setBackupPassword] = useState('');
     const [statusMessage, setStatusMessage] = useState<{
         type: 'success' | 'error';
         text: string;
     } | null>(null);
-    const [syncing, setSyncing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     /**
@@ -73,46 +69,6 @@ export function SecuritySettings() {
     const areKeysPublished = !!(
         profileKeys?.public_key_x25519 && profileKeys?.public_key_signing
     );
-
-    // Синхронизация ключей с профилем в БД
-    const handleSyncKeys = async () => {
-        if (!user || !publicKeyX25519) return;
-        setSyncing(true);
-        setStatusMessage(null);
-
-        try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    public_key_x25519: publicKeyX25519,
-                    public_key_signing: publicKeyEd25519,
-                })
-                .eq('id', user.id);
-
-            if (error) throw error;
-
-            // Инвалидируем кеш TanStack Query для обновления данных
-            await queryClient.invalidateQueries({
-                queryKey: ['profile-keys', user.id],
-            });
-
-            setStatusMessage({
-                type: 'success',
-                text: t(
-                    'profile.keysSynced',
-                    'Ключи шифрования активированы и привязаны к профилю',
-                ),
-            });
-        } catch (err) {
-            console.error('Failed to sync keys', err);
-            setStatusMessage({
-                type: 'error',
-                text: t('profile.syncError', 'Ошибка при активации ключей'),
-            });
-        } finally {
-            setSyncing(false);
-        }
-    };
 
     // Скачивание бэкапа
     const handleDownloadBackup = async () => {
@@ -210,47 +166,45 @@ export function SecuritySettings() {
             )}
 
             <Flex direction="column" gap="4">
-                {/* Блок защиты (показываем только если ключи еще не опубликованы или есть ошибка синхронизации) */}
-                {(!areKeysPublished || !keysInitialized) && (
-                    <Card size="2" variant="surface">
-                        <Heading size="3" mb="2">
-                            {t('profile.encryptionTitle', 'Защита сообщений')}
-                        </Heading>
-                        <Text size="2" color="gray" mb="4" as="p">
-                            {t(
-                                'profile.encryptionDesc',
-                                'Чтобы другие пользователи могли отправлять вам зашифрованные сообщения, необходимо активировать ваши публичные ключи.',
-                            )}
-                        </Text>
-                        <Button
-                            onClick={handleSyncKeys}
-                            disabled={!keysInitialized || syncing}
-                            loading={syncing}
-                        >
-                            {t(
-                                'profile.activateEncryption',
-                                'Активировать шифрование',
-                            )}
-                        </Button>
-                    </Card>
-                )}
-
-                {areKeysPublished && (
-                    <Alert variant="success">
-                        <AlertTitle>
-                            {t(
-                                'profile.encryptionActiveTitle',
-                                'Шифрование активно',
-                            )}
-                        </AlertTitle>
-                        <AlertDescription>
-                            {t(
-                                'profile.keysSyncedDesc',
-                                'Ваши ключи шифрования синхронизированы. Вы можете общаться безопасно.',
-                            )}
-                        </AlertDescription>
-                    </Alert>
-                )}
+                {/* Status Indicator only - no manual activation needed as it's auto-synced */}
+                <Card size="2" variant="surface">
+                    <Flex align="center" gap="3">
+                        <Box
+                            style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: '50%',
+                                background: areKeysPublished
+                                    ? 'var(--green-9)'
+                                    : 'var(--orange-9)',
+                            }}
+                        />
+                        <Flex direction="column">
+                            <Text weight="bold" size="2">
+                                {areKeysPublished
+                                    ? t(
+                                          'profile.encryptionActiveTitle',
+                                          'Шифрование активно',
+                                      )
+                                    : t(
+                                          'profile.encryptionSyncing',
+                                          'Синхронизация ключей...',
+                                      )}
+                            </Text>
+                            <Text size="1" color="gray">
+                                {areKeysPublished
+                                    ? t(
+                                          'profile.keysSyncedDesc',
+                                          'Вы можете общаться безопасно.',
+                                      )
+                                    : t(
+                                          'profile.keysSyncingDesc',
+                                          'Генерация криптографических ключей...',
+                                      )}
+                            </Text>
+                        </Flex>
+                    </Flex>
+                </Card>
 
                 <Flex direction="column" gap="2">
                     <Label htmlFor="backupPassword">

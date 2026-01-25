@@ -32,10 +32,10 @@ export const ChatService = {
         const roomKey = await generateRoomKey();
         const roomId = generateRoomId();
 
-        // 1. Получаем публичные ключи участников (X25519)
+        // 1. Получаем публичные ключи участников (ECDH P-256)
         const { data: profiles, error: profilesError } = await supabase
             .from(DB_TABLES.PROFILES)
-            .select('id, public_key_x25519') // Предполагаем наличие колонки!
+            .select('id, public_key_x25519')
             .in('id', allMemberIds);
 
         if (profilesError) throw profilesError;
@@ -44,21 +44,23 @@ export const ChatService = {
         }
 
         // 2. Шифруем RoomKey для каждого
-        // Используем Partial или Pick, так как создаем новые записи без created_at
         const encryptedKeys: Omit<RoomKey, 'created_at'>[] = [];
         const roomMembers: Omit<RoomMember, 'joined_at'>[] = [];
 
         for (const profile of profiles) {
             if (!profile.public_key_x25519) {
-                logger.warn(`User ${profile.id} has no X25519 key`);
-                continue; // Или throw Error
+                logger.warn(`User ${profile.id} has no keys`);
+                continue;
             }
 
             // Импорт публичного ключа получателя
             const recipientPubKey = await window.crypto.subtle.importKey(
                 'raw',
                 base64ToArrayBuffer(profile.public_key_x25519),
-                { name: 'X25519' },
+                {
+                    name: 'ECDH',
+                    namedCurve: 'P-256',
+                },
                 true,
                 [],
             );
