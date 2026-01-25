@@ -54,7 +54,7 @@ jobs:
     steps:
       - name: Pull and Restart App
         run: |
-          cd ~/WebstormProjects/knock-knock
+          cd ~/knock-knock
           docker compose pull app
           docker compose up -d app
           docker image prune -f
