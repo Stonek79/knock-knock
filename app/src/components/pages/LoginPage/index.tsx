@@ -8,15 +8,17 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
+import { AUTH_MODES } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import { loginSchema } from '@/lib/schemas/auth';
 import { supabase } from '@/lib/supabase';
+import type { AuthMode } from '@/lib/types/auth';
 import { useAuthStore } from '@/stores/auth';
 import styles from './login.module.css';
 
 /**
  * Страница входа в приложение.
- * Использует Authentication via Magic Link (Supabase).
+ * Использует Authentication via Magic Link (Supabase) или Password.
  */
 export function LoginPage() {
     const { t } = useTranslation();
@@ -24,6 +26,7 @@ export function LoginPage() {
     const { user } = useAuthStore();
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [authMode, setAuthMode] = useState<AuthMode>(AUTH_MODES.MAGIC_LINK);
 
     // Redirect if already logged in
     useEffect(() => {
@@ -35,35 +38,57 @@ export function LoginPage() {
     const form = useForm({
         defaultValues: {
             email: '',
+            password: '',
         },
 
         onSubmit: async ({ value }) => {
             setSubmitError(null);
             try {
-                logger.info('Attempting login', { email: value.email });
-                const { error } = await supabase.auth.signInWithOtp({
-                    email: value.email,
-                    options: {
-                        emailRedirectTo: window.location.origin,
-                    },
-                });
+                if (authMode === AUTH_MODES.MAGIC_LINK) {
+                    logger.info('Attempting magic link login', {
+                        email: value.email,
+                    });
+                    const { error } = await supabase.auth.signInWithOtp({
+                        email: value.email,
+                        options: {
+                            emailRedirectTo: window.location.origin,
+                        },
+                    });
 
-                if (error) {
-                    logger.warn('Login failed', error);
-                    setSubmitError(getAuthErrorMessage(error));
-                } else {
+                    if (error) throw error;
+
                     logger.info('Magic link sent successfully');
                     setIsSubmitted(true);
+                } else {
+                    logger.info('Attempting password login', {
+                        email: value.email,
+                    });
+                    const { error } = await supabase.auth.signInWithPassword({
+                        email: value.email,
+                        password: value.password || '',
+                    });
+
+                    if (error) throw error;
+
+                    logger.info('Password login successful');
+                    // Редирект произойдет автоматически через useEffect
                 }
             } catch (err) {
                 logger.error('Login exception', err);
-                if (err instanceof Error) {
-                    console.error('RAW_LOGIN_ERROR:', err.message);
-                }
                 setSubmitError(getAuthErrorMessage(err));
             }
         },
     });
+
+    const toggleAuthMode = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setAuthMode((prev) =>
+            prev === AUTH_MODES.MAGIC_LINK
+                ? AUTH_MODES.PASSWORD
+                : AUTH_MODES.MAGIC_LINK,
+        );
+        setSubmitError(null);
+    };
 
     if (isSubmitted) {
         return (
@@ -76,6 +101,12 @@ export function LoginPage() {
                         <Text align="center" color="gray">
                             {t('auth.magicLinkSent')}
                         </Text>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setIsSubmitted(false)}
+                        >
+                            {t('common.back')}
+                        </Button>
                     </Flex>
                 </Card>
             </div>
@@ -120,7 +151,7 @@ export function LoginPage() {
                                             );
                                         return result.success
                                             ? undefined
-                                            : result.error.issues[0].message;
+                                            : t(result.error.issues[0].message);
                                     },
                                 }}
                             >
@@ -153,26 +184,83 @@ export function LoginPage() {
                                 )}
                             </form.Field>
 
-                            <form.Subscribe
-                                selector={(state) => [
-                                    state.canSubmit,
-                                    state.isSubmitting,
-                                ]}
-                            >
-                                {([canSubmit, isSubmitting]) => (
-                                    <Button
-                                        type="submit"
-                                        disabled={!canSubmit}
-                                        variant="solid"
-                                        size="3"
-                                        className={styles.submitButton}
-                                    >
-                                        {isSubmitting
-                                            ? t('auth.sending')
-                                            : t('auth.signInWithEmail')}
-                                    </Button>
-                                )}
-                            </form.Subscribe>
+                            {authMode === AUTH_MODES.PASSWORD && (
+                                <form.Field
+                                    name="password"
+                                    validators={{
+                                        onChange: ({ value }) =>
+                                            !value
+                                                ? t('common.required')
+                                                : undefined,
+                                    }}
+                                >
+                                    {(field) => (
+                                        <Flex direction="column" gap="2">
+                                            <Label htmlFor={field.name}>
+                                                {t('common.password')}
+                                            </Label>
+                                            <Input
+                                                id={field.name}
+                                                name={field.name}
+                                                type="password"
+                                                value={field.state.value}
+                                                onBlur={field.handleBlur}
+                                                onChange={(e) =>
+                                                    field.handleChange(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="••••••••"
+                                            />
+                                            {field.state.meta.isTouched &&
+                                            field.state.meta.errors.length ? (
+                                                <Text color="red" size="1">
+                                                    {field.state.meta.errors.join(
+                                                        ', ',
+                                                    )}
+                                                </Text>
+                                            ) : null}
+                                        </Flex>
+                                    )}
+                                </form.Field>
+                            )}
+
+                            <Flex direction="column" gap="3" mt="2">
+                                <form.Subscribe
+                                    selector={(state) => [
+                                        state.canSubmit,
+                                        state.isSubmitting,
+                                    ]}
+                                >
+                                    {([canSubmit, isSubmitting]) => (
+                                        <Button
+                                            type="submit"
+                                            disabled={!canSubmit}
+                                            variant="solid"
+                                            size="3"
+                                            className={styles.submitButton}
+                                        >
+                                            {isSubmitting
+                                                ? t('auth.sending')
+                                                : authMode ===
+                                                    AUTH_MODES.MAGIC_LINK
+                                                  ? t('auth.signInWithEmail')
+                                                  : t('auth.signIn')}
+                                        </Button>
+                                    )}
+                                </form.Subscribe>
+
+                                <Button
+                                    variant="ghost"
+                                    size="2"
+                                    onClick={toggleAuthMode}
+                                    style={{ margin: '0 auto' }}
+                                >
+                                    {authMode === AUTH_MODES.MAGIC_LINK
+                                        ? t('auth.signInWithPassword')
+                                        : t('auth.signInWithMagicLink')}
+                                </Button>
+                            </Flex>
                         </div>
                     </form>
                 </Flex>
