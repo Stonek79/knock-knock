@@ -9,6 +9,7 @@
 
 - [Инструкция по деплою](file:///Users/alexstone/WebstormProjects/knock-knock/docs/DEPLOYMENT.md)
 - [Правила проекта](file:///Users/alexstone/WebstormProjects/knock-knock/docs/RULES.md)
+- **[Roadmap проекта](file:///Users/alexstone/WebstormProjects/knock-knock/docs/ROADMAP.md)** (Актуальный статус)
 
 ## Как запустить локально
 ```bash
