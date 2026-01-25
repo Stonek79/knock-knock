@@ -33,6 +33,8 @@ export function getAuthErrorMessage(error: unknown): string {
 
     if (
         lowerMsg.includes('invalid authentication credentials') ||
+        lowerMsg.includes('invalid login credentials') ||
+        lowerMsg.includes('invalid_grant') ||
         lowerMsg.includes('invalid jwt')
     ) {
         return i18n.t('auth.errors.invalidCredentials');

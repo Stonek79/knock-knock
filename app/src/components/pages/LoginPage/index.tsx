@@ -1,20 +1,23 @@
 import { Box, Card, Flex, Heading, Text } from '@radix-ui/themes';
 import { useForm } from '@tanstack/react-form';
-import { useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { Navigate } from '@tanstack/react-router';
+import { type MouseEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
+import { AppLogo } from '@/components/ui/AppLogo';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { EmailInput } from '@/components/ui/EmailInput';
 import { Label } from '@/components/ui/Label';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
-import { AUTH_MODES } from '@/lib/constants';
+import { AUTH_MODES, ROUTES } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import { loginSchema } from '@/lib/schemas/auth';
 import { supabase } from '@/lib/supabase';
 import type { AuthMode } from '@/lib/types/auth';
 import { useAuthStore } from '@/stores/auth';
 import styles from './login.module.css';
+import { SuccessView } from './SuccessView';
 
 /**
  * Страница входа в приложение.
@@ -22,18 +25,10 @@ import styles from './login.module.css';
  */
 export function LoginPage() {
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const { user } = useAuthStore();
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [authMode, setAuthMode] = useState<AuthMode>(AUTH_MODES.MAGIC_LINK);
-
-    // Redirect if already logged in
-    useEffect(() => {
-        if (user) {
-            navigate({ to: '/chat' });
-        }
-    }, [user, navigate]);
 
     const form = useForm({
         defaultValues: {
@@ -71,7 +66,6 @@ export function LoginPage() {
                     if (error) throw error;
 
                     logger.info('Password login successful');
-                    // Редирект произойдет автоматически через useEffect
                 }
             } catch (err) {
                 logger.error('Login exception', err);
@@ -80,7 +74,7 @@ export function LoginPage() {
         },
     });
 
-    const toggleAuthMode = (e: React.MouseEvent) => {
+    const toggleAuthMode = (e: MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         setAuthMode((prev) =>
             prev === AUTH_MODES.MAGIC_LINK
@@ -90,27 +84,13 @@ export function LoginPage() {
         setSubmitError(null);
     };
 
+    // Redirect if member, but ensure hooks are called first
+    if (user) {
+        return <Navigate to={ROUTES.CHAT_LIST} />;
+    }
+
     if (isSubmitted) {
-        return (
-            <div className={styles.loginPage}>
-                <Card size="4" className={styles.loginCard}>
-                    <Flex direction="column" gap="4" align="center">
-                        <Heading size="6" align="center">
-                            {t('auth.checkEmail')}
-                        </Heading>
-                        <Text align="center" color="gray">
-                            {t('auth.magicLinkSent')}
-                        </Text>
-                        <Button
-                            variant="ghost"
-                            onClick={() => setIsSubmitted(false)}
-                        >
-                            {t('common.back')}
-                        </Button>
-                    </Flex>
-                </Card>
-            </div>
-        );
+        return <SuccessView onBack={() => setIsSubmitted(false)} />;
     }
 
     return (
@@ -118,6 +98,9 @@ export function LoginPage() {
             <Card size="4" className={styles.loginCard}>
                 <Flex direction="column" gap="5">
                     <Box>
+                        <Flex justify="center" mb="4">
+                            <AppLogo width={120} />
+                        </Flex>
                         <Heading size="6" align="center" mb="2">
                             {t('auth.welcomeBack')}
                         </Heading>
@@ -134,6 +117,7 @@ export function LoginPage() {
                     )}
 
                     <form
+                        autoComplete="off"
                         onSubmit={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -160,7 +144,7 @@ export function LoginPage() {
                                         <Label htmlFor={field.name}>
                                             {t('common.email')}
                                         </Label>
-                                        <Input
+                                        <EmailInput
                                             id={field.name}
                                             name={field.name}
                                             value={field.state.value}
@@ -199,10 +183,9 @@ export function LoginPage() {
                                             <Label htmlFor={field.name}>
                                                 {t('common.password')}
                                             </Label>
-                                            <Input
+                                            <PasswordInput
                                                 id={field.name}
                                                 name={field.name}
-                                                type="password"
                                                 value={field.state.value}
                                                 onBlur={field.handleBlur}
                                                 onChange={(e) =>

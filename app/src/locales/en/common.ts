@@ -7,6 +7,8 @@ export const common = {
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
+    password: 'Password',
+    required: 'Required',
     back: 'Back',
     appDescription: 'Secure PWA Messenger with End-to-End Encryption.',
     features: {
@@ -22,5 +24,12 @@ export const common = {
             title: '📱 PWA Ready',
             desc: 'Install on any device. Works offline.',
         },
+    },
+    landing: {
+        badge: 'In Development',
+        title: 'The Future of Secure Communication',
+        description:
+            'The application is in closed beta. We will open access to everyone soon.',
+        devLogin: 'Developer Login',
     },
 } as const;

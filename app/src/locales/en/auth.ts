@@ -8,6 +8,8 @@ export const auth = {
     pleaseLogIn: 'Please log in',
     initializationError: 'Auth initialization failed',
     signIn: 'Sign In',
+    signInWithPassword: 'Sign in with Password',
+    signInWithMagicLink: 'Sign in with Magic Link',
     error: 'Authentication Error',
     errors: {
         serverUnreachable:
