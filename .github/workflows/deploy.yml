@@ -46,21 +46,15 @@ jobs:
           build-args: |
             VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
             VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
-
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build-and-push
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Executing remote ssh commands to deploy via VPS bridge
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_PROXY_HOST }}
-          username: ${{ secrets.SSH_PROXY_USER }}
-          key: ${{ secrets.SSH_PROXY_KEY }}
-          port: 22
-          script_stop: true
-          debug: true
-          script: |
-            ssh -i ~/.ssh/github_deploy_key -o StrictHostKeyChecking=no alex@${{ secrets.SERVER_HOST }} "cd ~/WebstormProjects/knock-knock && docker compose pull app && docker compose up -d app && docker image prune -f"
+      - name: Pull and Restart App
+        run: |
+          cd ~/WebstormProjects/knock-knock
+          docker compose pull app
+          docker compose up -d app
+          docker image prune -f
