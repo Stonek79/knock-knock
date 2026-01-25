@@ -60,6 +60,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
+          proxy_host: ${{ secrets.SSH_PROXY_HOST }}
+          proxy_username: ${{ secrets.SSH_PROXY_USER }}
+          proxy_key: ${{ secrets.SSH_PROXY_KEY }}
           script: |
             cd ~/WebstormProjects/knock-knock
             docker compose pull app
