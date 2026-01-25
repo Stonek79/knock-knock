@@ -13,14 +13,3 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-  watchtower:
-    image: containrrr/watchtower
-    container_name: watchtower
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300 --cleanup knock-knock-app
-    environment:
-      - WATCHTOWER_NOTIFICATIONS=shoutrrr
-      # Можно добавить уведомления в Telegram позже
