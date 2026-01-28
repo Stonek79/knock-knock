@@ -10,6 +10,8 @@ export const common = {
     password: 'Пароль',
     required: 'Обязательное поле',
     back: 'Назад',
+    search: 'Поиск',
+    comingSoon: 'Скоро',
     appDescription: 'Защищенный PWA мессенджер с End-to-End шифрованием.',
     features: {
         e2e: {

@@ -1,0 +1,22 @@
+/**
+ * CSS модуль для SecuritySettings.
+ * Карточка настроек безопасности профиля.
+ */
+
+.statusIndicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.statusActive {
+    background: var(--green-9);
+}
+
+.statusSyncing {
+    background: var(--orange-9);
+}
+
+.hiddenInput {
+    display: none;
+}

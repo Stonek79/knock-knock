@@ -1,0 +1,77 @@
+.container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    border-bottom: 1px solid var(--gray-4);
+}
+
+.chatList {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.chatListItem {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid var(--gray-3);
+}
+
+.chatListItem:hover {
+    background-color: var(--gray-3);
+}
+
+.chatInfo {
+    flex: 1;
+    min-width: 0; /* Для работы truncate */
+}
+
+.unreadBadge {
+    background-color: var(--blue-9);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 0 6px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loadingContainer {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emptyContainer {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.iconButton {
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: var(--gray-11);
+}
+
+.iconButton:hover {
+    background-color: var(--gray-4);
+    color: var(--gray-12);
+}

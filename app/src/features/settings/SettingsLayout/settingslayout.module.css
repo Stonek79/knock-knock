@@ -1,0 +1,12 @@
+.mobileContainer {
+    height: 100%;
+    background-color: var(--gray-2);
+}
+
+.content {
+    flex: 1;
+    height: 100%;
+    width: 100%;
+    padding: 24px;
+    overflow-y: auto;
+}

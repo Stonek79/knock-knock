@@ -7,4 +7,5 @@ export { errors } from './errors';
 export { favorites } from './favorites';
 export { nav } from './nav';
 export { profile } from './profile';
+export { settings } from './settings';
 export { validation } from './validation';

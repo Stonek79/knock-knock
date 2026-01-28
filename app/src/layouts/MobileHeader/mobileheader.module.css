@@ -1,0 +1,63 @@
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface);
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.title {
+    color: var(--foreground);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.iconButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--foreground);
+    transition: background-color 0.2s ease;
+}
+
+.iconButton:hover {
+    background: var(--muted);
+}
+
+.iconButton:active {
+    background: var(--muted-foreground);
+    opacity: 0.2;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--foreground);
+    transition: background-color 0.2s ease;
+    margin-inline-end: -0.5rem;
+}
+
+.backButton:hover {
+    background: var(--muted);
+}
+
+/* Скрываем на десктопе */
+@media (min-width: 769px) {
+    .header {
+        display: none;
+    }
+}

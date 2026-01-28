@@ -3,20 +3,6 @@
         "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, sans-serif;
 
-    /* Light Theme (Default)    /* Light Theme (Default) */
-    --background: #ffffff;
-    --foreground: #0f172a;
-    --primary: #2563eb;
-    --primary-foreground: #ffffff;
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
-    --border: #e2e8f0;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --surface: #f8fafc; /* Added surface var */
-
-    /* Radix UI overrides if needed */
-
     /* --- Responsive System (Mobile First) --- */
 
     /* Spacing */
@@ -43,33 +29,46 @@
     --text-4xl: 2.25rem; /* 36px */
 }
 
-/* Desktop Overrides (min-width: 1024px) */
-@media (min-width: 1024px) {
-    :root {
-        /* Spacing Scale Up */
-        --space-lg: 2rem;
-        --space-xl: 3rem;
-        --space-2xl: 4rem;
+/* 
+ * Semantic Variables Mapped to Radix Tokens 
+ * Must be scoped to .radix-themes so they can access Radix variables
+ */
+.radix-themes {
+    --background: var(--color-background);
+    --main-background: var(--color-background);
+    --surface: var(--color-panel-solid);
 
-        /* Typography Scale Up */
-        --text-xl: 1.5rem;
-        --text-2xl: 2rem;
-        --text-3xl: 2.5rem;
-        --text-4xl: 3rem;
-    }
+    --foreground: var(--slate-12);
+
+    --primary: var(--blue-9);
+    --primary-foreground: #ffffff;
+
+    --muted: var(--slate-3);
+    --muted-foreground: var(--slate-11);
+
+    --border: var(--slate-6);
+    --destructive: var(--red-9);
+    --destructive-foreground: #ffffff;
+
+    /* Semantic Variables */
+    --bubble-out: var(--blue-9);
+    --bubble-out-fg: #ffffff;
+    --bubble-in: var(--slate-3);
+    --bubble-in-fg: var(--slate-12);
+    --bubble-meta: var(--slate-11);
+    --header-bg: var(--surface);
 }
 
-[data-theme="dark"] {
-    --background: #020617;
-    --foreground: #f8fafc;
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --border: #1e293b;
-    --destructive: #7f1d1d;
-    --destructive-foreground: #ffffff;
-    --surface: #0f172a;
+#root .radix-themes {
+    min-height: 100vh;
+    background-color: var(--color-background);
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    width: 100%;
 }
 
 body {

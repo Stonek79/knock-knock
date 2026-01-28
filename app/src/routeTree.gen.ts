@@ -9,20 +9,63 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivateRouteImport } from './routes/private'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as CallsRouteImport } from './routes/calls'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
-import { Route as ProfileIndexRouteImport } from './routes/profile/index'
-import { Route as LoginIndexRouteImport } from './routes/login/index'
-import { Route as FavoritesIndexRouteImport } from './routes/favorites/index'
-import { Route as ContactsIndexRouteImport } from './routes/contacts/index'
-import { Route as ChatIndexRouteImport } from './routes/chat/index'
-import { Route as CallsIndexRouteImport } from './routes/calls/index'
-import { Route as ChatRoomIdRouteImport } from './routes/chat/$roomId'
+import { Route as PrivateIndexRouteImport } from './routes/private.index'
+import { Route as ChatIndexRouteImport } from './routes/chat.index'
+import { Route as SettingsSecurityRouteImport } from './routes/settings/security'
+import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy'
+import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications'
+import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
+import { Route as SettingsAccountRouteImport } from './routes/settings/account'
+import { Route as ChatRoomIdRouteImport } from './routes/chat.$roomId'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivateRoute = PrivateRouteImport.update({
+  id: '/private',
+  path: '/private',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactsRoute = ContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CallsRoute = CallsRouteImport.update({
+  id: '/calls',
+  path: '/calls',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,39 +74,44 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
-  id: '/settings/',
-  path: '/settings/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
 } as any)
-const ProfileIndexRoute = ProfileIndexRouteImport.update({
-  id: '/profile/',
-  path: '/profile/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginIndexRoute = LoginIndexRouteImport.update({
-  id: '/login/',
-  path: '/login/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FavoritesIndexRoute = FavoritesIndexRouteImport.update({
-  id: '/favorites/',
-  path: '/favorites/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactsIndexRoute = ContactsIndexRouteImport.update({
-  id: '/contacts/',
-  path: '/contacts/',
-  getParentRoute: () => rootRouteImport,
+const PrivateIndexRoute = PrivateIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PrivateRoute,
 } as any)
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ChatRoute,
 } as any)
-const CallsIndexRoute = CallsIndexRouteImport.update({
-  id: '/calls/',
-  path: '/calls/',
-  getParentRoute: () => rootRouteImport,
+const SettingsSecurityRoute = SettingsSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsAppearanceRoute = SettingsAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsAccountRoute = SettingsAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const ChatRoomIdRoute = ChatRoomIdRouteImport.update({
   id: '/$roomId',
@@ -73,96 +121,190 @@ const ChatRoomIdRoute = ChatRoomIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/calls': typeof CallsRoute
   '/chat': typeof ChatRouteWithChildren
+  '/contacts': typeof ContactsRoute
+  '/favorites': typeof FavoritesRoute
+  '/login': typeof LoginRoute
+  '/private': typeof PrivateRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/chat/$roomId': typeof ChatRoomIdRoute
-  '/calls/': typeof CallsIndexRoute
+  '/settings/account': typeof SettingsAccountRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
+  '/settings/security': typeof SettingsSecurityRoute
   '/chat/': typeof ChatIndexRoute
-  '/contacts/': typeof ContactsIndexRoute
-  '/favorites/': typeof FavoritesIndexRoute
-  '/login/': typeof LoginIndexRoute
-  '/profile/': typeof ProfileIndexRoute
+  '/private/': typeof PrivateIndexRoute
   '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calls': typeof CallsRoute
+  '/contacts': typeof ContactsRoute
+  '/favorites': typeof FavoritesRoute
+  '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/chat/$roomId': typeof ChatRoomIdRoute
-  '/calls': typeof CallsIndexRoute
+  '/settings/account': typeof SettingsAccountRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
+  '/settings/security': typeof SettingsSecurityRoute
   '/chat': typeof ChatIndexRoute
-  '/contacts': typeof ContactsIndexRoute
-  '/favorites': typeof FavoritesIndexRoute
-  '/login': typeof LoginIndexRoute
-  '/profile': typeof ProfileIndexRoute
+  '/private': typeof PrivateIndexRoute
   '/settings': typeof SettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/calls': typeof CallsRoute
   '/chat': typeof ChatRouteWithChildren
+  '/contacts': typeof ContactsRoute
+  '/favorites': typeof FavoritesRoute
+  '/login': typeof LoginRoute
+  '/private': typeof PrivateRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/chat/$roomId': typeof ChatRoomIdRoute
-  '/calls/': typeof CallsIndexRoute
+  '/settings/account': typeof SettingsAccountRoute
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
+  '/settings/privacy': typeof SettingsPrivacyRoute
+  '/settings/security': typeof SettingsSecurityRoute
   '/chat/': typeof ChatIndexRoute
-  '/contacts/': typeof ContactsIndexRoute
-  '/favorites/': typeof FavoritesIndexRoute
-  '/login/': typeof LoginIndexRoute
-  '/profile/': typeof ProfileIndexRoute
+  '/private/': typeof PrivateIndexRoute
   '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/chat'
-    | '/chat/$roomId'
-    | '/calls/'
-    | '/chat/'
-    | '/contacts/'
-    | '/favorites/'
-    | '/login/'
-    | '/profile/'
-    | '/settings/'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/chat/$roomId'
     | '/calls'
     | '/chat'
     | '/contacts'
     | '/favorites'
     | '/login'
+    | '/private'
     | '/profile'
+    | '/settings'
+    | '/chat/$roomId'
+    | '/settings/account'
+    | '/settings/appearance'
+    | '/settings/notifications'
+    | '/settings/privacy'
+    | '/settings/security'
+    | '/chat/'
+    | '/private/'
+    | '/settings/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/calls'
+    | '/contacts'
+    | '/favorites'
+    | '/login'
+    | '/profile'
+    | '/chat/$roomId'
+    | '/settings/account'
+    | '/settings/appearance'
+    | '/settings/notifications'
+    | '/settings/privacy'
+    | '/settings/security'
+    | '/chat'
+    | '/private'
     | '/settings'
   id:
     | '__root__'
     | '/'
+    | '/calls'
     | '/chat'
+    | '/contacts'
+    | '/favorites'
+    | '/login'
+    | '/private'
+    | '/profile'
+    | '/settings'
     | '/chat/$roomId'
-    | '/calls/'
+    | '/settings/account'
+    | '/settings/appearance'
+    | '/settings/notifications'
+    | '/settings/privacy'
+    | '/settings/security'
     | '/chat/'
-    | '/contacts/'
-    | '/favorites/'
-    | '/login/'
-    | '/profile/'
+    | '/private/'
     | '/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CallsRoute: typeof CallsRoute
   ChatRoute: typeof ChatRouteWithChildren
-  CallsIndexRoute: typeof CallsIndexRoute
-  ContactsIndexRoute: typeof ContactsIndexRoute
-  FavoritesIndexRoute: typeof FavoritesIndexRoute
-  LoginIndexRoute: typeof LoginIndexRoute
-  ProfileIndexRoute: typeof ProfileIndexRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
+  ContactsRoute: typeof ContactsRoute
+  FavoritesRoute: typeof FavoritesRoute
+  LoginRoute: typeof LoginRoute
+  PrivateRoute: typeof PrivateRouteWithChildren
+  ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/private': {
+      id: '/private'
+      path: '/private'
+      fullPath: '/private'
+      preLoaderRoute: typeof PrivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat': {
       id: '/chat'
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calls': {
+      id: '/calls'
+      path: '/calls'
+      fullPath: '/calls'
+      preLoaderRoute: typeof CallsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -174,38 +316,17 @@ declare module '@tanstack/react-router' {
     }
     '/settings/': {
       id: '/settings/'
-      path: '/settings'
+      path: '/'
       fullPath: '/settings/'
       preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof SettingsRoute
     }
-    '/profile/': {
-      id: '/profile/'
-      path: '/profile'
-      fullPath: '/profile/'
-      preLoaderRoute: typeof ProfileIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login/': {
-      id: '/login/'
-      path: '/login'
-      fullPath: '/login/'
-      preLoaderRoute: typeof LoginIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/favorites/': {
-      id: '/favorites/'
-      path: '/favorites'
-      fullPath: '/favorites/'
-      preLoaderRoute: typeof FavoritesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contacts/': {
-      id: '/contacts/'
-      path: '/contacts'
-      fullPath: '/contacts/'
-      preLoaderRoute: typeof ContactsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/private/': {
+      id: '/private/'
+      path: '/'
+      fullPath: '/private/'
+      preLoaderRoute: typeof PrivateIndexRouteImport
+      parentRoute: typeof PrivateRoute
     }
     '/chat/': {
       id: '/chat/'
@@ -214,12 +335,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof ChatRoute
     }
-    '/calls/': {
-      id: '/calls/'
-      path: '/calls'
-      fullPath: '/calls/'
-      preLoaderRoute: typeof CallsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/settings/security': {
+      id: '/settings/security'
+      path: '/security'
+      fullPath: '/settings/security'
+      preLoaderRoute: typeof SettingsSecurityRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/privacy': {
+      id: '/settings/privacy'
+      path: '/privacy'
+      fullPath: '/settings/privacy'
+      preLoaderRoute: typeof SettingsPrivacyRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/notifications': {
+      id: '/settings/notifications'
+      path: '/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof SettingsNotificationsRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/appearance': {
+      id: '/settings/appearance'
+      path: '/appearance'
+      fullPath: '/settings/appearance'
+      preLoaderRoute: typeof SettingsAppearanceRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/account': {
+      id: '/settings/account'
+      path: '/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof SettingsAccountRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/chat/$roomId': {
       id: '/chat/$roomId'
@@ -243,15 +392,49 @@ const ChatRouteChildren: ChatRouteChildren = {
 
 const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
 
+interface PrivateRouteChildren {
+  PrivateIndexRoute: typeof PrivateIndexRoute
+}
+
+const PrivateRouteChildren: PrivateRouteChildren = {
+  PrivateIndexRoute: PrivateIndexRoute,
+}
+
+const PrivateRouteWithChildren =
+  PrivateRoute._addFileChildren(PrivateRouteChildren)
+
+interface SettingsRouteChildren {
+  SettingsAccountRoute: typeof SettingsAccountRoute
+  SettingsAppearanceRoute: typeof SettingsAppearanceRoute
+  SettingsNotificationsRoute: typeof SettingsNotificationsRoute
+  SettingsPrivacyRoute: typeof SettingsPrivacyRoute
+  SettingsSecurityRoute: typeof SettingsSecurityRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsAccountRoute: SettingsAccountRoute,
+  SettingsAppearanceRoute: SettingsAppearanceRoute,
+  SettingsNotificationsRoute: SettingsNotificationsRoute,
+  SettingsPrivacyRoute: SettingsPrivacyRoute,
+  SettingsSecurityRoute: SettingsSecurityRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CallsRoute: CallsRoute,
   ChatRoute: ChatRouteWithChildren,
-  CallsIndexRoute: CallsIndexRoute,
-  ContactsIndexRoute: ContactsIndexRoute,
-  FavoritesIndexRoute: FavoritesIndexRoute,
-  LoginIndexRoute: LoginIndexRoute,
-  ProfileIndexRoute: ProfileIndexRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
+  ContactsRoute: ContactsRoute,
+  FavoritesRoute: FavoritesRoute,
+  LoginRoute: LoginRoute,
+  PrivateRoute: PrivateRouteWithChildren,
+  ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

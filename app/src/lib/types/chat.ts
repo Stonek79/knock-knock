@@ -2,6 +2,11 @@
  * Типы для функционала чата (Persistent Chat).
  */
 
+import type { CHAT_TYPE } from '@/lib/constants/common';
+
+/** Тип чата для создания: public | private | group */
+export type ChatType = (typeof CHAT_TYPE)[keyof typeof CHAT_TYPE];
+
 /** Тип комнаты: личный чат или группа */
 export type RoomType = 'direct' | 'group';
 

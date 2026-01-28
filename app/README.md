@@ -37,7 +37,12 @@ A privacy-focused PWA messenger with End-to-End Encryption (E2EE), built with Re
 -   **Git Push**: The User handles all commits and pushes manually. The AI agent does not run git commands.
 -   **Communication**: Russian language is used for all collaboration.
 
-### 4. Dev Mode
+### 4. Architecture
+-   **Structure**: Based on a Unified Layout principle.
+-   **Desktop**: Uses Resizable Panels (chat list vs chat window). Left sidebar combines chat list and bottom navigation.
+-   **Mobile**: Single column view with bottom navigation.
+
+### 5. Dev Mode
 -   The project supports a **Dev Mode** without a backend connection.
 -   If `.env` is missing, the app initializes in "Mock Mode" for UI development.
 

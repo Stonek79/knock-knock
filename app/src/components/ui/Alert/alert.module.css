@@ -1,0 +1,13 @@
+/**
+ * CSS модуль для Alert
+ * Стили для компонента уведомлений.
+ */
+
+.title {
+    display: block;
+}
+
+.alertTitle {
+    display: block;
+    margin-bottom: 4px;
+}

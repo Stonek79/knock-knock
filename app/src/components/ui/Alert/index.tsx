@@ -1,6 +1,7 @@
 import { Callout } from '@radix-ui/themes';
 import { CircleCheck, Info, TriangleAlert } from 'lucide-react';
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import styles from './alert.module.css';
 
 /**
  * Свойства компонента Alert.
@@ -41,9 +42,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
                     </Callout.Icon>
                 )}
                 <Callout.Text>
-                    {title && (
-                        <strong style={{ display: 'block' }}>{title}</strong>
-                    )}
+                    {title && <strong className={styles.title}>{title}</strong>}
                     {children}
                 </Callout.Text>
             </Callout.Root>
@@ -53,7 +52,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
 Alert.displayName = 'Alert';
 
 const AlertTitle = ({ children }: { children: ReactNode }) => (
-    <strong style={{ display: 'block', marginBottom: 4 }}>{children}</strong>
+    <strong className={styles.alertTitle}>{children}</strong>
 );
 const AlertDescription = ({ children }: { children: ReactNode }) => (
     <span>{children}</span>

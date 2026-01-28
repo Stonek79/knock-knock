@@ -1,0 +1,48 @@
+.mobileContainer {
+    height: 100%;
+    background-color: var(--gray-2);
+}
+
+.mobileItemLink {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.mobileItem {
+    transition:
+        transform 0.2s,
+        background-color 0.2s;
+}
+
+.mobileItem:active {
+    transform: scale(0.98);
+    background-color: var(--gray-4);
+}
+
+.iconBox {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: var(--gray-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Icon Colors */
+.iconBlue {
+    color: var(--blue-9);
+}
+.iconViolet {
+    color: var(--violet-9);
+}
+.iconGreen {
+    color: var(--green-9);
+}
+.iconOrange {
+    color: var(--orange-9);
+}
+.iconRed {
+    color: var(--red-9);
+}

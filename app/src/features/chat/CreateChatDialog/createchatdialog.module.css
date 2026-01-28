@@ -1,0 +1,8 @@
+.emptyState {
+    padding: 32px 0;
+    gap: 16px;
+}
+
+.icon {
+    color: var(--muted-foreground);
+}

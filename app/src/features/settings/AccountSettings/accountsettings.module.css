@@ -1,0 +1,7 @@
+.container {
+    max-width: 600px;
+}
+
+.signOutCard {
+    background-color: var(--gray-2);
+}

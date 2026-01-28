@@ -9,6 +9,7 @@ import './index.css';
 
 // Импортируем сгенерированное дерево маршрутов
 import { routeTree } from './routeTree.gen';
+import { useThemeStore } from './stores/theme';
 
 /** Создаем новый экземпляр роутера */
 const router = createRouter({ routeTree });
@@ -23,16 +24,28 @@ declare module '@tanstack/react-router' {
 /** Клиент для TanStack Query */
 const queryClient = new QueryClient();
 
+function Root() {
+    const { appearance } = useThemeStore();
+    return (
+        <Theme
+            appearance={appearance}
+            accentColor="blue"
+            grayColor="slate"
+            radius="medium"
+        >
+            <QueryClientProvider client={queryClient}>
+                <RouterProvider router={router} />
+            </QueryClientProvider>
+        </Theme>
+    );
+}
+
 const rootElement = document.getElementById('root');
 if (rootElement && !rootElement.innerHTML) {
     const root = createRoot(rootElement);
     root.render(
         <StrictMode>
-            <Theme accentColor="blue" grayColor="slate" radius="medium">
-                <QueryClientProvider client={queryClient}>
-                    <RouterProvider router={router} />
-                </QueryClientProvider>
-            </Theme>
+            <Root />
         </StrictMode>,
     );
 }

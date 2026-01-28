@@ -1,0 +1,79 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.content {
+    text-align: center;
+    z-index: 10;
+    max-width: 600px;
+    animation: fadeIn 1s ease-out;
+}
+
+.logoImage {
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--gray-12);
+}
+
+.description {
+    font-size: 1.25rem;
+    color: var(--gray-11);
+    line-height: 1.6;
+    margin-bottom: 3rem;
+}
+
+.footer {
+    position: absolute;
+    bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.devLink {
+    color: var(--gray-8);
+    font-size: 0.875rem;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.devLink:hover {
+    color: var(--gray-12);
+    background-color: var(--gray-3);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.badgeIcon {
+    margin-right: 6px;
+}
+
+.descriptionText {
+    max-width: 600px;
+    line-height: 1.6;
+}
