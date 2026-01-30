@@ -68,30 +68,35 @@ export const MOCK_ROOMS: MockRoom[] = [
 		name: "General",
 		created_at: minutesAgo(1440),
 		type: "group",
+		is_ephemeral: false,
 	},
 	{
 		id: "room-2",
 		name: "Dev Talk",
 		created_at: minutesAgo(720),
 		type: "group",
+		is_ephemeral: false,
 	},
 	{
 		id: "room-3",
 		name: "Crypto Chat 🔐",
 		created_at: minutesAgo(360),
 		type: "group",
+		is_ephemeral: false,
 	},
 	{
 		id: "room-4",
 		name: "SpaceX Updates",
 		created_at: minutesAgo(120),
 		type: "group",
+		is_ephemeral: false,
 	},
 	{
 		id: "room-5",
 		name: "Linux Kernel",
 		created_at: minutesAgo(60),
 		type: "group",
+		is_ephemeral: false,
 	},
 ];
 
@@ -207,3 +212,9 @@ export const getMockRoomMembers = (userId: string): MockRoomMember[] => {
 		},
 	}));
 };
+
+export const MOCK_GROUP_AVATARS = [
+	"https://api.dicebear.com/7.x/avataaars/svg?seed=group1",
+	"https://api.dicebear.com/7.x/avataaars/svg?seed=group2",
+	"https://api.dicebear.com/7.x/avataaars/svg?seed=group3",
+];

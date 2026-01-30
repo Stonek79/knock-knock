@@ -16,7 +16,7 @@ i18n.use(LanguageDetector)
             },
         },
         fallbackLng: 'ru',
-        debug: import.meta.env.DEV,
+        debug: false,
 
         interpolation: {
             escapeValue: false,

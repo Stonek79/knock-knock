@@ -26,6 +26,7 @@ import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy'
 import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsAccountRouteImport } from './routes/settings/account'
+import { Route as DmUserIdRouteImport } from './routes/dm.$userId'
 import { Route as ChatRoomIdRouteImport } from './routes/chat.$roomId'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -113,6 +114,11 @@ const SettingsAccountRoute = SettingsAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => SettingsRoute,
 } as any)
+const DmUserIdRoute = DmUserIdRouteImport.update({
+  id: '/dm/$userId',
+  path: '/dm/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoomIdRoute = ChatRoomIdRouteImport.update({
   id: '/$roomId',
   path: '/$roomId',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRouteWithChildren
   '/chat/$roomId': typeof ChatRoomIdRoute
+  '/dm/$userId': typeof DmUserIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/chat/$roomId': typeof ChatRoomIdRoute
+  '/dm/$userId': typeof DmUserIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRouteWithChildren
   '/chat/$roomId': typeof ChatRoomIdRoute
+  '/dm/$userId': typeof DmUserIdRoute
   '/settings/account': typeof SettingsAccountRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/chat/$roomId'
+    | '/dm/$userId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/notifications'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/chat/$roomId'
+    | '/dm/$userId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/notifications'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/chat/$roomId'
+    | '/dm/$userId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/notifications'
@@ -247,6 +259,7 @@ export interface RootRouteChildren {
   PrivateRoute: typeof PrivateRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRouteWithChildren
+  DmUserIdRoute: typeof DmUserIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsAccountRouteImport
       parentRoute: typeof SettingsRoute
     }
+    '/dm/$userId': {
+      id: '/dm/$userId'
+      path: '/dm/$userId'
+      fullPath: '/dm/$userId'
+      preLoaderRoute: typeof DmUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat/$roomId': {
       id: '/chat/$roomId'
       path: '/$roomId'
@@ -435,6 +455,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivateRoute: PrivateRouteWithChildren,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRouteWithChildren,
+  DmUserIdRoute: DmUserIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

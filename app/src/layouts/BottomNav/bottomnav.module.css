@@ -1,97 +1,116 @@
 .bottomNav {
-    z-index: 1000;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
+	z-index: 1000;
+	background: var(--surface);
+	border-top: 1px solid var(--border);
+	box-sizing: border-box;
+}
+
+/* Десктопный вариант: фиксированная высота для соответствия инпуту */
+.bottomNav[data-variant="desktop"] {
+	height: 72px;
+	display: flex;
+	align-items: center;
+}
+
+.bottomNav[data-variant="desktop"] .navList {
+	width: 100%;
+	padding: 0 4px;
 }
 
 .fixedBottom {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding-bottom: env(safe-area-inset-bottom, 0);
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .navList {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 8px 4px;
-    margin: 0;
-    list-style: none;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	padding: 8px 4px;
+	margin: 0;
+	list-style: none;
 }
 
 .navItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    min-width: 56px;
-    padding: 6px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    text-decoration: none;
-    color: var(--muted-foreground);
-    transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	min-width: 56px;
+	max-width: 80px;
+	padding: 6px 12px;
+	border-radius: 20px;
+	cursor: pointer;
+	text-decoration: none;
+	color: var(--muted-foreground);
+	transition: all 0.2s ease;
 
-    /* Убираем дефолтные стили ссылок */
-    -webkit-tap-highlight-color: transparent;
+	/* Убираем дефолтные стили ссылок */
+	-webkit-tap-highlight-color: transparent;
 }
 
 .navItem:active {
-    transform: scale(0.95);
+	transform: scale(0.95);
 }
 
 .navItemActive {
-    color: var(--primary);
+	color: var(--primary);
 }
 
 /* Иконка wrapper — пилюля для активного состояния */
 .iconWrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 64px;
-    height: 32px;
-    border-radius: 16px;
-    position: relative;
-    transition: all 0.25s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 32px;
+	border-radius: 16px;
+	position: relative;
+	transition: all 0.25s ease;
 }
 
 .iconWrapperActive {
-    background: var(--muted);
+	background: var(--muted);
 }
 
 .icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    position: relative;
-    transition: transform 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	position: relative;
+	transition: transform 0.2s ease;
 }
 
 .label {
-    font-size: 12px;
-    letter-spacing: 0.02em;
+	font-size: 11px;
+	letter-spacing: 0.01em;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: center;
 }
 
 /* Badge для непрочитанных сообщений */
 .badge {
-    position: absolute;
-    top: 2px;
-    right: 8px;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: 9px;
-    background: var(--primary);
-    color: white;
-    font-size: 11px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+	position: absolute;
+	top: 2px;
+	right: 4px;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	border-radius: 9px;
+	background: var(--primary);
+	color: white;
+	font-size: 11px;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }

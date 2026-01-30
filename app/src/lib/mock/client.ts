@@ -1,11 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-	getMockRoomMembers,
-	MOCK_ROOMS,
-	MOCK_USERS,
-	type MockUser,
-	mockMessages,
-} from "./data";
+import { MOCK_ROOMS, MOCK_USERS, type MockUser, mockMessages } from "./data";
 
 // Session storage helper
 const getStoredSession = () => {
@@ -115,52 +109,207 @@ export const createMockClient = (): SupabaseClient => {
 				return Promise.resolve({ error: null });
 			},
 		},
-		channel: (_name: string) => ({
-			on: () => ({
-				subscribe: () => ({
-					unsubscribe: () => undefined,
-				}),
-			}),
-			subscribe: () => ({
+		channel: () => {
+			// biome-ignore lint/complexity/noBannedTypes: Mocking internal user data
+			const listeners: { event: string; filter: string; callback: Function }[] =
+				[];
+
+			const builder = {
+				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+				// biome-ignore lint/complexity/noBannedTypes: Mocking internal user data
+				on: (type: string, filterObj: any, callback: Function) => {
+					// Формируем ключ события: postgres_changes:public:MESSAGES:room_id=eq.ID
+					const eventKey = `${type}:public:${filterObj.table}:${filterObj.filter}`;
+					listeners.push({
+						event: eventKey,
+						filter: filterObj.filter,
+						callback,
+					});
+					return builder;
+				},
+				subscribe: () => {
+					const unsubscribers = listeners.map((l) =>
+						mockEE.on(l.event, l.callback),
+					);
+					return {
+						unsubscribe: () => {
+							unsubscribers.forEach((unsub) => {
+								unsub();
+							});
+						},
+					};
+				},
 				unsubscribe: () => undefined,
-			}),
-		}),
+			};
+			return builder;
+		},
+		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
 		removeChannel: (_channel: any) => undefined,
 	} as unknown as SupabaseClient;
 };
 
+// Session storage helpers for state
+const getStoredMockState = () => {
+	try {
+		const saved = sessionStorage.getItem("mock_db_state");
+		if (!saved) return null;
+		return JSON.parse(saved);
+	} catch {
+		return null;
+	}
+};
+
+// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+const saveMockState = (state: any) => {
+	try {
+		sessionStorage.setItem("mock_db_state", JSON.stringify(state));
+	} catch (e) {
+		console.error("Failed to save mock state", e);
+	}
+};
+
+const initialState = getStoredMockState() || {
+	rooms: [...MOCK_ROOMS],
+	members: MOCK_ROOMS.flatMap((room) =>
+		MOCK_USERS.map((user) => ({ room_id: room.id, user_id: user.id })),
+	),
+	messages: [...mockMessages],
+};
+
+const MOCK_STATE = initialState;
+
+// Простая реализация EventEmitter для имитации Realtime
+class MockEventEmitter {
+	// biome-ignore lint/complexity/noBannedTypes: Mocking internal user data
+	private listeners: Record<string, Function[]> = {};
+
+	// biome-ignore lint/complexity/noBannedTypes: Mocking internal user data
+	on(event: string, callback: Function) {
+		if (!this.listeners[event]) this.listeners[event] = [];
+		this.listeners[event].push(callback);
+		return () => {
+			this.listeners[event] = this.listeners[event].filter(
+				(l) => l !== callback,
+			);
+		};
+	}
+
+	// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+	emit(event: string, payload: any) {
+		if (this.listeners[event]) {
+			this.listeners[event].forEach((l) => {
+				l(payload);
+			});
+		}
+	}
+}
+
+const mockEE = new MockEventEmitter();
+
 // Более точная реализация `from` для поддержки цепочек и await
 const mockFrom = (table: string) => {
-	// Состояние текущего запроса
 	const state = {
+		operation: "select",
 		filters: [] as { column: string; value: unknown }[],
+		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
 		order: undefined as { column: string; options?: any } | undefined,
 		single: false as boolean,
 		limit: undefined as number | undefined,
 	};
+	// ... (skip lines)
 
-	// Функция выполнения запроса
 	const execute = async () => {
-		await new Promise((resolve) => setTimeout(resolve, 50)); // Эмуляция сети
-
-		// biome-ignore lint/suspicious/noExplicitAny: Mock data can be anything
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
 		let data: any[] | any = [];
 
-		// 1. Выбор источника данных
 		if (table === "room_members") {
-			// Специальный случай: фильтр по user_id возвращает список комнат пользователя
 			const userIdFilter = state.filters.find((f) => f.column === "user_id");
 			if (userIdFilter) {
-				data = getMockRoomMembers(userIdFilter.value as string);
+				// Ищем комнаты пользователя
+				const userMembers = MOCK_STATE.members.filter(
+					// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+					(m: any) => m.user_id === userIdFilter.value,
+				);
+				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+				data = userMembers.map((m: any) => {
+					// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+					const room = MOCK_STATE.rooms.find((r: any) => r.id === m.room_id);
+					// Находим последнее сообщение
+					const lastMsg = MOCK_STATE.messages
+						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+						.filter((msg: any) => msg.room_id === m.room_id)
+						.sort(
+							// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+							(a: any, b: any) =>
+								new Date(b.created_at).getTime() -
+								new Date(a.created_at).getTime(),
+						)[0];
+
+					// Находим всех участников этой комнаты с профилями
+					const allMembers = MOCK_STATE.members
+						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+						.filter((rm: any) => rm.room_id === m.room_id)
+						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+						.map((rm: any) => ({
+							user_id: rm.user_id,
+							profiles: MOCK_USERS.find((u) => u.id === rm.user_id) || null,
+						}));
+
+					return {
+						room_id: m.room_id,
+						user_id: m.user_id,
+						rooms: room
+							? {
+									...room,
+									last_message: lastMsg
+										? {
+												content: lastMsg.content,
+												created_at: lastMsg.created_at,
+												sender_id: lastMsg.sender_id,
+											}
+										: null,
+									room_members: allMembers,
+								}
+							: null,
+					};
+				});
 			} else {
-				data = [];
+				// Общий случай для room_members (без фильтра по user_id в начале)
+				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+				data = MOCK_STATE.members.map((m: any) => ({
+					...m,
+					profiles: MOCK_USERS.find((u) => u.id === m.user_id) || null,
+				}));
 			}
 		} else if (table === "profiles") {
 			data = MOCK_USERS;
 		} else if (table === "rooms") {
-			data = MOCK_ROOMS;
+			// Всегда джойним room_members для комнат, так как этого ожидает useChatRoomData
+			// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+			data = MOCK_STATE.rooms.map((room: any) => {
+				const members = MOCK_STATE.members
+					// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+					.filter((m: any) => m.room_id === room.id)
+					// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+					.map((m: any) => ({
+						...m,
+						profiles:
+							MOCK_USERS.find((u) => u.id === m.user_id) ||
+							(mockSession && mockSession.user.id === m.user_id
+								? mockSession.user
+								: null),
+					}));
+				return { ...room, room_members: members };
+			});
+		} else if (table === "messages") {
+			// При запросе сообщений добавляем профили отправителей
+			// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+			data = MOCK_STATE.messages.map((msg: any) => ({
+				...msg,
+				profiles: MOCK_USERS.find((u) => u.id === msg.sender_id) || null,
+			}));
 		} else if (table === "room_keys") {
-			// Мокаем ключи шифрования
 			return {
 				data: {
 					encrypted_key: JSON.stringify({
@@ -171,77 +320,111 @@ const mockFrom = (table: string) => {
 				},
 				error: null,
 			};
-		} else if (table === "messages") {
-			data = mockMessages;
 		}
 
-		// 2. Применение фильтров
+		// 2. Filter
 		if (Array.isArray(data)) {
-			// Фильтруем данные
 			for (const filter of state.filters) {
-				// Пропускаем user_id для room_members, т.к. он уже обработан на этапе выборки
-				if (table === "room_members" && filter.column === "user_id") continue;
-
-				data = data.filter((item: any) => {
-					const itemValue = item[filter.column];
-					const filterValue = filter.value;
-
-					if (Array.isArray(filterValue)) {
-						return filterValue.includes(itemValue);
+				// Пропускаем user_id если он уже обработан спец-логикой выше
+				if (
+					table === "room_members" &&
+					filter.column === "user_id" &&
+					state.filters.some((f) => f.column === "user_id")
+				) {
+					// Но если мы зашли в 'else', то фильтруем
+					if (
+						!state.filters.find((f) => f.column === "user_id" && f === filter)
+					) {
+						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+						data = data.filter((item: any) => item.user_id === filter.value);
 					}
-					return itemValue === filterValue;
+					continue;
+				}
+
+				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+				data = data.filter((item: any) => {
+					if (filter.column.startsWith("rooms.")) {
+						const subCol = filter.column.split(".")[1];
+						return item.rooms?.[subCol] === filter.value;
+					}
+					const itemValue = item[filter.column];
+					if (Array.isArray(filter.value))
+						return filter.value.includes(itemValue);
+					return itemValue === filter.value;
 				});
 			}
 
-			// 3. Сортировка
-			if (state.order) {
-				data.sort((a: any, b: any) => {
-					const valA = a[state.order!.column];
-					const valB = b[state.order!.column];
-					// Простое сравнение строк/дат
-					if (valA < valB) return state.order!.options?.ascending ? -1 : 1;
-					if (valA > valB) return state.order!.options?.ascending ? 1 : -1;
-					return 0;
-				});
-			}
+			// Если операция DELETE - удаляем найденные элементы из глобального стейта
+			if (state.operation === "delete") {
+				// Находим индексы для удаления
+				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+				const itemsToDelete = data as any[];
 
-			// 4. Лимит
-			if (state.limit !== undefined) {
-				data = data.slice(0, state.limit);
+				if (table === "rooms") {
+					MOCK_STATE.rooms = MOCK_STATE.rooms.filter(
+						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+						(r: any) => !itemsToDelete.some((del) => del.id === r.id),
+					);
+				} else if (table === "room_members") {
+					MOCK_STATE.members = MOCK_STATE.members.filter(
+						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+						(m: any) =>
+							!itemsToDelete.some(
+								(del) => del.room_id === m.room_id && del.user_id === m.user_id,
+							),
+					);
+				} else if (table === "messages") {
+					MOCK_STATE.messages = MOCK_STATE.messages.filter(
+						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+						(m: any) => !itemsToDelete.some((del) => del.id === m.id),
+					);
+				}
+
+				saveMockState(MOCK_STATE);
+				return { data: null, error: null };
 			}
-		} else if (data && !Array.isArray(data)) {
-			// Если источник не массив (вдруг), оборачиваем
-			data = [data];
 		}
 
-		// 5. Single response
+		// 3. Order
+		if (Array.isArray(data) && state.order) {
+			// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+			data.sort((a: any, b: any) => {
+				// biome-ignore lint/style/noNonNullAssertion: Mocking internal user data
+				const valA = a[state.order!.column];
+				// biome-ignore lint/style/noNonNullAssertion: Mocking internal user data
+				const valB = b[state.order!.column];
+				// biome-ignore lint/style/noNonNullAssertion: Mocking internal user data
+				if (valA < valB) return state.order!.options?.ascending ? -1 : 1;
+				// biome-ignore lint/style/noNonNullAssertion: Mocking internal user data
+				if (valA > valB) return state.order!.options?.ascending ? 1 : -1;
+				return 0;
+			});
+		}
+
+		// 4. Limit
+		if (Array.isArray(data) && state.limit) data = data.slice(0, state.limit);
+
 		if (state.single) {
-			if (Array.isArray(data) && data.length > 0) {
-				return { data: data[0], error: null };
-			}
-			return {
-				data: null,
-				error: { message: "Not found", code: "PGRST116" },
-			};
+			return data.length > 0
+				? { data: data[0], error: null }
+				: { data: null, error: { message: "Not found", code: "PGRST116" } };
 		}
-
 		return { data, error: null };
 	};
 
-	// Строитель (Builder)
-	// biome-ignore lint/suspicious/noExplicitAny: Mock builder requires flexible types
+	// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
 	const builder: any = {
-		select: (_columns?: string) => builder,
+		select: () => builder,
 		eq: (column: string, value: unknown) => {
 			state.filters.push({ column, value });
 			return builder;
 		},
 		in: (column: string, values: unknown[]) => {
-			// Mock 'in' filter: match any of the values
 			state.filters.push({ column, value: values });
 			return builder;
 		},
-		order: (column: string, options?: { ascending?: boolean }) => {
+		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+		order: (column: string, options?: any) => {
 			state.order = { column, options };
 			return builder;
 		},
@@ -255,35 +438,51 @@ const mockFrom = (table: string) => {
 		},
 		maybeSingle: async () => {
 			state.single = true;
-			const result = await execute();
-			if (result.error && (result.error as any).code === "PGRST116") {
-				return { data: null, error: null };
-			}
-			return result;
+			const r = await execute();
+			return r.error?.code === "PGRST116" ? { data: null, error: null } : r;
 		},
-		insert: (values: unknown) => {
-			// Mock insert - just return success
+		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+		insert: (values: any) => {
+			const valArr = Array.isArray(values) ? values : [values];
+
+			// Генерируем ID для сообщений если их нет
+			if (table === "messages") {
+				valArr.forEach((v) => {
+					if (!v.id) v.id = Math.random().toString(36).substring(7);
+					if (!v.created_at) v.created_at = new Date().toISOString();
+				});
+			}
+
+			if (table === "rooms") MOCK_STATE.rooms.push(...valArr);
+			if (table === "room_members") MOCK_STATE.members.push(...valArr);
+			if (table === "messages") {
+				MOCK_STATE.messages.push(...valArr);
+				// Эмитим событие для Realtime
+				valArr.forEach((msg) => {
+					mockEE.emit(
+						`postgres_changes:public:${table}:room_id=eq.${msg.room_id}`,
+						{
+							new: {
+								...msg,
+								profiles:
+									MOCK_USERS.find((u) => u.id === msg.sender_id) || null,
+							},
+						},
+					);
+				});
+			}
+			saveMockState(MOCK_STATE);
 			return Promise.resolve({ data: values, error: null });
 		},
-		update: (_values: unknown) => {
-			// Mock update - returns builder to allow chains or await
-			return builder;
-		},
+		update: () => builder,
 		delete: () => {
-			// Mock delete - returns builder to allow .eq()...
+			state.operation = "delete";
 			return builder;
 		},
-		// Позволяет использовать await builder
-		// biome-ignore lint/suspicious/noThenProperty: Necessary to mock Supabase's Thenable interface
-		then: (
-			onfulfilled?: (value: any) => any,
-			onrejected?: (reason: any) => any,
-		) => {
-			// biome-ignore lint/suspicious/noThenProperty: Necessary to mock Supabase's Thenable interface
-			return execute().then(onfulfilled, onrejected);
-		},
+		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+		// biome-ignore lint/suspicious/noThenProperty: Mocking internal user data
+		then: (onf?: any, onr?: any) => execute().then(onf, onr),
 	};
-
 	return builder;
 };
 

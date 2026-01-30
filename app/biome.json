@@ -27,6 +27,9 @@
             "allowTrailingCommas": false
         }
     },
+    "files": {
+        "includes": ["src/lib/mock/**"]
+    },
     "overrides": [
         {
             "includes": ["src/lib/mock/**"],

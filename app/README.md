@@ -42,9 +42,13 @@ A privacy-focused PWA messenger with End-to-End Encryption (E2EE), built with Re
 -   **Desktop**: Uses Resizable Panels (chat list vs chat window). Left sidebar combines chat list and bottom navigation.
 -   **Mobile**: Single column view with bottom navigation.
 
-### 5. Dev Mode
--   The project supports a **Dev Mode** without a backend connection.
--   If `.env` is missing, the app initializes in "Mock Mode" for UI development.
+### 5. Dev Mode (Mock Mode)
+-   The project supports a fully functional **Mock Mode** without a backend connection.
+-   **Features**:
+    -   **Realtime Simulation**: Uses `EventEmitter` to simulate `postgres_changes`.
+    -   **Full CRUD**: Supports creating and deleting chats and messages.
+    -   **Persistence**: Data persists in `sessionStorage` (cleared on tab close if not saved to code, but "Reset DB" available).
+-   If `.env` is missing, the app initializes in this mode automatically.
 
 ## Getting Started
 

@@ -1,0 +1,60 @@
+.groupInfo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	margin-bottom: var(--space-3);
+}
+
+.avatarUpload {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.avatarPlaceholder {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	background: var(--muted);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.avatarPlaceholder:hover {
+	background: var(--slate-4);
+}
+
+.camera {
+	color: var(--muted-foreground);
+}
+
+.selectedList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	padding: var(--space-2) 0;
+}
+
+.selectedChip {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: var(--space-1) var(--space-2);
+	background: var(--blue-3);
+	border-radius: var(--radius-full);
+	font-size: var(--text-sm);
+	color: var(--blue-11);
+}
+
+.removeChip {
+	cursor: pointer;
+	opacity: 0.7;
+	transition: opacity 0.15s;
+}
+
+.removeChip:hover {
+	opacity: 1;
+}
