@@ -1,42 +1,42 @@
 .inputWrapper {
-	display: flex;
-	align-items: flex-end;
-	gap: 12px;
-	padding: 8px 12px;
-	border-top: 1px solid var(--border);
-	background-color: var(--color-background);
-	min-height: auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    background-color: var(--color-background);
+    min-height: auto;
 }
 
 @media (min-width: 600px) {
-	.inputWrapper {
-		border-top: 1px solid var(--border);
-		background-color: var(--surface);
-		align-items: center;
-	}
+    .inputWrapper {
+        border-top: 1px solid var(--border);
+        background-color: var(--surface);
+        align-items: center;
+    }
 }
 
 .textArea {
-	flex: 1;
-	min-height: 40px;
-	max-height: 160px;
-	resize: none;
-	width: 100%;
+    flex: 1;
+    min-height: 40px;
+    max-height: 160px;
+    resize: none;
+    width: 100%;
 
-	outline: none;
-	border: none;
-	scrollbar-width: thin;
+    outline: none;
+    border: none;
+    scrollbar-width: thin;
 
-	padding: 8px 12px;
+    padding: 8px 12px;
 }
 
 .actionButton {
-	margin-bottom: 2px;
+    margin-bottom: 2px;
 }
 
 .textAreaContainer {
-	flex: 1;
-	display: flex;
-	align-items: center;
-	min-height: 40px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-height: 40px;
 }

@@ -1,12 +1,12 @@
-import type { z } from "zod";
+import type { z } from 'zod';
 import type {
-	chatTypeSchema,
-	memberRoleSchema,
-	roomKeySchema,
-	roomMemberSchema,
-	roomSchema,
-	roomTypeSchema,
-} from "@/lib/schemas/room";
+    chatTypeSchema,
+    memberRoleSchema,
+    roomKeySchema,
+    roomMemberSchema,
+    roomSchema,
+    roomTypeSchema,
+} from '@/lib/schemas/room';
 
 /** Тип чата для создания: public | private | group */
 export type ChatType = z.infer<typeof chatTypeSchema>;
@@ -36,12 +36,12 @@ export type RoomKey = z.infer<typeof roomKeySchema>;
  * Расширенная структура комнаты с вложенными участниками
  */
 export interface RoomWithMembers extends Room {
-	room_members: {
-		user_id: string;
-		profiles: {
-			display_name: string;
-			username: string;
-			avatar_url: string | null;
-		} | null;
-	}[];
+    room_members: {
+        user_id: string;
+        profiles: {
+            display_name: string;
+            username: string;
+            avatar_url: string | null;
+        } | null;
+    }[];
 }

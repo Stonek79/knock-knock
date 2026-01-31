@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { DMInitializer } from "@/features/chat/DMInitializer";
+import { createFileRoute } from '@tanstack/react-router';
+import { DMInitializer } from '@/features/chat/DMInitializer';
 
 /**
  * Роут инициализации DM-чата.
@@ -11,14 +11,14 @@ import { DMInitializer } from "@/features/chat/DMInitializer";
  * Это стандартный паттерн мессенджеров (Telegram, WhatsApp, Slack).
  */
 interface DMSearch {
-	isPrivate?: boolean;
+    isPrivate?: boolean;
 }
 
-export const Route = createFileRoute("/dm/$userId")({
-	component: DMInitializer,
-	validateSearch: (search: Record<string, unknown>): DMSearch => {
-		return {
-			isPrivate: search.isPrivate === true || search.isPrivate === "true",
-		};
-	},
+export const Route = createFileRoute('/dm/$userId')({
+    component: DMInitializer,
+    validateSearch: (search: Record<string, unknown>): DMSearch => {
+        return {
+            isPrivate: search.isPrivate === true || search.isPrivate === 'true',
+        };
+    },
 });

@@ -1,75 +1,75 @@
 .container {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-2);
-	max-height: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 300px;
 }
 
 .searchWrapper {
-	position: sticky;
-	top: 0;
-	background: var(--surface);
-	z-index: 1;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 1;
 }
 
 .list {
-	flex: 1;
-	overflow-y: auto;
-	min-height: 150px;
-	max-height: 250px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 150px;
+    max-height: 250px;
 }
 
 .item {
-	display: flex;
-	align-items: center;
-	padding: var(--space-2) var(--space-3);
-	gap: var(--space-3);
-	cursor: pointer;
-	transition: background-color 0.15s ease;
-	border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-3);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-radius: var(--radius-sm);
 }
 
 .item:hover {
-	background-color: var(--muted);
+    background-color: var(--muted);
 }
 
 .itemSelected {
-	background-color: var(--blue-3);
+    background-color: var(--blue-3);
 }
 
 .itemSelected:hover {
-	background-color: var(--blue-4);
+    background-color: var(--blue-4);
 }
 
 .info {
-	flex: 1;
-	min-width: 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .name {
-	font-weight: 500;
-	color: var(--foreground);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+    font-weight: 500;
+    color: var(--foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .username {
-	font-size: var(--text-sm);
-	color: var(--muted-foreground);
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
 }
 
 .checkbox {
-	flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 .emptyContainer {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: var(--space-6);
-	color: var(--muted-foreground);
-	gap: var(--space-2);
-	min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    color: var(--muted-foreground);
+    gap: var(--space-2);
+    min-height: 150px;
 }
