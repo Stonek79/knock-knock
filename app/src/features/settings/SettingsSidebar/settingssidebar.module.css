@@ -1,28 +1,32 @@
 .sidebar {
-    /* Background comes from parent layout (var(--surface)) */
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+	/* Background comes from parent layout (var(--surface)) */
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 }
 
 .desktopItem {
-    padding: 10px 16px;
-    color: var(--muted-foreground);
-    text-decoration: none;
-    transition:
-        background-color 0.2s,
-        color 0.2s;
-    border-radius: var(--radius-md);
-    margin: 0 8px;
+	padding: 10px 16px;
+	color: var(--muted-foreground);
+	text-decoration: none;
+	transition:
+		background-color 0.2s,
+		color 0.2s;
+	border-radius: var(--radius-md);
+	margin: 0 8px;
 }
 
 .desktopItem:hover {
-    background-color: var(--slate-3); /* --muted */
-    color: var(--foreground);
+	background-color: var(--slate-3); /* --muted */
+	color: var(--foreground);
 }
 
 .active {
-    background-color: var(--blue-3); /* --accent-3 equivalent */
-    color: var(--blue-11); /* --accent-11 equivalent */
-    font-weight: 500;
+	background-color: var(--blue-3); /* --accent-3 equivalent */
+	color: var(--blue-11); /* --accent-11 equivalent */
+	font-weight: 500;
+}
+
+.icon {
+	color: var(--primary);
 }

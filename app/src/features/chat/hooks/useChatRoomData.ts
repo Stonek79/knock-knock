@@ -13,8 +13,14 @@ import { useAuthStore } from "@/stores/auth";
  * Хук для загрузки данных комнаты и ключей шифрования.
  * Инкапсулирует логику выбора между Mock и Production режимами.
  */
-export function useChatRoomData() {
-	const { roomId } = useParams({ from: "/chat/$roomId" });
+export function useChatRoomData(propRoomId?: string) {
+	const params = useParams({ strict: false }) as Record<
+		string,
+		string | undefined
+	>;
+	// Use roomId from props OR params. If neither, it remains undefined.
+	const roomId = propRoomId ?? params?.roomId;
+
 	const { user } = useAuthStore();
 	const { t } = useTranslation();
 
@@ -22,6 +28,7 @@ export function useChatRoomData() {
 		queryKey: ["room", roomId, user?.id],
 		queryFn: async () => {
 			if (!user) throw new Error("Unauthorized");
+			// TS guard: ensure roomId is string inside this function
 			if (!roomId) throw new Error("Room ID required");
 
 			// 1. Mock Mode Strategy
@@ -32,6 +39,7 @@ export function useChatRoomData() {
 			// 2. Production Strategy
 			return fetchProductionRoomData(roomId, user.id, t);
 		},
+		// Only run query if we have both user AND a valid roomId string
 		enabled: !!user && !!roomId,
 	});
 }

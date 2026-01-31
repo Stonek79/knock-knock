@@ -104,6 +104,34 @@ export const createMockClient = (): SupabaseClient => {
 				saveSession(newSession);
 				return Promise.resolve({ data: {}, error: null });
 			},
+			signInWithPassword: ({ email }: { email: string; password?: string }) => {
+				// Mock: Allow any password, just find user by email
+				const user = MOCK_USERS.find((u) => u.email === email);
+
+				if (!user) {
+					return Promise.resolve({
+						data: { user: null, session: null },
+						error: {
+							message: "Invalid login credentials",
+							name: "AuthError",
+							status: 400,
+							// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+						} as any,
+					});
+				}
+
+				const newSession = {
+					user,
+					access_token: "mock-token",
+					expires_at: Math.floor(Date.now() / 1000) + 3600 * 24, // 24 hours
+				};
+
+				saveSession(newSession);
+				return Promise.resolve({
+					data: { user, session: newSession },
+					error: null,
+				});
+			},
 			signOut: () => {
 				saveSession(null);
 				return Promise.resolve({ error: null });

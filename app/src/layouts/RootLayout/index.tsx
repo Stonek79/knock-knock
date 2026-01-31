@@ -127,7 +127,7 @@ export function RootLayout() {
 		}
 
 		// Настройки
-		if (path.startsWith(ROUTES.SETTINGS)) {
+		if (path.startsWith(ROUTES.SETTINGS) || path.startsWith(ROUTES.ADMIN)) {
 			return <SettingsSidebar />;
 		}
 

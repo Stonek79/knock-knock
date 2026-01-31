@@ -14,12 +14,14 @@ export const profileSchema = z.object({
 
 // Полная схема модели профиля (из БД)
 export const profileModelSchema = z.object({
-	id: z.uuid(),
+	id: z.string().uuid(),
 	username: z.string(),
 	display_name: z.string(),
-	email: z.email(),
 	avatar_url: z.string().nullable(),
-	updated_at: z.string(),
+	status: z.string().optional(),
+	last_seen: z.string().optional(),
+	role: z.enum(["user", "admin"]).optional(),
+	banned_until: z.string().nullable().optional(),
+	is_agreed_to_rules: z.boolean().optional(),
+	created_at: z.string().optional(),
 });
-
-export type ProfileSchema = z.infer<typeof profileSchema>;

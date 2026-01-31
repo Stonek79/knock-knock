@@ -2,19 +2,17 @@
 	display: flex;
 	align-items: flex-end;
 	gap: 12px;
-
 	padding: 8px 12px;
-	border-top: none;
+	border-top: 1px solid var(--border);
 	background-color: var(--color-background);
 	min-height: auto;
 }
 
 @media (min-width: 600px) {
 	.inputWrapper {
-		min-height: 72px;
-		padding: 16px 24px;
 		border-top: 1px solid var(--border);
 		background-color: var(--surface);
+		align-items: center;
 	}
 }
 

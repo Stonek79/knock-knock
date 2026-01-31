@@ -17,10 +17,12 @@ import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CallsRouteImport } from './routes/calls'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as PrivateIndexRouteImport } from './routes/private.index'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SettingsSecurityRouteImport } from './routes/settings/security'
 import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy'
 import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications'
@@ -28,6 +30,7 @@ import { Route as SettingsAppearanceRouteImport } from './routes/settings/appear
 import { Route as SettingsAccountRouteImport } from './routes/settings/account'
 import { Route as DmUserIdRouteImport } from './routes/dm.$userId'
 import { Route as ChatRoomIdRouteImport } from './routes/chat.$roomId'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -69,6 +72,11 @@ const CallsRoute = CallsRouteImport.update({
   path: '/calls',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -88,6 +96,11 @@ const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ChatRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const SettingsSecurityRoute = SettingsSecurityRouteImport.update({
   id: '/security',
@@ -124,9 +137,15 @@ const ChatRoomIdRoute = ChatRoomIdRouteImport.update({
   path: '/$roomId',
   getParentRoute: () => ChatRoute,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/calls': typeof CallsRoute
   '/chat': typeof ChatRouteWithChildren
   '/contacts': typeof ContactsRoute
@@ -135,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/private': typeof PrivateRouteWithChildren
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/admin/users': typeof AdminUsersRoute
   '/chat/$roomId': typeof ChatRoomIdRoute
   '/dm/$userId': typeof DmUserIdRoute
   '/settings/account': typeof SettingsAccountRoute
@@ -142,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/privacy': typeof SettingsPrivacyRoute
   '/settings/security': typeof SettingsSecurityRoute
+  '/admin/': typeof AdminIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/private/': typeof PrivateIndexRoute
   '/settings/': typeof SettingsIndexRoute
@@ -153,6 +174,7 @@ export interface FileRoutesByTo {
   '/favorites': typeof FavoritesRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/admin/users': typeof AdminUsersRoute
   '/chat/$roomId': typeof ChatRoomIdRoute
   '/dm/$userId': typeof DmUserIdRoute
   '/settings/account': typeof SettingsAccountRoute
@@ -160,6 +182,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/privacy': typeof SettingsPrivacyRoute
   '/settings/security': typeof SettingsSecurityRoute
+  '/admin': typeof AdminIndexRoute
   '/chat': typeof ChatIndexRoute
   '/private': typeof PrivateIndexRoute
   '/settings': typeof SettingsIndexRoute
@@ -167,6 +190,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/calls': typeof CallsRoute
   '/chat': typeof ChatRouteWithChildren
   '/contacts': typeof ContactsRoute
@@ -175,6 +199,7 @@ export interface FileRoutesById {
   '/private': typeof PrivateRouteWithChildren
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/admin/users': typeof AdminUsersRoute
   '/chat/$roomId': typeof ChatRoomIdRoute
   '/dm/$userId': typeof DmUserIdRoute
   '/settings/account': typeof SettingsAccountRoute
@@ -182,6 +207,7 @@ export interface FileRoutesById {
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/settings/privacy': typeof SettingsPrivacyRoute
   '/settings/security': typeof SettingsSecurityRoute
+  '/admin/': typeof AdminIndexRoute
   '/chat/': typeof ChatIndexRoute
   '/private/': typeof PrivateIndexRoute
   '/settings/': typeof SettingsIndexRoute
@@ -190,6 +216,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/calls'
     | '/chat'
     | '/contacts'
@@ -198,6 +225,7 @@ export interface FileRouteTypes {
     | '/private'
     | '/profile'
     | '/settings'
+    | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
     | '/settings/account'
@@ -205,6 +233,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/privacy'
     | '/settings/security'
+    | '/admin/'
     | '/chat/'
     | '/private/'
     | '/settings/'
@@ -216,6 +245,7 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/login'
     | '/profile'
+    | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
     | '/settings/account'
@@ -223,12 +253,14 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/privacy'
     | '/settings/security'
+    | '/admin'
     | '/chat'
     | '/private'
     | '/settings'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/calls'
     | '/chat'
     | '/contacts'
@@ -237,6 +269,7 @@ export interface FileRouteTypes {
     | '/private'
     | '/profile'
     | '/settings'
+    | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
     | '/settings/account'
@@ -244,6 +277,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/privacy'
     | '/settings/security'
+    | '/admin/'
     | '/chat/'
     | '/private/'
     | '/settings/'
@@ -251,6 +285,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   CallsRoute: typeof CallsRoute
   ChatRoute: typeof ChatRouteWithChildren
   ContactsRoute: typeof ContactsRoute
@@ -320,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CallsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -347,6 +389,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/chat/'
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof ChatRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/settings/security': {
       id: '/settings/security'
@@ -397,8 +446,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRoomIdRouteImport
       parentRoute: typeof ChatRoute
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ChatRouteChildren {
   ChatRoomIdRoute: typeof ChatRoomIdRoute
@@ -447,6 +515,7 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   CallsRoute: CallsRoute,
   ChatRoute: ChatRouteWithChildren,
   ContactsRoute: ContactsRoute,

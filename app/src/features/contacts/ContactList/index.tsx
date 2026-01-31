@@ -13,7 +13,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
 import { usePresence } from "@/features/contacts/hooks/usePresence";
-import type { Profile } from "@/lib/types/models";
+import type { Profile } from "@/lib/types/profile";
 import styles from "./contactlist.module.css";
 
 interface ContactListProps {
@@ -105,7 +105,7 @@ export function ContactList({ mode = "list", onSelect }: ContactListProps) {
 
 		// 4. List
 		return (
-			<ScrollArea scrollbars="vertical" className={styles.list}>
+			<ScrollArea type="hover" className={styles.list}>
 				{filteredContacts.map((contact) => {
 					const isOnline = onlineUsers[contact.id] === "online";
 

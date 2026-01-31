@@ -1,0 +1,40 @@
+.adminContainer {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	background-color: var(--color-background);
+}
+
+.adminHeader {
+	height: 60px;
+	border-bottom: 1px solid var(--border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 24px;
+	background-color: var(--surface);
+}
+
+.adminContent {
+	flex: 1;
+	overflow-y: auto;
+	padding: 24px;
+}
+
+.centerContainer {
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.accessDeniedContainer {
+	height: 100vh;
+	padding: 20px;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: var(--space-4);
+}

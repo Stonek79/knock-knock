@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { DB_TABLES } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
-import type { Profile } from "@/lib/types/models";
+import type { Profile } from "@/lib/types/profile";
 
 export function useContacts() {
 	return useQuery({

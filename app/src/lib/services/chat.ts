@@ -258,12 +258,27 @@ export const ChatService = {
 						.select("user_id")
 						.eq("room_id", room.id);
 
-					if (!membersError && members?.length === 2) {
+					if (!membersError) {
 						const memberIds = members.map((m) => m.user_id);
-						if (memberIds.includes(targetUserId)) {
-							logger.info("Found existing DM room", {
-								roomId: room.id,
-							});
+						const isSelfChat = currentUserId === targetUserId;
+
+						// Case 1: Self Chat (1 member)
+						if (
+							isSelfChat &&
+							memberIds.length === 1 &&
+							memberIds[0] === currentUserId
+						) {
+							logger.info("Found existing Self-Chat room", { roomId: room.id });
+							return room.id;
+						}
+
+						// Case 2: P2P Chat (2 members)
+						if (
+							!isSelfChat &&
+							memberIds.length === 2 &&
+							memberIds.includes(targetUserId)
+						) {
+							logger.info("Found existing DM room", { roomId: room.id });
 							return room.id;
 						}
 					}

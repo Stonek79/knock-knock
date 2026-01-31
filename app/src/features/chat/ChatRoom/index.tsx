@@ -6,18 +6,16 @@ import {
 	AlertDialog as RadixAlertDialog,
 	Text,
 } from "@radix-ui/themes";
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { useChatActions } from "@/features/chat/hooks/useChatActions";
 import { useChatPeer } from "@/features/chat/hooks/useChatPeer";
 import { useChatRoomData } from "@/features/chat/hooks/useChatRoomData";
 import { MessageInput } from "@/features/chat/MessageInput";
 import { MessageList } from "@/features/chat/MessageList";
 import { RoomHeader } from "@/features/chat/RoomHeader";
-import { logger } from "@/lib/logger";
-import { ChatService } from "@/lib/services/chat";
 import { useAuthStore } from "@/stores/auth";
 import styles from "../chat.module.css";
 
@@ -25,15 +23,21 @@ import styles from "../chat.module.css";
  * Компонент комнаты чата.
  * Отвечает за загрузку метаданных комнаты, разблокировку ключей и отображение списка сообщений.
  */
-export function ChatRoom() {
-	const { roomId } = useParams({ from: "/chat/$roomId" });
+interface ChatRoomProps {
+	roomId?: string;
+}
+
+export function ChatRoom({ roomId: propRoomId }: ChatRoomProps) {
+	const params = useParams({ strict: false }) as Record<
+		string,
+		string | undefined
+	>;
+	const roomId = propRoomId || params?.roomId;
+
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
-	const navigate = useNavigate();
-	const queryClient = useQueryClient();
 
 	const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
-	const [ending, setEnding] = useState(false);
 
 	/**
 	 * Загрузка данных комнаты через кастомный хук.
@@ -43,7 +47,7 @@ export function ChatRoom() {
 		data: roomInfo,
 		isLoading: loading,
 		error: fetchError,
-	} = useChatRoomData();
+	} = useChatRoomData(roomId); // Pass the resolved roomId
 
 	const room = roomInfo?.room;
 	const roomKey = roomInfo?.roomKey;
@@ -55,40 +59,19 @@ export function ChatRoom() {
 	 */
 	const { data: peerUser } = useChatPeer(otherUserId, room?.type);
 
-	const handleSendMessage = async (text: string) => {
-		if (!roomKey || !user) return;
-		try {
-			await ChatService.sendMessage(roomId, user.id, text, roomKey);
-		} catch (e) {
-			logger.error("Failed to send message", e);
-		}
-	};
+	/**
+	 * Бизнес-логика (отправка, удаление) вынесена в хук
+	 */
+	const { sendMessage, endSession, ending } = useChatActions({
+		roomId,
+		roomKey,
+		user,
+		room,
+	});
 
 	const confirmEndSession = async () => {
-		setEnding(true);
-		try {
-			await ChatService.clearRoom(roomId);
-			// Если чат эфемерный, можно удалить и саму комнату (для DM это стандарт)
-			// Плюс сейчас у нас мок умеет удалять
-			if (room?.is_ephemeral) {
-				logger.info(`Deleting ephemeral room: ${roomId}`);
-				await ChatService.deleteRoom(roomId);
-				// Важно: инвалидируем список чатов, чтобы удаленный чат пропал из меню
-				await queryClient.invalidateQueries({
-					queryKey: ["rooms", user?.id],
-					refetchType: "all",
-				});
-				logger.info(`Room ${roomId} deleted and queries invalidated`);
-			} else {
-				logger.info(`Room ${roomId} is not ephemeral, skipping delete`);
-			}
-			navigate({ to: "/chat" });
-		} catch (e) {
-			logger.error("Failed to end session", e);
-		} finally {
-			setEnding(false);
-			setShowEndSessionDialog(false);
-		}
+		await endSession();
+		setShowEndSessionDialog(false);
 	};
 
 	if (loading)
@@ -107,6 +90,8 @@ export function ChatRoom() {
 				</Alert>
 			</Box>
 		);
+
+	if (!roomId) return null;
 
 	return (
 		<div className={styles.roomWrapper}>
@@ -157,11 +142,11 @@ export function ChatRoom() {
 			)}
 
 			<main className={styles.messageArea}>
-				{roomKey && <MessageList roomId={roomId} roomKey={roomKey} />}
+				{roomKey && roomId && <MessageList roomId={roomId} roomKey={roomKey} />}
 			</main>
 
 			<footer className={styles.inputArea}>
-				<MessageInput onSend={handleSendMessage} disabled={!roomKey} />
+				<MessageInput onSend={sendMessage} disabled={!roomKey || !roomId} />
 			</footer>
 		</div>
 	);

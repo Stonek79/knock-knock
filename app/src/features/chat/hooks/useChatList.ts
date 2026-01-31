@@ -4,7 +4,7 @@ import { DB_TABLES } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 import { formatChatTime } from "@/lib/utils/date";
 import { useAuthStore } from "@/stores/auth";
-import type { ChatItem } from "./ChatListItem";
+import type { ChatItem } from "../ChatList/ChatListItem";
 
 /**
  * Тип результата запроса комнат из БД.
@@ -74,6 +74,16 @@ export function useChatList() {
 		select: (data: RoomQueryResult[]): ChatItem[] => {
 			return data
 				.filter((item) => item.rooms) // Filter out orphaned members
+				.filter((item) => {
+					// Исключаем чаты с самим собой ("Избранное") из общего списка
+					if (item.rooms.type === "direct") {
+						const otherMembers = item.rooms.room_members.filter(
+							(m) => m.user_id !== user?.id,
+						);
+						return otherMembers.length > 0;
+					}
+					return true;
+				})
 				.map((item) => {
 					const room = item.rooms;
 					const isDM = room.type === "direct";

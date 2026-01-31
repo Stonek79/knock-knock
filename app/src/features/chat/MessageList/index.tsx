@@ -56,11 +56,7 @@ export function MessageList({ roomId, roomKey }: MessageListProps) {
 	}
 
 	return (
-		<ScrollArea
-			type="always"
-			scrollbars="vertical"
-			className={styles.scrollArea}
-		>
+		<ScrollArea type="hover" className={styles.scrollArea}>
 			<div className={styles.viewport} ref={scrollViewportRef}>
 				<Flex direction="column" gap="2">
 					{messages.map((msg: DecryptedMessageWithProfile) => (

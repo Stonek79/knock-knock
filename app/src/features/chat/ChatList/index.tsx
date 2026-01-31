@@ -6,10 +6,10 @@ import { CreateGroupDialog } from "@/features/chat/CreateGroupDialog";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { CHAT_TYPE } from "@/lib/constants";
 import type { ChatType } from "@/lib/types";
+import { useChatList } from "../hooks/useChatList";
 import { ChatListHeader } from "./ChatListHeader";
 import { ChatListItem } from "./ChatListItem";
 import styles from "./chatlist.module.css";
-import { useChatList } from "./useChatList";
 
 /**
  * Тип открытого диалога создания чата.
@@ -90,7 +90,7 @@ export function ChatList() {
 					</Box>
 				) : (
 					// Список чатов
-					<ScrollArea scrollbars="vertical" className={styles.chatList}>
+					<ScrollArea type="hover" className={styles.chatList}>
 						<Flex direction="column">
 							{chats.map((chat) => (
 								<ChatListItem key={chat.id} chat={chat} />

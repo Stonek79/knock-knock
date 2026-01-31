@@ -12,7 +12,7 @@ import { Search, UserPlus } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
-import type { Profile } from "@/lib/types/models";
+import type { Profile } from "@/lib/types/profile";
 import styles from "./contactpicker.module.css";
 
 /**
@@ -137,7 +137,7 @@ export function ContactPicker({
 
 			{/* Список контактов */}
 			{!isLoading && !isError && filteredContacts.length > 0 && (
-				<ScrollArea scrollbars="vertical" className={styles.list}>
+				<ScrollArea type="hover" className={styles.list}>
 					{filteredContacts.map((contact) => {
 						const isSelected = selectedIds.includes(contact.id);
 						return (

@@ -80,12 +80,20 @@ export function RoomHeader({
 		}
 	}
 
-	const displayName =
-		isDM && resolvedPeer
+	const isSelfChat =
+		isDM &&
+		room?.room_members?.length === 1 &&
+		room.room_members[0].user_id === user?.id;
+
+	const displayName = isSelfChat
+		? t("chat.favorites", "Избранное")
+		: isDM && resolvedPeer
 			? resolvedPeer.display_name
 			: room?.name || t("chat.unknownRoom", "Чат");
 
-	const avatarFallback = displayName?.[0]?.toUpperCase() || "?";
+	const avatarFallback = isSelfChat
+		? "⭐"
+		: displayName?.[0]?.toUpperCase() || "?";
 	const avatarUrl = isDM ? resolvedPeer?.avatar_url : undefined;
 
 	// Генерируем строку участников для групп

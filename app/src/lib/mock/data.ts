@@ -4,6 +4,7 @@ export interface MockUser {
 	username: string;
 	display_name: string;
 	avatar_url?: string;
+	role?: "user" | "admin";
 }
 
 export interface MockRoom {
@@ -59,6 +60,13 @@ export const MOCK_USERS: MockUser[] = [
 		email: "linus@linux.org",
 		username: "Linus Torvalds",
 		display_name: "Linus",
+	},
+	{
+		id: "user-6",
+		email: "admin@linux.org",
+		username: "Admin",
+		display_name: "Admin",
+		role: "admin",
 	},
 ];
 
