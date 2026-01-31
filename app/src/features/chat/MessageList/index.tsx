@@ -1,7 +1,7 @@
 import { Flex, ScrollArea, Text } from "@radix-ui/themes";
 import { useEffect, useRef } from "react";
 import { useMessages } from "@/features/chat/hooks/useMessages";
-import type { DecryptedMessageWithProfile } from "@/lib/types/chat";
+import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 import { useAuthStore } from "@/stores/auth";
 import { MessageBubble } from "../MessageBubble";
 import styles from "./message-list.module.css";

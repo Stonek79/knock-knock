@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { DB_TABLES } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
-import type { RoomWithMembers } from "@/lib/types/chat";
+import type { RoomWithMembers } from "@/lib/types/room";
 
 /**
  * Хук для загрузки данных собеседника в DM-чате.

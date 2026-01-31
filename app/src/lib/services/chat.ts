@@ -9,7 +9,7 @@ import {
 } from "@/lib/crypto";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
-import type { RoomKey, RoomMember } from "@/lib/types/chat";
+import type { RoomKey, RoomMember } from "@/lib/types/room";
 
 /**
  * Сервис для управления чатами и сообщениями.

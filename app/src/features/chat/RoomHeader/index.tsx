@@ -4,7 +4,7 @@ import { ChevronLeft, Phone, Trash2, Video } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import type { RoomWithMembers } from "@/lib/types/chat";
+import type { RoomWithMembers } from "@/lib/types/room";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./roomheader.module.css";
 

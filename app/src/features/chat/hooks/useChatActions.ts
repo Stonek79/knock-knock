@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { logger } from "@/lib/logger";
 import { ChatService } from "@/lib/services/chat";
-import type { RoomWithMembers } from "@/lib/types/chat";
+import type { RoomWithMembers } from "@/lib/types/room";
 
 interface UseChatActionsProps {
 	roomId?: string;

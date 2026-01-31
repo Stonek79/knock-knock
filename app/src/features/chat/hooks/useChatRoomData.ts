@@ -6,7 +6,7 @@ import { DB_TABLES } from "@/lib/constants";
 import { base64ToArrayBuffer, getKeyPair } from "@/lib/crypto";
 import { unwrapRoomKey } from "@/lib/crypto/encryption";
 import { supabase } from "@/lib/supabase";
-import type { RoomWithMembers } from "@/lib/types/chat";
+import type { RoomWithMembers } from "@/lib/types/room";
 import { useAuthStore } from "@/stores/auth";
 
 /**

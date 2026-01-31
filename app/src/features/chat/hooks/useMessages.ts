@@ -4,7 +4,10 @@ import { DB_TABLES } from "@/lib/constants";
 import { decryptMessage } from "@/lib/crypto/messages";
 import { logger } from "@/lib/logger";
 import { isMock, supabase } from "@/lib/supabase";
-import type { DecryptedMessageWithProfile, MessageRow } from "@/lib/types/chat";
+import type {
+	DecryptedMessageWithProfile,
+	MessageRow,
+} from "@/lib/types/message";
 
 /**
  * Хук для загрузки сообщений и подписки на обновления.
