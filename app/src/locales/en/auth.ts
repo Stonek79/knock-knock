@@ -1,4 +1,14 @@
 export const auth = {
+    loginTitle: 'Sign In',
+    registerTitle: 'Create Account',
+    loginAction: 'Sign In',
+    registerAction: 'Create Account',
+    noAccount: 'No account?',
+    hasAccount: 'Already have an account?',
+    toRegister: 'Sign Up',
+    toLogin: 'Sign In',
+    emailPlaceholder: 'name@example.com',
+    passwordPlaceholder: '••••••••',
     welcomeBack: 'Welcome back',
     signInToAccount: 'Sign in to your account',
     checkEmail: 'Check your email',
@@ -19,6 +29,8 @@ export const auth = {
             'Invalid authentication credentials. Check your keys sync.',
         sendEmailFailed:
             'Failed to send confirmation email. Check server config.',
+        rateLimitError:
+            'Too many attempts. Please try again in {{seconds}} sec.',
         unknown: 'An unexpected error occurred.',
     },
 };

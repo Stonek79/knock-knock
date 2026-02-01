@@ -1,5 +1,14 @@
 export const auth = {
-    welcomeBack: 'С возвращением',
+    loginTitle: 'Вход',
+    registerTitle: 'Создание аккаунта',
+    loginAction: 'Войти',
+    registerAction: 'Создать аккаунт',
+    noAccount: 'Нет аккаунта?',
+    hasAccount: 'Уже есть аккаунт?',
+    toRegister: 'Зарегистрироваться',
+    toLogin: 'Войти',
+    emailPlaceholder: 'name@example.com',
+    passwordPlaceholder: '••••••••',
     signInToAccount: 'Войдите в свой аккаунт',
     checkEmail: 'Проверьте почту',
     magicLinkSent: 'Мы отправили магическую ссылку на ваш email.',
@@ -19,6 +28,8 @@ export const auth = {
             'Неверные данные для входа (ошибка ключей). Проверьте соответствие ANON_KEY и секрета.',
         sendEmailFailed:
             'Не удалось отправить письмо подтверждения. Обратитесь к администратору.',
+        rateLimitError:
+            'Слишком много попыток. Попробуйте через {{seconds}} сек.',
         unknown: 'Произошла неожиданная ошибка.',
     },
 };

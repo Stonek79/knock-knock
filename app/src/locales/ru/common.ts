@@ -1,5 +1,5 @@
 export const common = {
-    email: 'Email',
+    email: 'Электронная почта',
     save: 'Сохранить',
     saving: 'Сохранение...',
     cancel: 'Отмена',
