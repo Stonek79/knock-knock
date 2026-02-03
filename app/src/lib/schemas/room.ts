@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { MEMBER_ROLE, ROOM_TYPE } from '@/lib/constants/chat';
 import { CHAT_TYPE } from '@/lib/constants/common';
 
 /**
  * Перечисления
  */
-export const roomTypeSchema = z.enum(['direct', 'group']);
-export const memberRoleSchema = z.enum(['admin', 'member']);
+export const roomTypeSchema = z.enum([ROOM_TYPE.DIRECT, ROOM_TYPE.GROUP]);
+export const memberRoleSchema = z.enum([MEMBER_ROLE.ADMIN, MEMBER_ROLE.MEMBER]);
 export const chatTypeSchema = z.enum(CHAT_TYPE);
 
 /**
@@ -28,6 +29,7 @@ export const roomMemberSchema = z.object({
     user_id: z.uuid(),
     role: memberRoleSchema,
     joined_at: z.string(),
+    last_read_at: z.string().nullable().optional(),
 });
 
 /**

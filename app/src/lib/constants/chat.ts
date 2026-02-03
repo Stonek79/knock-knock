@@ -23,3 +23,13 @@ export const REALTIME_EVENTS = {
 export const STORAGE_KEYS = {
     CHAT_LAST_VIEWED: 'chat_last_viewed',
 } as const;
+
+export const ROOM_TYPE = {
+    DIRECT: 'direct',
+    GROUP: 'group',
+} as const;
+
+export const MEMBER_ROLE = {
+    ADMIN: 'admin',
+    MEMBER: 'member',
+} as const;

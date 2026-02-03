@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { MOCK_ROOMS, MOCK_USERS, type MockUser, mockMessages } from "./data";
+import { MOCK_USERS, type MockUser } from "./data";
+import { handleRpc } from "./rpc";
+import { MOCK_STATE, saveMockState } from "./state";
 
 // Session storage helper
 const getStoredSession = () => {
 	try {
-		const saved = sessionStorage.getItem("mock_session");
+		const saved = localStorage.getItem("mock_session");
 		return saved ? JSON.parse(saved) : null;
 	} catch {
 		return null;
@@ -36,13 +38,13 @@ const notifyAuthListeners = (event: string, session: unknown) => {
 const saveSession = (session: MockSession | null) => {
 	mockSession = session;
 	if (session) {
-		sessionStorage.setItem("mock_session", JSON.stringify(session));
+		localStorage.setItem("mock_session", JSON.stringify(session));
 		notifyAuthListeners("SIGNED_IN", {
 			user: session.user,
 			access_token: session.access_token,
 		});
 	} else {
-		sessionStorage.removeItem("mock_session");
+		localStorage.removeItem("mock_session");
 		notifyAuthListeners("SIGNED_OUT", null);
 	}
 };
@@ -173,38 +175,18 @@ export const createMockClient = (): SupabaseClient => {
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
 		removeChannel: (_channel: any) => undefined,
+		// biome-ignore lint/suspicious/noExplicitAny: Mocking RPC
+		rpc: (fn: string, args: any) => {
+			const userId = mockSession?.user.id;
+			const { data, error } = handleRpc(fn, args, MOCK_STATE, userId, (e, p) =>
+				mockEE.emit(e, p),
+			);
+			return Promise.resolve({ data, error });
+		},
 	} as unknown as SupabaseClient;
 };
 
-// Session storage helpers for state
-const getStoredMockState = () => {
-	try {
-		const saved = sessionStorage.getItem("mock_db_state");
-		if (!saved) return null;
-		return JSON.parse(saved);
-	} catch {
-		return null;
-	}
-};
-
-// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
-const saveMockState = (state: any) => {
-	try {
-		sessionStorage.setItem("mock_db_state", JSON.stringify(state));
-	} catch (e) {
-		console.error("Failed to save mock state", e);
-	}
-};
-
-const initialState = getStoredMockState() || {
-	rooms: [...MOCK_ROOMS],
-	members: MOCK_ROOMS.flatMap((room) =>
-		MOCK_USERS.map((user) => ({ room_id: room.id, user_id: user.id })),
-	),
-	messages: [...mockMessages],
-};
-
-const MOCK_STATE = initialState;
+// State moved to state.ts
 
 // Простая реализация EventEmitter для имитации Realtime
 class MockEventEmitter {

@@ -51,9 +51,9 @@ export function ChatListItem({ chat }: ChatListItemProps) {
                         {chat.lastMessage}
                     </Text>
                 </Flex>
-                {chat.unread && chat.unread > 0 && (
-                    <Box className={styles.unreadBadge}>{chat.unread}</Box>
-                )}
+                {chat?.unread && chat.unread > 0 ? (
+                    <Box className={styles.unreadBadge}>{chat?.unread}</Box>
+                ) : null}
             </Flex>
         </Link>
     );

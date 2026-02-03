@@ -7,6 +7,7 @@ import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
 import { CHAT_TYPE } from '@/lib/constants';
 import type { ChatType } from '@/lib/types';
 import { useChatList } from '../hooks/useChatList';
+import { useUnreadCounts } from '../hooks/useUnreadCounts';
 import { ChatListHeader } from './ChatListHeader';
 import { ChatListItem } from './ChatListItem';
 import styles from './chatlist.module.css';
@@ -35,6 +36,7 @@ export function ChatList() {
     const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
 
     const { data: chats = [], isLoading } = useChatList();
+    const { getCount } = useUnreadCounts();
 
     /**
      * Обработчик изменения состояния диалога.
@@ -93,7 +95,13 @@ export function ChatList() {
                     <ScrollArea type="hover" className={styles.chatList}>
                         <Flex direction="column">
                             {chats.map((chat) => (
-                                <ChatListItem key={chat.id} chat={chat} />
+                                <ChatListItem
+                                    key={chat.id}
+                                    chat={{
+                                        ...chat,
+                                        unread: getCount(chat.id),
+                                    }}
+                                />
                             ))}
                         </Flex>
                     </ScrollArea>
