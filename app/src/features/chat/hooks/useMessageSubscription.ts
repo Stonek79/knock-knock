@@ -157,7 +157,6 @@ export function useMessageSubscription({
                     filter: `room_id=eq.${roomId}`,
                 },
                 (payload: RealtimePostgresChangesPayload<MessageRow>) => {
-                    console.log('Realtime Event:', payload.eventType, payload); // DEBUG LOG
                     if (payload.eventType === REALTIME_EVENTS.INSERT) {
                         handleInsert(payload);
                     } else if (payload.eventType === REALTIME_EVENTS.UPDATE) {
