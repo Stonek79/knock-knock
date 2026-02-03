@@ -16,6 +16,9 @@ dist-ssr
 .env.production
 .env.example
 /infra
+.vitest-tmp
+.vite
+.vitest
 
 # Auto-generated files
 src/routeTree.gen.ts

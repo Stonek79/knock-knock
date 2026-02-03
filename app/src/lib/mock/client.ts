@@ -350,27 +350,31 @@ const mockFrom = (table: string) => {
 			};
 		}
 
-		// 2. Filter
+		// 3. Update / Delete
 		if (Array.isArray(data)) {
+			// Filter logic needs to be applied first to find WHO to update/delete
+			// Re-use logic for filtering
+			// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+			let itemsToProcess = data as any[];
+
 			for (const filter of state.filters) {
-				// Пропускаем user_id если он уже обработан спец-логикой выше
 				if (
 					table === "room_members" &&
 					filter.column === "user_id" &&
 					state.filters.some((f) => f.column === "user_id")
 				) {
-					// Но если мы зашли в 'else', то фильтруем
 					if (
 						!state.filters.find((f) => f.column === "user_id" && f === filter)
 					) {
-						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
-						data = data.filter((item: any) => item.user_id === filter.value);
+						itemsToProcess = itemsToProcess.filter(
+							// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+							(item: any) => item.user_id === filter.value,
+						);
 					}
 					continue;
 				}
-
 				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
-				data = data.filter((item: any) => {
+				itemsToProcess = itemsToProcess.filter((item: any) => {
 					if (filter.column.startsWith("rooms.")) {
 						const subCol = filter.column.split(".")[1];
 						return item.rooms?.[subCol] === filter.value;
@@ -382,35 +386,74 @@ const mockFrom = (table: string) => {
 				});
 			}
 
-			// Если операция DELETE - удаляем найденные элементы из глобального стейта
+			// Если операция DELETE
 			if (state.operation === "delete") {
-				// Находим индексы для удаления
-				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
-				const itemsToDelete = data as any[];
-
 				if (table === "rooms") {
 					MOCK_STATE.rooms = MOCK_STATE.rooms.filter(
 						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
-						(r: any) => !itemsToDelete.some((del) => del.id === r.id),
+						(r: any) => !itemsToProcess.some((del) => del.id === r.id),
 					);
 				} else if (table === "room_members") {
 					MOCK_STATE.members = MOCK_STATE.members.filter(
 						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
 						(m: any) =>
-							!itemsToDelete.some(
+							!itemsToProcess.some(
 								(del) => del.room_id === m.room_id && del.user_id === m.user_id,
 							),
 					);
 				} else if (table === "messages") {
 					MOCK_STATE.messages = MOCK_STATE.messages.filter(
 						// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
-						(m: any) => !itemsToDelete.some((del) => del.id === m.id),
+						(m: any) => !itemsToProcess.some((del) => del.id === m.id),
+					);
+				}
+				saveMockState(MOCK_STATE);
+				return { data: null, error: null };
+			}
+
+			// Если операция UPDATE
+			if (state.operation === "update") {
+				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+				const updates = (state as any).updateValues;
+
+				if (table === "messages") {
+					// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+					MOCK_STATE.messages = MOCK_STATE.messages.map((msg: any) => {
+						if (itemsToProcess.some((item) => item.id === msg.id)) {
+							const updatedMsg = { ...msg, ...updates };
+
+							// Emit Realtime Event
+							mockEE.emit(
+								`postgres_changes:public:${table}:room_id=eq.${msg.room_id}`,
+								{
+									eventType: "UPDATE",
+									new: {
+										...updatedMsg,
+										profiles:
+											MOCK_USERS.find((u) => u.id === msg.sender_id) || null,
+									},
+									old: msg,
+								},
+							);
+							return updatedMsg;
+						}
+						return msg;
+					});
+				} else if (table === "rooms") {
+					// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+					MOCK_STATE.rooms = MOCK_STATE.rooms.map((r: any) =>
+						itemsToProcess.some((item) => item.id === r.id)
+							? { ...r, ...updates }
+							: r,
 					);
 				}
 
 				saveMockState(MOCK_STATE);
 				return { data: null, error: null };
 			}
+
+			// If select, just return filtered data
+			data = itemsToProcess;
 		}
 
 		// 3. Order
@@ -490,6 +533,7 @@ const mockFrom = (table: string) => {
 					mockEE.emit(
 						`postgres_changes:public:${table}:room_id=eq.${msg.room_id}`,
 						{
+							eventType: "INSERT",
 							new: {
 								...msg,
 								profiles:
@@ -502,7 +546,13 @@ const mockFrom = (table: string) => {
 			saveMockState(MOCK_STATE);
 			return Promise.resolve({ data: values, error: null });
 		},
-		update: () => builder,
+		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+		update: (values: any) => {
+			state.operation = "update";
+			// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
+			(state as any).updateValues = values;
+			return builder;
+		},
 		delete: () => {
 			state.operation = "delete";
 			return builder;

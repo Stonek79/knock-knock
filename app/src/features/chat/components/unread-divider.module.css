@@ -1,0 +1,22 @@
+/* Контейнер разделителя */
+.container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: var(--space-2) 0;
+	margin: var(--space-2) 0;
+}
+
+/* Линия разделителя */
+.line {
+	flex: 1;
+	height: 1px;
+	background: var(--accent-a8);
+}
+
+/* Текст разделителя */
+.text {
+	color: var(--accent-11);
+	font-size: var(--font-size-1);
+	font-weight: var(--font-weight-medium);
+}

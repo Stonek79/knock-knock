@@ -1,42 +1,65 @@
+/* Обёртка ввода сообщения */
 .inputWrapper {
-    display: flex;
-    align-items: flex-end;
-    gap: 12px;
-    padding: 8px 12px;
-    border-top: 1px solid var(--border);
-    background-color: var(--color-background);
-    min-height: auto;
+	display: flex;
+	flex-direction: row;
+	align-items: flex-end;
+	gap: 8px;
+	/* Уменьшенный отступ: иконка 40px + 4px*2 = 48px, стремимся к компактности */
+	padding: 4px 6px;
+	background-color: var(--gray-1);
+	transition: background-color 0.2s;
+	min-height: 60px; /* Визуальный минимум */
 }
 
-@media (min-width: 600px) {
-    .inputWrapper {
-        border-top: 1px solid var(--border);
-        background-color: var(--surface);
-        align-items: center;
-    }
-}
-
-.textArea {
-    flex: 1;
-    min-height: 40px;
-    max-height: 160px;
-    resize: none;
-    width: 100%;
-
-    outline: none;
-    border: none;
-    scrollbar-width: thin;
-
-    padding: 8px 12px;
-}
-
-.actionButton {
-    margin-bottom: 2px;
-}
-
+/* Контейнер текстового поля */
 .textAreaContainer {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    min-height: 40px;
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	/* Убираем лишние отступы контейнера */
+	padding: 0;
+}
+
+/* Текстовое поле */
+.textArea {
+	width: 100%;
+	/* Соответствие высоте кнопки для выравнивания одной строки */
+	min-height: 40px;
+	line-height: 1.5;
+	max-height: 150px;
+	resize: none;
+	outline: none;
+	border: none;
+	scrollbar-width: thin;
+	padding: 8px 0; /* Внутренний отступ для вертикального центрирования текста */
+	margin: 0;
+	box-sizing: border-box;
+}
+
+/* Кнопки действий */
+.actionButton {
+	flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	margin-bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Десктоп */
+@media (min-width: 769px) {
+	.inputWrapper {
+		/* Десктоп: подгонка под высоту сайдбара (72px) */
+		/* 40px контент + 16px*2 отступ = 72px */
+		padding: 4px 6px;
+		align-items: flex-end;
+		background-color: var(--surface);
+		max-height: 200px;
+	}
+
+	.textArea {
+		padding: 8px 0; /* Единое выравнивание */
+	}
 }

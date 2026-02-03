@@ -21,6 +21,7 @@ export interface MockMessage {
 	sender_id: string;
 	content: string;
 	created_at: string;
+	deleted_by?: string[];
 }
 
 /** Вспомогательная функция для генерации времени N минут назад */

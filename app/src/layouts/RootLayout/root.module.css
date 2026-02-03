@@ -1,13 +1,14 @@
 .layout {
-    display: flex;
-    flex-direction: column;
-    min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	height: 100dvh;
+	overflow: hidden;
 }
 
 /* Мобильный layout адаптируется под тему */
 .mobileLayout {
-    background: var(--background);
-    color: var(--foreground);
+	background: var(--background);
+	color: var(--foreground);
 }
 
 /* Отступ снизу для мобильной навигации */
@@ -19,52 +20,52 @@
 
 /* === DESKTOP LAYOUT === */
 .desktopLayout {
-    display: grid;
-    grid-template-columns: 60px 350px 1fr;
-    height: 100vh;
-    width: 100%;
-    overflow: hidden;
-    background: var(--background);
+	display: grid;
+	grid-template-columns: 60px 350px 1fr;
+	height: 100vh;
+	width: 100%;
+	overflow: hidden;
+	background: var(--background);
 }
 
 .sidebar {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-    background: var(--surface);
-    /* backdrop-filter handles blur, color comes from surface which might be translucent in Radix */
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-right: 1px solid var(--border);
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	overflow: hidden;
+	background: var(--surface);
+	/* backdrop-filter handles blur, color comes from surface which might be translucent in Radix */
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	border-right: 1px solid var(--border);
 }
 
 .mainContent {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-    background: var(--main-background);
-    position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	overflow: hidden;
+	background: var(--main-background);
+	position: relative;
 }
 
 .loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-size: 1.25rem;
-    color: var(--muted-foreground);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	font-size: 1.25rem;
+	color: var(--muted-foreground);
 }
 
 .banner {
-    background-color: var(--amber-9);
-    color: white;
-    text-align: center;
-    padding: 0.5rem;
-    font-weight: bold;
-    font-size: 0.875rem;
-    position: sticky;
-    top: 0;
-    z-index: 9999;
+	background-color: var(--amber-9);
+	color: white;
+	text-align: center;
+	padding: 0.5rem;
+	font-weight: bold;
+	font-size: 0.875rem;
+	position: sticky;
+	top: 0;
+	z-index: 9999;
 }

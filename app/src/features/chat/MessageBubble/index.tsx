@@ -1,72 +1,95 @@
-import { Avatar, Box, Text } from '@radix-ui/themes';
-import { getUserColor } from '@/lib/utils/colors';
-import styles from './message-bubble.module.css';
+import { Avatar, Box, Text } from "@radix-ui/themes";
+import { useTranslation } from "react-i18next";
+import { MESSAGE_STATUS } from "@/lib/constants/chat";
+import type { MessageStatus } from "@/lib/types/message";
+import { getUserColor } from "@/lib/utils/colors";
+import styles from "./message-bubble.module.css";
+import { StatusIcon } from "./StatusIcon";
 
 interface MessageBubbleProps {
-    /** Текст сообщения */
-    content: string;
-    /** Флаг, является ли сообщение собственным */
-    isOwn: boolean;
-    /** ISO строка времени создания */
-    timestamp: string;
-    /** Имя отправителя (для групповых чатов) */
-    senderName?: string;
-    /** URL аватара отправителя */
-    senderAvatar?: string;
+	content: string | null;
+	isOwn: boolean;
+	timestamp: string;
+	senderName?: string;
+	senderAvatar?: string;
+	status?: MessageStatus;
+	isEdited?: boolean;
+	isDeleted?: boolean;
+	isSelected?: boolean;
+	onToggleSelection?: () => void;
+	isEditing?: boolean;
 }
 
-/**
- * Пузырек сообщения в стиле WhatsApp с поддержкой аватарок и цветных имен.
- */
 export function MessageBubble({
-    content,
-    isOwn,
-    timestamp,
-    senderName,
-    senderAvatar,
+	content,
+	isOwn,
+	timestamp,
+	senderName,
+	senderAvatar,
+	status = MESSAGE_STATUS.SENT,
+	isEdited = false,
+	isDeleted = false,
+	isSelected = false,
+	onToggleSelection,
+	isEditing = false,
 }: MessageBubbleProps) {
-    // Форматируем время: "14:30"
-    const timeString = new Date(timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+	const { t } = useTranslation();
 
-    // Получаем цвет Radix для имени пользователя
-    const userColor = senderName ? getUserColor(senderName) : undefined;
+	const timeString = new Date(timestamp).toLocaleTimeString([], {
+		hour: "2-digit",
+		minute: "2-digit",
+	});
 
-    return (
-        <div
-            className={`${styles.bubbleWrapper} ${isOwn ? styles.own : styles.peer}`}
-        >
-            {!isOwn && (
-                <div className={styles.avatarWrapper}>
-                    <Avatar
-                        size="1"
-                        radius="full"
-                        fallback={senderName?.[0] || '?'}
-                        src={senderAvatar}
-                        className={styles.avatar}
-                    />
-                </div>
-            )}
+	const userColor = senderName ? getUserColor(senderName) : undefined;
 
-            <Box
-                className={`${styles.bubble} ${isOwn ? styles.bubbleOwn : styles.bubblePeer}`}
-            >
-                {!isOwn && senderName && (
-                    <Text className={styles.senderName} color={userColor}>
-                        {senderName}
-                    </Text>
-                )}
+	return (
+		<Box
+			className={`${styles.bubbleWrapper} ${isOwn ? styles.own : styles.peer} ${isSelected ? styles.selected : ""}`}
+			onClick={() => {
+				if (isEditing) return; // Не переключаем, если редактируем
+				onToggleSelection?.();
+			}}
+		>
+			{!isOwn && (
+				<Avatar
+					size="1"
+					radius="full"
+					fallback={senderName?.[0] || "?"}
+					src={senderAvatar}
+					className={styles.avatar}
+				/>
+			)}
 
-                <Text className={styles.content}>{content}</Text>
+			<Box
+				className={`${styles.bubble} ${isOwn ? styles.bubbleOwn : styles.bubblePeer}`}
+			>
+				{!isOwn && senderName && (
+					<Text
+						weight="bold"
+						size="1"
+						color={userColor}
+						className={styles.senderName}
+					>
+						{senderName}
+					</Text>
+				)}
 
-                <div className={styles.timeWrapper}>
-                    <Text className={styles.time}>{timeString}</Text>
-                </div>
-                {/* Clearfix for float time effect inside the bubble context */}
-                <div className={styles.clearfix} />
-            </Box>
-        </div>
-    );
+				{isDeleted ? (
+					<Text className={styles.deletedContent}>
+						{t("chat.messageDeleted", "Сообщение удалено")}
+					</Text>
+				) : (
+					<Text className={styles.content}>{content}</Text>
+				)}
+
+				<Box className={styles.metadata}>
+					<Text className={styles.time}>
+						{timeString}
+						{isEdited && !isDeleted && ` • ${t("chat.edited", "изм.")}`}
+					</Text>
+					<StatusIcon status={status} isOwn={isOwn} isDeleted={isDeleted} />
+				</Box>
+			</Box>
+		</Box>
+	);
 }
