@@ -32,16 +32,20 @@ export function useChatActions({
      */
     const sendMessage = async (text: string) => {
         if (!roomKey || !user || !roomId) {
-            logger.warn(
-                'Невозможно отправить сообщение: отсутствуют ключи или ID комнаты',
-            );
+            logger.warn('Cannot send message: missing keys or room ID');
             return;
         }
-        try {
-            await MessageService.sendMessage(roomId, user.id, text, roomKey);
-        } catch (e) {
-            logger.error('Ошибка отправки сообщения', e);
-            throw e;
+
+        const result = await MessageService.sendMessage(
+            roomId,
+            user.id,
+            text,
+            roomKey,
+        );
+        if (result.isErr()) {
+            logger.error('Failed to send message', result.error);
+            // Здесь можно добавить toast error notification
+            throw new Error(result.error.message); // Для совместимости с вызывающим кодом, если он ждет throw, или обработать тут
         }
     };
 
@@ -54,24 +58,30 @@ export function useChatActions({
 
         setEnding(true);
         try {
-            await MessageService.clearRoom(roomId);
+            const clearResult = await MessageService.clearRoom(roomId);
+            if (clearResult.isErr()) {
+                logger.error('Failed to clear room', clearResult.error);
+            }
 
             // Если чат эфемерный (временный), удаляем его полностью из базы
             if (room?.is_ephemeral) {
-                logger.info(`Удаление эфемерной комнаты: ${roomId}`);
-                await RoomService.deleteRoom(roomId);
-
-                // Обновляем список комнат в кэше
-                await queryClient.invalidateQueries({
-                    queryKey: ['rooms'],
-                    refetchType: 'all',
-                });
-                logger.info(`Комната ${roomId} удалена, кэш обновлен`);
+                logger.info(`Deleting ephemeral room: ${roomId}`);
+                const deleteResult = await RoomService.deleteRoom(roomId);
+                if (deleteResult.isErr()) {
+                    logger.error('Failed to delete room', deleteResult.error);
+                } else {
+                    // Обновляем список комнат в кэше
+                    await queryClient.invalidateQueries({
+                        queryKey: ['rooms'],
+                        refetchType: 'all',
+                    });
+                    logger.info(`Room ${roomId} deleted, cache updated`);
+                }
             }
 
             navigate({ to: '/chat' });
         } catch (e) {
-            logger.error('Ошибка завершения сессии', e);
+            logger.error('Error ending session', e);
         } finally {
             setEnding(false);
         }
@@ -79,22 +89,19 @@ export function useChatActions({
 
     /**
      * Безопасное удаление сообщения (Secure Delete).
-     * Контент затирается, помечается как удаленное.
-     */
-    /**
-     * Безопасное удаление сообщения (Secure Delete).
      */
     const deleteMessage = async (messageId: string, isOwnMessage: boolean) => {
         if (!user) return;
-        try {
-            await MessageService.deleteMessage(
-                messageId,
-                user.id,
-                isOwnMessage,
-            );
-        } catch (e) {
-            logger.error('Ошибка удаления сообщения', e);
-            throw e;
+
+        const result = await MessageService.deleteMessage(
+            messageId,
+            user.id,
+            isOwnMessage,
+        );
+
+        if (result.isErr()) {
+            logger.error('Failed to delete message', result.error);
+            throw new Error(result.error.message);
         }
     };
 
@@ -104,14 +111,19 @@ export function useChatActions({
      */
     const updateMessage = async (messageId: string, newContent: string) => {
         if (!roomKey) {
-            logger.warn('Невозможно отредактировать: нет ключа шифрования');
+            logger.warn('Cannot update: missing encryption key');
             return;
         }
-        try {
-            await MessageService.updateMessage(messageId, newContent, roomKey);
-        } catch (e) {
-            logger.error('Ошибка редактирования сообщения', e);
-            throw e;
+
+        const result = await MessageService.updateMessage(
+            messageId,
+            newContent,
+            roomKey,
+        );
+
+        if (result.isErr()) {
+            logger.error('Failed to update message', result.error);
+            throw new Error(result.error.message);
         }
     };
 

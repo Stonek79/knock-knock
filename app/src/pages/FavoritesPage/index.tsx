@@ -24,7 +24,9 @@ export function FavoritesPage() {
         queryFn: async () => {
             if (!user) throw new Error('Unauthorized');
             // Находим или создаем чат с самим собой (targetUserId = currentUserId)
-            return RoomService.findOrCreateDM(user.id, user.id);
+            const res = await RoomService.findOrCreateDM(user.id, user.id);
+            if (res.isErr()) throw new Error(res.error.message);
+            return res.value;
         },
         enabled: !!user,
     });

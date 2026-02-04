@@ -90,10 +90,12 @@ vi.mock('@/features/chat/hooks/useChatScroll', () => ({
     }),
 }));
 
+import { ok } from '@/lib/utils/result';
+
 // Мок действий чата — перехватываем вызовы сервисов
-const mockSendMessage = vi.fn().mockResolvedValue(undefined);
-const mockDeleteMessage = vi.fn().mockResolvedValue(undefined);
-const mockUpdateMessage = vi.fn().mockResolvedValue(undefined);
+const mockSendMessage = vi.fn().mockResolvedValue(ok(undefined));
+const mockDeleteMessage = vi.fn().mockResolvedValue(ok(undefined));
+const mockUpdateMessage = vi.fn().mockResolvedValue(ok(undefined));
 
 vi.mock('@/features/chat/hooks/useChatActions', () => ({
     useChatActions: () => ({

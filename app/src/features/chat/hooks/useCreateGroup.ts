@@ -51,7 +51,7 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
 
         setIsCreating(true);
         try {
-            const { roomId } = await RoomService.createRoom(
+            const res = await RoomService.createRoom(
                 groupName.trim(),
                 'group',
                 user.id,
@@ -59,6 +59,9 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
                 false, // Групповые чаты обычно не эфемерные
                 avatarUrl,
             );
+
+            if (res.isErr()) throw new Error(res.error.message);
+            const { roomId } = res.value;
 
             // Инвалидируем кеш списка комнат
             await queryClient.invalidateQueries({

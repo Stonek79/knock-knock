@@ -16,11 +16,13 @@ export function useCreateDM() {
             targetUserId,
             isPrivate,
         }: CreateDMParams) => {
-            return RoomService.findOrCreateDM(
+            const res = await RoomService.findOrCreateDM(
                 currentUserId,
                 targetUserId,
                 isPrivate,
             );
+            if (res.isErr()) throw new Error(res.error.message);
+            return res.value;
         },
         onSuccess: () => {
             // Инвалидируем список комнат, чтобы новый чат появился в сайдбаре

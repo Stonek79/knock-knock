@@ -4,22 +4,30 @@ import { MessageInput } from '@/features/chat/MessageInput';
 import { MessageService } from '@/lib/services/message';
 
 // Mocks
-vi.mock('@/lib/services/message', () => ({
-    MessageService: {
-        sendMessage: vi.fn(),
-        deleteMessage: vi.fn(),
-        updateMessage: vi.fn(),
-        markMessagesAsRead: vi.fn(),
-        markMessageAsDelivered: vi.fn(),
-    },
-}));
+vi.mock('@/lib/services/message', async () => {
+    const { ok } = await import('@/lib/utils/result');
+    return {
+        MessageService: {
+            sendMessage: vi.fn().mockResolvedValue(ok('msg-1')),
+            deleteMessage: vi.fn().mockResolvedValue(ok(undefined)),
+            updateMessage: vi.fn().mockResolvedValue(ok(undefined)),
+            markMessagesAsRead: vi.fn().mockResolvedValue(ok(undefined)),
+            markMessageAsDelivered: vi.fn().mockResolvedValue(ok(undefined)),
+        },
+    };
+});
 
-vi.mock('@/lib/services/room', () => ({
-    RoomService: {
-        createRoom: vi.fn(),
-        findOrCreateDM: vi.fn(),
-    },
-}));
+vi.mock('@/lib/services/room', async () => {
+    const { ok } = await import('@/lib/utils/result');
+    return {
+        RoomService: {
+            createRoom: vi
+                .fn()
+                .mockResolvedValue(ok({ roomId: 'room-1', roomKey: {} })),
+            findOrCreateDM: vi.fn().mockResolvedValue(ok('room-1')),
+        },
+    };
+});
 
 vi.mock('@/features/chat/hooks/useMessages', () => ({
     useMessages: () => ({

@@ -16,6 +16,8 @@ import {
     restoreBackup,
     saveKeyPair,
 } from '@/lib/crypto';
+import type { RecoveryError, RestoredKeys } from '@/lib/crypto/recovery';
+import type { Result } from '@/lib/types/result';
 
 export interface KeystoreState {
     loading: boolean;
@@ -78,7 +80,7 @@ export function useKeystore(): KeystoreState & KeystoreActions {
                 });
             }
         } catch (error) {
-            console.error('Ошибка загрузки ключей:', error);
+            console.error('Failed to load keys:', error);
             setState((prev) => ({ ...prev, loading: false }));
         }
     }, []);
@@ -110,7 +112,7 @@ export function useKeystore(): KeystoreState & KeystoreActions {
                 publicKeyX25519: arrayBufferToBase64(rawPrekey),
             });
         } catch (error) {
-            console.error('Ошибка генерации ключей:', error);
+            console.error('Failed to generate keys:', error);
             setState((prev) => ({ ...prev, loading: false }));
         }
     }, []);
@@ -146,7 +148,7 @@ export function useKeystore(): KeystoreState & KeystoreActions {
 
             return await createBackup(password, identity, prekey);
         } catch (error) {
-            console.error('Ошибка экспорта:', error);
+            console.error('Export failed:', error);
             return null;
         }
     }, []);
@@ -155,7 +157,13 @@ export function useKeystore(): KeystoreState & KeystoreActions {
         async (backup: KeyBackup, password: string) => {
             setState((prev) => ({ ...prev, loading: true }));
             try {
-                const restored = await restoreBackup(backup, password);
+                const result: Result<RestoredKeys, RecoveryError> =
+                    await restoreBackup(backup, password);
+
+                if (result.isErr()) {
+                    throw new Error(result.error.message);
+                }
+                const restored = result.value;
 
                 await saveKeyPair(
                     'identity',
@@ -170,7 +178,7 @@ export function useKeystore(): KeystoreState & KeystoreActions {
 
                 await loadKeys();
             } catch (error) {
-                console.error('Ошибка восстановления:', error);
+                console.error('Restore failed:', error);
                 setState((prev) => ({ ...prev, loading: false }));
                 throw error;
             }

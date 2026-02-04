@@ -7,8 +7,10 @@
 - `/infra` — Конфигурации инфраструктуры (Docker, Nginx, WireGuard).
 - `/docs` — Проектные правила и технические спецификации.
 
+- [Архитектура](file:///Users/alexstone/WebstormProjects/knock-knock/docs/ARCHITECTURE.md)
 - [Инструкция по деплою](file:///Users/alexstone/WebstormProjects/knock-knock/docs/DEPLOYMENT.md)
 - [Правила проекта](file:///Users/alexstone/WebstormProjects/knock-knock/docs/RULES.md)
+- [AI Агенты и Навыки](file:///Users/alexstone/WebstormProjects/knock-knock/docs/AGENTS.md)
 - **[Roadmap проекта](file:///Users/alexstone/WebstormProjects/knock-knock/docs/ROADMAP.md)** (Актуальный статус)
 
 ## Как запустить локально

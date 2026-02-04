@@ -3,6 +3,9 @@
  * Использует PBKDF2 для деривации ключа шифрования из пароля
  * и AES-GCM для защиты данных.
  */
+import { ERROR_CODES } from '@/lib/constants/errors';
+import type { AppError, Result } from '@/lib/types/result';
+import { appError, err, ok } from '@/lib/utils/result';
 
 const subtle = window.crypto.subtle;
 
@@ -26,7 +29,7 @@ interface BackupPayload {
     };
 }
 
-// Утилиты преобразования (дублируем, чтобы не зависеть от keys.ts циклически, или вынесем в utils.ts позже)
+// Утилиты преобразования
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
     let binary = '';
     const bytes = new Uint8Array(buffer);
@@ -123,8 +126,15 @@ export async function createBackup(
 }
 
 /**
+ * Ошибки, возможные при восстановлении бэкапа
+ */
+export type RecoveryError =
+    | AppError<typeof ERROR_CODES.UNSUPPORTED_VERSION>
+    | AppError<typeof ERROR_CODES.DECRYPT_FAILED, Error>
+    | AppError<typeof ERROR_CODES.INVALID_BACKUP, Error>;
+
+/**
  * Быстрый тип для возврата восстановленных ключей
- * (CryptoKey, но без структуры KeyPair, так как импорт возвращает CryptoKey)
  */
 export interface RestoredKeys {
     identity: { privateKey: CryptoKey; publicKey: CryptoKey };
@@ -137,9 +147,14 @@ export interface RestoredKeys {
 export async function restoreBackup(
     backup: KeyBackup,
     password: string,
-): Promise<RestoredKeys> {
+): Promise<Result<RestoredKeys, RecoveryError>> {
     if (backup.version !== 1) {
-        throw new Error('Unsupported backup version');
+        return err(
+            appError(
+                ERROR_CODES.UNSUPPORTED_VERSION,
+                'Unsupported backup version',
+            ),
+        );
     }
 
     try {
@@ -191,26 +206,34 @@ export async function restoreBackup(
             'jwk',
             payload.prekey.public,
             { name: 'X25519' },
-            true, // Часто публичные ключи тоже нужны extractable для передачи
-            [], // У X25519 public key usage часто пустой при импорте, или не проверяется так строго?
-            // Обычно для X25519 public key usages не задаются при deriveBits?
-            // Спецификация: Public keys for X25519 do not support any usages directly?
-            // Нет, для deriveBits нужен PUBLIC key собеседника, но usages задаются при импорте?
-            // Обычно [] или ['deriveBits'] (но deriveBits - это usage приватного ключа).
-            // Проверим спецификацию: "The 'deriveKey' and 'deriveBits' usages are only applicable to private keys."
-            // Значит для публичного ключа usage должен быть []?
-            // На всякий случай оставим пустым, так как он используется как параметр в deriveBits.
+            true,
+            [],
         );
 
-        return {
+        return ok({
             identity: {
                 privateKey: identityPrivate,
                 publicKey: identityPublic,
             },
             prekey: { privateKey: prekeyPrivate, publicKey: prekeyPublic },
-        };
+        });
     } catch (e) {
-        console.error(e);
-        throw new Error('Failed to decrypt backup. Wrong password?');
+        console.error('Backup restore failed:', e);
+        if (e instanceof Error && e.name === 'OperationError') {
+            return err(
+                appError(
+                    ERROR_CODES.DECRYPT_FAILED,
+                    'Failed to decrypt backup. Wrong password?',
+                    e,
+                ),
+            );
+        }
+        return err(
+            appError(
+                ERROR_CODES.INVALID_BACKUP,
+                'Failed to parse backup data',
+                e instanceof Error ? e : undefined,
+            ),
+        );
     }
 }
