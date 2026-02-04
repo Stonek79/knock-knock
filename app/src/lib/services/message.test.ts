@@ -87,12 +87,10 @@ describe('MessageService', () => {
             });
 
             const mockSelect = vi.fn().mockReturnValue({
-                single: vi
-                    .fn()
-                    .mockResolvedValue({
-                        data: null,
-                        error: { message: 'DB Fail' },
-                    }),
+                single: vi.fn().mockResolvedValue({
+                    data: null,
+                    error: { message: 'DB Fail' },
+                }),
             });
             const mockInsert = vi.fn().mockReturnValue({ select: mockSelect });
             // biome-ignore lint/suspicious/noExplicitAny: mock
