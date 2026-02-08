@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MESSAGE_POSITION } from '@/lib/constants';
 
 /**
  * Схема сообщения (messages)
@@ -16,3 +17,13 @@ export const messageSchema = z.object({
     is_edited: z.boolean().default(false),
     is_deleted: z.boolean().default(false),
 });
+
+/**
+ * Схема позиции сообщения в группе
+ */
+export const messagePositionSchema = z.enum([
+    MESSAGE_POSITION.SINGLE,
+    MESSAGE_POSITION.START,
+    MESSAGE_POSITION.MIDDLE,
+    MESSAGE_POSITION.END,
+]);

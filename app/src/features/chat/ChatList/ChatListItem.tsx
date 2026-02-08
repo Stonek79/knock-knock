@@ -8,6 +8,7 @@ import styles from './chatlist.module.css';
 interface ChatItem {
     id: string;
     name: string;
+    avatar?: string;
     lastMessage?: string;
     time?: string;
     unread?: number;
@@ -30,13 +31,18 @@ export function ChatListItem({ chat }: ChatListItemProps) {
             to="/chat/$roomId"
             params={{ roomId: chat.id }}
             className={styles.chatListItem}
+            activeProps={{
+                className: `${styles.chatListItem} ${styles.chatListItemActive}`,
+            }}
         >
-            <Flex p="3" gap="3" align="center">
+            <Flex p="3" gap="3" align="center" width="100%">
                 <Avatar
                     size="3"
-                    fallback={chat.name[0]}
+                    src={chat.avatar}
+                    fallback={chat.name.replace(/🔒\s*/, '')[0]}
                     radius="full"
-                    color="blue"
+                    color="gray"
+                    variant="soft"
                 />
                 <Flex direction="column" className={styles.chatInfo}>
                     <Flex justify="between">
@@ -47,7 +53,12 @@ export function ChatListItem({ chat }: ChatListItemProps) {
                             {chat.time}
                         </Text>
                     </Flex>
-                    <Text color="gray" size="2" truncate>
+                    <Text
+                        color="gray"
+                        size="2"
+                        truncate
+                        className={styles.lastMessage}
+                    >
                         {chat.lastMessage}
                     </Text>
                 </Flex>

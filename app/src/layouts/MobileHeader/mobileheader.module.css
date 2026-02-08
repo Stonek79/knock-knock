@@ -3,9 +3,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    background: var(--surface);
+    background: var(--glass-bg);
     color: var(--foreground);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--glass-border);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -34,7 +34,7 @@
 }
 
 .iconButton:active {
-    background: var(--muted-foreground);
+    background: var(--muted);
     opacity: 0.2;
 }
 

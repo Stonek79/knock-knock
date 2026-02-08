@@ -19,6 +19,11 @@ dist-ssr
 .vitest-tmp
 .vite
 .vitest
+/coverage
+playwright-report
+test-results
+*.tsbuildinfo
+.tanstack
 
 # Auto-generated files
 src/routeTree.gen.ts
@@ -33,3 +38,7 @@ src/routeTree.gen.ts
 *.njsproj
 *.sln
 *.sw?
+
+*storybook.log
+storybook-static
+.storybook

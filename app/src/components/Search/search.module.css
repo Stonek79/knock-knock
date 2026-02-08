@@ -1,0 +1,22 @@
+.searchWrapper {
+    width: 100%;
+}
+
+.searchField {
+    background: var(--bubble-in);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 0 12px;
+    height: 36px;
+    transition: all 0.3s ease;
+    color: var(--foreground);
+}
+
+.searchField:focus-within {
+    background: var(--glass-bg);
+    border-color: var(--accent-primary);
+    box-shadow:
+        0 0 15px var(--glow-soft),
+        0 0 30px var(--glow-soft),
+        inset 0 0 15px var(--glow-soft);
+}

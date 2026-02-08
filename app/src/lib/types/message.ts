@@ -1,10 +1,18 @@
 import type { z } from 'zod';
-import type { messageSchema } from '@/lib/schemas/message';
+import type {
+    messagePositionSchema,
+    messageSchema,
+} from '@/lib/schemas/message';
 
 /**
  * Структура таблицы messages (Сообщения)
  */
 export type Message = z.infer<typeof messageSchema>;
+
+/**
+ * Тип позиции сообщения в группе (single, start, middle, end)
+ */
+export type MessagePosition = z.infer<typeof messagePositionSchema>;
 
 /**
  * Структура сообщения в БД (до расшифровки)

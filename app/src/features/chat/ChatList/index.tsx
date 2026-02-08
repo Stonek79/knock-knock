@@ -1,6 +1,7 @@
 import { Box, Flex, ScrollArea, Text } from '@radix-ui/themes';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Search } from '@/components/Search/Search';
 import { CreateChatDialog } from '@/features/chat/CreateChatDialog';
 import { CreateGroupDialog } from '@/features/chat/CreateGroupDialog';
 import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
@@ -34,6 +35,7 @@ export function ChatList() {
 
     const [openDialog, setOpenDialog] = useState<ChatDialogType>(null);
     const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const { data: chats = [], isLoading } = useChatList();
     const { getCount } = useUnreadCounts();
@@ -77,10 +79,18 @@ export function ChatList() {
             <Flex direction="column" className={styles.container}>
                 {/* Заголовок с меню (только для десктопа) */}
                 {!isMobile && (
-                    <ChatListHeader
-                        onOpenChatDialog={handleOpenChatDialog}
-                        onOpenGroupDialog={handleOpenGroupDialog}
-                    />
+                    <>
+                        <ChatListHeader
+                            onOpenChatDialog={handleOpenChatDialog}
+                            onOpenGroupDialog={handleOpenGroupDialog}
+                        />
+                        <div className={styles.searchWrapper}>
+                            <Search
+                                value={searchQuery}
+                                onChange={setSearchQuery}
+                            />
+                        </div>
+                    </>
                 )}
 
                 {/* Пустой список */}

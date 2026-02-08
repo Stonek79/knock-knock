@@ -1,53 +1,82 @@
-import { Button as RadixButton } from '@radix-ui/themes';
-import { type ComponentPropsWithoutRef, forwardRef } from 'react';
+import { Slot } from '@radix-ui/react-slot';
+import { type ButtonHTMLAttributes, forwardRef } from 'react';
+import styles from './button.module.css';
 
-// Удаляем 'variant' из свойств Radix, чтобы избежать конфликта с нашими кастомными вариантами
-type BaseButtonProps = Omit<
-    ComponentPropsWithoutRef<typeof RadixButton>,
-    'variant'
->;
+/**
+ * Варианты стиля кнопки.
+ */
+type ButtonVariant = 'solid' | 'glass' | 'ghost' | 'outline' | 'soft';
 
-type ButtonProps = BaseButtonProps & {
-    variant?:
-        | 'primary'
-        | 'secondary'
-        | 'ghost'
-        | 'solid'
-        | 'soft'
-        | 'outline'
-        | 'surface'
-        | 'classic';
+/**
+ * Размеры кнопки.
+ * Поддерживаются как семантические (sm/md/lg), так и Radix-совместимые (1-4).
+ */
+type ButtonSize = 'sm' | 'md' | 'lg' | 'icon' | '1' | '2' | '3' | '4';
+
+/**
+ * Пропсы компонента Button.
+ */
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+    /** Если true, рендерит дочерний элемент вместо <button> */
+    asChild?: boolean;
+    /** Вариант стиля кнопки */
+    variant?: ButtonVariant;
+    /** Размер кнопки */
+    size?: ButtonSize;
+}
+
+/**
+ * Маппинг размеров в CSS-классы.
+ */
+const sizeClassMap: Record<ButtonSize, string> = {
+    '1': styles.size1,
+    '2': styles.size2,
+    '3': styles.size3,
+    '4': styles.size4,
+    sm: styles.sm,
+    md: styles.md,
+    lg: styles.lg,
+    icon: styles.icon,
 };
 
 /**
- * Компонент кнопки.
- * Обертка над Radix Themes Button с поддержкой легаси вариантов.
+ * Универсальный компонент кнопки.
+ * Использует CSS-переменные из index.css для интеграции с дизайн-системой.
+ *
+ * @example
+ * ```tsx
+ * <Button variant="solid">Отправить</Button>
+ * <Button variant="ghost" size="sm">Отмена</Button>
+ * <Button variant="glass" size="3">Radix-размер</Button>
+ * ```
  */
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ variant = 'primary', ...props }, ref) => {
-        // Сопоставление легаси вариантов с вариантами Radix Themes
-        let themeVariant: ComponentPropsWithoutRef<
-            typeof RadixButton
-        >['variant'] = 'solid';
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+    (
+        {
+            className,
+            variant = 'solid',
+            size = 'md',
+            asChild = false,
+            ...props
+        },
+        ref,
+    ) => {
+        const Comp = asChild ? Slot : 'button';
 
-        switch (variant) {
-            case 'primary':
-                themeVariant = 'solid';
-                break;
-            case 'secondary':
-                themeVariant = 'soft';
-                break;
-            case 'ghost':
-                themeVariant = 'ghost';
-                break;
-            default:
-                themeVariant = variant as ComponentPropsWithoutRef<
-                    typeof RadixButton
-                >['variant'];
-        }
+        // Собираем классы
+        const buttonClasses = [
+            styles.button,
+            styles[variant],
+            sizeClassMap[size],
+            className,
+        ]
+            .filter(Boolean)
+            .join(' ');
 
-        return <RadixButton ref={ref} variant={themeVariant} {...props} />;
+        return <Comp className={buttonClasses} ref={ref} {...props} />;
     },
 );
 
 Button.displayName = 'Button';
+
+export { Button };

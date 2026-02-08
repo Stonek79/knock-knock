@@ -11,6 +11,8 @@ export const common = {
     required: 'Обязательное поле',
     back: 'Назад',
     search: 'Поиск',
+    today: 'Сегодня',
+    yesterday: 'Вчера',
     comingSoon: 'Скоро',
     appDescription: 'Защищенный PWA мессенджер с End-to-End шифрованием.',
     features: {

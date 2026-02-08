@@ -5,19 +5,6 @@
     overflow: hidden;
 }
 
-/* Мобильный layout адаптируется под тему */
-.mobileLayout {
-    background: var(--background);
-    color: var(--foreground);
-}
-
-/* Отступ снизу для мобильной навигации */
-/* @media (max-width: 768px) {
-	.layout {
-		padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
-	}
-} */
-
 /* === DESKTOP LAYOUT === */
 .desktopLayout {
     display: grid;
@@ -25,7 +12,6 @@
     height: 100vh;
     width: 100%;
     overflow: hidden;
-    background: var(--background);
 }
 
 .sidebar {
@@ -33,11 +19,10 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
-    background: var(--surface);
-    /* backdrop-filter handles blur, color comes from surface which might be translucent in Radix */
+    background: transparent;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-right: 1px solid var(--border);
+    border-right: 1px solid var(--glass-border);
 }
 
 .mainContent {
@@ -45,7 +30,6 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
-    background: var(--main-background);
     position: relative;
 }
 
@@ -55,7 +39,7 @@
     align-items: center;
     height: 100vh;
     font-size: 1.25rem;
-    color: var(--muted-foreground);
+    color: var(--muted);
 }
 
 .banner {

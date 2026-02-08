@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { DB_TABLES } from '@/lib/constants';
+import { DB_TABLES, ROOM_TYPE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { formatChatTime } from '@/lib/utils/date';
 import { useAuthStore } from '@/stores/auth';
@@ -76,7 +76,7 @@ export function useChatList() {
                 .filter((item) => item.rooms) // Filter out orphaned members
                 .filter((item) => {
                     // Исключаем чаты с самим собой ("Избранное") из общего списка
-                    if (item.rooms.type === 'direct') {
+                    if (item.rooms.type === ROOM_TYPE.DIRECT) {
                         const otherMembers = item.rooms.room_members.filter(
                             (m) => m.user_id !== user?.id,
                         );
@@ -86,7 +86,7 @@ export function useChatList() {
                 })
                 .map((item) => {
                     const room = item.rooms;
-                    const isDM = room.type === 'direct';
+                    const isDM = room.type === ROOM_TYPE.DIRECT;
 
                     // Для DM чатов пытаемся найти имя собеседника
                     let displayName = room.name;
@@ -121,7 +121,7 @@ export function useChatList() {
                             room.last_message?.content ||
                             t('chat.noMessages', 'Нет сообщений'),
                         time: room.last_message?.created_at
-                            ? formatChatTime(room.last_message.created_at)
+                            ? formatChatTime(room.last_message.created_at, t)
                             : '',
                     };
                 });

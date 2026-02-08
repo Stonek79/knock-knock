@@ -11,7 +11,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
-    padding: 16px;
+    padding: 8px 0;
 }
 
 .loadingBox,
@@ -37,12 +37,19 @@
 }
 
 .scrollButton {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    border: 2px solid var(--surface); /* Бордюр для визуального отделения от сообщений */
+    box-shadow: var(--glass-shadow);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    color: var(--accent-primary);
     transition:
         opacity 0.3s ease,
         transform 0.2s;
     opacity: 1;
+}
+
+.scrollButton:hover {
+    background: var(--bubble-in);
 }
 
 .scrollButtonHidden {

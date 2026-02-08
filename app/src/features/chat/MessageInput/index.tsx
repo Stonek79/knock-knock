@@ -96,12 +96,12 @@ export function MessageInput({
                 <IconButton
                     size="3"
                     radius="full"
-                    variant="ghost" // Unify style
+                    variant="ghost"
                     onClick={handleSend}
                     disabled={disabled || sending}
                     className={styles.actionButton}
                     aria-label={t('chat.send', 'Отправить')}
-                    color="blue"
+                    style={{ color: 'var(--accent-primary)' }}
                 >
                     <SendHorizontal size={20} />
                 </IconButton>

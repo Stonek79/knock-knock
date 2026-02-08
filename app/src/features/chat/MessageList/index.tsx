@@ -5,15 +5,11 @@
  */
 import { Box, Flex, IconButton, Text } from '@radix-ui/themes';
 import { ArrowDown } from 'lucide-react';
-import {
-    type RefObject,
-    useEffect,
-    useImperativeHandle,
-    useRef,
-    useState,
-} from 'react';
+import { type RefObject, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUserActivity } from '@/hooks/useUserActivity';
 import type { DecryptedMessageWithProfile } from '@/lib/types/message';
+import { getMessageGroupPosition } from '@/lib/utils/messageGrouping';
 import { useAuthStore } from '@/stores/auth';
 import { UnreadDivider } from '../components/UnreadDivider';
 import { useChatScroll } from '../hooks/useChatScroll';
@@ -54,47 +50,13 @@ export function MessageList({
     });
 
     // Логика авто-скрытия кнопки прокрутки
-    const [isUserActive, setIsUserActive] = useState(true);
-    const activityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-        null,
-    );
-
-    useEffect(() => {
-        const handleActivity = () => {
-            setIsUserActive(true);
-            if (activityTimeoutRef.current)
-                clearTimeout(activityTimeoutRef.current);
-            activityTimeoutRef.current = setTimeout(() => {
-                setIsUserActive(false);
-            }, 2000); // Скрыть после 2 сек бездействия
-        };
-
-        // Подписка на события активности
-        window.addEventListener('mousemove', handleActivity);
-        window.addEventListener('touchstart', handleActivity);
-        window.addEventListener('keydown', handleActivity);
-
-        handleActivity(); // Инициализация
-
-        return () => {
-            window.removeEventListener('mousemove', handleActivity);
-            window.removeEventListener('touchstart', handleActivity);
-            window.removeEventListener('keydown', handleActivity);
-            if (activityTimeoutRef.current)
-                clearTimeout(activityTimeoutRef.current);
-        };
-    }, []);
+    const { isActive: isUserActive, triggerActivity } = useUserActivity(2000);
 
     // Общий обработчик прокрутки
     const handleScroll = () => {
         handleChatScroll();
         // Также обновляем активность при прокрутке
-        setIsUserActive(true);
-        if (activityTimeoutRef.current)
-            clearTimeout(activityTimeoutRef.current);
-        activityTimeoutRef.current = setTimeout(() => {
-            setIsUserActive(false);
-        }, 2000);
+        triggerActivity();
     };
 
     // Expose scrollToBottom to parent via ref
@@ -135,34 +97,50 @@ export function MessageList({
                 className={styles.scrollContainer}
             >
                 <Flex direction="column" gap="3">
-                    {messages?.map((msg: DecryptedMessageWithProfile) => {
-                        const isOwn = user?.id === msg.sender_id;
-                        const isEditing = editingId === msg.id && isOwn;
-                        const isFirstUnread = msg.id === firstUnreadId;
+                    {messages?.map(
+                        (msg: DecryptedMessageWithProfile, index) => {
+                            const isOwn = user?.id === msg.sender_id;
+                            const isEditing = editingId === msg.id && isOwn;
+                            const isFirstUnread = msg.id === firstUnreadId;
 
-                        return (
-                            <Box key={msg.id} style={{ width: '100%' }}>
-                                {isFirstUnread && <UnreadDivider />}
-                                <MessageBubble
-                                    content={msg.content}
-                                    isOwn={isOwn}
-                                    timestamp={msg.created_at}
-                                    senderName={msg.profiles?.display_name}
-                                    senderAvatar={
-                                        msg.profiles?.avatar_url ?? undefined
-                                    }
-                                    status={msg.status}
-                                    isEdited={msg.is_edited}
-                                    isDeleted={msg.is_deleted}
-                                    isSelected={selectedMessageIds?.has(msg.id)}
-                                    onToggleSelection={() =>
-                                        onToggleSelection?.(msg.id)
-                                    }
-                                    isEditing={isEditing}
-                                />
-                            </Box>
-                        );
-                    })}
+                            // Grouping Logic
+                            const prevMsg = messages[index - 1];
+                            const nextMsg = messages[index + 1];
+
+                            const groupPosition = getMessageGroupPosition(
+                                msg,
+                                prevMsg,
+                                nextMsg,
+                            );
+
+                            return (
+                                <Box key={msg.id} style={{ width: '100%' }}>
+                                    {isFirstUnread && <UnreadDivider />}
+                                    <MessageBubble
+                                        content={msg.content}
+                                        isOwn={isOwn}
+                                        timestamp={msg.created_at}
+                                        senderName={msg.profiles?.display_name}
+                                        senderAvatar={
+                                            msg.profiles?.avatar_url ??
+                                            undefined
+                                        }
+                                        status={msg.status}
+                                        isEdited={msg.is_edited}
+                                        isDeleted={msg.is_deleted}
+                                        isSelected={selectedMessageIds?.has(
+                                            msg.id,
+                                        )}
+                                        onToggleSelection={() =>
+                                            onToggleSelection?.(msg.id)
+                                        }
+                                        isEditing={isEditing}
+                                        groupPosition={groupPosition}
+                                    />
+                                </Box>
+                            );
+                        },
+                    )}
                 </Flex>
             </div>
             {showScrollButton && (

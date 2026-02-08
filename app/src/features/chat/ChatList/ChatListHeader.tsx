@@ -1,5 +1,5 @@
-import { Box, DropdownMenu, Flex, Text } from '@radix-ui/themes';
-import { Lock, MessageSquarePlus, MoreVertical, Users } from 'lucide-react';
+import { DropdownMenu, Flex, IconButton, Text } from '@radix-ui/themes';
+import { Lock, MessageSquarePlus, Plus, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CHAT_TYPE } from '@/lib/constants';
 import type { ChatType } from '@/lib/types';
@@ -24,17 +24,19 @@ export function ChatListHeader({
     const { t } = useTranslation();
 
     return (
-        <Flex justify="between" align="center" p="3" className={styles.header}>
-            <Text size="5" weight="bold">
-                {t('chat.title', 'Чаты')}
-            </Text>
+        <header className={styles.header}>
+            <Text className={styles.appTitle}>Knock Knock</Text>
             <DropdownMenu.Root>
                 <DropdownMenu.Trigger>
-                    <Box className={styles.iconButton}>
-                        <MoreVertical size={20} />
-                    </Box>
+                    <IconButton
+                        variant="ghost"
+                        className={styles.createButton}
+                        size="3"
+                    >
+                        <Plus size={20} />
+                    </IconButton>
                 </DropdownMenu.Trigger>
-                <DropdownMenu.Content>
+                <DropdownMenu.Content variant="soft">
                     <DropdownMenu.Item
                         onSelect={() => onOpenChatDialog(CHAT_TYPE.PUBLIC)}
                     >
@@ -61,6 +63,6 @@ export function ChatListHeader({
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Root>
-        </Flex>
+        </header>
     );
 }

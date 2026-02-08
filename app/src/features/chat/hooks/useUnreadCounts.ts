@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { DB_TABLES } from '@/lib/constants';
-import { REALTIME_EVENTS } from '@/lib/constants/chat';
+import { DB_TABLES, REALTIME_EVENTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/auth';
 

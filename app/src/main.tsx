@@ -25,13 +25,22 @@ declare module '@tanstack/react-router' {
 const queryClient = new QueryClient();
 
 function Root() {
-    const { appearance } = useThemeStore();
+    const { theme, mode } = useThemeStore();
+
+    // Динамически выбираем акцент Radix под нашу концепцию
+    // Emerald: золотой акцент (#CFA570 -> Radix 'gold' или 'amber')
+    // Neon: бирюзовый акцент (#00F0FF -> Radix 'teal' или 'cyan')
+    const accentColor = theme === 'emerald' ? 'gold' : 'teal';
+    const grayColor = theme === 'emerald' ? 'olive' : 'slate';
+
     return (
         <Theme
-            appearance={appearance}
-            accentColor="blue"
-            grayColor="slate"
+            appearance={mode}
+            accentColor={accentColor}
+            grayColor={grayColor}
             radius="medium"
+            panelBackground="translucent"
+            hasBackground={false}
         >
             <QueryClientProvider client={queryClient}>
                 <RouterProvider router={router} />

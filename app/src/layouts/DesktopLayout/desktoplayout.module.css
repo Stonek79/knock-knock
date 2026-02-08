@@ -1,24 +1,40 @@
 .desktopLayout {
     display: grid;
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: var(--panel-width) 1fr;
     height: 100vh;
-    width: 100%;
+    width: 100vw;
+    background: transparent;
     overflow: hidden;
-    background: var(--background);
+    position: relative;
+    gap: 0;
+}
+
+/* Основной контейнер фона теперь управляется через body в index.css */
+.backgroundLayer {
+    display: none;
 }
 
 .sidebarColumn {
-    height: 100%;
-    overflow: hidden;
-    border-right: 1px solid var(--border);
-    background: var(--surface);
-}
-
-.mainContent {
-    height: 100%;
-    background: var(--main-background);
-    overflow: hidden;
-    position: relative;
+    z-index: 1;
+    border-right: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
+    height: 100%;
+}
+
+.mainColumn {
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: transparent; /* Окно чата тоже просвечивает фон */
+}
+
+@media (max-width: 768px) {
+    .desktopLayout {
+        display: block;
+    }
+    .sidebarColumn {
+        display: none;
+    }
 }

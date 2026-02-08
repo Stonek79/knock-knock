@@ -15,6 +15,7 @@ interface RoomHeaderProps {
     roomId: string;
     peerUser?: PeerUser | null;
     onEndSession?: () => void;
+    /** Флаг завершения сессии */
     ending?: boolean;
     selectedCount?: number;
     canEditSelected?: boolean;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MEMBER_ROLE, ROOM_TYPE } from '@/lib/constants/chat';
+import { MEMBER_ROLE, ROOM_TYPE } from '@/lib/constants';
 import { CHAT_TYPE } from '@/lib/constants/common';
 
 /**

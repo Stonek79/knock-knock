@@ -1,7 +1,7 @@
 import { Avatar, Box, Text } from '@radix-ui/themes';
 import { useTranslation } from 'react-i18next';
-import { MESSAGE_STATUS } from '@/lib/constants/chat';
-import type { MessageStatus } from '@/lib/types/message';
+import { MESSAGE_POSITION, MESSAGE_STATUS } from '@/lib/constants';
+import type { MessagePosition, MessageStatus } from '@/lib/types/message';
 import { getUserColor } from '@/lib/utils/colors';
 import styles from './message-bubble.module.css';
 import { StatusIcon } from './StatusIcon';
@@ -18,6 +18,7 @@ interface MessageBubbleProps {
     isSelected?: boolean;
     onToggleSelection?: () => void;
     isEditing?: boolean;
+    groupPosition?: MessagePosition;
 }
 
 export function MessageBubble({
@@ -32,6 +33,7 @@ export function MessageBubble({
     isSelected = false,
     onToggleSelection,
     isEditing = false,
+    groupPosition = MESSAGE_POSITION.SINGLE,
 }: MessageBubbleProps) {
     const { t } = useTranslation();
 
@@ -45,34 +47,47 @@ export function MessageBubble({
     return (
         <Box
             className={`${styles.bubbleWrapper} ${isOwn ? styles.own : styles.peer} ${isSelected ? styles.selected : ''}`}
+            data-group-position={groupPosition}
             onClick={() => {
                 if (isEditing) return; // Не переключаем, если редактируем
                 onToggleSelection?.();
             }}
         >
             {!isOwn && (
-                <Avatar
-                    size="1"
-                    radius="full"
-                    fallback={senderName?.[0] || '?'}
-                    src={senderAvatar}
-                    className={styles.avatar}
-                />
+                <div className={styles.avatarContainer}>
+                    {groupPosition === MESSAGE_POSITION.SINGLE ||
+                    groupPosition === MESSAGE_POSITION.END ? (
+                        <Avatar
+                            size="1"
+                            radius="full"
+                            fallback={senderName?.[0] || '?'}
+                            src={senderAvatar}
+                            className={styles.avatar}
+                            color="gray"
+                            variant="soft"
+                        />
+                    ) : (
+                        <div className={styles.avatarPlaceholder} />
+                    )}
+                </div>
             )}
 
             <Box
                 className={`${styles.bubble} ${isOwn ? styles.bubbleOwn : styles.bubblePeer}`}
             >
-                {!isOwn && senderName && (
-                    <Text
-                        weight="bold"
-                        size="1"
-                        color={userColor}
-                        className={styles.senderName}
-                    >
-                        {senderName}
-                    </Text>
-                )}
+                {!isOwn &&
+                    senderName &&
+                    (groupPosition === MESSAGE_POSITION.SINGLE ||
+                        groupPosition === MESSAGE_POSITION.START) && (
+                        <Text
+                            weight="bold"
+                            size="1"
+                            color={userColor}
+                            className={styles.senderName}
+                        >
+                            {senderName}
+                        </Text>
+                    )}
 
                 {isDeleted ? (
                     <Text className={styles.deletedContent}>

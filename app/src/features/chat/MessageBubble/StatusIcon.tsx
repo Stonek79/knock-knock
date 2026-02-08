@@ -1,5 +1,5 @@
 import { Check, CheckCheck } from 'lucide-react';
-import { MESSAGE_STATUS } from '@/lib/constants/chat';
+import { MESSAGE_STATUS } from '@/lib/constants';
 import type { MessageStatus } from '@/lib/types/message';
 import styles from './message-bubble.module.css';
 

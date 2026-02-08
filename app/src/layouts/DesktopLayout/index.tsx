@@ -31,10 +31,11 @@ export function DesktopLayout({
 
     return (
         <div className={styles.desktopLayout}>
+            <div className={styles.backgroundLayer} />
             <div className={styles.sidebarColumn}>
                 <Sidebar>{sidebarContent}</Sidebar>
             </div>
-            <main className={styles.mainContent}>{children}</main>
+            <main className={styles.mainColumn}>{children}</main>
         </div>
     );
 }

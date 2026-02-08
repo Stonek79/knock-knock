@@ -1,13 +1,11 @@
 import { Card, Flex, Heading, Select, Text } from '@radix-ui/themes';
 import { useTranslation } from 'react-i18next';
-import { THEME } from '@/lib/constants/theme';
-import type { ThemeValue } from '@/lib/types/theme';
 import { useThemeStore } from '@/stores/theme';
 import styles from './appearance.module.css';
 
 export function AppearanceSettings() {
     const { t } = useTranslation();
-    const { appearance, setAppearance } = useThemeStore();
+    const { mode, setMode } = useThemeStore();
 
     return (
         <Flex direction="column" gap="4" p="4" className={styles.container}>
@@ -20,21 +18,18 @@ export function AppearanceSettings() {
                     <Flex justify="between" align="center">
                         <Text>{t('profile.theme', 'Тема оформления')}</Text>
                         <Select.Root
-                            value={appearance}
+                            value={mode}
                             onValueChange={(value) =>
-                                setAppearance(value as ThemeValue)
+                                setMode(value as 'light' | 'dark')
                             }
                         >
                             <Select.Trigger variant="surface" />
                             <Select.Content position="popper">
-                                <Select.Item value={THEME.LIGHT}>
+                                <Select.Item value="light">
                                     {t('theme.light', 'Светлая')}
                                 </Select.Item>
-                                <Select.Item value={THEME.DARK}>
+                                <Select.Item value="dark">
                                     {t('theme.dark', 'Темная')}
-                                </Select.Item>
-                                <Select.Item value={THEME.INHERIT}>
-                                    {t('theme.system', 'Системная')}
                                 </Select.Item>
                             </Select.Content>
                         </Select.Root>

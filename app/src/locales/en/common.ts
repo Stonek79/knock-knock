@@ -11,6 +11,8 @@ export const common = {
     required: 'Required',
     back: 'Back',
     search: 'Search',
+    today: 'Today',
+    yesterday: 'Yesterday',
     comingSoon: 'Coming soon',
     appDescription: 'Secure PWA Messenger with End-to-End Encryption.',
     features: {

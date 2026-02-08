@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { DB_TABLES } from '@/lib/constants/chat';
+import { DB_TABLES } from '@/lib/constants';
 import { decryptMessage } from '@/lib/crypto/messages';
 import { logger } from '@/lib/logger';
 import { isMock, supabase } from '@/lib/supabase';

@@ -3,6 +3,7 @@ import { ChevronLeft, Phone, Trash2, Video } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
+import { ROOM_TYPE } from '@/lib/constants';
 import type { RoomWithMembers } from '@/lib/types/room';
 import { useAuthStore } from '@/stores/auth';
 import styles from './roomheader.module.css';
@@ -19,6 +20,7 @@ interface DefaultHeaderProps {
     roomId: string;
     peerUser?: PeerUser | null;
     onEndSession?: () => void;
+    /** Флаг загрузки при завершении сессии */
     ending?: boolean;
     onBack: () => void;
 }
@@ -40,8 +42,8 @@ export function DefaultHeader({
         }
     };
 
-    const isDM = room?.type === 'direct';
-    const isGroup = room?.type === 'group';
+    const isDM = room?.type === ROOM_TYPE.DIRECT;
+    const isGroup = room?.type === ROOM_TYPE.GROUP;
 
     let resolvedPeer = peerUser;
     if (isDM && !resolvedPeer && room?.room_members && user) {
@@ -72,7 +74,7 @@ export function DefaultHeader({
     const avatarFallback = isSelfChat
         ? '⭐'
         : displayName?.[0]?.toUpperCase() || '?';
-    const avatarUrl = isDM ? resolvedPeer?.avatar_url : undefined;
+    const avatarUrl = isDM ? resolvedPeer?.avatar_url : room?.avatar_url;
 
     const memberNames =
         isGroup && room?.room_members
@@ -101,14 +103,18 @@ export function DefaultHeader({
                     onClick={handleInfoClick}
                 >
                     <Avatar
-                        src={avatarUrl}
+                        src={avatarUrl ?? undefined}
                         fallback={avatarFallback}
                         radius="full"
                         size="2"
                         color="gray"
                     />
                     <Flex direction="column" gap="0">
-                        <Heading size="3" truncate>
+                        <Heading
+                            size="3"
+                            truncate
+                            className={styles.displayName}
+                        >
                             {room?.is_ephemeral ? '🔒 ' : ''}
                             {displayName}
                         </Heading>
@@ -149,12 +155,11 @@ export function DefaultHeader({
 
                 {room?.is_ephemeral && onEndSession && (
                     <Button
-                        color="red"
-                        variant="soft"
-                        size="1"
+                        variant="ghost"
+                        size="sm"
                         onClick={onEndSession}
-                        loading={ending}
-                        ml="2"
+                        disabled={ending}
+                        className={styles.endSessionButton}
                     >
                         <Trash2 size={16} />
                         {t('chat.endSession')}

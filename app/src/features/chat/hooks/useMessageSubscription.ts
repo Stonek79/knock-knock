@@ -1,15 +1,15 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
-import { DB_TABLES, REALTIME_EVENTS } from '@/lib/constants/chat';
-import { decryptMessage } from '@/lib/crypto/messages';
+import { DB_TABLES, REALTIME_EVENTS } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import { MessageService } from '@/lib/services/message';
-import { isMock, supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import type {
     DecryptedMessageWithProfile,
     MessageRow,
 } from '@/lib/types/message';
+import { decryptMessagePayload } from '@/lib/utils/decryptPayload';
 
 interface UseMessageSubscriptionProps {
     roomId: string;
@@ -28,22 +28,7 @@ export function useMessageSubscription({
 }: UseMessageSubscriptionProps) {
     const queryClient = useQueryClient();
 
-    /**
-     * Расшифровывает сообщение.
-     * Если сообщение удалено или mock-режим — возвращает соответствующий контент.
-     */
-    const decryptPayload = useCallback(
-        async (msg: MessageRow) => {
-            if (msg.is_deleted || msg.content === null) return null;
-            if (isMock) return msg.content;
-            if (!msg.iv) return null;
-            // Проверка roomKey нужна для TS, хотя useEffect перезапускается при его смене
-            if (!roomKey) return null;
-
-            return await decryptMessage(msg.content, msg.iv, roomKey);
-        },
-        [roomKey],
-    );
+    // roomKey нужен для расшифровки
 
     /**
      * Обработка нового сообщения (INSERT).
@@ -55,7 +40,10 @@ export function useMessageSubscription({
         async (payload: RealtimePostgresChangesPayload<MessageRow>) => {
             const newMsgRaw = payload.new as MessageRow;
             try {
-                const decryptedContent = await decryptPayload(newMsgRaw);
+                const decryptedContent = await decryptMessagePayload(
+                    newMsgRaw,
+                    roomKey,
+                );
                 const newMsg: DecryptedMessageWithProfile = {
                     ...newMsgRaw,
                     content: decryptedContent,
@@ -85,7 +73,7 @@ export function useMessageSubscription({
                 logger.error('Error handling INSERT message', error);
             }
         },
-        [decryptPayload, queryClient, roomId, userId],
+        [queryClient, roomId, userId, roomKey],
     );
 
     /**
@@ -96,7 +84,10 @@ export function useMessageSubscription({
         async (payload: RealtimePostgresChangesPayload<MessageRow>) => {
             const newMsgRaw = payload.new as MessageRow;
             try {
-                const decryptedContent = await decryptPayload(newMsgRaw);
+                const decryptedContent = await decryptMessagePayload(
+                    newMsgRaw,
+                    roomKey,
+                );
 
                 queryClient.setQueryData(
                     ['messages', roomId],
@@ -138,7 +129,7 @@ export function useMessageSubscription({
                 logger.error('Error handling UPDATE message', error);
             }
         },
-        [decryptPayload, queryClient, roomId, userId],
+        [queryClient, roomId, userId, roomKey],
     );
 
     useEffect(() => {

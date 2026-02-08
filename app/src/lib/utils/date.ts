@@ -1,28 +1,44 @@
 /**
  * Форматирует дату для отображения в списке чатов.
  * Правила:
- * - < 1 мин: "сейчас"
- * - < 1 час: "X мин"
- * - < 24 часа: "X ч"
- * - Иначе: "DD MMM" (например, "12 янв")
+ * - Сегодня: "Сегодня" (переведённое)
+ * - Вчера: "Вчера" (переведённое)
+ * - Иначе: "dd.mm.yy"
  *
  * @param dateString Строка даты в формате ISO или совместимом
- * @param locale Локаль (по умолчанию ru-RU)
+ * @param t Функция перевода i18n (useTranslation().t)
  */
 export const formatChatTime = (
     dateString: string,
-    locale = 'ru-RU',
+    t: (key: string) => string,
 ): string => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
 
-    if (diffMin < 1) return 'сейчас';
-    if (diffMin < 60) return `${diffMin} мин`;
+    // Сбрасываем время для сравнения только дат
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dateOnly = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+    );
 
-    const diffHours = Math.floor(diffMin / 60);
-    if (diffHours < 24) return `${diffHours} ч`;
+    const diffDays = Math.floor(
+        (today.getTime() - dateOnly.getTime()) / (1000 * 60 * 60 * 24),
+    );
 
-    return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    if (diffDays === 0) {
+        return t('common.today');
+    }
+
+    if (diffDays === 1) {
+        return t('common.yesterday');
+    }
+
+    // Формат dd.mm.yy
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+
+    return `${day}.${month}.${year}`;
 };

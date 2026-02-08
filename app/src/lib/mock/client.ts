@@ -526,7 +526,20 @@ const mockFrom = (table: string) => {
 				});
 			}
 			saveMockState(MOCK_STATE);
-			return Promise.resolve({ data: values, error: null });
+
+			// Возвращаем builder с поддержкой .select().single()
+			const insertedData = valArr.length === 1 ? valArr[0] : valArr;
+			return {
+				select: () => ({
+					single: () => Promise.resolve({ data: insertedData, error: null }),
+					// biome-ignore lint/suspicious/noThenProperty: Mocking Promise-like interface
+					then: (onf?: (r: { data: unknown; error: null }) => void) =>
+						Promise.resolve({ data: insertedData, error: null }).then(onf),
+				}),
+				// biome-ignore lint/suspicious/noThenProperty: Mocking Promise-like interface
+				then: (onf?: (r: { data: unknown; error: null }) => void) =>
+					Promise.resolve({ data: insertedData, error: null }).then(onf),
+			};
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal user data
 		update: (values: any) => {

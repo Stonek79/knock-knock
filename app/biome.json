@@ -27,6 +27,11 @@
             "allowTrailingCommas": false
         }
     },
+    "css": {
+        "parser": {
+            "cssModules": true
+        }
+    },
     "overrides": [
         {
             "includes": ["src/lib/mock/**"],
