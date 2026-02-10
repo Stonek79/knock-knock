@@ -3,6 +3,7 @@
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--glass-border);
     box-sizing: border-box;
+    width: 100%;
 }
 
 /* Десктопный вариант: фиксированная высота для соответствия инпуту */
@@ -10,6 +11,16 @@
     height: 72px;
     display: flex;
     align-items: center;
+    width: 100%;
+}
+
+.navList {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 4px;
+    margin: 0;
+    list-style: none;
 }
 
 .bottomNav[data-variant="desktop"] .navList {
@@ -23,15 +34,6 @@
     left: 0;
     right: 0;
     padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-.navList {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 8px 4px;
-    margin: 0;
-    list-style: none;
 }
 
 .navItem {
