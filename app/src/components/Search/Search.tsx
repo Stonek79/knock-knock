@@ -1,7 +1,7 @@
-import { Box, TextField } from '@radix-ui/themes';
-import { Search as SearchIcon } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import styles from './search.module.css';
+import { Box, TextField } from "@radix-ui/themes";
+import { Search as SearchIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import styles from "./search.module.css";
 
 interface SearchProps {
     value?: string;
@@ -17,7 +17,7 @@ export function Search({ value, onChange, placeholder }: SearchProps) {
             <TextField.Root
                 size="2"
                 variant="surface"
-                placeholder={placeholder || t('common.search', 'Поиск...')}
+                placeholder={placeholder || t("common.search", "Поиск...")}
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}
                 className={styles.textField}

@@ -1,14 +1,14 @@
-import { Button, Callout, Dialog, Flex, Text } from '@radix-ui/themes';
-import { useNavigate } from '@tanstack/react-router';
-import { AlertCircle } from 'lucide-react';
-import { useCallback, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useCreateDM } from '@/features/chat/hooks/useCreateDM';
+import { Button, Callout, Dialog, Flex, Text } from "@radix-ui/themes";
+import { useNavigate } from "@tanstack/react-router";
+import { AlertCircle } from "lucide-react";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useCreateDM } from "@/features/chat/hooks/useCreateDM";
 import {
     ContactPicker,
     useSelectedContacts,
-} from '@/features/contacts/ContactPicker';
-import { useAuthStore } from '@/stores/auth';
+} from "@/features/contacts/ContactPicker";
+import { useAuthStore } from "@/stores/auth";
 
 interface CreateChatDialogProps {
     /** Открыт ли диалог */
@@ -47,7 +47,9 @@ export function CreateChatDialog({
      * Создаёт комнату (или находит существующую) и сразу переходит в неё.
      */
     const handleCreateChat = useCallback(async () => {
-        if (selectedIds.length === 0 || !user) return;
+        if (selectedIds.length === 0 || !user) {
+            return;
+        }
 
         const targetUserId = selectedIds[0];
         setError(null);
@@ -66,12 +68,12 @@ export function CreateChatDialog({
 
             // Переходим сразу в чат
             navigate({
-                to: '/chat/$roomId',
+                to: "/chat/$roomId",
                 params: { roomId },
             });
         } catch (err) {
-            console.error('Failed to create chat:', err);
-            setError(err instanceof Error ? err.message : t('common.error'));
+            console.error("Failed to create chat:", err);
+            setError(err instanceof Error ? err.message : t("common.error"));
         }
     }, [selectedIds, user, onOpenChange, navigate, isPrivate, createDM, t]);
 
@@ -96,10 +98,10 @@ export function CreateChatDialog({
         <Dialog.Root open={open} onOpenChange={handleOpenChange}>
             <Dialog.Content maxWidth="450px">
                 <Dialog.Title>
-                    {isPrivate ? t('chat.newPrivate') : t('chat.newChat')}
+                    {isPrivate ? t("chat.newPrivate") : t("chat.newChat")}
                 </Dialog.Title>
                 <Dialog.Description size="2" mb="4">
-                    {t('chat.selectContact')}
+                    {t("chat.selectContact")}
                 </Dialog.Description>
 
                 {error && (
@@ -115,7 +117,7 @@ export function CreateChatDialog({
                     mode="single"
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
-                    searchPlaceholder={t('common.search', 'Поиск')}
+                    searchPlaceholder={t("common.search", "Поиск")}
                 />
 
                 {canCreate && (
@@ -127,7 +129,7 @@ export function CreateChatDialog({
                 <Flex gap="3" mt="4" justify="end">
                     <Dialog.Close>
                         <Button variant="soft" color="gray">
-                            {t('common.cancel')}
+                            {t("common.cancel")}
                         </Button>
                     </Dialog.Close>
                     <Button
@@ -136,8 +138,8 @@ export function CreateChatDialog({
                         onClick={handleCreateChat}
                     >
                         {createDM.isPending
-                            ? t('common.processing')
-                            : t('chat.create')}
+                            ? t("common.processing")
+                            : t("chat.create")}
                     </Button>
                 </Flex>
             </Dialog.Content>

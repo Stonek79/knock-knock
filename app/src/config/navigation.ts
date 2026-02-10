@@ -1,5 +1,5 @@
-import { MessageCircle, Phone, Settings, Star } from 'lucide-react';
-import { ROUTES } from '@/lib/constants';
+import { MessageCircle, Phone, Settings, Star } from "lucide-react";
+import { ROUTES } from "@/lib/constants";
 
 /**
  * Конфигурация элемента навигации.
@@ -20,31 +20,31 @@ export interface NavItemConfig {
 /** Конфигурация элементов навигации в стиле WhatsApp */
 export const NAVIGATION_ITEMS: NavItemConfig[] = [
     {
-        key: 'chats',
+        key: "chats",
         path: ROUTES.CHAT_LIST,
         icon: MessageCircle,
-        labelKey: 'nav.chats',
-        defaultLabel: 'Чаты',
+        labelKey: "nav.chats",
+        defaultLabel: "Чаты",
     },
     {
-        key: 'favorites',
+        key: "favorites",
         path: ROUTES.FAVORITES,
         icon: Star,
-        labelKey: 'nav.favorites',
-        defaultLabel: 'Избранное',
+        labelKey: "nav.favorites",
+        defaultLabel: "Избранное",
     },
     {
-        key: 'calls',
+        key: "calls",
         path: ROUTES.CALLS,
         icon: Phone,
-        labelKey: 'nav.calls',
-        defaultLabel: 'Звонки',
+        labelKey: "nav.calls",
+        defaultLabel: "Звонки",
     },
     {
-        key: 'settings',
+        key: "settings",
         path: ROUTES.SETTINGS,
         icon: Settings,
-        labelKey: 'nav.settings',
-        defaultLabel: 'Настройки',
+        labelKey: "nav.settings",
+        defaultLabel: "Настройки",
     },
 ];

@@ -2,7 +2,7 @@
  * Основные типы Result (из neverthrow).
  * Только чистые типы, никакого runtime-кода.
  */
-import type { Err, Ok, Result } from 'neverthrow';
+import type { Err, Ok, Result } from "neverthrow";
 
 export type { Result, Ok, Err };
 

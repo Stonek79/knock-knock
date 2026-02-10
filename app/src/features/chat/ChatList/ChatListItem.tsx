@@ -1,6 +1,6 @@
-import { Avatar, Box, Flex, Text } from '@radix-ui/themes';
-import { Link } from '@tanstack/react-router';
-import styles from './chatlist.module.css';
+import { Avatar, Box, Flex, Text } from "@radix-ui/themes";
+import { Link } from "@tanstack/react-router";
+import styles from "./chatlist.module.css";
 
 /**
  * Данные элемента списка чатов.
@@ -39,7 +39,7 @@ export function ChatListItem({ chat }: ChatListItemProps) {
                 <Avatar
                     size="3"
                     src={chat.avatar}
-                    fallback={chat.name.replace(/🔒\s*/, '')[0]}
+                    fallback={chat.name.replace(/🔒\s*/, "")[0]}
                     radius="full"
                     color="gray"
                     variant="soft"

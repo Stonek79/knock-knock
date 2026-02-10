@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
-import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
-import { Sidebar } from '@/layouts/Sidebar';
-import styles from './desktoplayout.module.css';
+import type { ReactNode } from "react";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { Sidebar } from "@/layouts/Sidebar";
+import styles from "./desktoplayout.module.css";
 
 /**
  * Пропсы компонента DesktopLayout.

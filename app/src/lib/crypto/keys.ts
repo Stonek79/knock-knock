@@ -13,11 +13,11 @@ const subtle = window.crypto.subtle;
 export async function generateIdentityKeyPair(): Promise<CryptoKeyPair> {
     return (await subtle.generateKey(
         {
-            name: 'ECDSA',
-            namedCurve: 'P-256',
+            name: "ECDSA",
+            namedCurve: "P-256",
         },
         true, // extractable
-        ['sign', 'verify'],
+        ["sign", "verify"],
     )) as CryptoKeyPair;
 }
 
@@ -27,11 +27,11 @@ export async function generateIdentityKeyPair(): Promise<CryptoKeyPair> {
 export async function generatePreKeyPair(): Promise<CryptoKeyPair> {
     return (await subtle.generateKey(
         {
-            name: 'ECDH',
-            namedCurve: 'P-256',
+            name: "ECDH",
+            namedCurve: "P-256",
         },
         true, // extractable
-        ['deriveKey', 'deriveBits'],
+        ["deriveKey", "deriveBits"],
     )) as CryptoKeyPair;
 }
 
@@ -44,7 +44,7 @@ export async function deriveSharedSecret(
 ): Promise<ArrayBuffer> {
     return await subtle.deriveBits(
         {
-            name: 'ECDH',
+            name: "ECDH",
             public: theirPublicKey,
         },
         myPrivateKey,
@@ -61,8 +61,8 @@ export async function signMessage(
 ): Promise<ArrayBuffer> {
     return await subtle.sign(
         {
-            name: 'ECDSA',
-            hash: { name: 'SHA-256' },
+            name: "ECDSA",
+            hash: { name: "SHA-256" },
         },
         privateKey,
         message as BufferSource,
@@ -79,8 +79,8 @@ export async function verifySignature(
 ): Promise<boolean> {
     return await subtle.verify(
         {
-            name: 'ECDSA',
-            hash: { name: 'SHA-256' },
+            name: "ECDSA",
+            hash: { name: "SHA-256" },
         },
         publicKey,
         signature as BufferSource,
@@ -92,7 +92,7 @@ export async function verifySignature(
  * Экспортирует публичный ключ в Raw формат (байты).
  */
 export async function exportPublicKey(key: CryptoKey): Promise<ArrayBuffer> {
-    return await subtle.exportKey('raw', key);
+    return await subtle.exportKey("raw", key);
 }
 
 /**
@@ -102,17 +102,17 @@ export async function exportPublicKey(key: CryptoKey): Promise<ArrayBuffer> {
  */
 export async function importPublicKey(
     keyData: ArrayBuffer | Uint8Array,
-    algorithm: 'ECDSA' | 'ECDH',
+    algorithm: "ECDSA" | "ECDH",
 ): Promise<CryptoKey> {
     const usage: KeyUsage[] =
-        algorithm === 'ECDSA' ? ['verify'] : ['deriveKey', 'deriveBits'];
+        algorithm === "ECDSA" ? ["verify"] : ["deriveKey", "deriveBits"];
 
     return await subtle.importKey(
-        'raw',
+        "raw",
         keyData as BufferSource,
         {
             name: algorithm,
-            namedCurve: 'P-256',
+            namedCurve: "P-256",
         },
         true,
         usage,
@@ -125,7 +125,7 @@ export async function importPublicKey(
  * Преобразует ArrayBuffer в Base64 строку.
  */
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
-    let binary = '';
+    let binary = "";
     const bytes = new Uint8Array(buffer);
     const len = bytes.byteLength;
     for (let i = 0; i < len; i++) {

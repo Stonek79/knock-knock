@@ -1,8 +1,8 @@
-import i18n from 'i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-import { initReactI18next } from 'react-i18next';
-import * as en from '@/locales/en';
-import * as ru from '@/locales/ru';
+import i18n from "i18next";
+import LanguageDetector from "i18next-browser-languagedetector";
+import { initReactI18next } from "react-i18next";
+import * as en from "@/locales/en";
+import * as ru from "@/locales/ru";
 
 i18n.use(LanguageDetector)
     .use(initReactI18next)
@@ -15,7 +15,7 @@ i18n.use(LanguageDetector)
                 translation: en,
             },
         },
-        fallbackLng: 'ru',
+        fallbackLng: "ru",
         debug: false,
 
         interpolation: {

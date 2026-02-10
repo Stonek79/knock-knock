@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { DecryptedMessageWithProfile } from '@/lib/types/message';
-import { useAuthStore } from '@/stores/auth';
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { DecryptedMessageWithProfile } from "@/lib/types/message";
+import { useAuthStore } from "@/stores/auth";
 
 interface UseChatScrollProps {
     messages: DecryptedMessageWithProfile[];
@@ -18,12 +18,14 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
      * Прокрутка к последнему сообщению.
      */
     const scrollToBottom = useCallback(
-        (behavior: ScrollBehavior = 'smooth') => {
+        (behavior: ScrollBehavior = "smooth") => {
             const viewport = viewportRef.current;
-            if (!viewport) return;
+            if (!viewport) {
+                return;
+            }
 
             // Проверка на наличие scrollTo (JSDOM его не поддерживает)
-            if (typeof viewport.scrollTo === 'function') {
+            if (typeof viewport.scrollTo === "function") {
                 viewport.scrollTo({ top: viewport.scrollHeight, behavior });
             } else {
                 viewport.scrollTop = viewport.scrollHeight;
@@ -37,7 +39,7 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
         if (messages.length > 0 && !hasScrolledOnce) {
             // Используем instant для мгновенного появления внизу при открытии
             const timer = setTimeout(() => {
-                scrollToBottom('instant');
+                scrollToBottom("instant");
                 setHasScrolledOnce(true);
                 prevMessagesLength.current = messages.length;
             }, 50);
@@ -48,7 +50,9 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
 
     // Авто-скролл при добавлении новых сообщений
     useEffect(() => {
-        if (!hasScrolledOnce) return;
+        if (!hasScrolledOnce) {
+            return;
+        }
 
         const newMessagesAdded = messages.length > prevMessagesLength.current;
         const lastMessage = messages[messages.length - 1];
@@ -61,7 +65,7 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
             if (isOwnMessage || isAtBottom) {
                 // Небольшая задержка, чтобы React успел отрисовать новый элемент и обновить scrollHeight
                 const timer = setTimeout(() => {
-                    scrollToBottom('smooth');
+                    scrollToBottom("smooth");
                 }, 50);
 
                 prevMessagesLength.current = messages.length;
@@ -75,7 +79,9 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
     // Обработчик скролла для определения положения
     const handleScroll = () => {
         const viewport = viewportRef.current;
-        if (!viewport) return;
+        if (!viewport) {
+            return;
+        }
 
         const { scrollTop, scrollHeight, clientHeight } = viewport;
         // Порог в 100px от низа считается "мы внизу"
@@ -90,6 +96,6 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
         viewportRef,
         showScrollButton,
         handleScroll,
-        scrollToBottom: () => scrollToBottom('smooth'),
+        scrollToBottom: () => scrollToBottom("smooth"),
     };
 }

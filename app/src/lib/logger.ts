@@ -10,16 +10,16 @@ class Logger {
 
     info(message: string, data?: unknown) {
         if (this.isDev) {
-            console.info(`%c ℹ️ ${message}`, 'color: #3b82f6', data || '');
+            console.info(`%c ℹ️ ${message}`, "color: #3b82f6", data || "");
         }
     }
 
     warn(message: string, data?: unknown) {
-        console.warn(`%c ⚠️ ${message}`, 'color: #eab308', data || '');
+        console.warn(`%c ⚠️ ${message}`, "color: #eab308", data || "");
     }
 
     error(message: string, error?: unknown) {
-        console.error(`%c ❌ ${message}`, 'color: #ef4444; font-weight: bold');
+        console.error(`%c ❌ ${message}`, "color: #ef4444; font-weight: bold");
         if (error) {
             console.error(error);
         }
@@ -27,7 +27,7 @@ class Logger {
 
     debug(message: string, data?: unknown) {
         if (this.isDev) {
-            console.debug(`%c 🐞 ${message}`, 'color: #a855f7', data || '');
+            console.debug(`%c 🐞 ${message}`, "color: #a855f7", data || "");
         }
     }
 }

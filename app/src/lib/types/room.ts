@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type { z } from "zod";
 import type {
     chatTypeSchema,
     memberRoleSchema,
@@ -6,7 +6,7 @@ import type {
     roomMemberSchema,
     roomSchema,
     roomTypeSchema,
-} from '@/lib/schemas/room';
+} from "@/lib/schemas/room";
 
 /** Тип чата для создания: public | private | group */
 export type ChatType = z.infer<typeof chatTypeSchema>;

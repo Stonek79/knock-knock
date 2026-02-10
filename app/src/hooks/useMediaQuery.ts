@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * Хук для определения соответствия CSS media query.
@@ -13,7 +13,9 @@ import { useEffect, useState } from 'react';
 export function useMediaQuery(query: string): boolean {
     const [matches, setMatches] = useState<boolean>(() => {
         // SSR проверка: на сервере window недоступен
-        if (typeof window === 'undefined') return false;
+        if (typeof window === "undefined") {
+            return false;
+        }
         return window.matchMedia(query).matches;
     });
 
@@ -29,10 +31,10 @@ export function useMediaQuery(query: string): boolean {
         setMatches(mediaQuery.matches);
 
         // Современный API подписки
-        mediaQuery.addEventListener('change', handleChange);
+        mediaQuery.addEventListener("change", handleChange);
 
         return () => {
-            mediaQuery.removeEventListener('change', handleChange);
+            mediaQuery.removeEventListener("change", handleChange);
         };
     }, [query]);
 
@@ -42,9 +44,9 @@ export function useMediaQuery(query: string): boolean {
 /** Предустановленные breakpoints для удобства */
 export const BREAKPOINTS = {
     /** Мобильные устройства (до 768px) */
-    MOBILE: '(max-width: 768px)',
+    MOBILE: "(max-width: 768px)",
     /** Планшеты (769px - 1024px) */
-    TABLET: '(min-width: 769px) and (max-width: 1024px)',
+    TABLET: "(min-width: 769px) and (max-width: 1024px)",
     /** Десктоп (от 1025px) */
-    DESKTOP: '(min-width: 1025px)',
+    DESKTOP: "(min-width: 1025px)",
 } as const;

@@ -4,7 +4,7 @@ import {
     useEffect,
     useRef,
     useState,
-} from 'react';
+} from "react";
 
 interface UseMessageInputProps {
     onSend: (text: string) => Promise<void>;
@@ -20,7 +20,7 @@ export function useMessageInput({
     initialValue,
 }: UseMessageInputProps) {
     // ... existing state ...
-    const [message, setMessage] = useState(initialValue || '');
+    const [message, setMessage] = useState(initialValue || "");
     const [sending, setSending] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const hasText = message.trim().length > 0;
@@ -29,7 +29,7 @@ export function useMessageInput({
     const adjustHeight = useCallback(() => {
         const textarea = textareaRef.current;
         if (textarea) {
-            textarea.style.height = '40px';
+            textarea.style.height = "40px";
             if (message.trim()) {
                 const scrollHeight = textarea.scrollHeight;
                 textarea.style.height = `${Math.min(scrollHeight, 160)}px`;
@@ -46,7 +46,7 @@ export function useMessageInput({
         let focusTimer: ReturnType<typeof setTimeout> | null = null;
 
         if (initialValue !== undefined) {
-            setMessage(initialValue || '');
+            setMessage(initialValue || "");
             // Автофокус при входе в режим редактирования
             if (initialValue) {
                 focusTimer = setTimeout(() => textareaRef.current?.focus(), 50);
@@ -55,20 +55,24 @@ export function useMessageInput({
 
         // Очистка таймера при размонтировании
         return () => {
-            if (focusTimer) clearTimeout(focusTimer);
+            if (focusTimer) {
+                clearTimeout(focusTimer);
+            }
         };
     }, [initialValue]);
 
     // ... handleSend ...
     const handleSend = async () => {
-        if (!hasText || sending || disabled) return;
+        if (!hasText || sending || disabled) {
+            return;
+        }
 
         setSending(true);
         try {
             await onSend(message.trim());
-            setMessage('');
+            setMessage("");
             if (textareaRef.current) {
-                textareaRef.current.style.height = '40px';
+                textareaRef.current.style.height = "40px";
             }
         } finally {
             setSending(false);
@@ -79,14 +83,14 @@ export function useMessageInput({
     };
 
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Escape' && onCancel) {
+        if (e.key === "Escape" && onCancel) {
             e.preventDefault();
             onCancel();
-            setMessage(''); // Clear input on cancel? Or keep? Usually reset.
+            setMessage(""); // Clear input on cancel? Or keep? Usually reset.
             return;
         }
 
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey) {
             if (window.innerWidth > 600) {
                 e.preventDefault();
                 handleSend();

@@ -1,15 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
-import { DB_TABLES } from '@/lib/constants';
-import { supabase } from '@/lib/supabase';
-import type { Profile } from '@/lib/types/profile';
+import { useQuery } from "@tanstack/react-query";
+import { DB_TABLES } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
+import type { Profile } from "@/lib/types/profile";
 
 export function useContacts() {
     return useQuery({
-        queryKey: ['contacts'],
+        queryKey: ["contacts"],
         queryFn: async (): Promise<Profile[]> => {
             // 1. Mock Mode
-            if (import.meta.env.VITE_USE_MOCK === 'true') {
-                const { MOCK_USERS } = await import('@/lib/mock/data');
+            if (import.meta.env.VITE_USE_MOCK === "true") {
+                const { MOCK_USERS } = await import("@/lib/mock/data");
                 // Приводим MockUser к Profile, предполагая совместимость или делаем маппинг
                 return MOCK_USERS.map((u) => ({
                     id: u.id,
@@ -24,10 +24,12 @@ export function useContacts() {
             // 2. Production Mode
             const { data, error } = await supabase
                 .from(DB_TABLES.PROFILES)
-                .select('*')
-                .order('display_name', { ascending: true });
+                .select("*")
+                .order("display_name", { ascending: true });
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
             return data as Profile[];
         },
         staleTime: 1000 * 60 * 5, // 5 минут

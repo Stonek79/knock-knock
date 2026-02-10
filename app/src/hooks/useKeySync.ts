@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/auth';
-import { useKeystore } from './useKeystore';
+import { useEffect, useRef } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/stores/auth";
+import { useKeystore } from "./useKeystore";
 
 /**
  * Хук для автоматической синхронизации публичных ключей пользователя с его профилем в Supabase.
@@ -39,14 +39,14 @@ export function useKeySync() {
 
                 // Сначала проверяем, нужно ли обновление
                 const { data: profile, error: fetchError } = await supabase
-                    .from('profiles')
-                    .select('public_key_x25519, public_key_signing')
-                    .eq('id', user.id)
+                    .from("profiles")
+                    .select("public_key_x25519, public_key_signing")
+                    .eq("id", user.id)
                     .single();
 
                 if (fetchError) {
                     console.error(
-                        'Failed to fetch profile during key sync:',
+                        "Failed to fetch profile during key sync:",
                         fetchError,
                     );
                     return;
@@ -58,26 +58,26 @@ export function useKeySync() {
                     profile.public_key_signing !== publicKeyEd25519
                 ) {
                     const { error: updateError } = await supabase
-                        .from('profiles')
+                        .from("profiles")
                         .update({
                             public_key_x25519: publicKeyX25519,
                             public_key_signing: publicKeyEd25519,
                         })
-                        .eq('id', user.id);
+                        .eq("id", user.id);
 
                     if (updateError) {
                         console.error(
-                            'Failed to update public keys in profile:',
+                            "Failed to update public keys in profile:",
                             updateError,
                         );
                     } else {
                         console.log(
-                            'Public keys successfully synchronized with profile',
+                            "Public keys successfully synchronized with profile",
                         );
                     }
                 }
             } catch (error) {
-                console.error('Error during key synchronization:', error);
+                console.error("Error during key synchronization:", error);
             } finally {
                 isSyncing.current = false;
             }

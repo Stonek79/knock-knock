@@ -1,13 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-import { useParams } from '@tanstack/react-router';
-import type { TFunction } from 'i18next';
-import { useTranslation } from 'react-i18next';
-import { DB_TABLES } from '@/lib/constants';
-import { base64ToArrayBuffer, getKeyPair } from '@/lib/crypto';
-import { unwrapRoomKey } from '@/lib/crypto/encryption';
-import { supabase } from '@/lib/supabase';
-import type { RoomWithMembers } from '@/lib/types/room';
-import { useAuthStore } from '@/stores/auth';
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
+import { DB_TABLES } from "@/lib/constants";
+import { base64ToArrayBuffer, getKeyPair } from "@/lib/crypto";
+import { unwrapRoomKey } from "@/lib/crypto/encryption";
+import { supabase } from "@/lib/supabase";
+import type { RoomWithMembers } from "@/lib/types/room";
+import { useAuthStore } from "@/stores/auth";
 
 /**
  * Хук для загрузки данных комнаты и ключей шифрования.
@@ -25,14 +25,18 @@ export function useChatRoomData(propRoomId?: string) {
     const { t } = useTranslation();
 
     return useQuery({
-        queryKey: ['room', roomId, user?.id],
+        queryKey: ["room", roomId, user?.id],
         queryFn: async () => {
-            if (!user) throw new Error('Unauthorized');
+            if (!user) {
+                throw new Error("Unauthorized");
+            }
             // TS guard: ensure roomId is string inside this function
-            if (!roomId) throw new Error('Room ID required');
+            if (!roomId) {
+                throw new Error("Room ID required");
+            }
 
             // 1. Mock Mode Strategy
-            if (import.meta.env.VITE_USE_MOCK === 'true') {
+            if (import.meta.env.VITE_USE_MOCK === "true") {
                 return fetchMockRoomData(roomId, user.id, t);
             }
 
@@ -49,14 +53,14 @@ export function useChatRoomData(propRoomId?: string) {
  */
 async function fetchMockRoomData(roomId: string, userId: string, t: TFunction) {
     // FALLBACK для старых mock-ссылок dm-user1-user2
-    if (roomId.startsWith('dm-')) {
-        const parts = roomId.replace('dm-', '').split('-');
+    if (roomId.startsWith("dm-")) {
+        const parts = roomId.replace("dm-", "").split("-");
         const otherUserId = parts.find((id) => id !== userId) || parts[1];
 
         const mockKey = await window.crypto.subtle.generateKey(
-            { name: 'AES-GCM', length: 256 },
+            { name: "AES-GCM", length: 256 },
             true,
-            ['encrypt', 'decrypt'],
+            ["encrypt", "decrypt"],
         );
 
         return {
@@ -64,7 +68,7 @@ async function fetchMockRoomData(roomId: string, userId: string, t: TFunction) {
                 id: roomId,
                 name: null,
                 avatar_url: null,
-                type: 'direct',
+                type: "direct",
                 created_at: new Date().toISOString(),
                 is_ephemeral: false,
                 room_members: [],
@@ -84,17 +88,17 @@ async function fetchMockRoomData(roomId: string, userId: string, t: TFunction) {
                 profiles (display_name, username, avatar_url)
             )
         `)
-        .eq('id', roomId)
+        .eq("id", roomId)
         .single();
 
     if (error || !roomData) {
-        throw new Error(t('chat.errors.accessDenied'));
+        throw new Error(t("chat.errors.accessDenied"));
     }
 
     const typedRoom = roomData as unknown as RoomWithMembers;
     let otherUserId: string | undefined;
 
-    if (typedRoom.type === 'direct') {
+    if (typedRoom.type === "direct") {
         otherUserId = typedRoom.room_members?.find(
             (m) => m.user_id !== userId,
         )?.user_id;
@@ -102,9 +106,9 @@ async function fetchMockRoomData(roomId: string, userId: string, t: TFunction) {
 
     // В Mock-режиме генерируем свежий ключ
     const mockKey = await window.crypto.subtle.generateKey(
-        { name: 'AES-GCM', length: 256 },
+        { name: "AES-GCM", length: 256 },
         true,
-        ['encrypt', 'decrypt'],
+        ["encrypt", "decrypt"],
     );
 
     return {
@@ -132,11 +136,11 @@ async function fetchProductionRoomData(
                 profiles (display_name, username, avatar_url)
             )
         `)
-        .eq('id', roomId)
+        .eq("id", roomId)
         .single();
 
     if (roomError || !roomData) {
-        throw new Error(t('chat.errors.accessDenied'));
+        throw new Error(t("chat.errors.accessDenied"));
     }
 
     const typedRoom = roomData as unknown as RoomWithMembers;
@@ -144,19 +148,19 @@ async function fetchProductionRoomData(
     // 2. Загружаем зашифрованный ключ
     const { data: keyData, error: keyError } = await supabase
         .from(DB_TABLES.ROOM_KEYS)
-        .select('encrypted_key')
-        .eq('room_id', roomId)
-        .eq('user_id', userId)
+        .select("encrypted_key")
+        .eq("room_id", roomId)
+        .eq("user_id", userId)
         .single();
 
     if (keyError || !keyData) {
-        throw new Error(t('chat.errors.accessDenied'));
+        throw new Error(t("chat.errors.accessDenied"));
     }
 
     // 3. Загружаем Identity Key
-    const identity = await getKeyPair('identity');
+    const identity = await getKeyPair("identity");
     if (!identity) {
-        throw new Error(t('chat.errors.keysMissing'));
+        throw new Error(t("chat.errors.keysMissing"));
     }
 
     // 4. Расшифровываем ключ комнаты
@@ -174,7 +178,7 @@ async function fetchProductionRoomData(
 
     // 5. Определяем собеседника для DM
     let otherUserId: string | undefined;
-    if (typedRoom.type === 'direct') {
+    if (typedRoom.type === "direct") {
         otherUserId = typedRoom.room_members?.find(
             (m) => m.user_id !== userId,
         )?.user_id;

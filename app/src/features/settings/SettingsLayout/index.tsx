@@ -1,7 +1,7 @@
-import { Box } from '@radix-ui/themes';
-import type { ReactNode } from 'react';
-import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
-import styles from './settingslayout.module.css';
+import { Box } from "@radix-ui/themes";
+import type { ReactNode } from "react";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import styles from "./settingslayout.module.css";
 
 interface SettingsLayoutProps {
     children: ReactNode;

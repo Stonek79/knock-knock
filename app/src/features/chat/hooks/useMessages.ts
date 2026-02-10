@@ -1,14 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
-import { DB_TABLES } from '@/lib/constants';
-import { decryptMessage } from '@/lib/crypto/messages';
-import { logger } from '@/lib/logger';
-import { isMock, supabase } from '@/lib/supabase';
+import { useQuery } from "@tanstack/react-query";
+import { DB_TABLES } from "@/lib/constants";
+import { decryptMessage } from "@/lib/crypto/messages";
+import { logger } from "@/lib/logger";
+import { isMock, supabase } from "@/lib/supabase";
 import type {
     DecryptedMessageWithProfile,
     MessageRow,
-} from '@/lib/types/message';
-import { useAuthStore } from '@/stores/auth';
-import { useMessageSubscription } from './useMessageSubscription';
+} from "@/lib/types/message";
+import { useAuthStore } from "@/stores/auth";
+import { useMessageSubscription } from "./useMessageSubscription";
 
 /**
  * Хук для загрузки сообщений и автоматического обновления.
@@ -31,20 +31,22 @@ export function useMessages(roomId: string, roomKey?: CryptoKey) {
 
     // 2. React Query для загрузки и кэширования списка сообщений
     const query = useQuery({
-        queryKey: ['messages', roomId],
+        queryKey: ["messages", roomId],
         queryFn: async (): Promise<DecryptedMessageWithProfile[]> => {
             // Если нет ID комнаты или ключа шифрования, загрузка невозможна
-            if (!roomId || !roomKey) return [];
+            if (!roomId || !roomKey) {
+                return [];
+            }
 
             // Запрос в Supabase
             const { data, error } = await supabase
                 .from(DB_TABLES.MESSAGES)
-                .select('*, profiles(display_name, avatar_url)')
-                .eq('room_id', roomId)
-                .order('created_at', { ascending: true }); // Сортировка от старых к новым
+                .select("*, profiles(display_name, avatar_url)")
+                .eq("room_id", roomId)
+                .order("created_at", { ascending: true }); // Сортировка от старых к новым
 
             if (error) {
-                logger.error('Ошибка при загрузке сообщений', error);
+                logger.error("Ошибка при загрузке сообщений", error);
                 throw error;
             }
 
@@ -61,7 +63,7 @@ export function useMessages(roomId: string, roomKey?: CryptoKey) {
             // 3. Обработка и расшифровка каждого сообщения
             for (const msg of rows) {
                 // Local Delete (Delete for Me)
-                if (msg.deleted_by?.includes(user?.id || '')) {
+                if (msg.deleted_by?.includes(user?.id || "")) {
                     continue;
                 }
 
@@ -94,7 +96,7 @@ export function useMessages(roomId: string, roomKey?: CryptoKey) {
                     );
                     decrypted.push({
                         ...msg,
-                        content: '🔒 Ошибка: Нет вектора шифрования',
+                        content: "🔒 Ошибка: Нет вектора шифрования",
                     });
                     continue;
                 }
@@ -116,7 +118,7 @@ export function useMessages(roomId: string, roomKey?: CryptoKey) {
                     );
                     decrypted.push({
                         ...msg,
-                        content: '🔒 Ошибка расшифровки',
+                        content: "🔒 Ошибка расшифровки",
                     });
                 }
             }

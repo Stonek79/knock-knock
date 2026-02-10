@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import type { DecryptedMessageWithProfile } from '@/lib/types/message';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 
 export function useUnreadTracking(
     roomId: string,
@@ -12,7 +12,9 @@ export function useUnreadTracking(
 
     // Инициализация позиции разделителя на основе last_read_at с сервера
     useEffect(() => {
-        if (!roomId || messages?.length === 0 || initialized.current) return;
+        if (!roomId || messages?.length === 0 || initialized.current) {
+            return;
+        }
 
         // Если есть временная метка с сервера, ищем первое сообщение после неё
         if (lastReadAt) {
@@ -29,13 +31,15 @@ export function useUnreadTracking(
 
     // Отметить как прочитанное (RPC вызов)
     const markAsRead = useCallback(async () => {
-        if (!roomId) return;
+        if (!roomId) {
+            return;
+        }
 
         try {
-            await supabase.rpc('mark_room_as_read', { p_room_id: roomId });
+            await supabase.rpc("mark_room_as_read", { p_room_id: roomId });
             setFirstUnreadId(null);
         } catch (e) {
-            console.error('Не удалось отметить комнату как прочитанную', e);
+            console.error("Не удалось отметить комнату как прочитанную", e);
         }
     }, [roomId]);
 

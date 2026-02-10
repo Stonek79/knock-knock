@@ -1,12 +1,12 @@
-import { Box, Card, Flex, Heading, Text } from '@radix-ui/themes';
-import { Link } from '@tanstack/react-router';
-import clsx from 'clsx';
-import { ChevronRight, ShieldAlert } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { SETTINGS_ITEMS } from '@/config/settings';
-import { ROUTES } from '@/lib/constants';
-import { useAuthStore } from '@/stores/auth';
-import styles from './settingsmenu.module.css';
+import { Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import { Link } from "@tanstack/react-router";
+import clsx from "clsx";
+import { ChevronRight, ShieldAlert } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { SETTINGS_ITEMS } from "@/config/settings";
+import { ROUTES } from "@/lib/constants";
+import { useAuthStore } from "@/stores/auth";
+import styles from "./settingsmenu.module.css";
 
 /**
  * Меню настроек (для мобильной версии и главной страницы настроек).
@@ -17,7 +17,7 @@ export function SettingsMenu() {
     return (
         <Box className={styles.mobileContainer}>
             <Box px="4" pt="2" mb="4">
-                <Heading size="5">{t('nav.settings', 'Настройки')}</Heading>
+                <Heading size="5">{t("nav.settings", "Настройки")}</Heading>
             </Box>
             <Flex direction="column" gap="2" px="4">
                 {SETTINGS_ITEMS.map((item) => {
@@ -70,7 +70,9 @@ function AdminSettingsItem() {
     const { profile } = useAuthStore();
     const { t } = useTranslation();
 
-    if (profile?.role !== 'admin') return null;
+    if (profile?.role !== "admin") {
+        return null;
+    }
 
     return (
         <Link to={ROUTES.ADMIN} className={styles.mobileItemLink}>
@@ -86,7 +88,7 @@ function AdminSettingsItem() {
                             <ShieldAlert size={20} />
                         </Box>
                         <Text size="3" weight="medium">
-                            {t('nav.admin', 'Admin Panel')}
+                            {t("nav.admin", "Admin Panel")}
                         </Text>
                     </Flex>
                     <ChevronRight color="gray" size={20} />

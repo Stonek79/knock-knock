@@ -1,7 +1,7 @@
-import { TextField } from '@radix-ui/themes';
-import { Eye, EyeOff } from 'lucide-react';
-import { type ComponentPropsWithoutRef, forwardRef, useState } from 'react';
-import styles from './styles.module.css';
+import { TextField } from "@radix-ui/themes";
+import { Eye, EyeOff } from "lucide-react";
+import { type ComponentPropsWithoutRef, forwardRef, useState } from "react";
+import styles from "./styles.module.css";
 
 type PasswordInputProps = ComponentPropsWithoutRef<typeof TextField.Root>;
 
@@ -15,7 +15,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             <TextField.Root
                 className={className}
                 ref={ref}
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 {...props}
             >
                 <TextField.Slot side="right">
@@ -24,7 +24,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                         onClick={toggleVisibility}
                         className={styles.toggleButton}
                         aria-label={
-                            showPassword ? 'Hide password' : 'Show password'
+                            showPassword ? "Hide password" : "Show password"
                         }
                     >
                         {showPassword ? (
@@ -39,4 +39,4 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     },
 );
 
-PasswordInput.displayName = 'PasswordInput';
+PasswordInput.displayName = "PasswordInput";

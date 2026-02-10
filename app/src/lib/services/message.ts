@@ -1,11 +1,11 @@
-import type { PostgrestError } from '@supabase/supabase-js';
-import { DB_TABLES } from '@/lib/constants';
-import { ERROR_CODES } from '@/lib/constants/errors';
-import { encryptMessage } from '@/lib/crypto';
-import { logger } from '@/lib/logger';
-import { supabase } from '@/lib/supabase';
-import type { AppError, Result } from '@/lib/types/result';
-import { appError, err, ok } from '@/lib/utils/result';
+import type { PostgrestError } from "@supabase/supabase-js";
+import { DB_TABLES } from "@/lib/constants";
+import { ERROR_CODES } from "@/lib/constants/errors";
+import { encryptMessage } from "@/lib/crypto";
+import { logger } from "@/lib/logger";
+import { supabase } from "@/lib/supabase";
+import type { AppError, Result } from "@/lib/types/result";
+import { appError, err, ok } from "@/lib/utils/result";
 
 export type MessageError =
     | AppError<typeof ERROR_CODES.DB_ERROR, PostgrestError>
@@ -26,20 +26,20 @@ export const MessageService = {
         roomKey: CryptoKey,
     ): Promise<Result<string, MessageError>> {
         let ciphertext: string = content;
-        let iv: string = 'mock-iv';
+        let iv: string = "mock-iv";
 
         // Шифрование (если не мок)
-        if (import.meta.env.VITE_USE_MOCK !== 'true') {
+        if (import.meta.env.VITE_USE_MOCK !== "true") {
             try {
                 const encrypted = await encryptMessage(content, roomKey);
                 ciphertext = encrypted.ciphertext;
                 iv = encrypted.iv;
             } catch (e) {
-                logger.error('Failed to encrypt message', e);
+                logger.error("Failed to encrypt message", e);
                 return err(
                     appError(
                         ERROR_CODES.CRYPTO_ERROR,
-                        'Encryption failed',
+                        "Encryption failed",
                         e instanceof Error ? e : undefined,
                     ),
                 );
@@ -54,12 +54,12 @@ export const MessageService = {
                 content: ciphertext,
                 iv: iv,
             })
-            .select('id')
+            .select("id")
             .single();
 
         if (error) {
             return err(
-                appError(ERROR_CODES.DB_ERROR, 'Failed to send message', error),
+                appError(ERROR_CODES.DB_ERROR, "Failed to send message", error),
             );
         }
 
@@ -76,19 +76,19 @@ export const MessageService = {
         roomKey: CryptoKey,
     ): Promise<Result<void, MessageError>> {
         let ciphertext = newContent;
-        let iv = 'mock-iv';
+        let iv = "mock-iv";
 
-        if (import.meta.env.VITE_USE_MOCK !== 'true') {
+        if (import.meta.env.VITE_USE_MOCK !== "true") {
             try {
                 const encrypted = await encryptMessage(newContent, roomKey);
                 ciphertext = encrypted.ciphertext;
                 iv = encrypted.iv;
             } catch (e) {
-                logger.error('Failed to encrypt updated message', e);
+                logger.error("Failed to encrypt updated message", e);
                 return err(
                     appError(
                         ERROR_CODES.CRYPTO_ERROR,
-                        'Encryption failed',
+                        "Encryption failed",
                         e instanceof Error ? e : undefined,
                     ),
                 );
@@ -103,13 +103,13 @@ export const MessageService = {
                 is_edited: true,
                 updated_at: new Date().toISOString(),
             })
-            .eq('id', messageId);
+            .eq("id", messageId);
 
         if (error) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to update message',
+                    "Failed to update message",
                     error,
                 ),
             );
@@ -138,13 +138,13 @@ export const MessageService = {
                     is_deleted: true,
                     updated_at: new Date().toISOString(),
                 })
-                .eq('id', messageId);
+                .eq("id", messageId);
 
             if (error) {
                 return err(
                     appError(
                         ERROR_CODES.DB_ERROR,
-                        'Failed to delete message globally',
+                        "Failed to delete message globally",
                         error,
                     ),
                 );
@@ -154,15 +154,15 @@ export const MessageService = {
             // 1. Получаем текущий массив deleted_by
             const { data: msg, error: fetchError } = await supabase
                 .from(DB_TABLES.MESSAGES)
-                .select('deleted_by')
-                .eq('id', messageId)
+                .select("deleted_by")
+                .eq("id", messageId)
                 .single();
 
             if (fetchError) {
                 return err(
                     appError(
                         ERROR_CODES.DB_ERROR,
-                        'Failed to fetch message for deletion',
+                        "Failed to fetch message for deletion",
                         fetchError,
                     ),
                 );
@@ -175,13 +175,13 @@ export const MessageService = {
                     .update({
                         deleted_by: [...currentDeletedBy, currentUserId],
                     })
-                    .eq('id', messageId);
+                    .eq("id", messageId);
 
                 if (error) {
                     return err(
                         appError(
                             ERROR_CODES.DB_ERROR,
-                            'Failed to delete message locally',
+                            "Failed to delete message locally",
                             error,
                         ),
                     );
@@ -199,11 +199,11 @@ export const MessageService = {
         const { error } = await supabase
             .from(DB_TABLES.MESSAGES)
             .delete()
-            .eq('room_id', roomId);
+            .eq("room_id", roomId);
 
         if (error) {
             return err(
-                appError(ERROR_CODES.DB_ERROR, 'Failed to clear room', error),
+                appError(ERROR_CODES.DB_ERROR, "Failed to clear room", error),
             );
         }
 
@@ -219,16 +219,16 @@ export const MessageService = {
     ): Promise<Result<void, MessageError>> {
         const { error } = await supabase
             .from(DB_TABLES.MESSAGES)
-            .update({ status: 'read' })
-            .eq('room_id', roomId)
-            .neq('sender_id', currentUserId)
-            .neq('status', 'read'); // Opt: only unread
+            .update({ status: "read" })
+            .eq("room_id", roomId)
+            .neq("sender_id", currentUserId)
+            .neq("status", "read"); // Opt: only unread
 
         if (error) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to mark messages as read',
+                    "Failed to mark messages as read",
                     error,
                 ),
             );
@@ -245,15 +245,15 @@ export const MessageService = {
     ): Promise<Result<void, MessageError>> {
         const { error } = await supabase
             .from(DB_TABLES.MESSAGES)
-            .update({ status: 'delivered' })
-            .eq('id', messageId)
-            .eq('status', 'sent');
+            .update({ status: "delivered" })
+            .eq("id", messageId)
+            .eq("status", "sent");
 
         if (error) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to mark message delivered',
+                    "Failed to mark message delivered",
                     error,
                 ),
             );

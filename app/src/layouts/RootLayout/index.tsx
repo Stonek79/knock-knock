@@ -1,21 +1,21 @@
-import { Outlet, useLocation, useNavigate } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { CallsList } from '@/features/calls/CallsList';
-import { ChatList } from '@/features/chat/ChatList';
-import { ContactList } from '@/features/contacts/ContactList';
-import { FavoritesList } from '@/features/favorites/FavoritesList';
-import { SettingsSidebar } from '@/features/settings/SettingsSidebar';
-import { useKeySync } from '@/hooks/useKeySync';
-import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
-import { BottomNav } from '@/layouts/BottomNav';
-import { DesktopLayout } from '@/layouts/DesktopLayout';
-import { MobileHeader } from '@/layouts/MobileHeader';
-import { IS_DEV, ROUTES } from '@/lib/constants';
-import { isSupabaseConfigured } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/auth';
-import styles from './root.module.css';
+import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { CallsList } from "@/features/calls/CallsList";
+import { ChatList } from "@/features/chat/ChatList";
+import { ContactList } from "@/features/contacts/ContactList";
+import { FavoritesList } from "@/features/favorites/FavoritesList";
+import { SettingsSidebar } from "@/features/settings/SettingsSidebar";
+import { useKeySync } from "@/hooks/useKeySync";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { BottomNav } from "@/layouts/BottomNav";
+import { DesktopLayout } from "@/layouts/DesktopLayout";
+import { MobileHeader } from "@/layouts/MobileHeader";
+import { IS_DEV, ROUTES } from "@/lib/constants";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { useAuthStore } from "@/stores/auth";
+import styles from "./root.module.css";
 
 /**
  * Корневой компонент приложения (Root Layout).
@@ -91,7 +91,7 @@ export function RootLayout() {
                     onSelect={(contact) => {
                         // Переходим на DMInitializer для создания/поиска DM (с флагом приватности)
                         navigate({
-                            to: '/dm/$userId',
+                            to: "/dm/$userId",
                             params: { userId: contact.id },
                             search: { isPrivate: true },
                         });
@@ -108,7 +108,7 @@ export function RootLayout() {
                     onSelect={(contact) => {
                         // Переходим на DMInitializer для поиска/создания DM
                         navigate({
-                            to: '/dm/$userId',
+                            to: "/dm/$userId",
                             params: { userId: contact.id },
                         });
                     }}
@@ -146,7 +146,7 @@ export function RootLayout() {
 
     // Скрин лоадера во время проверки авторизации
     if (loading) {
-        return <div className={styles.loading}>{t('common.loading')}</div>;
+        return <div className={styles.loading}>{t("common.loading")}</div>;
     }
 
     // Рендер для неавторизованных пользователей или "чистых" экранов (Login, Home)

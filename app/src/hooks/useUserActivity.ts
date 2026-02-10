@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * Хук для отслеживания активности пользователя.
@@ -12,7 +12,9 @@ export function useUserActivity(timeoutMs = 2000) {
 
     const triggerActivity = useCallback(() => {
         setIsActive(true);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
         timeoutRef.current = setTimeout(() => {
             setIsActive(false);
         }, timeoutMs);
@@ -22,17 +24,19 @@ export function useUserActivity(timeoutMs = 2000) {
         const handleActivity = () => triggerActivity();
 
         // Подписка на глобальные события
-        window.addEventListener('mousemove', handleActivity);
-        window.addEventListener('touchstart', handleActivity);
-        window.addEventListener('keydown', handleActivity);
+        window.addEventListener("mousemove", handleActivity);
+        window.addEventListener("touchstart", handleActivity);
+        window.addEventListener("keydown", handleActivity);
 
         triggerActivity(); // Инициализация при монтировании
 
         return () => {
-            window.removeEventListener('mousemove', handleActivity);
-            window.removeEventListener('touchstart', handleActivity);
-            window.removeEventListener('keydown', handleActivity);
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            window.removeEventListener("mousemove", handleActivity);
+            window.removeEventListener("touchstart", handleActivity);
+            window.removeEventListener("keydown", handleActivity);
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
         };
     }, [triggerActivity]);
 

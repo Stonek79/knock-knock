@@ -2,9 +2,9 @@
  * Утилита для расшифровки контента сообщений.
  * Обрабатывает все edge-cases: удалённые сообщения, mock-режим, отсутствие IV.
  */
-import { decryptMessage } from '@/lib/crypto/messages';
-import { isMock } from '@/lib/supabase';
-import type { MessageRow } from '@/lib/types/message';
+import { decryptMessage } from "@/lib/crypto/messages";
+import { isMock } from "@/lib/supabase";
+import type { MessageRow } from "@/lib/types/message";
 
 /**
  * Расшифровывает контент сообщения.

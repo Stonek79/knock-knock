@@ -1,6 +1,6 @@
-import { err, fromPromise, ok, type Result } from 'neverthrow';
-import { z } from 'zod';
-import type { AppError } from '@/lib/types/result';
+import { err, fromPromise, ok, type Result } from "neverthrow";
+import { z } from "zod";
+import type { AppError } from "@/lib/types/result";
 
 /**
  * Реэкспорт примитивов neverthrow для консистентного использования.
@@ -41,9 +41,9 @@ export const resultSchema = <T extends z.ZodTypeAny, E extends z.ZodTypeAny>(
  */
 export const isResult = (val: unknown): val is Result<unknown, unknown> => {
     return (
-        typeof val === 'object' &&
+        typeof val === "object" &&
         val !== null &&
-        'isOk' in val &&
-        'isErr' in val
+        "isOk" in val &&
+        "isErr" in val
     );
 };

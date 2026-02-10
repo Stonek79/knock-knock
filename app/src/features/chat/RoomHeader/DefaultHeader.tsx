@@ -1,12 +1,12 @@
-import { Avatar, Box, Flex, Heading, Text } from '@radix-ui/themes';
-import { ChevronLeft, Phone, Trash2, Video } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/Button';
-import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
-import { ROOM_TYPE } from '@/lib/constants';
-import type { RoomWithMembers } from '@/lib/types/room';
-import { useAuthStore } from '@/stores/auth';
-import styles from './roomheader.module.css';
+import { Avatar, Box, Flex, Heading, Text } from "@radix-ui/themes";
+import { ChevronLeft, Phone, Trash2, Video } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/Button";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { ROOM_TYPE } from "@/lib/constants";
+import type { RoomWithMembers } from "@/lib/types/room";
+import { useAuthStore } from "@/stores/auth";
+import styles from "./roomheader.module.css";
 
 interface PeerUser {
     id: string;
@@ -38,7 +38,7 @@ export function DefaultHeader({
 
     const handleInfoClick = () => {
         if (peerUser?.id) {
-            console.log('Navigate to contact profile:', peerUser.id);
+            console.log("Navigate to contact profile:", peerUser.id);
         }
     };
 
@@ -66,14 +66,14 @@ export function DefaultHeader({
         room.room_members[0].user_id === user?.id;
 
     const displayName = isSelfChat
-        ? t('chat.favorites', 'Избранное')
+        ? t("chat.favorites", "Избранное")
         : isDM && resolvedPeer
           ? resolvedPeer.display_name
-          : room?.name || t('chat.unknownRoom', 'Чат');
+          : room?.name || t("chat.unknownRoom", "Чат");
 
     const avatarFallback = isSelfChat
-        ? '⭐'
-        : displayName?.[0]?.toUpperCase() || '?';
+        ? "⭐"
+        : displayName?.[0]?.toUpperCase() || "?";
     const avatarUrl = isDM ? resolvedPeer?.avatar_url : room?.avatar_url;
 
     const memberNames =
@@ -81,8 +81,8 @@ export function DefaultHeader({
             ? room.room_members
                   .map((m) => m.profiles?.display_name)
                   .filter(Boolean)
-                  .join(', ')
-            : '';
+                  .join(", ")
+            : "";
 
     return (
         <header className={styles.roomHeader}>
@@ -115,7 +115,7 @@ export function DefaultHeader({
                             truncate
                             className={styles.displayName}
                         >
-                            {room?.is_ephemeral ? '🔒 ' : ''}
+                            {room?.is_ephemeral ? "🔒 " : ""}
                             {displayName}
                         </Heading>
                         {isDM && resolvedPeer?.username && (
@@ -162,7 +162,7 @@ export function DefaultHeader({
                         className={styles.endSessionButton}
                     >
                         <Trash2 size={16} />
-                        {t('chat.endSession')}
+                        {t("chat.endSession")}
                     </Button>
                 )}
             </Flex>

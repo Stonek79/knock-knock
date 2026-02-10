@@ -1,6 +1,6 @@
-import { TextField } from '@radix-ui/themes';
-import { Mail } from 'lucide-react';
-import { type ComponentPropsWithoutRef, forwardRef } from 'react';
+import { TextField } from "@radix-ui/themes";
+import { Mail } from "lucide-react";
+import { type ComponentPropsWithoutRef, forwardRef } from "react";
 
 // import styles from './styles.module.css'; // Раскомментировать если понадобятся стили
 
@@ -23,4 +23,4 @@ export const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
     },
 );
 
-EmailInput.displayName = 'EmailInput';
+EmailInput.displayName = "EmailInput";

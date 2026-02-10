@@ -1,11 +1,11 @@
-import { Card } from '@radix-ui/themes';
-import { Navigate } from '@tanstack/react-router';
-import { useState } from 'react';
-import { LoginForm } from '@/features/auth/components/LoginForm';
-import { ROUTES } from '@/lib/constants';
-import { useAuthStore } from '@/stores/auth';
-import styles from './login.module.css';
-import { SuccessView } from './SuccessView';
+import { Card } from "@radix-ui/themes";
+import { Navigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { LoginForm } from "@/features/auth/components/LoginForm";
+import { ROUTES } from "@/lib/constants";
+import { useAuthStore } from "@/stores/auth";
+import styles from "./login.module.css";
+import { SuccessView } from "./SuccessView";
 
 /**
  * Страница входа в приложение.

@@ -1,6 +1,6 @@
-import { Box, Card, Flex, Text } from '@radix-ui/themes';
-import { useTranslation } from 'react-i18next';
-import styles from '../SecuritySettings/security.module.css';
+import { Box, Card, Flex, Text } from "@radix-ui/themes";
+import { useTranslation } from "react-i18next";
+import styles from "../SecuritySettings/security.module.css";
 
 interface KeysStatusCardProps {
     areKeysPublished: boolean;
@@ -23,23 +23,23 @@ export function KeysStatusCard({ areKeysPublished }: KeysStatusCardProps) {
                     <Text weight="bold" size="2">
                         {areKeysPublished
                             ? t(
-                                  'profile.encryptionActiveTitle',
-                                  'Шифрование активно',
+                                  "profile.encryptionActiveTitle",
+                                  "Шифрование активно",
                               )
                             : t(
-                                  'profile.encryptionSyncing',
-                                  'Синхронизация ключей...',
+                                  "profile.encryptionSyncing",
+                                  "Синхронизация ключей...",
                               )}
                     </Text>
                     <Text size="1" color="gray">
                         {areKeysPublished
                             ? t(
-                                  'profile.keysSyncedDesc',
-                                  'Вы можете общаться безопасно.',
+                                  "profile.keysSyncedDesc",
+                                  "Вы можете общаться безопасно.",
                               )
                             : t(
-                                  'profile.keysSyncingDesc',
-                                  'Генерация криптографических ключей...',
+                                  "profile.keysSyncingDesc",
+                                  "Генерация криптографических ключей...",
                               )}
                     </Text>
                 </Flex>

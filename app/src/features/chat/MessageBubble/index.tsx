@@ -1,10 +1,10 @@
-import { Avatar, Box, Text } from '@radix-ui/themes';
-import { useTranslation } from 'react-i18next';
-import { MESSAGE_POSITION, MESSAGE_STATUS } from '@/lib/constants';
-import type { MessagePosition, MessageStatus } from '@/lib/types/message';
-import { getUserColor } from '@/lib/utils/colors';
-import styles from './message-bubble.module.css';
-import { StatusIcon } from './StatusIcon';
+import { Avatar, Box, Text } from "@radix-ui/themes";
+import { useTranslation } from "react-i18next";
+import { MESSAGE_POSITION, MESSAGE_STATUS } from "@/lib/constants";
+import type { MessagePosition, MessageStatus } from "@/lib/types/message";
+import { getUserColor } from "@/lib/utils/colors";
+import styles from "./message-bubble.module.css";
+import { StatusIcon } from "./StatusIcon";
 
 interface MessageBubbleProps {
     content: string | null;
@@ -38,18 +38,20 @@ export function MessageBubble({
     const { t } = useTranslation();
 
     const timeString = new Date(timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
+        hour: "2-digit",
+        minute: "2-digit",
     });
 
     const userColor = senderName ? getUserColor(senderName) : undefined;
 
     return (
         <Box
-            className={`${styles.bubbleWrapper} ${isOwn ? styles.own : styles.peer} ${isSelected ? styles.selected : ''}`}
+            className={`${styles.bubbleWrapper} ${isOwn ? styles.own : styles.peer} ${isSelected ? styles.selected : ""}`}
             data-group-position={groupPosition}
             onClick={() => {
-                if (isEditing) return; // Не переключаем, если редактируем
+                if (isEditing) {
+                    return; // Не переключаем, если редактируем
+                }
                 onToggleSelection?.();
             }}
         >
@@ -60,7 +62,7 @@ export function MessageBubble({
                         <Avatar
                             size="1"
                             radius="full"
-                            fallback={senderName?.[0] || '?'}
+                            fallback={senderName?.[0] || "?"}
                             src={senderAvatar}
                             className={styles.avatar}
                             color="gray"
@@ -91,7 +93,7 @@ export function MessageBubble({
 
                 {isDeleted ? (
                     <Text className={styles.deletedContent}>
-                        {t('chat.messageDeleted', 'Сообщение удалено')}
+                        {t("chat.messageDeleted", "Сообщение удалено")}
                     </Text>
                 ) : (
                     <Text className={styles.content}>{content}</Text>
@@ -102,7 +104,7 @@ export function MessageBubble({
                         {timeString}
                         {isEdited &&
                             !isDeleted &&
-                            ` • ${t('chat.edited', 'изм.')}`}
+                            ` • ${t("chat.edited", "изм.")}`}
                     </Text>
                     <StatusIcon
                         status={status}

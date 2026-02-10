@@ -3,9 +3,9 @@
  * Переэкспортирует все криптофункции.
  */
 
-export * from './encryption';
-export * from './keys';
-export * from './keystore';
-export * from './messages';
-export * from './recovery';
-export * from './rooms';
+export * from "./encryption";
+export * from "./keys";
+export * from "./keystore";
+export * from "./messages";
+export * from "./recovery";
+export * from "./rooms";

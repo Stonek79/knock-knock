@@ -7,18 +7,18 @@ import {
     Spinner,
     Text,
     TextField,
-} from '@radix-ui/themes';
-import { Search, UserPlus } from 'lucide-react';
-import { useDeferredValue, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useContacts } from '@/features/contacts/hooks/useContacts';
-import type { Profile } from '@/lib/types/profile';
-import styles from './contactpicker.module.css';
+} from "@radix-ui/themes";
+import { Search, UserPlus } from "lucide-react";
+import { useDeferredValue, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useContacts } from "@/features/contacts/hooks/useContacts";
+import type { Profile } from "@/lib/types/profile";
+import styles from "./contactpicker.module.css";
 
 /**
  * Режим работы компонента ContactPicker.
  */
-export type ContactPickerMode = 'single' | 'multi';
+export type ContactPickerMode = "single" | "multi";
 
 interface ContactPickerProps {
     /**
@@ -50,7 +50,7 @@ export function ContactPicker({
     searchPlaceholder,
 }: ContactPickerProps) {
     const { t } = useTranslation();
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState("");
     const deferredSearchQuery = useDeferredValue(searchQuery);
 
     /**
@@ -77,7 +77,7 @@ export function ContactPicker({
      * Обработчик клика по контакту.
      */
     const handleContactClick = (contact: Profile) => {
-        if (mode === 'single') {
+        if (mode === "single") {
             // Одиночный выбор — просто заменяем
             onSelectionChange([contact.id]);
         } else {
@@ -101,7 +101,7 @@ export function ContactPicker({
             <Box className={styles.searchWrapper}>
                 <TextField.Root
                     placeholder={
-                        searchPlaceholder || t('contacts.search', 'Поиск...')
+                        searchPlaceholder || t("contacts.search", "Поиск...")
                     }
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -121,7 +121,7 @@ export function ContactPicker({
                 <Box className={styles.emptyContainer}>
                     <Spinner size="3" />
                     <Text color="gray" size="2">
-                        {t('common.loading', 'Загрузка...')}
+                        {t("common.loading", "Загрузка...")}
                     </Text>
                 </Box>
             )}
@@ -130,7 +130,7 @@ export function ContactPicker({
             {isError && (
                 <Box className={styles.emptyContainer}>
                     <Text color="red" size="2">
-                        {t('contacts.error', 'Ошибка загрузки')}
+                        {t("contacts.error", "Ошибка загрузки")}
                     </Text>
                 </Box>
             )}
@@ -140,7 +140,7 @@ export function ContactPicker({
                 <Box className={styles.emptyContainer}>
                     <UserPlus size={40} />
                     <Text size="2">
-                        {t('contacts.empty', 'Контакты не найдены')}
+                        {t("contacts.empty", "Контакты не найдены")}
                     </Text>
                 </Box>
             )}
@@ -153,10 +153,10 @@ export function ContactPicker({
                         return (
                             <Box
                                 key={contact.id}
-                                className={`${styles.item} ${isSelected ? styles.itemSelected : ''}`}
+                                className={`${styles.item} ${isSelected ? styles.itemSelected : ""}`}
                                 onClick={() => handleContactClick(contact)}
                             >
-                                {mode === 'multi' && (
+                                {mode === "multi" && (
                                     <Checkbox
                                         checked={isSelected}
                                         className={styles.checkbox}

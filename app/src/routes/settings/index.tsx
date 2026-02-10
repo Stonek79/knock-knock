@@ -1,8 +1,8 @@
-import { Container, Flex, Heading } from '@radix-ui/themes';
-import { createFileRoute } from '@tanstack/react-router';
-import { ThemeSelector } from '../../features/settings/ThemeSelector';
+import { Container, Flex, Heading } from "@radix-ui/themes";
+import { createFileRoute } from "@tanstack/react-router";
+import { ThemeSelector } from "../../features/settings/ThemeSelector";
 
-export const Route = createFileRoute('/settings/')({
+export const Route = createFileRoute("/settings/")({
     component: SettingsPage,
 });
 

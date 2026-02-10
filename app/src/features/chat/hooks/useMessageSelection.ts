@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { ClipboardService } from '@/lib/services/clipboard';
-import type { DecryptedMessageWithProfile } from '@/lib/types/message';
+import { useState } from "react";
+import { ClipboardService } from "@/lib/services/clipboard";
+import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 
 interface UseMessageSelectionProps {
     deleteMessage: (id: string, isOwnMessage: boolean) => Promise<void>;
@@ -25,7 +25,9 @@ export function useMessageSelection({
 
     const toggleSelection = (id: string) => {
         // Если уже редактируем, выделение не работает
-        if (editingId) return;
+        if (editingId) {
+            return;
+        }
 
         const newSet = new Set(selectedMessageIds);
         if (newSet.has(id)) {
@@ -46,7 +48,9 @@ export function useMessageSelection({
     };
 
     const handleDeleteSelected = () => {
-        if (selectedMessageIds.size === 0) return;
+        if (selectedMessageIds.size === 0) {
+            return;
+        }
         handleAction(async () => {
             const promises = Array.from(selectedMessageIds).map((id) => {
                 const msg = messages.find((m) => m.id === id);
@@ -62,7 +66,7 @@ export function useMessageSelection({
             const selectedText = messages
                 .filter((m) => selectedMessageIds.has(m.id) && m.content)
                 .map((m) => m.content)
-                .join('\n\n');
+                .join("\n\n");
 
             if (selectedText) {
                 ClipboardService.copy(selectedText).catch(console.error);
@@ -72,18 +76,20 @@ export function useMessageSelection({
 
     const handleReplySelected = () => {
         handleAction(() => {
-            console.log('Reply to:', Array.from(selectedMessageIds));
+            console.log("Reply to:", Array.from(selectedMessageIds));
         });
     };
 
     const handleForwardSelected = () => {
         handleAction(() => {
-            console.log('Forward:', Array.from(selectedMessageIds));
+            console.log("Forward:", Array.from(selectedMessageIds));
         });
     };
 
     const handleEditSelected = () => {
-        if (selectedMessageIds.size !== 1) return;
+        if (selectedMessageIds.size !== 1) {
+            return;
+        }
         const id = Array.from(selectedMessageIds)[0];
         setEditingId(id);
         clearSelection();

@@ -20,11 +20,11 @@ export function generateRoomId(): string {
 export async function generateRoomKey(): Promise<CryptoKey> {
     return await subtle.generateKey(
         {
-            name: 'AES-GCM',
+            name: "AES-GCM",
             length: 256,
         },
         true, // extractable (нужен для экспорта/импорта другим участникам)
-        ['encrypt', 'decrypt'],
+        ["encrypt", "decrypt"],
     );
 }
 
@@ -33,7 +33,7 @@ export async function generateRoomKey(): Promise<CryptoKey> {
  * Полезно для отладки или низкоуровневых операций.
  */
 export async function exportRoomKeyRaw(key: CryptoKey): Promise<ArrayBuffer> {
-    return await subtle.exportKey('raw', key);
+    return await subtle.exportKey("raw", key);
 }
 
 /**
@@ -42,8 +42,8 @@ export async function exportRoomKeyRaw(key: CryptoKey): Promise<ArrayBuffer> {
 export async function importRoomKeyRaw(
     keyData: ArrayBuffer,
 ): Promise<CryptoKey> {
-    return await subtle.importKey('raw', keyData, { name: 'AES-GCM' }, true, [
-        'encrypt',
-        'decrypt',
+    return await subtle.importKey("raw", keyData, { name: "AES-GCM" }, true, [
+        "encrypt",
+        "decrypt",
     ]);
 }

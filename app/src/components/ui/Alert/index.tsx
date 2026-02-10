@@ -1,36 +1,36 @@
-import { Callout } from '@radix-ui/themes';
-import { CircleCheck, Info, TriangleAlert } from 'lucide-react';
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-import styles from './alert.module.css';
+import { Callout } from "@radix-ui/themes";
+import { CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
+import styles from "./alert.module.css";
 
 /**
  * Свойства компонента Alert.
  */
 export interface AlertProps extends VariableAlertProps {
     /** Вариант стиля уведомления */
-    variant?: 'default' | 'destructive' | 'success';
+    variant?: "default" | "destructive" | "success";
     /** Заголовок уведомления (опционально) */
     title?: string;
     /** Отображать ли иконку (по умолчанию true) */
     icon?: boolean;
 }
 
-type VariableAlertProps = Omit<HTMLAttributes<HTMLDivElement>, 'color'>;
+type VariableAlertProps = Omit<HTMLAttributes<HTMLDivElement>, "color">;
 
 /**
  * Компонент уведомления (Alert).
  * Обертка над Radix Themes Callout.
  */
 const Alert = forwardRef<HTMLDivElement, AlertProps>(
-    ({ children, variant = 'default', title, icon = true, ...props }, ref) => {
-        let color: 'blue' | 'red' | 'green' = 'blue';
+    ({ children, variant = "default", title, icon = true, ...props }, ref) => {
+        let color: "blue" | "red" | "green" = "blue";
         let IconComponent = Info;
 
-        if (variant === 'destructive') {
-            color = 'red';
+        if (variant === "destructive") {
+            color = "red";
             IconComponent = TriangleAlert;
-        } else if (variant === 'success') {
-            color = 'green';
+        } else if (variant === "success") {
+            color = "green";
             IconComponent = CircleCheck;
         }
 
@@ -49,7 +49,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
         );
     },
 );
-Alert.displayName = 'Alert';
+Alert.displayName = "Alert";
 
 const AlertTitle = ({ children }: { children: ReactNode }) => (
     <strong className={styles.alertTitle}>{children}</strong>

@@ -1,10 +1,10 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { DB_TABLES, REALTIME_EVENTS } from '@/lib/constants';
-import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/auth';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { DB_TABLES, REALTIME_EVENTS } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/stores/auth";
 
-const UNREAD_CHANNEL = 'unread_tracker';
+const UNREAD_CHANNEL = "unread_tracker";
 
 interface UnreadCount {
     room_id: string;
@@ -21,13 +21,15 @@ export function useUnreadCounts() {
 
     // Загрузка начальных значений
     const { data: counts = [] } = useQuery({
-        queryKey: ['unread_counts', user?.id],
+        queryKey: ["unread_counts", user?.id],
         queryFn: async () => {
-            if (!user) return [];
-            const { data, error } = await supabase.rpc('get_unread_counts');
+            if (!user) {
+                return [];
+            }
+            const { data, error } = await supabase.rpc("get_unread_counts");
             if (error) {
                 console.error(
-                    'Не удалось загрузить счетчики непрочитанных',
+                    "Не удалось загрузить счетчики непрочитанных",
                     error,
                 );
                 return [];
@@ -40,16 +42,18 @@ export function useUnreadCounts() {
 
     // Подписка на Realtime события
     useEffect(() => {
-        if (!user) return;
+        if (!user) {
+            return;
+        }
 
         const channel = supabase
             .channel(UNREAD_CHANNEL)
             // Слушаем новые сообщения (увеличиваем счетчик)
             .on(
-                'postgres_changes',
+                "postgres_changes",
                 {
                     event: REALTIME_EVENTS.INSERT,
-                    schema: 'public',
+                    schema: "public",
                     table: DB_TABLES.MESSAGES,
                 },
                 (payload) => {
@@ -57,10 +61,12 @@ export function useUnreadCounts() {
                         room_id: string;
                         sender_id: string;
                     };
-                    if (newMsg.sender_id === user.id) return; // Игнорируем свои сообщения
+                    if (newMsg.sender_id === user.id) {
+                        return; // Игнорируем свои сообщения
+                    }
 
                     queryClient.setQueryData(
-                        ['unread_counts', user.id],
+                        ["unread_counts", user.id],
                         (old: UnreadCount[] = []) => {
                             const exists = old.find(
                                 (c) => c.room_id === newMsg.room_id,
@@ -83,10 +89,10 @@ export function useUnreadCounts() {
             // Слушаем обновления участников (сброс счетчика, если изменился last_read_at)
             // Обрабатывает синхронизацию с других устройств
             .on(
-                'postgres_changes',
+                "postgres_changes",
                 {
                     event: REALTIME_EVENTS.UPDATE,
-                    schema: 'public',
+                    schema: "public",
                     table: DB_TABLES.ROOM_MEMBERS,
                     filter: `user_id=eq.${user.id}`,
                 },
@@ -94,7 +100,7 @@ export function useUnreadCounts() {
                     // Если last_read_at изменился, повторно запрашиваем данные или сбрасываем оптимистично
                     // Повторный запрос надежнее для получения нуля
                     queryClient.invalidateQueries({
-                        queryKey: ['unread_counts', user.id],
+                        queryKey: ["unread_counts", user.id],
                     });
                 },
             )

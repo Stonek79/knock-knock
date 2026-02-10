@@ -1,7 +1,7 @@
-import { Check, CheckCheck } from 'lucide-react';
-import { MESSAGE_STATUS } from '@/lib/constants';
-import type { MessageStatus } from '@/lib/types/message';
-import styles from './message-bubble.module.css';
+import { Check, CheckCheck } from "lucide-react";
+import { MESSAGE_STATUS } from "@/lib/constants";
+import type { MessageStatus } from "@/lib/types/message";
+import styles from "./message-bubble.module.css";
 
 interface StatusIconProps {
     status: MessageStatus;
@@ -10,7 +10,9 @@ interface StatusIconProps {
 }
 
 export function StatusIcon({ status, isOwn, isDeleted }: StatusIconProps) {
-    if (!isOwn || isDeleted) return null;
+    if (!isOwn || isDeleted) {
+        return null;
+    }
 
     const iconClass = styles.iconSmall;
 

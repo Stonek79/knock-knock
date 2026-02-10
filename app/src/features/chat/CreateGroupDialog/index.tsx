@@ -6,15 +6,15 @@ import {
     Flex,
     Text,
     TextField,
-} from '@radix-ui/themes';
-import { Camera, X } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { useCreateGroup } from '@/features/chat/hooks/useCreateGroup';
+} from "@radix-ui/themes";
+import { Camera, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useCreateGroup } from "@/features/chat/hooks/useCreateGroup";
 import {
     ContactPicker,
     useSelectedContacts,
-} from '@/features/contacts/ContactPicker';
-import styles from './creategroupdialog.module.css';
+} from "@/features/contacts/ContactPicker";
+import styles from "./creategroupdialog.module.css";
 
 interface CreateGroupDialogProps {
     /** Открыт ли диалог */
@@ -53,12 +53,12 @@ export function CreateGroupDialog({
         <Dialog.Root open={open} onOpenChange={handleOpenChange}>
             <Dialog.Content maxWidth="500px">
                 <Dialog.Title>
-                    {t('chat.newGroup', 'Новая группа')}
+                    {t("chat.newGroup", "Новая группа")}
                 </Dialog.Title>
                 <Dialog.Description size="2" mb="4">
                     {t(
-                        'chat.groupDescription',
-                        'Создайте группу для общения с несколькими людьми',
+                        "chat.groupDescription",
+                        "Создайте группу для общения с несколькими людьми",
                     )}
                 </Dialog.Description>
 
@@ -72,7 +72,7 @@ export function CreateGroupDialog({
                         <Box
                             className={styles.avatarPlaceholder}
                             onClick={handleAvatarClick}
-                            style={{ cursor: 'pointer' }}
+                            style={{ cursor: "pointer" }}
                         >
                             {avatarUrl ? (
                                 <Avatar
@@ -86,7 +86,7 @@ export function CreateGroupDialog({
                             )}
                         </Box>
                         <TextField.Root
-                            placeholder={t('chat.groupName', 'Название группы')}
+                            placeholder={t("chat.groupName", "Название группы")}
                             value={groupName}
                             onChange={(e) => setGroupName(e.target.value)}
                             style={{ flex: 1 }}
@@ -123,7 +123,7 @@ export function CreateGroupDialog({
 
                 {/* Выбор участников */}
                 <Text size="2" weight="medium" mb="2">
-                    {t('chat.selectParticipants', 'Выберите участников')} (
+                    {t("chat.selectParticipants", "Выберите участников")} (
                     {selectedIds.length}/∞)
                 </Text>
 
@@ -131,14 +131,14 @@ export function CreateGroupDialog({
                     mode="multi"
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
-                    searchPlaceholder={t('common.search', 'Поиск')}
+                    searchPlaceholder={t("common.search", "Поиск")}
                 />
 
                 {selectedIds.length > 0 && selectedIds.length < 2 && (
                     <Text size="1" color="amber" mt="2">
                         {t(
-                            'chat.minParticipants',
-                            'Выберите минимум 2 участников для группы',
+                            "chat.minParticipants",
+                            "Выберите минимум 2 участников для группы",
                         )}
                     </Text>
                 )}
@@ -150,7 +150,7 @@ export function CreateGroupDialog({
                             color="gray"
                             disabled={isCreating}
                         >
-                            {t('common.cancel')}
+                            {t("common.cancel")}
                         </Button>
                     </Dialog.Close>
                     <Button
@@ -158,7 +158,7 @@ export function CreateGroupDialog({
                         loading={isCreating}
                         onClick={handleCreateGroup}
                     >
-                        {t('chat.createGroup', 'Создать группу')}
+                        {t("chat.createGroup", "Создать группу")}
                     </Button>
                 </Flex>
             </Dialog.Content>

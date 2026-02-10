@@ -1,17 +1,17 @@
-import { Slot } from '@radix-ui/react-slot';
-import { type ButtonHTMLAttributes, forwardRef } from 'react';
-import styles from './button.module.css';
+import { Slot } from "@radix-ui/react-slot";
+import { type ButtonHTMLAttributes, forwardRef } from "react";
+import styles from "./button.module.css";
 
 /**
  * Варианты стиля кнопки.
  */
-type ButtonVariant = 'solid' | 'glass' | 'ghost' | 'outline' | 'soft';
+type ButtonVariant = "solid" | "glass" | "ghost" | "outline" | "soft";
 
 /**
  * Размеры кнопки.
  * Поддерживаются как семантические (sm/md/lg), так и Radix-совместимые (1-4).
  */
-type ButtonSize = 'sm' | 'md' | 'lg' | 'icon' | '1' | '2' | '3' | '4';
+type ButtonSize = "sm" | "md" | "lg" | "icon" | "1" | "2" | "3" | "4";
 
 /**
  * Пропсы компонента Button.
@@ -29,10 +29,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * Маппинг размеров в CSS-классы.
  */
 const sizeClassMap: Record<ButtonSize, string> = {
-    '1': styles.size1,
-    '2': styles.size2,
-    '3': styles.size3,
-    '4': styles.size4,
+    "1": styles.size1,
+    "2": styles.size2,
+    "3": styles.size3,
+    "4": styles.size4,
     sm: styles.sm,
     md: styles.md,
     lg: styles.lg,
@@ -54,14 +54,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     (
         {
             className,
-            variant = 'solid',
-            size = 'md',
+            variant = "solid",
+            size = "md",
             asChild = false,
             ...props
         },
         ref,
     ) => {
-        const Comp = asChild ? Slot : 'button';
+        const Comp = asChild ? Slot : "button";
 
         // Собираем классы
         const buttonClasses = [
@@ -71,12 +71,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             className,
         ]
             .filter(Boolean)
-            .join(' ');
+            .join(" ");
 
         return <Comp className={buttonClasses} ref={ref} {...props} />;
     },
 );
 
-Button.displayName = 'Button';
+Button.displayName = "Button";
 
 export { Button };

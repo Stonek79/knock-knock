@@ -1,18 +1,18 @@
-import { Box, Spinner, Text } from '@radix-ui/themes';
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
-import { useCreateDM } from '@/features/chat/hooks/useCreateDM';
-import { useAuthStore } from '@/stores/auth';
-import styles from './dminitializer.module.css';
+import { Box, Spinner, Text } from "@radix-ui/themes";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { useCreateDM } from "@/features/chat/hooks/useCreateDM";
+import { useAuthStore } from "@/stores/auth";
+import styles from "./dminitializer.module.css";
 
 /**
  * Компонент инициализации DM-чата.
  */
 export function DMInitializer() {
-    const { userId } = useParams({ from: '/dm/$userId' });
-    const { isPrivate } = useSearch({ from: '/dm/$userId' });
+    const { userId } = useParams({ from: "/dm/$userId" });
+    const { isPrivate } = useSearch({ from: "/dm/$userId" });
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { t } = useTranslation();
@@ -22,8 +22,12 @@ export function DMInitializer() {
     const initializing = useRef(false);
 
     useEffect(() => {
-        if (!user || !userId) return;
-        if (initializing.current) return;
+        if (!user || !userId) {
+            return;
+        }
+        if (initializing.current) {
+            return;
+        }
         initializing.current = true;
 
         const initializeDM = async () => {
@@ -38,18 +42,18 @@ export function DMInitializer() {
 
                 // Редирект на комнату чата
                 navigate({
-                    to: '/chat/$roomId',
+                    to: "/chat/$roomId",
                     params: { roomId },
                     replace: true,
                 });
             } catch (err) {
-                console.error('Failed to initialize DM:', err);
+                console.error("Failed to initialize DM:", err);
                 setError(
                     err instanceof Error
                         ? err.message
                         : t(
-                              'chat.errors.createFailed',
-                              'Не удалось создать чат',
+                              "chat.errors.createFailed",
+                              "Не удалось создать чат",
                           ),
                 );
             }
@@ -62,7 +66,7 @@ export function DMInitializer() {
         return (
             <Box p="4">
                 <Alert variant="destructive">
-                    <AlertTitle>{t('common.error', 'Ошибка')}</AlertTitle>
+                    <AlertTitle>{t("common.error", "Ошибка")}</AlertTitle>
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             </Box>
@@ -73,7 +77,7 @@ export function DMInitializer() {
         <Box className={styles.container}>
             <Spinner size="3" />
             <Text color="gray" size="2">
-                {t('chat.initializing', 'Инициализация чата...')}
+                {t("chat.initializing", "Инициализация чата...")}
             </Text>
         </Box>
     );

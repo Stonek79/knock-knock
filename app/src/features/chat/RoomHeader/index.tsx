@@ -1,7 +1,7 @@
-import { useRouter } from '@tanstack/react-router';
-import type { RoomWithMembers } from '@/lib/types/room';
-import { DefaultHeader } from './DefaultHeader';
-import { SelectionHeader } from './SelectionHeader';
+import { useRouter } from "@tanstack/react-router";
+import type { RoomWithMembers } from "@/lib/types/room";
+import { DefaultHeader } from "./DefaultHeader";
+import { SelectionHeader } from "./SelectionHeader";
 
 interface PeerUser {
     id: string;
@@ -49,7 +49,7 @@ export function RoomHeader({
     const router = useRouter();
 
     const handleBack = () => {
-        router.navigate({ to: '/chat' });
+        router.navigate({ to: "/chat" });
     };
 
     if (selectedCount > 0) {

@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { DB_TABLES, ROOM_TYPE } from '@/lib/constants';
-import { supabase } from '@/lib/supabase';
-import { formatChatTime } from '@/lib/utils/date';
-import { useAuthStore } from '@/stores/auth';
-import type { ChatItem } from '../ChatList/ChatListItem';
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { DB_TABLES, ROOM_TYPE } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
+import { formatChatTime } from "@/lib/utils/date";
+import { useAuthStore } from "@/stores/auth";
+import type { ChatItem } from "../ChatList/ChatListItem";
 
 /**
  * Тип результата запроса комнат из БД.
@@ -14,7 +14,7 @@ interface RoomQueryResult {
     rooms: {
         id: string;
         name: string | null;
-        type: 'direct' | 'group';
+        type: "direct" | "group";
         is_ephemeral: boolean;
         last_message?: {
             content: string;
@@ -39,9 +39,11 @@ export function useChatList() {
     const { user } = useAuthStore();
 
     return useQuery({
-        queryKey: ['rooms', user?.id],
+        queryKey: ["rooms", user?.id],
         queryFn: async (): Promise<RoomQueryResult[]> => {
-            if (!user) return [];
+            if (!user) {
+                return [];
+            }
 
             const { data, error } = await supabase
                 .from(DB_TABLES.ROOM_MEMBERS)
@@ -62,10 +64,10 @@ export function useChatList() {
                         )
                     )
                 `)
-                .eq('user_id', user.id);
+                .eq("user_id", user.id);
 
             if (error) {
-                console.error('Failed to fetch rooms', error);
+                console.error("Failed to fetch rooms", error);
                 throw error;
             }
 
@@ -104,8 +106,8 @@ export function useChatList() {
 
                     if (!displayName) {
                         displayName = isDM
-                            ? t('chat.directChat', 'Личный чат')
-                            : t('chat.groupChat', 'Группа');
+                            ? t("chat.directChat", "Личный чат")
+                            : t("chat.groupChat", "Группа");
                     }
 
                     // Добавляем иконку замка для секретных чатов
@@ -119,10 +121,10 @@ export function useChatList() {
                         avatar: avatarUrl,
                         lastMessage:
                             room.last_message?.content ||
-                            t('chat.noMessages', 'Нет сообщений'),
+                            t("chat.noMessages", "Нет сообщений"),
                         time: room.last_message?.created_at
                             ? formatChatTime(room.last_message.created_at, t)
-                            : '',
+                            : "",
                     };
                 });
         },

@@ -1,7 +1,4 @@
-import type { THEME } from '@/lib/constants/theme';
+import type { DESIGN_THEME, THEME_MODE } from "../constants/theme";
 
-/**
- * Варианты темы оформления.
- * Использует значения из констант THEME.
- */
-export type ThemeValue = (typeof THEME)[keyof typeof THEME];
+export type DesignTheme = (typeof DESIGN_THEME)[keyof typeof DESIGN_THEME];
+export type ThemeMode = (typeof THEME_MODE)[keyof typeof THEME_MODE];

@@ -1,4 +1,4 @@
-import type { ERROR_CODES } from '@/lib/constants/errors';
+import type { ERROR_CODES } from "@/lib/constants/errors";
 
 /**
  * Тип кодов ошибок, выведенный из констант.

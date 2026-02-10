@@ -1,5 +1,5 @@
-import { useLocation } from '@tanstack/react-router';
-import { ROUTES } from '@/lib/constants';
+import { useLocation } from "@tanstack/react-router";
+import { ROUTES } from "@/lib/constants";
 
 /**
  * Хук для определения активного маршрута.

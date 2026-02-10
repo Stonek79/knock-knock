@@ -2,8 +2,8 @@
  * Calls page localization (en)
  */
 export const calls = {
-    title: 'Calls',
+    title: "Calls",
     emptyDescription:
-        'Your voice and video call history will be displayed here.',
-    startCall: 'Start call',
+        "Your voice and video call history will be displayed here.",
+    startCall: "Start call",
 };

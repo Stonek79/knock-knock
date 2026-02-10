@@ -1,9 +1,9 @@
-import { DropdownMenu, Flex, IconButton, Text } from '@radix-ui/themes';
-import { Lock, MessageSquarePlus, Plus, Users } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { CHAT_TYPE } from '@/lib/constants';
-import type { ChatType } from '@/lib/types';
-import styles from './chatlist.module.css';
+import { DropdownMenu, Flex, IconButton, Text } from "@radix-ui/themes";
+import { Lock, MessageSquarePlus, Plus, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { CHAT_TYPE } from "@/lib/constants";
+import type { ChatType } from "@/lib/types";
+import styles from "./chatlist.module.css";
 
 interface ChatListHeaderProps {
     /** Callback открытия диалога создания чата */
@@ -42,7 +42,7 @@ export function ChatListHeader({
                     >
                         <Flex align="center" gap="2">
                             <MessageSquarePlus size={16} />
-                            {t('chat.newChat')}
+                            {t("chat.newChat")}
                         </Flex>
                     </DropdownMenu.Item>
 
@@ -51,14 +51,14 @@ export function ChatListHeader({
                     >
                         <Flex align="center" gap="2">
                             <Lock size={16} />
-                            {t('chat.newPrivate')}
+                            {t("chat.newPrivate")}
                         </Flex>
                     </DropdownMenu.Item>
 
                     <DropdownMenu.Item onSelect={onOpenGroupDialog}>
                         <Flex align="center" gap="2">
                             <Users size={16} />
-                            {t('chat.newGroup')}
+                            {t("chat.newGroup")}
                         </Flex>
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>

@@ -1,8 +1,13 @@
-import { type ChangeEvent, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useFileDownloader } from '@/hooks/useFileDownloader';
-import { useKeystore } from '@/hooks/useKeystore';
-import type { KeyBackup } from '@/lib/crypto';
+import { type ChangeEvent, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useFileDownloader } from "@/hooks/useFileDownloader";
+import { useKeystore } from "@/hooks/useKeystore";
+import type { KeyBackup } from "@/lib/crypto";
+
+export interface StatusMessage {
+    type: "success" | "error";
+    text: string;
+}
 
 export function useKeysBackup() {
     const { t } = useTranslation();
@@ -13,50 +18,53 @@ export function useKeysBackup() {
     } = useKeystore();
     const { downloadJson } = useFileDownloader();
 
-    const [backupPassword, setBackupPassword] = useState('');
-    const [statusMessage, setStatusMessage] = useState<{
-        type: 'success' | 'error';
-        text: string;
-    } | null>(null);
+    const [backupPassword, setBackupPassword] = useState("");
+    const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(
+        null,
+    );
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleDownloadBackup = async () => {
         setStatusMessage(null);
         if (!backupPassword) {
             setStatusMessage({
-                type: 'error',
-                text: t('profile.enterBackupPassword'),
+                type: "error",
+                text: t("profile.enterBackupPassword"),
             });
             return;
         }
 
         const backup = await exportKeys(backupPassword);
         if (!backup) {
-            setStatusMessage({ type: 'error', text: t('profile.backupError') });
+            setStatusMessage({ type: "error", text: t("profile.backupError") });
             return;
         }
 
         const filename = `knock-backup-${new Date().toISOString().slice(0, 10)}.json`;
         downloadJson(backup, filename);
 
-        setBackupPassword('');
+        setBackupPassword("");
         setStatusMessage({
-            type: 'success',
-            text: t('profile.backupCreated'),
+            type: "success",
+            text: t("profile.backupCreated"),
         });
     };
 
     const handleRestoreBackup = (e: ChangeEvent<HTMLInputElement>) => {
         setStatusMessage(null);
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file) {
+            return;
+        }
 
         if (!backupPassword) {
             setStatusMessage({
-                type: 'error',
-                text: t('profile.enterBackupPassword'),
+                type: "error",
+                text: t("profile.enterBackupPassword"),
             });
-            if (fileInputRef.current) fileInputRef.current.value = '';
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
             return;
         }
 
@@ -67,18 +75,20 @@ export function useKeysBackup() {
                 const backupData = JSON.parse(text) as KeyBackup;
                 await restoreKeys(backupData, backupPassword);
                 setStatusMessage({
-                    type: 'success',
-                    text: t('profile.keysRestored'),
+                    type: "success",
+                    text: t("profile.keysRestored"),
                 });
-                setBackupPassword('');
+                setBackupPassword("");
             } catch (err) {
                 console.error(err);
                 setStatusMessage({
-                    type: 'error',
-                    text: t('profile.restoreError'),
+                    type: "error",
+                    text: t("profile.restoreError"),
                 });
             } finally {
-                if (fileInputRef.current) fileInputRef.current.value = '';
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
             }
         };
         reader.readAsText(file);

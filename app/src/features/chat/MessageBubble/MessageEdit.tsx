@@ -1,7 +1,7 @@
-import { Box, Flex, IconButton, TextArea } from '@radix-ui/themes';
-import { Check, X } from 'lucide-react';
-import { useState } from 'react';
-import styles from './message-bubble.module.css';
+import { Box, Flex, IconButton, TextArea } from "@radix-ui/themes";
+import { Check, X } from "lucide-react";
+import { useState } from "react";
+import styles from "./message-bubble.module.css";
 
 interface MessageEditProps {
     initialContent: string;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
 interface UseRateLimiterOptions {
     maxAttempts?: number;
@@ -14,7 +14,9 @@ export function useRateLimiter({
     const [attempts, setAttempts] = useState(0);
 
     const recordAttempt = useCallback(() => {
-        if (isBlocked) return;
+        if (isBlocked) {
+            return;
+        }
 
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);

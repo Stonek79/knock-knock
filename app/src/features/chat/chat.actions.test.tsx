@@ -2,16 +2,51 @@
  * Тесты действий с сообщениями в чате.
  * Проверяем: копирование, удаление, редактирование, отмену редактирования.
  */
-import { Theme } from '@radix-ui/themes';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ClipboardService } from '@/lib/services/clipboard';
-import { ChatRoom } from './ChatRoom';
 
-// --- Моки сервисов ---
+import { Theme } from "@radix-ui/themes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+    act,
+    cleanup,
+    fireEvent,
+    type RenderResult,
+    render,
+    screen,
+    waitFor,
+} from "@testing-library/react";
+import type { ReactElement } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ClipboardService } from "@/lib/services/clipboard";
+import { ok } from "@/lib/utils/result";
+import { ChatRoom } from "./ChatRoom";
 
-vi.mock('@/lib/services/message', () => ({
+// --- Стабильные константы и моки ---
+
+const MOCK_USER = { id: "user-1" };
+const MOCK_MESSAGES = [
+    {
+        id: "msg-1",
+        content: "My Message",
+        sender_id: "user-1",
+        created_at: "2023-01-01",
+    },
+    {
+        id: "msg-2",
+        content: "Other Message",
+        sender_id: "user-2",
+        created_at: "2023-01-01",
+    },
+];
+
+const MOCK_SEND_MESSAGE = vi.fn().mockResolvedValue(ok(undefined));
+const MOCK_DELETE_MESSAGE = vi.fn().mockResolvedValue(ok(undefined));
+const MOCK_UPDATE_MESSAGE = vi.fn().mockResolvedValue(ok(undefined));
+const MOCK_MARK_AS_READ = vi.fn();
+const MOCK_T = (_: string, defaultValue: string) => defaultValue;
+
+// --- Мокирование зависимостей (Должно быть в начале файла) ---
+
+vi.mock("@/lib/services/message", () => ({
     MessageService: {
         sendMessage: vi.fn(),
         deleteMessage: vi.fn(),
@@ -19,69 +54,54 @@ vi.mock('@/lib/services/message', () => ({
     },
 }));
 
-vi.mock('@/lib/services/room', () => ({
+vi.mock("@/lib/services/room", () => ({
     RoomService: {
         findOrCreateDM: vi.fn(),
     },
 }));
 
-// Мок роутера
-vi.mock('@tanstack/react-router', () => ({
-    useParams: vi.fn().mockReturnValue({ roomId: 'room-1' }),
+vi.mock("@tanstack/react-router", () => ({
+    useParams: vi.fn().mockReturnValue({ roomId: "room-1" }),
     useRouter: vi.fn().mockReturnValue({ navigate: vi.fn() }),
     useNavigate: vi.fn(),
 }));
 
-// Мок i18n — возвращает дефолтное значение
-vi.mock('react-i18next', () => ({
+vi.mock("react-i18next", () => ({
     useTranslation: () => ({
-        t: (_: string, defaultValue: string) => defaultValue,
+        t: MOCK_T,
     }),
 }));
 
-// Мок авторизации
-const mockUser = { id: 'user-1' };
-vi.mock('@/stores/auth', () => ({
-    useAuthStore: () => ({ user: mockUser }),
+vi.mock("@/stores/auth", () => ({
+    useAuthStore: () => ({ user: MOCK_USER }),
 }));
 
-// --- Моки хуков данных ---
-
-const mockMessages = [
-    {
-        id: 'msg-1',
-        content: 'My Message',
-        sender_id: 'user-1',
-        created_at: '2023-01-01',
-    },
-    {
-        id: 'msg-2',
-        content: 'Other Message',
-        sender_id: 'user-2',
-        created_at: '2023-01-01',
-    },
-];
-
-vi.mock('@/features/chat/hooks/useMessages', () => ({
+vi.mock("@/features/chat/hooks/useMessages", () => ({
     useMessages: () => ({
-        data: mockMessages,
+        data: MOCK_MESSAGES,
         isLoading: false,
     }),
 }));
 
-vi.mock('@/features/chat/hooks/useChatRoomData', () => ({
+vi.mock("@/features/chat/hooks/useChatRoomData", () => ({
     useChatRoomData: () => ({
         data: {
-            room: { type: 'direct' },
-            roomKey: 'key',
-            otherUserId: 'user-2',
+            room: { type: "direct" },
+            roomKey: "key",
+            otherUserId: "user-2",
         },
         isLoading: false,
     }),
 }));
 
-// Mock useChatScroll to avoid setTimeout warnings
-vi.mock('@/features/chat/hooks/useChatScroll', () => ({
+vi.mock("@/features/chat/hooks/useChatPeer", () => ({
+    useChatPeer: () => ({
+        data: { display_name: "Peer User", id: "user-2" },
+        isLoading: false,
+    }),
+}));
+
+vi.mock("@/features/chat/hooks/useChatScroll", () => ({
     useChatScroll: () => ({
         viewportRef: { current: null },
         showScrollButton: false,
@@ -90,151 +110,185 @@ vi.mock('@/features/chat/hooks/useChatScroll', () => ({
     }),
 }));
 
-import { ok } from '@/lib/utils/result';
+vi.mock("@/features/chat/hooks/useUnreadTracking", () => ({
+    useUnreadTracking: () => ({
+        firstUnreadId: null,
+        markAsRead: MOCK_MARK_AS_READ,
+    }),
+}));
 
-// Мок действий чата — перехватываем вызовы сервисов
-const mockSendMessage = vi.fn().mockResolvedValue(ok(undefined));
-const mockDeleteMessage = vi.fn().mockResolvedValue(ok(undefined));
-const mockUpdateMessage = vi.fn().mockResolvedValue(ok(undefined));
-
-vi.mock('@/features/chat/hooks/useChatActions', () => ({
+vi.mock("@/features/chat/hooks/useChatActions", () => ({
     useChatActions: () => ({
-        sendMessage: mockSendMessage,
-        deleteMessage: mockDeleteMessage,
-        updateMessage: mockUpdateMessage,
+        sendMessage: MOCK_SEND_MESSAGE,
+        deleteMessage: MOCK_DELETE_MESSAGE,
+        updateMessage: MOCK_UPDATE_MESSAGE,
         endSession: vi.fn(),
         ending: false,
     }),
 }));
 
-// Мок буфера обмена
-vi.mock('@/lib/services/clipboard', () => ({
+vi.mock("@/lib/services/clipboard", () => ({
     ClipboardService: {
         copy: vi.fn().mockResolvedValue(true),
     },
 }));
 
-// --- Тесты ---
+// --- Тестовая среда ---
 
-describe('Действия с сообщениями в чате', () => {
+describe("Действия с сообщениями в чате", () => {
     let queryClient: QueryClient;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockSendMessage.mockClear();
-        mockDeleteMessage.mockClear();
-        mockUpdateMessage.mockClear();
+        MOCK_SEND_MESSAGE.mockClear();
+        MOCK_DELETE_MESSAGE.mockClear();
+        MOCK_UPDATE_MESSAGE.mockClear();
+        MOCK_MARK_AS_READ.mockClear();
+
         queryClient = new QueryClient({
             defaultOptions: {
-                queries: { retry: false },
+                queries: { retry: false, gcTime: 0 },
             },
         });
     });
 
-    /**
-     * Обёртка для рендера с провайдерами:
-     * - QueryClientProvider для react-query
-     * - Theme для Radix UI (включает TooltipProvider)
-     */
-    const renderWithProvider = (ui: React.ReactNode) => {
-        return render(
-            <QueryClientProvider client={queryClient}>
-                <Theme>{ui}</Theme>
-            </QueryClientProvider>,
-        );
-    };
-
-    it('Копирование: выделяет сообщение и копирует текст', async () => {
-        renderWithProvider(<ChatRoom roomId="room-1" />);
-
-        // Кликаем на сообщение для выделения
-        const myMsg = screen.getByText('My Message');
-        fireEvent.click(myMsg);
-
-        // Нажимаем кнопку "Копировать"
-        const copyBtn = screen.getByRole('button', { name: /копировать/i });
-        fireEvent.click(copyBtn);
-
-        expect(ClipboardService.copy).toHaveBeenCalledWith('My Message');
+    afterEach(() => {
+        // Очистка DOM и сброс состояния
+        cleanup();
     });
 
-    it('Удаление: выделяет сообщение и вызывает сервис удаления', async () => {
-        renderWithProvider(<ChatRoom roomId="room-1" />);
+    /**
+     * Вспомогательная функция для рендера
+     */
+    const renderWithProvider = async (ui: ReactElement) => {
+        let result!: RenderResult;
+        await act(async () => {
+            result = render(
+                <QueryClientProvider client={queryClient}>
+                    <Theme>{ui}</Theme>
+                </QueryClientProvider>,
+            );
+        });
 
-        const myMsg = screen.getByText('My Message');
-        fireEvent.click(myMsg);
+        // Гарантируем, что компонент отрисовался без состояния загрузки
+        await waitFor(() => {
+            expect(screen.queryByText(/загрузка/i)).not.toBeInTheDocument();
+        });
 
-        const deleteBtn = screen.getByRole('button', { name: /удалить/i });
-        fireEvent.click(deleteBtn);
+        return result;
+    };
 
-        // Подтверждаем в диалоге
-        const confirmBtn = screen.getByRole('button', { name: /удалить/i });
-        fireEvent.click(confirmBtn);
+    it("Копирование: выделяет сообщение и копирует текст", async () => {
+        await renderWithProvider(<ChatRoom roomId="room-1" />);
+
+        const myMsg = screen.getByText("My Message");
+
+        // Клик может вызывать обновление состояния выделения
+        await act(async () => {
+            fireEvent.click(myMsg);
+        });
+
+        const copyBtn = screen.getByRole("button", { name: /копировать/i });
+        await act(async () => {
+            fireEvent.click(copyBtn);
+        });
+
+        expect(ClipboardService.copy).toHaveBeenCalledWith("My Message");
+    });
+
+    it("Удаление: выделяет сообщение и вызывает сервис удаления", async () => {
+        await renderWithProvider(<ChatRoom roomId="room-1" />);
+
+        const myMsg = screen.getByText("My Message");
+        await act(async () => {
+            fireEvent.click(myMsg);
+        });
+
+        const deleteBtn = screen.getByRole("button", { name: /удалить/i });
+        await act(async () => {
+            fireEvent.click(deleteBtn);
+        });
+
+        const confirmBtn = screen.getByRole("button", { name: /удалить/i });
+        await act(async () => {
+            fireEvent.click(confirmBtn);
+        });
 
         await waitFor(() => {
-            expect(mockDeleteMessage).toHaveBeenCalledWith('msg-1', true);
+            expect(MOCK_DELETE_MESSAGE).toHaveBeenCalledWith("msg-1", true);
         });
     });
 
-    it('Редактирование своего: показывает кнопку и заполняет ввод', async () => {
-        renderWithProvider(<ChatRoom roomId="room-1" />);
+    it("Редактирование своего: показывает кнопку и заполняет ввод", async () => {
+        await renderWithProvider(<ChatRoom roomId="room-1" />);
 
-        const myMsg = screen.getByText('My Message');
-        fireEvent.click(myMsg);
+        const myMsg = screen.getByText("My Message");
+        await act(async () => {
+            fireEvent.click(myMsg);
+        });
 
-        // Кнопка редактирования видна для своего сообщения
-        const editBtn = screen.getByRole('button', { name: /редактировать/i });
+        const editBtn = screen.getByRole("button", { name: /редактировать/i });
         expect(editBtn).toBeInTheDocument();
-        fireEvent.click(editBtn);
 
-        // Поле ввода заполнено текстом сообщения
-        const input = screen.getByDisplayValue('My Message');
+        await act(async () => {
+            fireEvent.click(editBtn);
+        });
+
+        const input = screen.getByDisplayValue("My Message");
         expect(input).toBeInTheDocument();
 
-        // Изменяем и отправляем
-        fireEvent.change(input, { target: { value: 'Updated Content' } });
-        const sendBtn = screen.getByRole('button', { name: /отправить/i });
-        fireEvent.click(sendBtn);
+        await act(async () => {
+            fireEvent.change(input, { target: { value: "Updated Content" } });
+        });
+
+        const sendBtn = screen.getByRole("button", { name: /отправить/i });
+        await act(async () => {
+            fireEvent.click(sendBtn);
+        });
 
         await waitFor(() => {
-            expect(mockUpdateMessage).toHaveBeenCalledWith(
-                'msg-1',
-                'Updated Content',
+            expect(MOCK_UPDATE_MESSAGE).toHaveBeenCalledWith(
+                "msg-1",
+                "Updated Content",
             );
         });
     });
 
-    it('Редактирование чужого: кнопка НЕ показывается', async () => {
-        renderWithProvider(<ChatRoom roomId="room-1" />);
+    it("Редактирование чужого: кнопка НЕ показывается", async () => {
+        await renderWithProvider(<ChatRoom roomId="room-1" />);
 
-        const otherMsg = screen.getByText('Other Message');
-        fireEvent.click(otherMsg);
+        const otherMsg = screen.getByText("Other Message");
+        await act(async () => {
+            fireEvent.click(otherMsg);
+        });
 
-        // Кнопка редактирования не должна быть видна
-        const editBtn = screen.queryByRole('button', {
+        const editBtn = screen.queryByRole("button", {
             name: /редактировать/i,
         });
         expect(editBtn).not.toBeInTheDocument();
     });
 
-    it('Отмена редактирования: Escape очищает поле ввода', async () => {
-        renderWithProvider(<ChatRoom roomId="room-1" />);
+    it("Отмена редактирования: Escape очищает поле ввода", async () => {
+        await renderWithProvider(<ChatRoom roomId="room-1" />);
 
-        // Входим в режим редактирования
-        const myMsg = screen.getByText('My Message');
-        fireEvent.click(myMsg);
-        const editBtn = screen.getByRole('button', { name: /редактировать/i });
-        fireEvent.click(editBtn);
+        const myMsg = screen.getByText("My Message");
+        await act(async () => {
+            fireEvent.click(myMsg);
+        });
 
-        // Проверяем что поле заполнено
-        screen.getByDisplayValue('My Message');
+        const editBtn = screen.getByRole("button", { name: /редактировать/i });
+        await act(async () => {
+            fireEvent.click(editBtn);
+        });
 
-        // Нажимаем Escape
-        fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
+        screen.getByDisplayValue("My Message");
 
-        // Поле должно очиститься
+        await act(async () => {
+            fireEvent.keyDown(screen.getByRole("textbox"), { key: "Escape" });
+        });
+
         await waitFor(() => {
-            expect(screen.getByRole('textbox')).toHaveValue('');
+            expect(screen.getByRole("textbox")).toHaveValue("");
         });
     });
 });

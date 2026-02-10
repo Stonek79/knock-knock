@@ -1,24 +1,24 @@
-import { describe, expect, it, vi } from 'vitest';
-import { ERROR_CODES } from '@/lib/constants/errors';
-import { createBackup, restoreBackup } from './recovery';
+import { describe, expect, it, vi } from "vitest";
+import { ERROR_CODES } from "@/lib/constants/errors";
+import { createBackup, restoreBackup } from "./recovery";
 
 // Web Crypto API доступен глобально в Node 20+ и Vitest (jsdom).
 
-describe('Recovery Service', () => {
-    it('должен успешно создать и восстановить бэкап с правильным паролем', async () => {
+describe("Recovery Service", () => {
+    it("должен успешно создать и восстановить бэкап с правильным паролем", async () => {
         const identityKey = (await window.crypto.subtle.generateKey(
-            { name: 'Ed25519' },
+            { name: "Ed25519" },
             true,
-            ['sign', 'verify'],
+            ["sign", "verify"],
         )) as CryptoKeyPair;
 
         const preKey = (await window.crypto.subtle.generateKey(
-            { name: 'X25519' },
+            { name: "X25519" },
             true,
-            ['deriveKey', 'deriveBits'],
+            ["deriveKey", "deriveBits"],
         )) as CryptoKeyPair;
 
-        const password = 'correct-password';
+        const password = "correct-password";
 
         const backup = await createBackup(password, identityKey, preKey);
 
@@ -34,26 +34,26 @@ describe('Recovery Service', () => {
         }
     });
 
-    it('должен вернуть ошибку DECRYPT_FAILED при неверном пароле', async () => {
+    it("должен вернуть ошибку DECRYPT_FAILED при неверном пароле", async () => {
         // Скрываем ожидаемый console.error
         const consoleSpy = vi
-            .spyOn(console, 'error')
+            .spyOn(console, "error")
             .mockImplementation(() => {});
 
         const identityKey = (await window.crypto.subtle.generateKey(
-            { name: 'Ed25519' },
+            { name: "Ed25519" },
             true,
-            ['sign', 'verify'],
+            ["sign", "verify"],
         )) as CryptoKeyPair;
 
         const preKey = (await window.crypto.subtle.generateKey(
-            { name: 'X25519' },
+            { name: "X25519" },
             true,
-            ['deriveKey', 'deriveBits'],
+            ["deriveKey", "deriveBits"],
         )) as CryptoKeyPair;
 
-        const password = 'correct-password';
-        const wrongPassword = 'wrong-password';
+        const password = "correct-password";
+        const wrongPassword = "wrong-password";
 
         const backup = await createBackup(password, identityKey, preKey);
 
@@ -69,20 +69,20 @@ describe('Recovery Service', () => {
         }
     });
 
-    it('должен вернуть ошибку INVALID_BACKUP при поврежденных данных', async () => {
+    it("должен вернуть ошибку INVALID_BACKUP при поврежденных данных", async () => {
         // Скрываем ожидаемый console.error
         const consoleSpy = vi
-            .spyOn(console, 'error')
+            .spyOn(console, "error")
             .mockImplementation(() => {});
 
         const backup = {
             version: 1,
-            salt: 'satl',
-            iv: 'iv',
-            data: 'corrupted-base64!',
+            salt: "satl",
+            iv: "iv",
+            data: "corrupted-base64!",
         };
 
-        const result = await restoreBackup(backup, 'password');
+        const result = await restoreBackup(backup, "password");
 
         expect(consoleSpy).toHaveBeenCalled();
         consoleSpy.mockRestore();
@@ -96,15 +96,15 @@ describe('Recovery Service', () => {
         }
     });
 
-    it('должен вернуть UNSUPPORTED_VERSION при несовпадении версий', async () => {
+    it("должен вернуть UNSUPPORTED_VERSION при несовпадении версий", async () => {
         const backup = {
             version: 999,
-            salt: '',
-            iv: '',
-            data: '',
+            salt: "",
+            iv: "",
+            data: "",
         };
 
-        const result = await restoreBackup(backup, 'password');
+        const result = await restoreBackup(backup, "password");
 
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/auth';
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/stores/auth";
 
 type PresenceState = {
     [key: string]: {
@@ -16,27 +16,29 @@ type PresenceState = {
 export function usePresence() {
     // Map: userId -> 'online' | 'offline'
     const [onlineUsers, setOnlineUsers] = useState<
-        Record<string, 'online' | 'offline'>
+        Record<string, "online" | "offline">
     >({});
     const { user } = useAuthStore();
 
     useEffect(() => {
-        if (!user) return;
+        if (!user) {
+            return;
+        }
 
         // 1. Mock Mode
-        if (import.meta.env.VITE_USE_MOCK === 'true') {
+        if (import.meta.env.VITE_USE_MOCK === "true") {
             // В мок-режиме, сделаем вид, что некоторые юзеры онлайн
             // (Можно брать из MOCK_USERS, но для простоты захардкодим логику)
             setOnlineUsers({
-                'user-2': 'online', // Elon
-                'user-3': 'online', // Pavel
-                [user.id]: 'online',
+                "user-2": "online", // Elon
+                "user-3": "online", // Pavel
+                [user.id]: "online",
             });
             return;
         }
 
         // 2. Production Mode (Supabase Realtime)
-        const channel = supabase.channel('global_presence', {
+        const channel = supabase.channel("global_presence", {
             config: {
                 presence: {
                     key: user.id,
@@ -45,20 +47,20 @@ export function usePresence() {
         });
 
         channel
-            .on('presence', { event: 'sync' }, () => {
+            .on("presence", { event: "sync" }, () => {
                 const state = channel.presenceState() as PresenceState;
-                const newOnlineMap: Record<string, 'online' | 'offline'> = {};
+                const newOnlineMap: Record<string, "online" | "offline"> = {};
 
                 Object.keys(state).forEach((userId) => {
-                    newOnlineMap[userId] = 'online';
+                    newOnlineMap[userId] = "online";
                 });
 
                 setOnlineUsers(newOnlineMap);
             })
-            .on('presence', { event: 'join' }, ({ key }) => {
-                setOnlineUsers((prev) => ({ ...prev, [key]: 'online' }));
+            .on("presence", { event: "join" }, ({ key }) => {
+                setOnlineUsers((prev) => ({ ...prev, [key]: "online" }));
             })
-            .on('presence', { event: 'leave' }, ({ key }) => {
+            .on("presence", { event: "leave" }, ({ key }) => {
                 setOnlineUsers((prev) => {
                     const next = { ...prev };
                     delete next[key];
@@ -66,7 +68,7 @@ export function usePresence() {
                 });
             })
             .subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') {
+                if (status === "SUBSCRIBED") {
                     await channel.track({
                         online_at: new Date().toISOString(),
                         user_id: user.id,

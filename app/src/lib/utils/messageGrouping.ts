@@ -1,5 +1,5 @@
-import { MESSAGE_POSITION } from '@/lib/constants';
-import type { MessagePosition } from '@/lib/types/message';
+import { MESSAGE_POSITION } from "@/lib/constants";
+import type { MessagePosition } from "@/lib/types/message";
 
 interface MessageWithSender {
     sender_id: string | null;
@@ -24,9 +24,15 @@ export function getMessageGroupPosition(
     // Проверка: сообщение от того же отправителя, что и следующее?
     const isBottom = nextMsg && nextMsg.sender_id === currentMsg.sender_id;
 
-    if (isTop && isBottom) return MESSAGE_POSITION.MIDDLE;
-    if (isTop && !isBottom) return MESSAGE_POSITION.END;
-    if (!isTop && isBottom) return MESSAGE_POSITION.START;
+    if (isTop && isBottom) {
+        return MESSAGE_POSITION.MIDDLE;
+    }
+    if (isTop && !isBottom) {
+        return MESSAGE_POSITION.END;
+    }
+    if (!isTop && isBottom) {
+        return MESSAGE_POSITION.START;
+    }
 
     return MESSAGE_POSITION.SINGLE;
 }

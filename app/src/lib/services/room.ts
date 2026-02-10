@@ -1,18 +1,18 @@
-import type { PostgrestError } from '@supabase/supabase-js';
-import { DB_TABLES } from '@/lib/constants';
-import { ERROR_CODES } from '@/lib/constants/errors';
+import type { PostgrestError } from "@supabase/supabase-js";
+import { DB_TABLES } from "@/lib/constants";
+import { ERROR_CODES } from "@/lib/constants/errors";
 import {
     arrayBufferToBase64,
     base64ToArrayBuffer,
     generateRoomId,
     generateRoomKey,
     wrapRoomKey,
-} from '@/lib/crypto';
-import { logger } from '@/lib/logger';
-import { supabase } from '@/lib/supabase';
-import type { AppError, Result } from '@/lib/types/result';
-import type { RoomKey, RoomMember } from '@/lib/types/room';
-import { appError, err, ok } from '@/lib/utils/result';
+} from "@/lib/crypto";
+import { logger } from "@/lib/logger";
+import { supabase } from "@/lib/supabase";
+import type { AppError, Result } from "@/lib/types/result";
+import type { RoomKey, RoomMember } from "@/lib/types/room";
+import { appError, err, ok } from "@/lib/utils/result";
 
 export type RoomError =
     | AppError<typeof ERROR_CODES.DB_ERROR, PostgrestError>
@@ -33,7 +33,7 @@ export const RoomService = {
      */
     async createRoom(
         name: string | null,
-        type: 'direct' | 'group',
+        type: "direct" | "group",
         myUserId: string,
         peerIds: string[],
         isEphemeral = false,
@@ -46,17 +46,18 @@ export const RoomService = {
         // 1. Получаем публичные ключи участников
         const { data: profiles, error: profilesError } = await supabase
             .from(DB_TABLES.PROFILES)
-            .select('id, public_key_x25519')
-            .in('id', allMemberIds);
+            .select("id, public_key_x25519")
+            .in("id", allMemberIds);
 
-        if (profilesError)
+        if (profilesError) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to fetch profiles',
+                    "Failed to fetch profiles",
                     profilesError,
                 ),
             );
+        }
 
         if (!profiles || profiles.length !== allMemberIds.length) {
             const foundIds = profiles?.map((p) => p.id) || [];
@@ -64,31 +65,31 @@ export const RoomService = {
                 (id) => !foundIds.includes(id),
             );
             return err(
-                appError(ERROR_CODES.MISSING_KEYS, 'Some users not found', {
+                appError(ERROR_CODES.MISSING_KEYS, "Some users not found", {
                     userIds: missingIds,
                 }),
             );
         }
 
         // 2. Шифруем RoomKey для каждого участника
-        const encryptedKeys: Omit<RoomKey, 'created_at'>[] = [];
-        const roomMembers: Omit<RoomMember, 'joined_at'>[] = [];
+        const encryptedKeys: Omit<RoomKey, "created_at">[] = [];
+        const roomMembers: Omit<RoomMember, "joined_at">[] = [];
 
         for (const profile of profiles) {
             // Режим Mock: пропускаем реальное шифрование
-            if (import.meta.env.VITE_USE_MOCK === 'true') {
+            if (import.meta.env.VITE_USE_MOCK === "true") {
                 roomMembers.push({
                     room_id: roomId,
                     user_id: profile.id,
-                    role: profile.id === myUserId ? 'admin' : 'member',
+                    role: profile.id === myUserId ? "admin" : "member",
                 });
                 encryptedKeys.push({
                     room_id: roomId,
                     user_id: profile.id,
                     encrypted_key: JSON.stringify({
-                        iv: 'mock',
-                        ciphertext: 'mock',
-                        ephemeralPublicKey: 'mock',
+                        iv: "mock",
+                        ciphertext: "mock",
+                        ephemeralPublicKey: "mock",
                     }),
                 });
                 continue;
@@ -109,11 +110,11 @@ export const RoomService = {
 
             try {
                 const recipientPubKey = await window.crypto.subtle.importKey(
-                    'raw',
+                    "raw",
                     base64ToArrayBuffer(profile.public_key_x25519),
                     {
-                        name: 'ECDH',
-                        namedCurve: 'P-256',
+                        name: "ECDH",
+                        namedCurve: "P-256",
                     },
                     true,
                     [],
@@ -138,14 +139,14 @@ export const RoomService = {
                 roomMembers.push({
                     room_id: roomId,
                     user_id: profile.id,
-                    role: profile.id === myUserId ? 'admin' : 'member',
+                    role: profile.id === myUserId ? "admin" : "member",
                 });
             } catch (e) {
-                logger.error('Crypto error during createRoom', e);
+                logger.error("Crypto error during createRoom", e);
                 return err(
                     appError(
                         ERROR_CODES.CRYPTO_ERROR,
-                        'Failed to encrypt room key',
+                        "Failed to encrypt room key",
                         e instanceof Error ? e : undefined,
                     ),
                 );
@@ -164,14 +165,15 @@ export const RoomService = {
                 avatar_url: avatarUrl,
                 is_ephemeral: isEphemeral,
             });
-        if (roomError)
+        if (roomError) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to create room record',
+                    "Failed to create room record",
                     roomError,
                 ),
             );
+        }
 
         // B. Добавляем участников
         const { error: membersError } = await supabase
@@ -181,7 +183,7 @@ export const RoomService = {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to add members',
+                    "Failed to add members",
                     membersError,
                 ),
             );
@@ -191,10 +193,11 @@ export const RoomService = {
         const { error: keysError } = await supabase
             .from(DB_TABLES.ROOM_KEYS)
             .insert(encryptedKeys);
-        if (keysError)
+        if (keysError) {
             return err(
-                appError(ERROR_CODES.DB_ERROR, 'Failed to add keys', keysError),
+                appError(ERROR_CODES.DB_ERROR, "Failed to add keys", keysError),
             );
+        }
 
         return ok({ roomId, roomKey });
     },
@@ -207,43 +210,45 @@ export const RoomService = {
         const { error: keysError } = await supabase
             .from(DB_TABLES.ROOM_KEYS)
             .delete()
-            .eq('room_id', roomId);
-        if (keysError)
+            .eq("room_id", roomId);
+        if (keysError) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to delete keys',
+                    "Failed to delete keys",
                     keysError,
                 ),
             );
+        }
 
         // 2. Удаляем участников
         const { error: membersError } = await supabase
             .from(DB_TABLES.ROOM_MEMBERS)
             .delete()
-            .eq('room_id', roomId);
-        if (membersError)
+            .eq("room_id", roomId);
+        if (membersError) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to delete members',
+                    "Failed to delete members",
                     membersError,
                 ),
             );
+        }
 
         // 3. Удаляем саму комнату
         const { error } = await supabase
             .from(DB_TABLES.ROOMS)
             .delete()
-            .eq('id', roomId);
+            .eq("id", roomId);
 
         if (error) {
             logger.warn(
-                'Could not delete room record (possbily restricted)',
+                "Could not delete room record (possbily restricted)",
                 error,
             );
             return err(
-                appError(ERROR_CODES.DB_ERROR, 'Failed to delete room', error),
+                appError(ERROR_CODES.DB_ERROR, "Failed to delete room", error),
             );
         }
 
@@ -262,19 +267,20 @@ export const RoomService = {
         // 1. Получаем список комнат текущего пользователя
         const { data: myMemberships, error: mbError } = await supabase
             .from(DB_TABLES.ROOM_MEMBERS)
-            .select('room_id')
-            .eq('user_id', currentUserId);
+            .select("room_id")
+            .eq("user_id", currentUserId);
 
-        if (mbError)
+        if (mbError) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    'Failed to fetch memberships',
+                    "Failed to fetch memberships",
                     mbError,
                 ),
             );
+        }
 
-        logger.info('findOrCreateDM: myMemberships', {
+        logger.info("findOrCreateDM: myMemberships", {
             count: myMemberships?.length,
         });
 
@@ -284,21 +290,22 @@ export const RoomService = {
             // 2. Ищем среди них прямые чаты (type='direct')
             const { data: candidateRooms, error: roomError } = await supabase
                 .from(DB_TABLES.ROOMS)
-                .select('id')
-                .in('id', myRoomIds)
-                .eq('type', 'direct')
-                .eq('is_ephemeral', isEphemeral);
+                .select("id")
+                .in("id", myRoomIds)
+                .eq("type", "direct")
+                .eq("is_ephemeral", isEphemeral);
 
-            if (roomError)
+            if (roomError) {
                 return err(
                     appError(
                         ERROR_CODES.DB_ERROR,
-                        'Failed to fetch candidate rooms',
+                        "Failed to fetch candidate rooms",
                         roomError,
                     ),
                 );
+            }
 
-            logger.info('findOrCreateDM: candidateRooms', {
+            logger.info("findOrCreateDM: candidateRooms", {
                 count: candidateRooms?.length,
             });
 
@@ -308,8 +315,8 @@ export const RoomService = {
                     const { data: members, error: membersError } =
                         await supabase
                             .from(DB_TABLES.ROOM_MEMBERS)
-                            .select('user_id')
-                            .eq('room_id', room.id);
+                            .select("user_id")
+                            .eq("room_id", room.id);
 
                     if (!membersError) {
                         const memberIds = members.map((m) => m.user_id);
@@ -321,7 +328,7 @@ export const RoomService = {
                             memberIds.length === 1 &&
                             memberIds[0] === currentUserId
                         ) {
-                            logger.info('Found existing Self-Chat room', {
+                            logger.info("Found existing Self-Chat room", {
                                 roomId: room.id,
                             });
                             return ok(room.id);
@@ -333,7 +340,7 @@ export const RoomService = {
                             memberIds.length === 2 &&
                             memberIds.includes(targetUserId)
                         ) {
-                            logger.info('Found existing DM room', {
+                            logger.info("Found existing DM room", {
                                 roomId: room.id,
                             });
                             return ok(room.id);
@@ -344,7 +351,7 @@ export const RoomService = {
         }
 
         // 4. Если не нашли — создаем новую
-        logger.info('Creating new DM room', {
+        logger.info("Creating new DM room", {
             currentUserId,
             targetUserId,
             isEphemeral,
@@ -352,7 +359,7 @@ export const RoomService = {
 
         const createResult = await this.createRoom(
             null, // DM не имеет названия при создании
-            'direct',
+            "direct",
             currentUserId,
             [targetUserId],
             isEphemeral,

@@ -1,19 +1,19 @@
 /** Название приложения */
-export const APP_NAME = 'KnokKnok';
+export const APP_NAME = "KnokKnok";
 
 /** Версия приложения */
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = "0.1.0";
 
 /**
  * Типы создаваемых чатов.
  */
 export const CHAT_TYPE = {
     /** Обычный чат */
-    PUBLIC: 'public',
+    PUBLIC: "public",
     /** Приватный чат с E2E шифрованием */
-    PRIVATE: 'private',
+    PRIVATE: "private",
     /** Групповой чат */
-    GROUP: 'group',
+    GROUP: "group",
 } as const;
 
 /** Режим разработчика */

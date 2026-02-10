@@ -1,10 +1,10 @@
-import { Box, Flex, Spinner, Text } from '@radix-ui/themes';
-import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { ChatRoom } from '@/features/chat/ChatRoom';
-import { RoomService } from '@/lib/services/room';
-import { useAuthStore } from '@/stores/auth';
-import styles from './favoritespage.module.css';
+import { Box, Flex, Spinner, Text } from "@radix-ui/themes";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { ChatRoom } from "@/features/chat/ChatRoom";
+import { RoomService } from "@/lib/services/room";
+import { useAuthStore } from "@/stores/auth";
+import styles from "./favoritespage.module.css";
 
 /**
  * Страница избранного.
@@ -20,12 +20,16 @@ export function FavoritesPage() {
         isLoading,
         error,
     } = useQuery({
-        queryKey: ['favorites', user?.id],
+        queryKey: ["favorites", user?.id],
         queryFn: async () => {
-            if (!user) throw new Error('Unauthorized');
+            if (!user) {
+                throw new Error("Unauthorized");
+            }
             // Находим или создаем чат с самим собой (targetUserId = currentUserId)
             const res = await RoomService.findOrCreateDM(user.id, user.id);
-            if (res.isErr()) throw new Error(res.error.message);
+            if (res.isErr()) {
+                throw new Error(res.error.message);
+            }
             return res.value;
         },
         enabled: !!user,
@@ -49,8 +53,8 @@ export function FavoritesPage() {
                 gap="2"
             >
                 <Text color="red">
-                    {t('common.error', 'Ошибка')}:{' '}
-                    {error instanceof Error ? error.message : 'Unknown error'}
+                    {t("common.error", "Ошибка")}:{" "}
+                    {error instanceof Error ? error.message : "Unknown error"}
                 </Text>
             </Flex>
         );

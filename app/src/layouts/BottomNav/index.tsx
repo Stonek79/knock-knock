@@ -1,10 +1,10 @@
-import { Text } from '@radix-ui/themes';
-import { Link } from '@tanstack/react-router';
-import clsx from 'clsx';
-import { useTranslation } from 'react-i18next';
-import { NAVIGATION_ITEMS } from '@/config/navigation';
-import { useIsActive } from '@/hooks/useIsActive';
-import styles from './bottomnav.module.css';
+import { Text } from "@radix-ui/themes";
+import { Link } from "@tanstack/react-router";
+import clsx from "clsx";
+import { useTranslation } from "react-i18next";
+import { NAVIGATION_ITEMS } from "@/config/navigation";
+import { useIsActive } from "@/hooks/useIsActive";
+import styles from "./bottomnav.module.css";
 
 /**
  * Пропсы компонента BottomNav.
@@ -12,7 +12,7 @@ import styles from './bottomnav.module.css';
 interface BottomNavProps {
     /** Количество непрочитанных сообщений (отображается как badge) */
     unreadCount?: number;
-    variant?: 'mobile' | 'desktop';
+    variant?: "mobile" | "desktop";
 }
 
 /**
@@ -25,7 +25,7 @@ interface BottomNavProps {
  */
 export function BottomNav({
     unreadCount = 0,
-    variant = 'mobile',
+    variant = "mobile",
 }: BottomNavProps) {
     const { t } = useTranslation();
     const checkIsActive = useIsActive();
@@ -35,7 +35,7 @@ export function BottomNav({
             data-variant={variant}
             className={clsx(
                 styles.bottomNav,
-                variant === 'mobile' && styles.fixedBottom,
+                variant === "mobile" && styles.fixedBottom,
             )}
         >
             <ul className={styles.navList}>
@@ -62,18 +62,18 @@ export function BottomNav({
                                         size={24}
                                         strokeWidth={active ? 2.5 : 2}
                                     />
-                                    {item.key === 'chats' &&
+                                    {item.key === "chats" &&
                                         unreadCount > 0 && (
                                             <span className={styles.badge}>
                                                 {unreadCount > 99
-                                                    ? '99+'
+                                                    ? "99+"
                                                     : unreadCount}
                                             </span>
                                         )}
                                 </span>
                                 <Text
                                     className={styles.label}
-                                    weight={active ? 'medium' : 'regular'}
+                                    weight={active ? "medium" : "regular"}
                                 >
                                     {t(item.labelKey, item.defaultLabel)}
                                 </Text>

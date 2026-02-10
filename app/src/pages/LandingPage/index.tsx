@@ -1,10 +1,10 @@
-import { Badge, Box, Button, Flex, Heading, Text } from '@radix-ui/themes';
-import { useNavigate } from '@tanstack/react-router';
-import { Construction } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { AppLogo } from '@/components/ui/AppLogo';
-import { ROUTES } from '@/lib/constants';
-import styles from './landing.module.css';
+import { Badge, Box, Button, Flex, Heading, Text } from "@radix-ui/themes";
+import { useNavigate } from "@tanstack/react-router";
+import { Construction } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { AppLogo } from "@/components/ui/AppLogo";
+import { ROUTES } from "@/lib/constants";
+import styles from "./landing.module.css";
 
 /**
  * Главная страница (Лендинг).
@@ -30,7 +30,7 @@ export function LandingPage() {
             >
                 <Badge color="orange" size="3" variant="surface" radius="full">
                     <Construction size={16} className={styles.badgeIcon} />
-                    {t('common.landing.badge')}
+                    {t("common.landing.badge")}
                 </Badge>
 
                 <AppLogo
@@ -40,7 +40,7 @@ export function LandingPage() {
                 />
 
                 <Heading size="8" align="center" weight="medium">
-                    {t('common.landing.title')}
+                    {t("common.landing.title")}
                 </Heading>
 
                 <Text
@@ -49,7 +49,7 @@ export function LandingPage() {
                     color="gray"
                     className={styles.descriptionText}
                 >
-                    {t('common.landing.description')}
+                    {t("common.landing.description")}
                 </Text>
             </Flex>
 
@@ -60,7 +60,7 @@ export function LandingPage() {
                     highContrast
                     onClick={() => navigate({ to: ROUTES.LOGIN })}
                 >
-                    {t('common.landing.devLogin')}
+                    {t("common.landing.devLogin")}
                 </Button>
             </Box>
         </Flex>

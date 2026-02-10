@@ -1,7 +1,7 @@
-import { Box, Flex, Grid, Text } from '@radix-ui/themes';
-import clsx from 'clsx';
-import { useThemeStore } from '@/stores/theme';
-import styles from './theme-selector.module.css';
+import { Box, Flex, Grid, Text } from "@radix-ui/themes";
+import clsx from "clsx";
+import { useThemeStore } from "@/stores/theme";
+import styles from "./theme-selector.module.css";
 
 export const ThemeSelector = () => {
     const { theme, setTheme, mode, setMode } = useThemeStore();
@@ -20,20 +20,20 @@ export const ThemeSelector = () => {
                 <Flex gap="2">
                     <button
                         type="button"
-                        onClick={() => setMode('light')}
+                        onClick={() => setMode("light")}
                         className={clsx(
                             styles.modeBtn,
-                            mode === 'light' && styles.active,
+                            mode === "light" && styles.active,
                         )}
                     >
                         Light ☀️
                     </button>
                     <button
                         type="button"
-                        onClick={() => setMode('dark')}
+                        onClick={() => setMode("dark")}
                         className={clsx(
                             styles.modeBtn,
-                            mode === 'dark' && styles.active,
+                            mode === "dark" && styles.active,
                         )}
                     >
                         Dark 🌑
@@ -47,15 +47,15 @@ export const ThemeSelector = () => {
                 <Box
                     className={clsx(
                         styles.themeCard,
-                        theme === 'neon' && styles.selected,
+                        theme === "neon" && styles.selected,
                     )}
-                    onClick={() => setTheme('neon')}
+                    onClick={() => setTheme("neon")}
                 >
                     <Box className={styles.previewNeon} />
                     <Flex justify="between" align="center" mt="2">
                         <Text weight="medium">Cosmic Neon</Text>
-                        {theme === 'neon' && (
-                            <Text style={{ color: 'var(--accent-primary)' }}>
+                        {theme === "neon" && (
+                            <Text style={{ color: "var(--accent-primary)" }}>
                                 ✓
                             </Text>
                         )}
@@ -66,15 +66,15 @@ export const ThemeSelector = () => {
                 <Box
                     className={clsx(
                         styles.themeCard,
-                        theme === 'emerald' && styles.selected,
+                        theme === "emerald" && styles.selected,
                     )}
-                    onClick={() => setTheme('emerald')}
+                    onClick={() => setTheme("emerald")}
                 >
                     <Box className={styles.previewEmerald} />
                     <Flex justify="between" align="center" mt="2">
                         <Text weight="medium">Emerald Luxury</Text>
-                        {theme === 'emerald' && (
-                            <Text style={{ color: 'var(--accent-primary)' }}>
+                        {theme === "emerald" && (
+                            <Text style={{ color: "var(--accent-primary)" }}>
                                 ✓
                             </Text>
                         )}

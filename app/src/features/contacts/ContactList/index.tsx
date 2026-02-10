@@ -7,14 +7,14 @@ import {
     Spinner,
     Text,
     TextField,
-} from '@radix-ui/themes';
-import { Search, UserPlus } from 'lucide-react';
-import { useDeferredValue, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useContacts } from '@/features/contacts/hooks/useContacts';
-import { usePresence } from '@/features/contacts/hooks/usePresence';
-import type { Profile } from '@/lib/types/profile';
-import styles from './contactlist.module.css';
+} from "@radix-ui/themes";
+import { Search, UserPlus } from "lucide-react";
+import { useDeferredValue, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useContacts } from "@/features/contacts/hooks/useContacts";
+import { usePresence } from "@/features/contacts/hooks/usePresence";
+import type { Profile } from "@/lib/types/profile";
+import styles from "./contactlist.module.css";
 
 interface ContactListProps {
     /**
@@ -22,7 +22,7 @@ interface ContactListProps {
      * - 'list': Обычный список контактов
      * - 'select': Режим выбора контакта (например, для нового приватного чата)
      */
-    mode?: 'list' | 'select';
+    mode?: "list" | "select";
     /** Колбэк при выборе контакта */
     onSelect?: (contact: Profile) => void;
 }
@@ -36,9 +36,9 @@ interface ContactListProps {
  * @param props - Пропсы компонента
  * @returns JSX элемент списка контактов
  */
-export function ContactList({ mode = 'list', onSelect }: ContactListProps) {
+export function ContactList({ mode = "list", onSelect }: ContactListProps) {
     const { t } = useTranslation();
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Отложенное значение поиска для плавного UX
     const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -62,9 +62,9 @@ export function ContactList({ mode = 'list', onSelect }: ContactListProps) {
     }, [contacts, deferredSearchQuery]);
 
     const title =
-        mode === 'select'
-            ? t('contacts.selectTitle', 'Выбрать контакт')
-            : t('contacts.title', 'Контакты');
+        mode === "select"
+            ? t("contacts.selectTitle", "Выбрать контакт")
+            : t("contacts.title", "Контакты");
 
     // Индикатор "поиск в процессе" (когда deferred отстаёт от актуального)
     const isSearching = searchQuery !== deferredSearchQuery;
@@ -76,7 +76,7 @@ export function ContactList({ mode = 'list', onSelect }: ContactListProps) {
                 <Box className={styles.emptyContainer}>
                     <Spinner size="3" />
                     <Text color="gray">
-                        {t('common.loading', 'Загрузка...')}
+                        {t("common.loading", "Загрузка...")}
                     </Text>
                 </Box>
             );
@@ -87,12 +87,12 @@ export function ContactList({ mode = 'list', onSelect }: ContactListProps) {
             return (
                 <Box className={styles.emptyContainer}>
                     <Text color="red">
-                        {t('contacts.error', 'Ошибка загрузки контактов')}
+                        {t("contacts.error", "Ошибка загрузки контактов")}
                     </Text>
                     <Text size="1" color="gray">
                         {error instanceof Error
                             ? error.message
-                            : 'Unknown error'}
+                            : "Unknown error"}
                     </Text>
                 </Box>
             );
@@ -102,7 +102,7 @@ export function ContactList({ mode = 'list', onSelect }: ContactListProps) {
         if (filteredContacts.length === 0) {
             return (
                 <Box className={styles.emptyContainer}>
-                    <Text>{t('contacts.notFound', 'Контакты не найдены')}</Text>
+                    <Text>{t("contacts.notFound", "Контакты не найдены")}</Text>
                 </Box>
             );
         }
@@ -111,7 +111,7 @@ export function ContactList({ mode = 'list', onSelect }: ContactListProps) {
         return (
             <ScrollArea type="hover" className={styles.list}>
                 {filteredContacts.map((contact) => {
-                    const isOnline = onlineUsers[contact.id] === 'online';
+                    const isOnline = onlineUsers[contact.id] === "online";
 
                     return (
                         <Box
@@ -159,17 +159,17 @@ export function ContactList({ mode = 'list', onSelect }: ContactListProps) {
             <Box className={styles.header} p="3">
                 <Flex justify="between" align="center" mb="3">
                     <Heading size="4">{title}</Heading>
-                    {mode === 'list' && (
+                    {mode === "list" && (
                         <Box
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => console.log('Add contact')}
+                            style={{ cursor: "pointer" }}
+                            onClick={() => console.log("Add contact")}
                         >
                             <UserPlus size={20} />
                         </Box>
                     )}
                 </Flex>
                 <TextField.Root
-                    placeholder={t('contacts.search', 'Поиск по имени...')}
+                    placeholder={t("contacts.search", "Поиск по имени...")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 >

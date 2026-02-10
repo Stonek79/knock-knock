@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 export interface ProfileKeys {
     public_key_x25519: string | null;
@@ -18,17 +18,19 @@ export function useProfileKeys(userId: string | undefined) {
         isLoading,
         error,
     } = useQuery({
-        queryKey: ['profile-keys', userId],
+        queryKey: ["profile-keys", userId],
         queryFn: async (): Promise<ProfileKeys | null> => {
-            if (!userId) return null;
+            if (!userId) {
+                return null;
+            }
             const { data, error } = await supabase
-                .from('profiles')
-                .select('public_key_x25519, public_key_signing')
-                .eq('id', userId)
+                .from("profiles")
+                .select("public_key_x25519, public_key_signing")
+                .eq("id", userId)
                 .single();
 
             if (error) {
-                console.error('Failed to fetch profile keys', error);
+                console.error("Failed to fetch profile keys", error);
                 return null;
             }
             return data;

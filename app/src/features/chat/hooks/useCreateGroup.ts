@@ -1,9 +1,9 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
-import { useCallback, useState } from 'react';
-import { MOCK_GROUP_AVATARS } from '@/lib/mock/data';
-import { RoomService } from '@/lib/services/room';
-import { useAuthStore } from '@/stores/auth';
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { useCallback, useState } from "react";
+import { MOCK_GROUP_AVATARS } from "@/lib/mock/data";
+import { RoomService } from "@/lib/services/room";
+import { useAuthStore } from "@/stores/auth";
 
 interface UseCreateGroupProps {
     onOpenChange: (open: boolean) => void;
@@ -18,7 +18,7 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
 
-    const [groupName, setGroupName] = useState('');
+    const [groupName, setGroupName] = useState("");
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isCreating, setIsCreating] = useState(false);
@@ -27,7 +27,7 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
      * Сброс формы
      */
     const resetState = useCallback(() => {
-        setGroupName('');
+        setGroupName("");
         setSelectedIds([]);
         setAvatarUrl(null);
     }, []);
@@ -47,26 +47,30 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
      * Создание группы
      */
     const handleCreateGroup = useCallback(async () => {
-        if (selectedIds.length < 2 || !groupName.trim() || !user) return;
+        if (selectedIds.length < 2 || !groupName.trim() || !user) {
+            return;
+        }
 
         setIsCreating(true);
         try {
             const res = await RoomService.createRoom(
                 groupName.trim(),
-                'group',
+                "group",
                 user.id,
                 selectedIds,
                 false, // Групповые чаты обычно не эфемерные
                 avatarUrl,
             );
 
-            if (res.isErr()) throw new Error(res.error.message);
+            if (res.isErr()) {
+                throw new Error(res.error.message);
+            }
             const { roomId } = res.value;
 
             // Инвалидируем кеш списка комнат
             await queryClient.invalidateQueries({
-                queryKey: ['rooms'],
-                refetchType: 'all',
+                queryKey: ["rooms"],
+                refetchType: "all",
             });
 
             // Закрываем диалог и переходим в чат
@@ -74,11 +78,11 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
             resetState();
 
             navigate({
-                to: '/chat/$roomId',
+                to: "/chat/$roomId",
                 params: { roomId },
             });
         } catch (error) {
-            console.error('Failed to create group:', error);
+            console.error("Failed to create group:", error);
         } finally {
             setIsCreating(false);
         }

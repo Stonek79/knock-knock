@@ -28,16 +28,16 @@ export const formatChatTime = (
     );
 
     if (diffDays === 0) {
-        return t('common.today');
+        return t("common.today");
     }
 
     if (diffDays === 1) {
-        return t('common.yesterday');
+        return t("common.yesterday");
     }
 
     // Формат dd.mm.yy
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = String(date.getFullYear()).slice(-2);
 
     return `${day}.${month}.${year}`;

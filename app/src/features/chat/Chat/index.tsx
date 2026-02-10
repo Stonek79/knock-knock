@@ -1,9 +1,9 @@
-import { Heading, Text } from '@radix-ui/themes';
-import { MessageCircle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { ChatList } from '@/features/chat/ChatList';
-import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
-import styles from '../chat.module.css';
+import { Heading, Text } from "@radix-ui/themes";
+import { MessageCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { ChatList } from "@/features/chat/ChatList";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import styles from "../chat.module.css";
 
 /**
  * Индекс страницы /chat.
@@ -26,12 +26,12 @@ export function Chat() {
                 <MessageCircle size={64} strokeWidth={1.5} />
             </div>
             <Heading size="5" mb="2">
-                {t('chat.selectChat', 'Выберите чат')}
+                {t("chat.selectChat", "Выберите чат")}
             </Heading>
             <Text color="gray" size="3" className={styles.placeholderText}>
                 {t(
-                    'chat.selectChatDesc',
-                    'Выберите пользователя из списка слева, чтобы начать общение.',
+                    "chat.selectChatDesc",
+                    "Выберите пользователя из списка слева, чтобы начать общение.",
                 )}
             </Text>
         </div>

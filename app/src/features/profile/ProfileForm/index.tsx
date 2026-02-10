@@ -1,14 +1,14 @@
-import { Flex, Text, TextField } from '@radix-ui/themes';
-import { useForm } from '@tanstack/react-form';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { type ChangeEvent, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
-import { Button } from '@/components/ui/Button';
-import { DB_TABLES, VALIDATION } from '@/lib/constants';
-import { profileSchema } from '@/lib/schemas/profile';
-import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/auth';
+import { Flex, Text, TextField } from "@radix-ui/themes";
+import { useForm } from "@tanstack/react-form";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { type ChangeEvent, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { DB_TABLES, VALIDATION } from "@/lib/constants";
+import { profileSchema } from "@/lib/schemas/profile";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/stores/auth";
 
 /**
  * Форма редактирования профиля пользователя.
@@ -19,22 +19,26 @@ export function ProfileForm() {
     const queryClient = useQueryClient();
 
     const [statusMessage, setStatusMessage] = useState<{
-        type: 'success' | 'error';
+        type: "success" | "error";
         text: string;
     } | null>(null);
 
     // Получение данных профиля
     const { data: profile } = useQuery({
-        queryKey: ['profile', user?.id],
+        queryKey: ["profile", user?.id],
         queryFn: async () => {
-            if (!user) return null;
+            if (!user) {
+                return null;
+            }
             const { data, error } = await supabase
                 .from(DB_TABLES.PROFILES)
-                .select('*')
-                .eq('id', user.id)
+                .select("*")
+                .eq("id", user.id)
                 .single();
 
-            if (error && error.code !== 'PGRST116') throw error;
+            if (error && error.code !== "PGRST116") {
+                throw error;
+            }
             return data;
         },
         enabled: !!user,
@@ -42,11 +46,13 @@ export function ProfileForm() {
 
     const form = useForm({
         defaultValues: {
-            username: profile?.username || '',
-            display_name: profile?.display_name || '',
+            username: profile?.username || "",
+            display_name: profile?.display_name || "",
         },
         onSubmit: async ({ value }) => {
-            if (!user) return;
+            if (!user) {
+                return;
+            }
             setStatusMessage(null);
 
             const { error } = await supabase.from(DB_TABLES.PROFILES).upsert({
@@ -57,12 +63,12 @@ export function ProfileForm() {
             });
 
             if (error) {
-                setStatusMessage({ type: 'error', text: error.message });
+                setStatusMessage({ type: "error", text: error.message });
             } else {
-                queryClient.invalidateQueries({ queryKey: ['profile'] });
+                queryClient.invalidateQueries({ queryKey: ["profile"] });
                 setStatusMessage({
-                    type: 'success',
-                    text: t('profile.profileUpdated'),
+                    type: "success",
+                    text: t("profile.profileUpdated"),
                 });
             }
         },
@@ -73,15 +79,15 @@ export function ProfileForm() {
             {statusMessage && (
                 <Alert
                     variant={
-                        statusMessage.type === 'success'
-                            ? 'success'
-                            : 'destructive'
+                        statusMessage.type === "success"
+                            ? "success"
+                            : "destructive"
                     }
                 >
                     <AlertTitle>
-                        {statusMessage.type === 'success'
-                            ? t('common.success')
-                            : t('common.error')}
+                        {statusMessage.type === "success"
+                            ? t("common.success")
+                            : t("common.error")}
                     </AlertTitle>
                     <AlertDescription>{statusMessage.text}</AlertDescription>
                 </Alert>
@@ -108,7 +114,7 @@ export function ProfileForm() {
                                     size="2"
                                     weight="medium"
                                 >
-                                    {t('profile.username')}
+                                    {t("profile.username")}
                                 </Text>
                                 <TextField.Root
                                     id="username"
@@ -129,7 +135,7 @@ export function ProfileForm() {
                                                     min: VALIDATION.USERNAME_MIN_LENGTH,
                                                 }),
                                             )
-                                            .join(', ')}
+                                            .join(", ")}
                                     </Text>
                                 ) : null}
                             </Flex>
@@ -145,7 +151,7 @@ export function ProfileForm() {
                                     size="2"
                                     weight="medium"
                                 >
-                                    {t('profile.displayName')}
+                                    {t("profile.displayName")}
                                 </Text>
                                 <TextField.Root
                                     id="display_name"
@@ -173,8 +179,8 @@ export function ProfileForm() {
                                 variant="solid"
                             >
                                 {isSubmitting
-                                    ? t('common.saving')
-                                    : t('profile.saveProfile')}
+                                    ? t("common.saving")
+                                    : t("profile.saveProfile")}
                             </Button>
                         )}
                     </form.Subscribe>

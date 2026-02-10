@@ -3,7 +3,7 @@
  * Использует AES-GCM (256-bit) с симметричным ключом комнаты.
  */
 
-import { arrayBufferToBase64, base64ToArrayBuffer } from './index';
+import { arrayBufferToBase64, base64ToArrayBuffer } from "./index";
 
 const subtle = window.crypto.subtle;
 const ENCODER = new TextEncoder();
@@ -24,7 +24,7 @@ export async function encryptMessage(
 
     const encryptedBuffer = await subtle.encrypt(
         {
-            name: 'AES-GCM',
+            name: "AES-GCM",
             iv: iv,
         },
         key,
@@ -54,7 +54,7 @@ export async function decryptMessage(
 
     const decryptedBuffer = await subtle.decrypt(
         {
-            name: 'AES-GCM',
+            name: "AES-GCM",
             iv: ivBuffer,
         },
         key,

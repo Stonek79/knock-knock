@@ -1,15 +1,15 @@
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect } from 'react';
-import { DB_TABLES, REALTIME_EVENTS } from '@/lib/constants';
-import { logger } from '@/lib/logger';
-import { MessageService } from '@/lib/services/message';
-import { supabase } from '@/lib/supabase';
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
+import { DB_TABLES, REALTIME_EVENTS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
+import { MessageService } from "@/lib/services/message";
+import { supabase } from "@/lib/supabase";
 import type {
     DecryptedMessageWithProfile,
     MessageRow,
-} from '@/lib/types/message';
-import { decryptMessagePayload } from '@/lib/utils/decryptPayload';
+} from "@/lib/types/message";
+import { decryptMessagePayload } from "@/lib/utils/decryptPayload";
 
 interface UseMessageSubscriptionProps {
     roomId: string;
@@ -54,23 +54,27 @@ export function useMessageSubscription({
                 if (userId && newMsgRaw.sender_id !== userId) {
                     MessageService.markMessageAsDelivered(newMsgRaw.id).catch(
                         (err) => {
-                            logger.error('Failed to mark delivered', err);
+                            logger.error("Failed to mark delivered", err);
                         },
                     );
                 }
 
                 // Обновляем кэш React Query
                 queryClient.setQueryData(
-                    ['messages', roomId],
+                    ["messages", roomId],
                     (old: DecryptedMessageWithProfile[] | undefined) => {
-                        if (!old) return [newMsg];
+                        if (!old) {
+                            return [newMsg];
+                        }
                         // Избегаем дубликатов
-                        if (old.some((m) => m.id === newMsg.id)) return old;
+                        if (old.some((m) => m.id === newMsg.id)) {
+                            return old;
+                        }
                         return [...old, newMsg];
                     },
                 );
             } catch (error) {
-                logger.error('Error handling INSERT message', error);
+                logger.error("Error handling INSERT message", error);
             }
         },
         [queryClient, roomId, userId, roomKey],
@@ -90,9 +94,11 @@ export function useMessageSubscription({
                 );
 
                 queryClient.setQueryData(
-                    ['messages', roomId],
+                    ["messages", roomId],
                     (old: DecryptedMessageWithProfile[] | undefined) => {
-                        if (!old) return old;
+                        if (!old) {
+                            return old;
+                        }
 
                         // Если сообщение удалено глобально и оно свое -> удаляем его из кэша
                         if (
@@ -103,7 +109,7 @@ export function useMessageSubscription({
                         }
 
                         // Если сообщение удалено локально (Delete for Me)
-                        if (newMsgRaw.deleted_by?.includes(userId || '')) {
+                        if (newMsgRaw.deleted_by?.includes(userId || "")) {
                             return old.filter((m) => m.id !== newMsgRaw.id);
                         }
 
@@ -126,7 +132,7 @@ export function useMessageSubscription({
                     },
                 );
             } catch (error) {
-                logger.error('Error handling UPDATE message', error);
+                logger.error("Error handling UPDATE message", error);
             }
         },
         [queryClient, roomId, userId, roomKey],
@@ -134,16 +140,18 @@ export function useMessageSubscription({
 
     useEffect(() => {
         // Не создаем подписку, пока нет необходимых данных
-        if (!roomId || !roomKey) return;
+        if (!roomId || !roomKey) {
+            return;
+        }
 
         // Создаем канал подписки
         const channel = supabase
             .channel(`room:${roomId}`)
             .on(
-                'postgres_changes',
+                "postgres_changes",
                 {
-                    event: '*',
-                    schema: 'public',
+                    event: "*",
+                    schema: "public",
                     table: DB_TABLES.MESSAGES,
                     filter: `room_id=eq.${roomId}`,
                 },
@@ -157,9 +165,9 @@ export function useMessageSubscription({
             )
             .subscribe((status) => {
                 console.log(
-                    'Realtime Subscription Status:',
+                    "Realtime Subscription Status:",
                     status,
-                    'Room:',
+                    "Room:",
                     roomId,
                 ); // DEBUG LOG
             });

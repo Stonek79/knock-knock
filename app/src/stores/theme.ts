@@ -1,9 +1,16 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+    DESIGN_THEME,
+    THEME_ATTRIBUTES,
+    THEME_MODE,
+    THEME_STORAGE_KEY,
+} from "@/lib/constants/theme";
+import type { DesignTheme, ThemeMode } from "@/lib/types/theme";
 
-export type DesignTheme = 'neon' | 'emerald';
-export type ThemeMode = 'light' | 'dark';
-
+/**
+ * Состояние темы приложения.
+ */
 interface ThemeState {
     theme: DesignTheme;
     mode: ThemeMode;
@@ -13,11 +20,14 @@ interface ThemeState {
     applyTheme: () => void;
 }
 
+/**
+ * Стор для управления темой (Neon/Emerald) и режимом (Light/Dark).
+ */
 export const useThemeStore = create<ThemeState>()(
     persist(
         (set, get) => ({
-            theme: 'neon',
-            mode: 'dark',
+            theme: DESIGN_THEME.NEON,
+            mode: THEME_MODE.DARK,
             setTheme: (theme) => {
                 set({ theme });
                 get().applyTheme();
@@ -27,29 +37,41 @@ export const useThemeStore = create<ThemeState>()(
                 get().applyTheme();
             },
             toggleMode: () => {
-                const next = get().mode === 'light' ? 'dark' : 'light';
+                const next =
+                    get().mode === THEME_MODE.LIGHT
+                        ? THEME_MODE.DARK
+                        : THEME_MODE.LIGHT;
                 set({ mode: next });
                 get().applyTheme();
             },
             applyTheme: () => {
                 const { theme, mode } = get();
-                if (typeof document !== 'undefined') {
-                    document.body.setAttribute('data-theme', theme);
-                    document.body.setAttribute('data-mode', mode);
-                    if (mode === 'dark') {
-                        document.documentElement.classList.add('dark');
-                        document.body.classList.add('dark');
-                        document.body.classList.remove('light');
+                if (typeof document !== "undefined") {
+                    document.body.setAttribute(
+                        THEME_ATTRIBUTES.DATA_THEME,
+                        theme,
+                    );
+                    document.body.setAttribute(
+                        THEME_ATTRIBUTES.DATA_MODE,
+                        mode,
+                    );
+
+                    if (mode === THEME_MODE.DARK) {
+                        document.documentElement.classList.add(THEME_MODE.DARK);
+                        document.body.classList.add(THEME_MODE.DARK);
+                        document.body.classList.remove(THEME_MODE.LIGHT);
                     } else {
-                        document.documentElement.classList.remove('dark');
-                        document.body.classList.remove('dark');
-                        document.body.classList.add('light');
+                        document.documentElement.classList.remove(
+                            THEME_MODE.DARK,
+                        );
+                        document.body.classList.remove(THEME_MODE.DARK);
+                        document.body.classList.add(THEME_MODE.LIGHT);
                     }
                 }
             },
         }),
         {
-            name: 'knock-knock-theme',
+            name: THEME_STORAGE_KEY,
             onRehydrateStorage: () => (state) => {
                 state?.applyTheme();
             },

@@ -1,5 +1,5 @@
-import { Box, DropdownMenu, Flex, Heading } from '@radix-ui/themes';
-import { useLocation, useRouter } from '@tanstack/react-router';
+import { Box, DropdownMenu, Flex, Heading } from "@radix-ui/themes";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import {
     Camera,
     ChevronLeft,
@@ -9,14 +9,14 @@ import {
     MoreVertical,
     Search,
     Users,
-} from 'lucide-react';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { CreateChatDialog } from '@/features/chat/CreateChatDialog';
-import { APP_NAME, CHAT_TYPE, ROUTES } from '@/lib/constants';
-import type { ChatType } from '@/lib/types';
-import { useAuthStore } from '@/stores/auth';
-import styles from './mobileheader.module.css';
+} from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { CreateChatDialog } from "@/features/chat/CreateChatDialog";
+import { APP_NAME, CHAT_TYPE, ROUTES } from "@/lib/constants";
+import type { ChatType } from "@/lib/types";
+import { useAuthStore } from "@/stores/auth";
+import styles from "./mobileheader.module.css";
 
 /**
  * Тип открытого диалога создания чата.
@@ -58,7 +58,7 @@ export function MobileHeader({
      * Проверяем, находимся ли мы глубоко в маршруте (например, в конкретном чате).
      * Грубая проверка: если сегментов > 2 (например /chat/123)
      */
-    const isSubRoute = location.pathname.split('/').filter(Boolean).length > 1;
+    const isSubRoute = location.pathname.split("/").filter(Boolean).length > 1;
 
     const handleBack = () => {
         router.navigate({ to: ROUTES.CHAT_LIST });
@@ -110,7 +110,7 @@ export function MobileHeader({
                                 >
                                     <Flex align="center" gap="2">
                                         <MessageSquarePlus size={16} />
-                                        {t('chat.newChat')}
+                                        {t("chat.newChat")}
                                     </Flex>
                                 </DropdownMenu.Item>
 
@@ -121,14 +121,14 @@ export function MobileHeader({
                                 >
                                     <Flex align="center" gap="2">
                                         <Lock size={16} />
-                                        {t('chat.newPrivate')}
+                                        {t("chat.newPrivate")}
                                     </Flex>
                                 </DropdownMenu.Item>
 
                                 <DropdownMenu.Item>
                                     <Flex align="center" gap="2">
                                         <Users size={16} />
-                                        {t('chat.newGroup')}
+                                        {t("chat.newGroup")}
                                     </Flex>
                                 </DropdownMenu.Item>
                                 <DropdownMenu.Separator />
@@ -138,7 +138,7 @@ export function MobileHeader({
                                 >
                                     <Flex gap="2" align="center">
                                         <LogOut size={16} />
-                                        {t('auth.signOut')}
+                                        {t("auth.signOut")}
                                     </Flex>
                                 </DropdownMenu.Item>
                             </DropdownMenu.Content>

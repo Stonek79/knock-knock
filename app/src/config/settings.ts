@@ -1,45 +1,45 @@
-import { Bell, Lock, Moon, Shield, User } from 'lucide-react';
-import { ROUTES } from '@/lib/constants';
+import { Bell, Lock, Moon, Shield, User } from "lucide-react";
+import { ROUTES } from "@/lib/constants";
 
 export const SETTINGS_ITEMS = [
     {
-        key: 'account',
+        key: "account",
         icon: User,
-        labelKey: 'settings.account',
-        defaultLabel: 'Аккаунт',
+        labelKey: "settings.account",
+        defaultLabel: "Аккаунт",
         path: ROUTES.SETTINGS_ACCOUNT,
-        color: 'blue',
+        color: "blue",
     },
     {
-        key: 'appearance',
+        key: "appearance",
         icon: Moon,
-        labelKey: 'settings.appearance',
-        defaultLabel: 'Внешний вид',
+        labelKey: "settings.appearance",
+        defaultLabel: "Внешний вид",
         path: ROUTES.SETTINGS_APPEARANCE,
-        color: 'violet',
+        color: "violet",
     },
     {
-        key: 'privacy',
+        key: "privacy",
         icon: Lock,
-        labelKey: 'settings.privacy',
-        defaultLabel: 'Конфиденциальность',
+        labelKey: "settings.privacy",
+        defaultLabel: "Конфиденциальность",
         path: ROUTES.SETTINGS_PRIVACY,
-        color: 'green',
+        color: "green",
     },
     {
-        key: 'notifications',
+        key: "notifications",
         icon: Bell,
-        labelKey: 'settings.notifications',
-        defaultLabel: 'Уведомления',
+        labelKey: "settings.notifications",
+        defaultLabel: "Уведомления",
         path: ROUTES.SETTINGS_NOTIFICATIONS,
-        color: 'orange',
+        color: "orange",
     },
     {
-        key: 'security',
+        key: "security",
         icon: Shield,
-        labelKey: 'settings.security',
-        defaultLabel: 'Безопасность',
+        labelKey: "settings.security",
+        defaultLabel: "Безопасность",
         path: ROUTES.SETTINGS_SECURITY,
-        color: 'red',
+        color: "red",
     },
 ];

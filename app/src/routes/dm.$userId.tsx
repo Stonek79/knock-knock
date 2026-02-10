@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { DMInitializer } from '@/features/chat/DMInitializer';
+import { createFileRoute } from "@tanstack/react-router";
+import { DMInitializer } from "@/features/chat/DMInitializer";
 
 /**
  * Роут инициализации DM-чата.
@@ -14,11 +14,11 @@ interface DMSearch {
     isPrivate?: boolean;
 }
 
-export const Route = createFileRoute('/dm/$userId')({
+export const Route = createFileRoute("/dm/$userId")({
     component: DMInitializer,
     validateSearch: (search: Record<string, unknown>): DMSearch => {
         return {
-            isPrivate: search.isPrivate === true || search.isPrivate === 'true',
+            isPrivate: search.isPrivate === true || search.isPrivate === "true",
         };
     },
 });

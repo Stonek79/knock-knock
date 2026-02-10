@@ -1,17 +1,17 @@
-import { Box, Flex, ScrollArea, Text } from '@radix-ui/themes';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Search } from '@/components/Search/Search';
-import { CreateChatDialog } from '@/features/chat/CreateChatDialog';
-import { CreateGroupDialog } from '@/features/chat/CreateGroupDialog';
-import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
-import { CHAT_TYPE } from '@/lib/constants';
-import type { ChatType } from '@/lib/types';
-import { useChatList } from '../hooks/useChatList';
-import { useUnreadCounts } from '../hooks/useUnreadCounts';
-import { ChatListHeader } from './ChatListHeader';
-import { ChatListItem } from './ChatListItem';
-import styles from './chatlist.module.css';
+import { Box, Flex, ScrollArea, Text } from "@radix-ui/themes";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Search } from "@/components/Search/Search";
+import { CreateChatDialog } from "@/features/chat/CreateChatDialog";
+import { CreateGroupDialog } from "@/features/chat/CreateGroupDialog";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { CHAT_TYPE } from "@/lib/constants";
+import type { ChatType } from "@/lib/types";
+import { useChatList } from "../hooks/useChatList";
+import { useUnreadCounts } from "../hooks/useUnreadCounts";
+import { ChatListHeader } from "./ChatListHeader";
+import { ChatListItem } from "./ChatListItem";
+import styles from "./chatlist.module.css";
 
 /**
  * Тип открытого диалога создания чата.
@@ -35,7 +35,7 @@ export function ChatList() {
 
     const [openDialog, setOpenDialog] = useState<ChatDialogType>(null);
     const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState("");
 
     const { data: chats = [], isLoading } = useChatList();
     const { getCount } = useUnreadCounts();
@@ -68,7 +68,7 @@ export function ChatList() {
         return (
             <Box className={styles.loadingContainer}>
                 <Text color="gray" size="2">
-                    {t('common.loading')}
+                    {t("common.loading")}
                 </Text>
             </Box>
         );
@@ -97,7 +97,7 @@ export function ChatList() {
                 {chats.length === 0 ? (
                     <Box className={styles.emptyContainer}>
                         <Text color="gray" size="2">
-                            {t('chat.noRooms', 'У вас пока нет чатов')}
+                            {t("chat.noRooms", "У вас пока нет чатов")}
                         </Text>
                     </Box>
                 ) : (

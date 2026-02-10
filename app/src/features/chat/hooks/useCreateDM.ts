@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { RoomService } from '@/lib/services/room';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { RoomService } from "@/lib/services/room";
 
 interface CreateDMParams {
     currentUserId: string;
@@ -21,14 +21,16 @@ export function useCreateDM() {
                 targetUserId,
                 isPrivate,
             );
-            if (res.isErr()) throw new Error(res.error.message);
+            if (res.isErr()) {
+                throw new Error(res.error.message);
+            }
             return res.value;
         },
         onSuccess: () => {
             // Инвалидируем список комнат, чтобы новый чат появился в сайдбаре
             queryClient.invalidateQueries({
-                queryKey: ['rooms'],
-                refetchType: 'all',
+                queryKey: ["rooms"],
+                refetchType: "all",
             });
         },
     });

@@ -1,9 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
-import { supabase } from '@/lib/supabase';
-import { useUnreadCounts } from './hooks/useUnreadCounts';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { describe, expect, it, vi } from "vitest";
+import { supabase } from "@/lib/supabase";
+import { useUnreadCounts } from "./hooks/useUnreadCounts";
 
 // Wrapper for QueryClient
 const createWrapper = () => {
@@ -22,7 +22,7 @@ const createWrapper = () => {
 };
 
 // Mock dependencies
-vi.mock('@/lib/supabase', () => ({
+vi.mock("@/lib/supabase", () => ({
     supabase: {
         rpc: vi.fn(),
         channel: vi.fn(() => ({
@@ -34,16 +34,16 @@ vi.mock('@/lib/supabase', () => ({
     },
 }));
 
-vi.mock('@/stores/auth', () => ({
+vi.mock("@/stores/auth", () => ({
     useAuthStore: () => ({
-        user: { id: 'test-user-id' },
+        user: { id: "test-user-id" },
     }),
 }));
 
-describe('useUnreadCounts', () => {
-    it('fetches initial counts via RPC', async () => {
+describe("useUnreadCounts", () => {
+    it("fetches initial counts via RPC", async () => {
         // Setup RPC mock
-        const mockCounts = [{ room_id: 'room-1', count: 5 }];
+        const mockCounts = [{ room_id: "room-1", count: 5 }];
         // biome-ignore lint/suspicious/noExplicitAny: Mocking RPC
         (supabase.rpc as unknown as any).mockResolvedValue({
             data: mockCounts,
@@ -58,15 +58,15 @@ describe('useUnreadCounts', () => {
             expect(result.current.counts).toEqual(mockCounts);
         });
 
-        expect(result.current.getCount('room-1')).toBe(5);
-        expect(result.current.getCount('room-2')).toBe(0);
+        expect(result.current.getCount("room-1")).toBe(5);
+        expect(result.current.getCount("room-2")).toBe(0);
     });
 
-    it('handles RPC errors gracefully', async () => {
+    it("handles RPC errors gracefully", async () => {
         // biome-ignore lint/suspicious/noExplicitAny: Mocking RPC
         (supabase.rpc as unknown as any).mockResolvedValue({
             data: null,
-            error: { message: 'RPC Error' },
+            error: { message: "RPC Error" },
         });
 
         const { result } = renderHook(() => useUnreadCounts(), {

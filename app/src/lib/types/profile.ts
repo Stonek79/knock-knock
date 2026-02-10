@@ -1,5 +1,5 @@
-import type { z } from 'zod';
-import type { profileModelSchema, profileSchema } from '@/lib/schemas/profile';
+import type { z } from "zod";
+import type { profileModelSchema, profileSchema } from "@/lib/schemas/profile";
 
 /**
  * Профиль пользователя (таблица profiles)
@@ -15,5 +15,5 @@ export type ProfileSchema = z.infer<typeof profileSchema>;
  * Профиль с статусом (онлайн/офлайн)
  */
 export type ProfileWithStatus = Profile & {
-    status: 'online' | 'offline';
+    status: "online" | "offline";
 };

@@ -1,10 +1,10 @@
-import type { Session, User } from '@supabase/supabase-js';
-import { create } from 'zustand';
-import { DB_TABLES } from '@/lib/constants';
-import i18n from '@/lib/i18n';
-import { MOCK_USERS } from '@/lib/mock/data';
-import { supabase } from '@/lib/supabase';
-import type { Profile } from '@/lib/types/profile';
+import type { Session, User } from "@supabase/supabase-js";
+import { create } from "zustand";
+import { DB_TABLES } from "@/lib/constants";
+import i18n from "@/lib/i18n";
+import { MOCK_USERS } from "@/lib/mock/data";
+import { supabase } from "@/lib/supabase";
+import type { Profile } from "@/lib/types/profile";
 
 interface AuthState {
     session: Session | null;
@@ -49,13 +49,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 }
             });
         } catch (error) {
-            console.error(i18n.t('auth.initializationError'), error);
+            console.error(i18n.t("auth.initializationError"), error);
             set({ loading: false });
         }
     },
     fetchProfile: async () => {
         const user = get().user;
-        if (!user) return;
+        if (!user) {
+            return;
+        }
 
         // CHECK MOCK USERS FIRST
         const mockUser = MOCK_USERS.find((u) => u.id === user.id);
@@ -68,7 +70,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 avatar_url: mockUser.avatar_url ?? null,
                 role: mockUser.role, // Pass the role!
                 created_at: new Date().toISOString(),
-                status: 'online',
+                status: "online",
                 last_seen: new Date().toISOString(),
                 is_agreed_to_rules: true,
                 banned_until: null,
@@ -80,14 +82,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
             const { data, error } = await supabase
                 .from(DB_TABLES.PROFILES)
-                .select('*')
-                .eq('id', user.id)
+                .select("*")
+                .eq("id", user.id)
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
             set({ profile: data as Profile, loading: false });
         } catch (error) {
-            console.error('Failed to fetch profile:', error);
+            console.error("Failed to fetch profile:", error);
             set({ loading: false });
         }
     },

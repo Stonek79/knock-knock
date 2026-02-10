@@ -1,4 +1,4 @@
-import { USER_COLORS } from '../constants';
+import { USER_COLORS } from "../constants";
 
 export type UserColor = (typeof USER_COLORS)[number];
 

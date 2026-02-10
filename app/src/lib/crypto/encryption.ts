@@ -28,36 +28,36 @@ export async function wrapRoomKey(
     // 1. Эфемерная пара
     const ephemeralKeyPair = (await subtle.generateKey(
         {
-            name: 'ECDH',
-            namedCurve: 'P-256',
+            name: "ECDH",
+            namedCurve: "P-256",
         },
         true,
-        ['deriveKey', 'deriveBits'],
+        ["deriveKey", "deriveBits"],
     )) as CryptoKeyPair;
 
     // 2. ECDH Shared Secret -> 3. Derive KEK (AES-GCM 256)
     // В Web Crypto API derivedKey делается за один шаг через deriveKey
     const kek = await subtle.deriveKey(
         {
-            name: 'ECDH',
+            name: "ECDH",
             public: recipientPublicKey,
         },
         ephemeralKeyPair.privateKey,
         {
-            name: 'AES-GCM',
+            name: "AES-GCM",
             length: 256,
         },
         false, // KEK не нужно извлекать
-        ['encrypt'],
+        ["encrypt"],
     );
 
     // 4. Шифруем Room Key (сначала экспортируем его в raw bytes)
-    const roomKeyBytes = await subtle.exportKey('raw', roomKey);
+    const roomKeyBytes = await subtle.exportKey("raw", roomKey);
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
     const ciphertext = await subtle.encrypt(
         {
-            name: 'AES-GCM',
+            name: "AES-GCM",
             iv: iv,
         },
         kek,
@@ -67,7 +67,7 @@ export async function wrapRoomKey(
     // 5. Возвращаем
     return {
         ephemeralPublicKey: await subtle.exportKey(
-            'raw',
+            "raw",
             ephemeralKeyPair.publicKey,
         ),
         iv: iv.buffer,
@@ -95,11 +95,11 @@ export async function unwrapRoomKey(
 ): Promise<CryptoKey> {
     // 1. Import Ephemeral Public Key
     const ephemeralPub = await subtle.importKey(
-        'raw',
+        "raw",
         encryptedData.ephemeralPublicKey,
         {
-            name: 'ECDH',
-            namedCurve: 'P-256',
+            name: "ECDH",
+            namedCurve: "P-256",
         },
         false,
         [],
@@ -108,22 +108,22 @@ export async function unwrapRoomKey(
     // 2 & 3. ECDH -> Derive KEK
     const kek = await subtle.deriveKey(
         {
-            name: 'ECDH',
+            name: "ECDH",
             public: ephemeralPub,
         },
         myPrivateKey,
         {
-            name: 'AES-GCM',
+            name: "AES-GCM",
             length: 256,
         },
         false,
-        ['decrypt'],
+        ["decrypt"],
     );
 
     // 4. Decrypt Room Key Bytes
     const roomKeyBytes = await subtle.decrypt(
         {
-            name: 'AES-GCM',
+            name: "AES-GCM",
             iv: encryptedData.iv,
         },
         kek,
@@ -132,10 +132,10 @@ export async function unwrapRoomKey(
 
     // 5. Import Room Key
     return await subtle.importKey(
-        'raw',
+        "raw",
         roomKeyBytes,
-        { name: 'AES-GCM' },
+        { name: "AES-GCM" },
         true, // Room Key usually extractable to reuse/export? Let's say yes for now.
-        ['encrypt', 'decrypt'],
+        ["encrypt", "decrypt"],
     );
 }

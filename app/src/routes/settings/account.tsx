@@ -1,6 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { AccountSettings } from '@/features/settings/AccountSettings';
+import { createFileRoute } from "@tanstack/react-router";
+import { AccountSettings } from "@/features/settings/AccountSettings";
 
-export const Route = createFileRoute('/settings/account')({
+export const Route = createFileRoute("/settings/account")({
     component: AccountSettings,
 });

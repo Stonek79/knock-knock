@@ -1,7 +1,7 @@
-import { Box } from '@radix-ui/themes';
-import type { ReactNode } from 'react';
-import { BottomNav } from '@/layouts/BottomNav';
-import styles from './sidebar.module.css';
+import { Box } from "@radix-ui/themes";
+import type { ReactNode } from "react";
+import { BottomNav } from "@/layouts/BottomNav";
+import styles from "./sidebar.module.css";
 
 interface SidebarProps {
     children: ReactNode;

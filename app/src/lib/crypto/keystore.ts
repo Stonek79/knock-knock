@@ -2,13 +2,13 @@
  * Модуль для хранения криптографических ключей в IndexedDB.
  * Сохраняет нативные объекты CryptoKey.
  */
-import { type IDBPDatabase, openDB } from 'idb';
+import { type IDBPDatabase, openDB } from "idb";
 
-const DB_NAME = 'knock-knock-keystore';
+const DB_NAME = "knock-knock-keystore";
 const DB_VERSION = 2; // Увеличили версию (миграция схемы)
-const STORE_NAME = 'keys';
+const STORE_NAME = "keys";
 
-export type KeyType = 'identity' | 'prekey';
+export type KeyType = "identity" | "prekey";
 
 /** Структура хранимой пары ключей */
 export interface StoredKeyPair {
@@ -30,12 +30,14 @@ interface KeystoreDB {
 let dbInstance: IDBPDatabase<KeystoreDB> | null = null;
 
 export async function openKeystore(): Promise<IDBPDatabase<KeystoreDB>> {
-    if (dbInstance) return dbInstance;
+    if (dbInstance) {
+        return dbInstance;
+    }
 
     dbInstance = await openDB<KeystoreDB>(DB_NAME, DB_VERSION, {
         upgrade(db, oldVersion) {
             if (oldVersion < 1) {
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                db.createObjectStore(STORE_NAME, { keyPath: "id" });
             }
             // Если была версия 1 (с Uint8Array), лучше очистить стор при миграции на v2,
             // так как формат данных кардинально меняется.
@@ -43,7 +45,7 @@ export async function openKeystore(): Promise<IDBPDatabase<KeystoreDB>> {
             // но на этапе dev можно сбросить.
             if (oldVersion === 1) {
                 db.deleteObjectStore(STORE_NAME);
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                db.createObjectStore(STORE_NAME, { keyPath: "id" });
             }
         },
     });
@@ -84,7 +86,7 @@ export async function clearAllKeys(): Promise<void> {
 }
 
 export async function hasKeys(): Promise<boolean> {
-    const identity = await getKeyPair('identity');
-    const prekey = await getKeyPair('prekey');
+    const identity = await getKeyPair("identity");
+    const prekey = await getKeyPair("prekey");
     return !!identity && !!prekey;
 }

@@ -1,13 +1,13 @@
-import { Box, Flex, Heading, Text } from '@radix-ui/themes';
-import { useTranslation } from 'react-i18next';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/Alert';
-import { AppLogo } from '@/components/ui/AppLogo';
-import { Button } from '@/components/ui/Button';
-import { EmailInput } from '@/components/ui/EmailInput';
-import { PasswordInput } from '@/components/ui/PasswordInput';
-import { AUTH_MODES, AUTH_VIEW_MODES } from '@/lib/constants';
-import { useLoginForm } from '../hooks/useLoginForm';
-import styles from './loginForm.module.css';
+import { Box, Flex, Heading, Text } from "@radix-ui/themes";
+import { useTranslation } from "react-i18next";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { AppLogo } from "@/components/ui/AppLogo";
+import { Button } from "@/components/ui/Button";
+import { EmailInput } from "@/components/ui/EmailInput";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { AUTH_MODES, AUTH_VIEW_MODES } from "@/lib/constants";
+import { useLoginForm } from "../hooks/useLoginForm";
+import styles from "./loginForm.module.css";
 
 interface LoginFormProps {
     onSuccess: () => void;
@@ -37,17 +37,17 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 </Flex>
                 <Heading size="6" align="center" mb="2">
                     {viewMode === AUTH_VIEW_MODES.LOGIN
-                        ? t('auth.loginTitle')
-                        : t('auth.registerTitle')}
+                        ? t("auth.loginTitle")
+                        : t("auth.registerTitle")}
                 </Heading>
                 <Text as="p" align="center" color="gray">
-                    {t('auth.signInToAccount')}
+                    {t("auth.signInToAccount")}
                 </Text>
             </Box>
 
             {submitError && (
                 <Alert variant="destructive">
-                    <AlertTitle>{t('auth.error')}</AlertTitle>
+                    <AlertTitle>{t("auth.error")}</AlertTitle>
                     <AlertDescription>{submitError}</AlertDescription>
                 </Alert>
             )}
@@ -81,7 +81,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                     size="2"
                                     weight="medium"
                                 >
-                                    {t('common.email')}
+                                    {t("common.email")}
                                 </Text>
                                 <EmailInput
                                     id={field.name}
@@ -91,12 +91,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                     onChange={(e) =>
                                         field.handleChange(e.target.value)
                                     }
-                                    placeholder={t('auth.emailPlaceholder')}
+                                    placeholder={t("auth.emailPlaceholder")}
                                 />
                                 {field.state.meta.isTouched &&
                                 field.state.meta.errors.length ? (
                                     <Text color="red" size="1">
-                                        {field.state.meta.errors.join(', ')}
+                                        {field.state.meta.errors.join(", ")}
                                     </Text>
                                 ) : null}
                             </Flex>
@@ -108,7 +108,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                             name="password"
                             validators={{
                                 onChange: ({ value }) =>
-                                    !value ? t('common.required') : undefined,
+                                    !value ? t("common.required") : undefined,
                             }}
                         >
                             {(field) => (
@@ -119,7 +119,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                         size="2"
                                         weight="medium"
                                     >
-                                        {t('common.password')}
+                                        {t("common.password")}
                                     </Text>
                                     <PasswordInput
                                         id={field.name}
@@ -130,13 +130,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                             field.handleChange(e.target.value)
                                         }
                                         placeholder={t(
-                                            'auth.passwordPlaceholder',
+                                            "auth.passwordPlaceholder",
                                         )}
                                     />
                                     {field.state.meta.isTouched &&
                                     field.state.meta.errors.length ? (
                                         <Text color="red" size="1">
-                                            {field.state.meta.errors.join(', ')}
+                                            {field.state.meta.errors.join(", ")}
                                         </Text>
                                     ) : null}
                                 </Flex>
@@ -160,10 +160,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                     className={styles.submitButton}
                                 >
                                     {isSubmitting
-                                        ? t('auth.sending')
+                                        ? t("auth.sending")
                                         : viewMode === AUTH_VIEW_MODES.LOGIN
-                                          ? t('auth.loginAction')
-                                          : t('auth.registerAction')}
+                                          ? t("auth.loginAction")
+                                          : t("auth.registerAction")}
                                 </Button>
                             )}
                         </form.Subscribe>
@@ -176,15 +176,15 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                             type="button"
                         >
                             {authMode === AUTH_MODES.MAGIC_LINK
-                                ? t('auth.signInWithPassword')
-                                : t('auth.signInWithMagicLink')}
+                                ? t("auth.signInWithPassword")
+                                : t("auth.signInWithMagicLink")}
                         </Button>
 
                         <Flex justify="center" align="center" gap="2" mt="2">
                             <Text size="2" color="gray">
                                 {viewMode === AUTH_VIEW_MODES.LOGIN
-                                    ? t('auth.noAccount')
-                                    : t('auth.hasAccount')}
+                                    ? t("auth.noAccount")
+                                    : t("auth.hasAccount")}
                             </Text>
                             <Button
                                 variant="ghost"
@@ -193,13 +193,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                 style={{
                                     margin: 0,
                                     padding: 0,
-                                    height: 'auto',
+                                    height: "auto",
                                 }}
                                 type="button"
                             >
                                 {viewMode === AUTH_VIEW_MODES.LOGIN
-                                    ? t('auth.toRegister')
-                                    : t('auth.toLogin')}
+                                    ? t("auth.toRegister")
+                                    : t("auth.toLogin")}
                             </Button>
                         </Flex>
                     </Flex>

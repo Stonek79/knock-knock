@@ -2,7 +2,7 @@
  * Хук для управления криптографическими ключами.
  * Адаптирован под Web Crypto API (все операции асинхронные).
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
     arrayBufferToBase64,
     clearAllKeys,
@@ -15,9 +15,9 @@ import {
     type KeyBackup,
     restoreBackup,
     saveKeyPair,
-} from '@/lib/crypto';
-import type { RecoveryError, RestoredKeys } from '@/lib/crypto/recovery';
-import type { Result } from '@/lib/types/result';
+} from "@/lib/crypto";
+import type { RecoveryError, RestoredKeys } from "@/lib/crypto/recovery";
+import type { Result } from "@/lib/types/result";
 
 export interface KeystoreState {
     loading: boolean;
@@ -49,8 +49,8 @@ export function useKeystore(): KeystoreState & KeystoreActions {
             const keysExist = await hasKeys();
 
             if (keysExist) {
-                const identity = await getKeyPair('identity');
-                const prekey = await getKeyPair('prekey');
+                const identity = await getKeyPair("identity");
+                const prekey = await getKeyPair("prekey");
 
                 // Экспортируем публичные ключи для отображения (Base64)
                 let pubEd25519Str = null;
@@ -80,7 +80,7 @@ export function useKeystore(): KeystoreState & KeystoreActions {
                 });
             }
         } catch (error) {
-            console.error('Failed to load keys:', error);
+            console.error("Failed to load keys:", error);
             setState((prev) => ({ ...prev, loading: false }));
         }
     }, []);
@@ -95,11 +95,11 @@ export function useKeystore(): KeystoreState & KeystoreActions {
 
             // Сохраняем объекты CryptoKey
             await saveKeyPair(
-                'identity',
+                "identity",
                 identity.privateKey,
                 identity.publicKey,
             );
-            await saveKeyPair('prekey', prekey.privateKey, prekey.publicKey);
+            await saveKeyPair("prekey", prekey.privateKey, prekey.publicKey);
 
             // Экспортируем для UI
             const rawIdentity = await exportPublicKey(identity.publicKey);
@@ -112,7 +112,7 @@ export function useKeystore(): KeystoreState & KeystoreActions {
                 publicKeyX25519: arrayBufferToBase64(rawPrekey),
             });
         } catch (error) {
-            console.error('Failed to generate keys:', error);
+            console.error("Failed to generate keys:", error);
             setState((prev) => ({ ...prev, loading: false }));
         }
     }, []);
@@ -139,16 +139,16 @@ export function useKeystore(): KeystoreState & KeystoreActions {
 
     const exportKeys = useCallback(async (password: string) => {
         try {
-            const identity = await getKeyPair('identity');
-            const prekey = await getKeyPair('prekey');
+            const identity = await getKeyPair("identity");
+            const prekey = await getKeyPair("prekey");
 
             if (!identity || !prekey) {
-                throw new Error('Keys not found');
+                throw new Error("Keys not found");
             }
 
             return await createBackup(password, identity, prekey);
         } catch (error) {
-            console.error('Export failed:', error);
+            console.error("Export failed:", error);
             return null;
         }
     }, []);
@@ -166,19 +166,19 @@ export function useKeystore(): KeystoreState & KeystoreActions {
                 const restored = result.value;
 
                 await saveKeyPair(
-                    'identity',
+                    "identity",
                     restored.identity.privateKey,
                     restored.identity.publicKey,
                 );
                 await saveKeyPair(
-                    'prekey',
+                    "prekey",
                     restored.prekey.privateKey,
                     restored.prekey.publicKey,
                 );
 
                 await loadKeys();
             } catch (error) {
-                console.error('Restore failed:', error);
+                console.error("Restore failed:", error);
                 setState((prev) => ({ ...prev, loading: false }));
                 throw error;
             }

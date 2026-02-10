@@ -2,8 +2,8 @@
  * Диалог подтверждения удаления сообщений.
  * Информирует о том, что удаление локальное (у собеседника сообщение останется).
  */
-import { AlertDialog, Button, Flex } from '@radix-ui/themes';
-import { useTranslation } from 'react-i18next';
+import { AlertDialog, Button, Flex } from "@radix-ui/themes";
+import { useTranslation } from "react-i18next";
 
 interface DeleteConfirmDialogProps {
     /** Открыт ли диалог */
@@ -25,23 +25,23 @@ export function DeleteConfirmDialog({
         <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
             <AlertDialog.Content maxWidth="450px">
                 <AlertDialog.Title>
-                    {t('chat.deleteMessageTitle', 'Удалить отсюда?')}
+                    {t("chat.deleteMessageTitle", "Удалить отсюда?")}
                 </AlertDialog.Title>
                 <AlertDialog.Description size="2">
                     {t(
-                        'chat.deleteMessageConfirm',
-                        'Это действие удалит сообщение у вас. У собеседника оно останется, если это не ваше сообщение.',
+                        "chat.deleteMessageConfirm",
+                        "Это действие удалит сообщение у вас. У собеседника оно останется, если это не ваше сообщение.",
                     )}
                 </AlertDialog.Description>
                 <Flex gap="3" mt="4" justify="end">
                     <AlertDialog.Cancel>
                         <Button variant="soft" color="gray">
-                            {t('common.cancel', 'Отмена')}
+                            {t("common.cancel", "Отмена")}
                         </Button>
                     </AlertDialog.Cancel>
                     <AlertDialog.Action>
                         <Button color="red" onClick={onConfirm}>
-                            {t('common.delete', 'Удалить')}
+                            {t("common.delete", "Удалить")}
                         </Button>
                     </AlertDialog.Action>
                 </Flex>

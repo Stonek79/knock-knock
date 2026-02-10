@@ -1,13 +1,13 @@
-import { useForm } from '@tanstack/react-form';
-import { type MouseEvent, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useRateLimiter } from '@/hooks/useRateLimiter';
-import { getAuthErrorMessage } from '@/lib/auth-errors';
-import { AUTH_MODES, AUTH_VIEW_MODES } from '@/lib/constants';
-import { logger } from '@/lib/logger';
-import { loginSchema } from '@/lib/schemas/auth';
-import { supabase } from '@/lib/supabase';
-import type { AuthMode, AuthViewMode } from '@/lib/types/auth';
+import { useForm } from "@tanstack/react-form";
+import { type MouseEvent, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useRateLimiter } from "@/hooks/useRateLimiter";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { AUTH_MODES, AUTH_VIEW_MODES } from "@/lib/constants";
+import { logger } from "@/lib/logger";
+import { loginSchema } from "@/lib/schemas/auth";
+import { supabase } from "@/lib/supabase";
+import type { AuthMode, AuthViewMode } from "@/lib/types/auth";
 
 /**
  * Хук для управления логикой формы входа/регистрации.
@@ -28,22 +28,22 @@ export function useLoginForm(onSuccess: () => void) {
 
     const form = useForm({
         defaultValues: {
-            email: '',
-            password: '',
+            email: "",
+            password: "",
         },
         onSubmit: async ({ value }) => {
             setSubmitError(null);
 
             if (isBlocked) {
                 setSubmitError(
-                    t('auth.errors.rateLimitError', { seconds: secondsLeft }),
+                    t("auth.errors.rateLimitError", { seconds: secondsLeft }),
                 );
                 return;
             }
 
             try {
                 if (authMode === AUTH_MODES.MAGIC_LINK) {
-                    logger.info('Attempting magic link login', {
+                    logger.info("Attempting magic link login", {
                         email: value.email,
                         type: viewMode,
                     });
@@ -54,9 +54,11 @@ export function useLoginForm(onSuccess: () => void) {
                         },
                     });
 
-                    if (error) throw error;
+                    if (error) {
+                        throw error;
+                    }
 
-                    logger.info('Magic link sent successfully');
+                    logger.info("Magic link sent successfully");
                     resetAttempts();
                     onSuccess();
                 } else {
@@ -65,10 +67,12 @@ export function useLoginForm(onSuccess: () => void) {
                     if (isRegister) {
                         const { error } = await supabase.auth.signUp({
                             email: value.email,
-                            password: value.password || '',
+                            password: value.password || "",
                         });
-                        if (error) throw error;
-                        logger.info('Password registration successful');
+                        if (error) {
+                            throw error;
+                        }
+                        logger.info("Password registration successful");
                         // Обычно требует подтверждения почты, но пока считаем успехом
                         resetAttempts();
                         onSuccess();
@@ -76,15 +80,17 @@ export function useLoginForm(onSuccess: () => void) {
                         const { error } =
                             await supabase.auth.signInWithPassword({
                                 email: value.email,
-                                password: value.password || '',
+                                password: value.password || "",
                             });
-                        if (error) throw error;
-                        logger.info('Password login successful');
+                        if (error) {
+                            throw error;
+                        }
+                        logger.info("Password login successful");
                         resetAttempts();
                     }
                 }
             } catch (err) {
-                logger.error('Login exception', err);
+                logger.error("Login exception", err);
                 recordAttempt();
                 setSubmitError(getAuthErrorMessage(err));
             }

@@ -1,8 +1,8 @@
-import type { z } from 'zod';
+import type { z } from "zod";
 import type {
     messagePositionSchema,
     messageSchema,
-} from '@/lib/schemas/message';
+} from "@/lib/schemas/message";
 
 /**
  * Структура таблицы messages (Сообщения)
@@ -22,12 +22,12 @@ export type MessageRow = Message;
 /**
  * Статус сообщения
  */
-export type MessageStatus = 'sent' | 'delivered' | 'read';
+export type MessageStatus = "sent" | "delivered" | "read";
 
 /**
  * Тип расшифрованного сообщения (контент — строка или null если удалено)
  */
-export interface DecryptedMessage extends Omit<Message, 'content'> {
+export interface DecryptedMessage extends Omit<Message, "content"> {
     content: string | null;
 }
 
