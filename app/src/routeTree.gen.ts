@@ -9,72 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PrivateRouteImport } from './routes/private'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as FavoritesRouteImport } from './routes/favorites'
-import { Route as ContactsRouteImport } from './routes/contacts'
-import { Route as ChatRouteImport } from './routes/chat'
-import { Route as CallsRouteImport } from './routes/calls'
-import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsIndexRouteImport } from './routes/settings/index'
-import { Route as PrivateIndexRouteImport } from './routes/private.index'
-import { Route as ChatIndexRouteImport } from './routes/chat.index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as SettingsSecurityRouteImport } from './routes/settings/security'
-import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy'
-import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications'
-import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
-import { Route as SettingsAccountRouteImport } from './routes/settings/account'
-import { Route as DmUserIdRouteImport } from './routes/dm.$userId'
-import { Route as ChatRoomIdRouteImport } from './routes/chat.$roomId'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AuthSettingsRouteImport } from './routes/_auth/settings'
+import { Route as AuthProfileRouteImport } from './routes/_auth/profile'
+import { Route as AuthPrivateRouteImport } from './routes/_auth/private'
+import { Route as AuthFavoritesRouteImport } from './routes/_auth/favorites'
+import { Route as AuthContactsRouteImport } from './routes/_auth/contacts'
+import { Route as AuthChatRouteImport } from './routes/_auth/chat'
+import { Route as AuthCallsRouteImport } from './routes/_auth/calls'
+import { Route as AuthAdminRouteImport } from './routes/_auth/admin'
+import { Route as AuthSettingsIndexRouteImport } from './routes/_auth/settings/index'
+import { Route as AuthPrivateIndexRouteImport } from './routes/_auth/private/index'
+import { Route as AuthChatIndexRouteImport } from './routes/_auth/chat/index'
+import { Route as AuthAdminIndexRouteImport } from './routes/_auth/admin/index'
+import { Route as AuthSettingsSecurityRouteImport } from './routes/_auth/settings/security'
+import { Route as AuthSettingsPrivacyRouteImport } from './routes/_auth/settings/privacy'
+import { Route as AuthSettingsNotificationsRouteImport } from './routes/_auth/settings/notifications'
+import { Route as AuthSettingsAppearanceRouteImport } from './routes/_auth/settings/appearance'
+import { Route as AuthSettingsAccountRouteImport } from './routes/_auth/settings/account'
+import { Route as AuthDmUserIdRouteImport } from './routes/_auth/dm.$userId'
+import { Route as AuthChatRoomIdRouteImport } from './routes/_auth/chat/$roomId'
+import { Route as AuthAdminUsersRouteImport } from './routes/_auth/admin/users'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivateRoute = PrivateRouteImport.update({
-  id: '/private',
-  path: '/private',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FavoritesRoute = FavoritesRouteImport.update({
-  id: '/favorites',
-  path: '/favorites',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactsRoute = ContactsRouteImport.update({
-  id: '/contacts',
-  path: '/contacts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatRoute = ChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CallsRoute = CallsRouteImport.update({
-  id: '/calls',
-  path: '/calls',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -82,146 +47,188 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsIndexRoute = SettingsIndexRouteImport.update({
+const AuthSettingsRoute = AuthSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthProfileRoute = AuthProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPrivateRoute = AuthPrivateRouteImport.update({
+  id: '/private',
+  path: '/private',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthFavoritesRoute = AuthFavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthContactsRoute = AuthContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthChatRoute = AuthChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthCallsRoute = AuthCallsRouteImport.update({
+  id: '/calls',
+  path: '/calls',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthAdminRoute = AuthAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSettingsIndexRoute = AuthSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => AuthSettingsRoute,
 } as any)
-const PrivateIndexRoute = PrivateIndexRouteImport.update({
+const AuthPrivateIndexRoute = AuthPrivateIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => PrivateRoute,
+  getParentRoute: () => AuthPrivateRoute,
 } as any)
-const ChatIndexRoute = ChatIndexRouteImport.update({
+const AuthChatIndexRoute = AuthChatIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => ChatRoute,
+  getParentRoute: () => AuthChatRoute,
 } as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
+const AuthAdminIndexRoute = AuthAdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AuthAdminRoute,
 } as any)
-const SettingsSecurityRoute = SettingsSecurityRouteImport.update({
+const AuthSettingsSecurityRoute = AuthSettingsSecurityRouteImport.update({
   id: '/security',
   path: '/security',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => AuthSettingsRoute,
 } as any)
-const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
+const AuthSettingsPrivacyRoute = AuthSettingsPrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => AuthSettingsRoute,
 } as any)
-const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => SettingsRoute,
-} as any)
-const SettingsAppearanceRoute = SettingsAppearanceRouteImport.update({
+const AuthSettingsNotificationsRoute =
+  AuthSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthSettingsRoute,
+  } as any)
+const AuthSettingsAppearanceRoute = AuthSettingsAppearanceRouteImport.update({
   id: '/appearance',
   path: '/appearance',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => AuthSettingsRoute,
 } as any)
-const SettingsAccountRoute = SettingsAccountRouteImport.update({
+const AuthSettingsAccountRoute = AuthSettingsAccountRouteImport.update({
   id: '/account',
   path: '/account',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => AuthSettingsRoute,
 } as any)
-const DmUserIdRoute = DmUserIdRouteImport.update({
+const AuthDmUserIdRoute = AuthDmUserIdRouteImport.update({
   id: '/dm/$userId',
   path: '/dm/$userId',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthRoute,
 } as any)
-const ChatRoomIdRoute = ChatRoomIdRouteImport.update({
+const AuthChatRoomIdRoute = AuthChatRoomIdRouteImport.update({
   id: '/$roomId',
   path: '/$roomId',
-  getParentRoute: () => ChatRoute,
+  getParentRoute: () => AuthChatRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
+const AuthAdminUsersRoute = AuthAdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AuthAdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/calls': typeof CallsRoute
-  '/chat': typeof ChatRouteWithChildren
-  '/contacts': typeof ContactsRoute
-  '/favorites': typeof FavoritesRoute
   '/login': typeof LoginRoute
-  '/private': typeof PrivateRouteWithChildren
-  '/profile': typeof ProfileRoute
-  '/settings': typeof SettingsRouteWithChildren
-  '/admin/users': typeof AdminUsersRoute
-  '/chat/$roomId': typeof ChatRoomIdRoute
-  '/dm/$userId': typeof DmUserIdRoute
-  '/settings/account': typeof SettingsAccountRoute
-  '/settings/appearance': typeof SettingsAppearanceRoute
-  '/settings/notifications': typeof SettingsNotificationsRoute
-  '/settings/privacy': typeof SettingsPrivacyRoute
-  '/settings/security': typeof SettingsSecurityRoute
-  '/admin/': typeof AdminIndexRoute
-  '/chat/': typeof ChatIndexRoute
-  '/private/': typeof PrivateIndexRoute
-  '/settings/': typeof SettingsIndexRoute
+  '/admin': typeof AuthAdminRouteWithChildren
+  '/calls': typeof AuthCallsRoute
+  '/chat': typeof AuthChatRouteWithChildren
+  '/contacts': typeof AuthContactsRoute
+  '/favorites': typeof AuthFavoritesRoute
+  '/private': typeof AuthPrivateRouteWithChildren
+  '/profile': typeof AuthProfileRoute
+  '/settings': typeof AuthSettingsRouteWithChildren
+  '/admin/users': typeof AuthAdminUsersRoute
+  '/chat/$roomId': typeof AuthChatRoomIdRoute
+  '/dm/$userId': typeof AuthDmUserIdRoute
+  '/settings/account': typeof AuthSettingsAccountRoute
+  '/settings/appearance': typeof AuthSettingsAppearanceRoute
+  '/settings/notifications': typeof AuthSettingsNotificationsRoute
+  '/settings/privacy': typeof AuthSettingsPrivacyRoute
+  '/settings/security': typeof AuthSettingsSecurityRoute
+  '/admin/': typeof AuthAdminIndexRoute
+  '/chat/': typeof AuthChatIndexRoute
+  '/private/': typeof AuthPrivateIndexRoute
+  '/settings/': typeof AuthSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/calls': typeof CallsRoute
-  '/contacts': typeof ContactsRoute
-  '/favorites': typeof FavoritesRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/chat/$roomId': typeof ChatRoomIdRoute
-  '/dm/$userId': typeof DmUserIdRoute
-  '/settings/account': typeof SettingsAccountRoute
-  '/settings/appearance': typeof SettingsAppearanceRoute
-  '/settings/notifications': typeof SettingsNotificationsRoute
-  '/settings/privacy': typeof SettingsPrivacyRoute
-  '/settings/security': typeof SettingsSecurityRoute
-  '/admin': typeof AdminIndexRoute
-  '/chat': typeof ChatIndexRoute
-  '/private': typeof PrivateIndexRoute
-  '/settings': typeof SettingsIndexRoute
+  '/calls': typeof AuthCallsRoute
+  '/contacts': typeof AuthContactsRoute
+  '/favorites': typeof AuthFavoritesRoute
+  '/profile': typeof AuthProfileRoute
+  '/admin/users': typeof AuthAdminUsersRoute
+  '/chat/$roomId': typeof AuthChatRoomIdRoute
+  '/dm/$userId': typeof AuthDmUserIdRoute
+  '/settings/account': typeof AuthSettingsAccountRoute
+  '/settings/appearance': typeof AuthSettingsAppearanceRoute
+  '/settings/notifications': typeof AuthSettingsNotificationsRoute
+  '/settings/privacy': typeof AuthSettingsPrivacyRoute
+  '/settings/security': typeof AuthSettingsSecurityRoute
+  '/admin': typeof AuthAdminIndexRoute
+  '/chat': typeof AuthChatIndexRoute
+  '/private': typeof AuthPrivateIndexRoute
+  '/settings': typeof AuthSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/calls': typeof CallsRoute
-  '/chat': typeof ChatRouteWithChildren
-  '/contacts': typeof ContactsRoute
-  '/favorites': typeof FavoritesRoute
+  '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
-  '/private': typeof PrivateRouteWithChildren
-  '/profile': typeof ProfileRoute
-  '/settings': typeof SettingsRouteWithChildren
-  '/admin/users': typeof AdminUsersRoute
-  '/chat/$roomId': typeof ChatRoomIdRoute
-  '/dm/$userId': typeof DmUserIdRoute
-  '/settings/account': typeof SettingsAccountRoute
-  '/settings/appearance': typeof SettingsAppearanceRoute
-  '/settings/notifications': typeof SettingsNotificationsRoute
-  '/settings/privacy': typeof SettingsPrivacyRoute
-  '/settings/security': typeof SettingsSecurityRoute
-  '/admin/': typeof AdminIndexRoute
-  '/chat/': typeof ChatIndexRoute
-  '/private/': typeof PrivateIndexRoute
-  '/settings/': typeof SettingsIndexRoute
+  '/_auth/admin': typeof AuthAdminRouteWithChildren
+  '/_auth/calls': typeof AuthCallsRoute
+  '/_auth/chat': typeof AuthChatRouteWithChildren
+  '/_auth/contacts': typeof AuthContactsRoute
+  '/_auth/favorites': typeof AuthFavoritesRoute
+  '/_auth/private': typeof AuthPrivateRouteWithChildren
+  '/_auth/profile': typeof AuthProfileRoute
+  '/_auth/settings': typeof AuthSettingsRouteWithChildren
+  '/_auth/admin/users': typeof AuthAdminUsersRoute
+  '/_auth/chat/$roomId': typeof AuthChatRoomIdRoute
+  '/_auth/dm/$userId': typeof AuthDmUserIdRoute
+  '/_auth/settings/account': typeof AuthSettingsAccountRoute
+  '/_auth/settings/appearance': typeof AuthSettingsAppearanceRoute
+  '/_auth/settings/notifications': typeof AuthSettingsNotificationsRoute
+  '/_auth/settings/privacy': typeof AuthSettingsPrivacyRoute
+  '/_auth/settings/security': typeof AuthSettingsSecurityRoute
+  '/_auth/admin/': typeof AuthAdminIndexRoute
+  '/_auth/chat/': typeof AuthChatIndexRoute
+  '/_auth/private/': typeof AuthPrivateIndexRoute
+  '/_auth/settings/': typeof AuthSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/admin'
     | '/calls'
     | '/chat'
     | '/contacts'
     | '/favorites'
-    | '/login'
     | '/private'
     | '/profile'
     | '/settings'
@@ -240,10 +247,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/calls'
     | '/contacts'
     | '/favorites'
-    | '/login'
     | '/profile'
     | '/admin/users'
     | '/chat/$roomId'
@@ -260,66 +267,38 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/admin'
-    | '/calls'
-    | '/chat'
-    | '/contacts'
-    | '/favorites'
+    | '/_auth'
     | '/login'
-    | '/private'
-    | '/profile'
-    | '/settings'
-    | '/admin/users'
-    | '/chat/$roomId'
-    | '/dm/$userId'
-    | '/settings/account'
-    | '/settings/appearance'
-    | '/settings/notifications'
-    | '/settings/privacy'
-    | '/settings/security'
-    | '/admin/'
-    | '/chat/'
-    | '/private/'
-    | '/settings/'
+    | '/_auth/admin'
+    | '/_auth/calls'
+    | '/_auth/chat'
+    | '/_auth/contacts'
+    | '/_auth/favorites'
+    | '/_auth/private'
+    | '/_auth/profile'
+    | '/_auth/settings'
+    | '/_auth/admin/users'
+    | '/_auth/chat/$roomId'
+    | '/_auth/dm/$userId'
+    | '/_auth/settings/account'
+    | '/_auth/settings/appearance'
+    | '/_auth/settings/notifications'
+    | '/_auth/settings/privacy'
+    | '/_auth/settings/security'
+    | '/_auth/admin/'
+    | '/_auth/chat/'
+    | '/_auth/private/'
+    | '/_auth/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRouteWithChildren
-  CallsRoute: typeof CallsRoute
-  ChatRoute: typeof ChatRouteWithChildren
-  ContactsRoute: typeof ContactsRoute
-  FavoritesRoute: typeof FavoritesRoute
+  AuthRoute: typeof AuthRouteWithChildren
   LoginRoute: typeof LoginRoute
-  PrivateRoute: typeof PrivateRouteWithChildren
-  ProfileRoute: typeof ProfileRoute
-  SettingsRoute: typeof SettingsRouteWithChildren
-  DmUserIdRoute: typeof DmUserIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/private': {
-      id: '/private'
-      path: '/private'
-      fullPath: '/private'
-      preLoaderRoute: typeof PrivateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -327,39 +306,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/favorites': {
-      id: '/favorites'
-      path: '/favorites'
-      fullPath: '/favorites'
-      preLoaderRoute: typeof FavoritesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contacts': {
-      id: '/contacts'
-      path: '/contacts'
-      fullPath: '/contacts'
-      preLoaderRoute: typeof ContactsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calls': {
-      id: '/calls'
-      path: '/calls'
-      fullPath: '/calls'
-      preLoaderRoute: typeof CallsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -369,162 +320,241 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/': {
-      id: '/settings/'
+    '/_auth/settings': {
+      id: '/_auth/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthSettingsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/profile': {
+      id: '/_auth/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthProfileRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/private': {
+      id: '/_auth/private'
+      path: '/private'
+      fullPath: '/private'
+      preLoaderRoute: typeof AuthPrivateRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/favorites': {
+      id: '/_auth/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof AuthFavoritesRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/contacts': {
+      id: '/_auth/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof AuthContactsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/chat': {
+      id: '/_auth/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthChatRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/calls': {
+      id: '/_auth/calls'
+      path: '/calls'
+      fullPath: '/calls'
+      preLoaderRoute: typeof AuthCallsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/admin': {
+      id: '/_auth/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthAdminRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/settings/': {
+      id: '/_auth/settings/'
       path: '/'
       fullPath: '/settings/'
-      preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof SettingsRoute
+      preLoaderRoute: typeof AuthSettingsIndexRouteImport
+      parentRoute: typeof AuthSettingsRoute
     }
-    '/private/': {
-      id: '/private/'
+    '/_auth/private/': {
+      id: '/_auth/private/'
       path: '/'
       fullPath: '/private/'
-      preLoaderRoute: typeof PrivateIndexRouteImport
-      parentRoute: typeof PrivateRoute
+      preLoaderRoute: typeof AuthPrivateIndexRouteImport
+      parentRoute: typeof AuthPrivateRoute
     }
-    '/chat/': {
-      id: '/chat/'
+    '/_auth/chat/': {
+      id: '/_auth/chat/'
       path: '/'
       fullPath: '/chat/'
-      preLoaderRoute: typeof ChatIndexRouteImport
-      parentRoute: typeof ChatRoute
+      preLoaderRoute: typeof AuthChatIndexRouteImport
+      parentRoute: typeof AuthChatRoute
     }
-    '/admin/': {
-      id: '/admin/'
+    '/_auth/admin/': {
+      id: '/_auth/admin/'
       path: '/'
       fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
+      preLoaderRoute: typeof AuthAdminIndexRouteImport
+      parentRoute: typeof AuthAdminRoute
     }
-    '/settings/security': {
-      id: '/settings/security'
+    '/_auth/settings/security': {
+      id: '/_auth/settings/security'
       path: '/security'
       fullPath: '/settings/security'
-      preLoaderRoute: typeof SettingsSecurityRouteImport
-      parentRoute: typeof SettingsRoute
+      preLoaderRoute: typeof AuthSettingsSecurityRouteImport
+      parentRoute: typeof AuthSettingsRoute
     }
-    '/settings/privacy': {
-      id: '/settings/privacy'
+    '/_auth/settings/privacy': {
+      id: '/_auth/settings/privacy'
       path: '/privacy'
       fullPath: '/settings/privacy'
-      preLoaderRoute: typeof SettingsPrivacyRouteImport
-      parentRoute: typeof SettingsRoute
+      preLoaderRoute: typeof AuthSettingsPrivacyRouteImport
+      parentRoute: typeof AuthSettingsRoute
     }
-    '/settings/notifications': {
-      id: '/settings/notifications'
+    '/_auth/settings/notifications': {
+      id: '/_auth/settings/notifications'
       path: '/notifications'
       fullPath: '/settings/notifications'
-      preLoaderRoute: typeof SettingsNotificationsRouteImport
-      parentRoute: typeof SettingsRoute
+      preLoaderRoute: typeof AuthSettingsNotificationsRouteImport
+      parentRoute: typeof AuthSettingsRoute
     }
-    '/settings/appearance': {
-      id: '/settings/appearance'
+    '/_auth/settings/appearance': {
+      id: '/_auth/settings/appearance'
       path: '/appearance'
       fullPath: '/settings/appearance'
-      preLoaderRoute: typeof SettingsAppearanceRouteImport
-      parentRoute: typeof SettingsRoute
+      preLoaderRoute: typeof AuthSettingsAppearanceRouteImport
+      parentRoute: typeof AuthSettingsRoute
     }
-    '/settings/account': {
-      id: '/settings/account'
+    '/_auth/settings/account': {
+      id: '/_auth/settings/account'
       path: '/account'
       fullPath: '/settings/account'
-      preLoaderRoute: typeof SettingsAccountRouteImport
-      parentRoute: typeof SettingsRoute
+      preLoaderRoute: typeof AuthSettingsAccountRouteImport
+      parentRoute: typeof AuthSettingsRoute
     }
-    '/dm/$userId': {
-      id: '/dm/$userId'
+    '/_auth/dm/$userId': {
+      id: '/_auth/dm/$userId'
       path: '/dm/$userId'
       fullPath: '/dm/$userId'
-      preLoaderRoute: typeof DmUserIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthDmUserIdRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/chat/$roomId': {
-      id: '/chat/$roomId'
+    '/_auth/chat/$roomId': {
+      id: '/_auth/chat/$roomId'
       path: '/$roomId'
       fullPath: '/chat/$roomId'
-      preLoaderRoute: typeof ChatRoomIdRouteImport
-      parentRoute: typeof ChatRoute
+      preLoaderRoute: typeof AuthChatRoomIdRouteImport
+      parentRoute: typeof AuthChatRoute
     }
-    '/admin/users': {
-      id: '/admin/users'
+    '/_auth/admin/users': {
+      id: '/_auth/admin/users'
       path: '/users'
       fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
+      preLoaderRoute: typeof AuthAdminUsersRouteImport
+      parentRoute: typeof AuthAdminRoute
     }
   }
 }
 
-interface AdminRouteChildren {
-  AdminUsersRoute: typeof AdminUsersRoute
-  AdminIndexRoute: typeof AdminIndexRoute
+interface AuthAdminRouteChildren {
+  AuthAdminUsersRoute: typeof AuthAdminUsersRoute
+  AuthAdminIndexRoute: typeof AuthAdminIndexRoute
 }
 
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminUsersRoute: AdminUsersRoute,
-  AdminIndexRoute: AdminIndexRoute,
+const AuthAdminRouteChildren: AuthAdminRouteChildren = {
+  AuthAdminUsersRoute: AuthAdminUsersRoute,
+  AuthAdminIndexRoute: AuthAdminIndexRoute,
 }
 
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
-
-interface ChatRouteChildren {
-  ChatRoomIdRoute: typeof ChatRoomIdRoute
-  ChatIndexRoute: typeof ChatIndexRoute
-}
-
-const ChatRouteChildren: ChatRouteChildren = {
-  ChatRoomIdRoute: ChatRoomIdRoute,
-  ChatIndexRoute: ChatIndexRoute,
-}
-
-const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
-
-interface PrivateRouteChildren {
-  PrivateIndexRoute: typeof PrivateIndexRoute
-}
-
-const PrivateRouteChildren: PrivateRouteChildren = {
-  PrivateIndexRoute: PrivateIndexRoute,
-}
-
-const PrivateRouteWithChildren =
-  PrivateRoute._addFileChildren(PrivateRouteChildren)
-
-interface SettingsRouteChildren {
-  SettingsAccountRoute: typeof SettingsAccountRoute
-  SettingsAppearanceRoute: typeof SettingsAppearanceRoute
-  SettingsNotificationsRoute: typeof SettingsNotificationsRoute
-  SettingsPrivacyRoute: typeof SettingsPrivacyRoute
-  SettingsSecurityRoute: typeof SettingsSecurityRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
-}
-
-const SettingsRouteChildren: SettingsRouteChildren = {
-  SettingsAccountRoute: SettingsAccountRoute,
-  SettingsAppearanceRoute: SettingsAppearanceRoute,
-  SettingsNotificationsRoute: SettingsNotificationsRoute,
-  SettingsPrivacyRoute: SettingsPrivacyRoute,
-  SettingsSecurityRoute: SettingsSecurityRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
-}
-
-const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
-  SettingsRouteChildren,
+const AuthAdminRouteWithChildren = AuthAdminRoute._addFileChildren(
+  AuthAdminRouteChildren,
 )
+
+interface AuthChatRouteChildren {
+  AuthChatRoomIdRoute: typeof AuthChatRoomIdRoute
+  AuthChatIndexRoute: typeof AuthChatIndexRoute
+}
+
+const AuthChatRouteChildren: AuthChatRouteChildren = {
+  AuthChatRoomIdRoute: AuthChatRoomIdRoute,
+  AuthChatIndexRoute: AuthChatIndexRoute,
+}
+
+const AuthChatRouteWithChildren = AuthChatRoute._addFileChildren(
+  AuthChatRouteChildren,
+)
+
+interface AuthPrivateRouteChildren {
+  AuthPrivateIndexRoute: typeof AuthPrivateIndexRoute
+}
+
+const AuthPrivateRouteChildren: AuthPrivateRouteChildren = {
+  AuthPrivateIndexRoute: AuthPrivateIndexRoute,
+}
+
+const AuthPrivateRouteWithChildren = AuthPrivateRoute._addFileChildren(
+  AuthPrivateRouteChildren,
+)
+
+interface AuthSettingsRouteChildren {
+  AuthSettingsAccountRoute: typeof AuthSettingsAccountRoute
+  AuthSettingsAppearanceRoute: typeof AuthSettingsAppearanceRoute
+  AuthSettingsNotificationsRoute: typeof AuthSettingsNotificationsRoute
+  AuthSettingsPrivacyRoute: typeof AuthSettingsPrivacyRoute
+  AuthSettingsSecurityRoute: typeof AuthSettingsSecurityRoute
+  AuthSettingsIndexRoute: typeof AuthSettingsIndexRoute
+}
+
+const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
+  AuthSettingsAccountRoute: AuthSettingsAccountRoute,
+  AuthSettingsAppearanceRoute: AuthSettingsAppearanceRoute,
+  AuthSettingsNotificationsRoute: AuthSettingsNotificationsRoute,
+  AuthSettingsPrivacyRoute: AuthSettingsPrivacyRoute,
+  AuthSettingsSecurityRoute: AuthSettingsSecurityRoute,
+  AuthSettingsIndexRoute: AuthSettingsIndexRoute,
+}
+
+const AuthSettingsRouteWithChildren = AuthSettingsRoute._addFileChildren(
+  AuthSettingsRouteChildren,
+)
+
+interface AuthRouteChildren {
+  AuthAdminRoute: typeof AuthAdminRouteWithChildren
+  AuthCallsRoute: typeof AuthCallsRoute
+  AuthChatRoute: typeof AuthChatRouteWithChildren
+  AuthContactsRoute: typeof AuthContactsRoute
+  AuthFavoritesRoute: typeof AuthFavoritesRoute
+  AuthPrivateRoute: typeof AuthPrivateRouteWithChildren
+  AuthProfileRoute: typeof AuthProfileRoute
+  AuthSettingsRoute: typeof AuthSettingsRouteWithChildren
+  AuthDmUserIdRoute: typeof AuthDmUserIdRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthAdminRoute: AuthAdminRouteWithChildren,
+  AuthCallsRoute: AuthCallsRoute,
+  AuthChatRoute: AuthChatRouteWithChildren,
+  AuthContactsRoute: AuthContactsRoute,
+  AuthFavoritesRoute: AuthFavoritesRoute,
+  AuthPrivateRoute: AuthPrivateRouteWithChildren,
+  AuthProfileRoute: AuthProfileRoute,
+  AuthSettingsRoute: AuthSettingsRouteWithChildren,
+  AuthDmUserIdRoute: AuthDmUserIdRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRouteWithChildren,
-  CallsRoute: CallsRoute,
-  ChatRoute: ChatRouteWithChildren,
-  ContactsRoute: ContactsRoute,
-  FavoritesRoute: FavoritesRoute,
+  AuthRoute: AuthRouteWithChildren,
   LoginRoute: LoginRoute,
-  PrivateRoute: PrivateRouteWithChildren,
-  ProfileRoute: ProfileRoute,
-  SettingsRoute: SettingsRouteWithChildren,
-  DmUserIdRoute: DmUserIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

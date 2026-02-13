@@ -70,6 +70,59 @@ app/src/
 └── locales/            # i18n JSON файлы (RU/EN)
 ```
 
+## Доменная модель чатов
+
+| Тип | URL | Описание |
+|-----|-----|----------|
+| **Публичный DM** | `/chat/:roomId` | 1-на-1 чат, история сохраняется в БД |
+| **Приватный чат** | `/private/:roomId` | 1-на-1 эфемерный чат, история удаляется при закрытии |
+| **Группа** | `/chat/:roomId` | Групповой чат, множество участников |
+| **DM-инициализатор** | `/dm/:userId` | Redirect-роут: находит/создаёт комнату и редиректит |
+
+---
+
+## Целевая структура
+
+```
+routes/
+├── __root.tsx                    # RootLayout (минимальный: init, ghost, dev banner)
+├── index.tsx                     # / — IndexPage (landing или redirect)
+├── login.tsx                     # /login — LoginPage
+│
+├── _auth.tsx                     # AuthLayout — проверка авторизации
+├── _auth/
+│   ├── chat.tsx                  # ChatLayout — Outlet + sidebar context
+│   ├── chat/
+│   │   ├── index.tsx             # /chat — ChatIndexPage
+│   │   └── $roomId.tsx           # /chat/:roomId — ChatRoomPage
+│   │
+│   ├── private.tsx               # PrivateLayout — Outlet + sidebar context
+│   ├── private/
+│   │   ├── index.tsx             # /private — PrivateChatPage
+│   │   └── $roomId.tsx           # /private/:roomId — PrivateRoomPage
+│   │
+│   ├── dm.$userId.tsx            # /dm/:userId — DMInitializer
+│   ├── contacts.tsx              # /contacts — ContactsPage
+│   ├── calls.tsx                 # /calls — CallsPage
+│   ├── favorites.tsx             # /favorites — FavoritesPage
+│   ├── profile.tsx               # /profile — ProfilePage
+│   │
+│   ├── settings.tsx              # SettingsLayout
+│   ├── settings/
+│   │   ├── index.tsx             # /settings — SettingsIndexPage
+│   │   ├── account.tsx
+│   │   ├── appearance.tsx
+│   │   ├── privacy.tsx
+│   │   ├── notifications.tsx
+│   │   └── security.tsx
+│   │
+│   ├── admin.tsx                 # AdminLayout
+│   └── admin/
+│       ├── index.tsx             # /admin — AdminDashboard
+│       └── users.tsx             # /admin/users — UserList
+```
+
+
 ### Правила слоев:
 1.  **Pages** могут импортировать **Features**, **Layouts** и **Components**.
 2.  **Features** могут импортировать **Components** и **Hooks**. Features не должны зависеть друг от друга (желательно).

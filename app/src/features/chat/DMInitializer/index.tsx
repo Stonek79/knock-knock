@@ -11,8 +11,8 @@ import styles from "./dminitializer.module.css";
  * Компонент инициализации DM-чата.
  */
 export function DMInitializer() {
-    const { userId } = useParams({ from: "/dm/$userId" });
-    const { isPrivate } = useSearch({ from: "/dm/$userId" });
+    const { userId } = useParams({ from: "/_auth/dm/$userId" });
+    const { isPrivate } = useSearch({ from: "/_auth/dm/$userId" });
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { t } = useTranslation();
