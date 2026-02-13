@@ -65,3 +65,27 @@
     color: var(--accent-primary);
     background: rgba(255, 255, 255, 0.05);
 }
+
+/* Зелёная точка онлайн-статуса */
+.onlineDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
+    flex-shrink: 0;
+}
+
+/* Кнопка назад (мобильная) */
+.iconButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--foreground);
+    transition: color 0.15s ease;
+}
+
+.backButton:hover {
+    color: var(--accent-primary);
+}

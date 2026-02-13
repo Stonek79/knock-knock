@@ -1,6 +1,6 @@
 import { Box, Card, Flex, Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
-import styles from "../SecuritySettings/security.module.css";
+import styles from "../security.module.css";
 
 interface KeysStatusCardProps {
     areKeysPublished: boolean;

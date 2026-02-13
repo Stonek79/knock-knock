@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
+import { ToastProvider } from "@/components/ui/Toast";
 import "./lib/i18n";
 import "./index.css";
 
@@ -43,7 +44,9 @@ function Root() {
             hasBackground={false}
         >
             <QueryClientProvider client={queryClient}>
-                <RouterProvider router={router} />
+                <ToastProvider>
+                    <RouterProvider router={router} />
+                </ToastProvider>
             </QueryClientProvider>
         </Theme>
     );

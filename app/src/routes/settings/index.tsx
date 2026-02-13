@@ -1,18 +1,6 @@
-import { Container, Flex, Heading } from "@radix-ui/themes";
 import { createFileRoute } from "@tanstack/react-router";
-import { ThemeSelector } from "../../features/settings/ThemeSelector";
+import { SettingsIndexPage } from "@/components/routes/SettingsIndexPage";
 
 export const Route = createFileRoute("/settings/")({
-    component: SettingsPage,
+    component: SettingsIndexPage,
 });
-
-function SettingsPage() {
-    return (
-        <Container size="2" p="4">
-            <Flex direction="column" gap="6">
-                <Heading>Настройки</Heading>
-                <ThemeSelector />
-            </Flex>
-        </Container>
-    );
-}

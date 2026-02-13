@@ -2,10 +2,11 @@ import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { PinScreen } from "@/features/auth/PinScreen";
 import { CallsList } from "@/features/calls/CallsList";
 import { ChatList } from "@/features/chat/ChatList";
 import { ContactList } from "@/features/contacts/ContactList";
-import { FavoritesList } from "@/features/favorites/FavoritesList";
+
 import { SettingsSidebar } from "@/features/settings/SettingsSidebar";
 import { useKeySync } from "@/hooks/useKeySync";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
@@ -15,6 +16,7 @@ import { MobileHeader } from "@/layouts/MobileHeader";
 import { IS_DEV, ROUTES } from "@/lib/constants";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
+import { useGhostStore } from "@/stores/ghost";
 import styles from "./root.module.css";
 
 /**
@@ -35,6 +37,8 @@ export function RootLayout() {
     const location = useLocation();
     const navigate = useNavigate();
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
+    const ghostStatus = useGhostStore((s) => s.status);
+    const ghostEnabled = useGhostStore((s) => s.enabled);
 
     // Автоматическая генерация и синхронизация ключей P2P (End-to-End Encryption)
     useKeySync();
@@ -54,12 +58,16 @@ export function RootLayout() {
      * - Мы на странице логина.
      * - Мы на лендинге.
      * - Мы внутри конкретного чата на мобильном устройстве (Full Screen Chat).
+     * - Мы на странице "Избранное" на мобильном (ChatRoom имеет свой RoomHeader).
      */
     const hideNav =
         location.pathname === ROUTES.LOGIN ||
         location.pathname === ROUTES.HOME ||
         (isMobile &&
-            location.pathname.match(new RegExp(`^${ROUTES.CHAT_LIST}/[^/]+$`))); // /chat/:roomId только на мобильных
+            (location.pathname.match(
+                new RegExp(`^${ROUTES.CHAT_LIST}/[^/]+$`),
+            ) || // /chat/:roomId
+                location.pathname.startsWith(ROUTES.FAVORITES))); // /favorites
 
     /**
      * Вычисляет содержимое боковой панели (Sidebar) для Desktop Layout.
@@ -78,8 +86,11 @@ export function RootLayout() {
     const sidebarContent = useMemo(() => {
         const path = location.pathname;
 
-        // Чаты — показываем список чатов
-        if (path.startsWith(ROUTES.CHAT_LIST)) {
+        // Чаты или Избранное — показываем список чатов
+        if (
+            path.startsWith(ROUTES.CHAT_LIST) ||
+            path.startsWith(ROUTES.FAVORITES)
+        ) {
             return <ChatList />;
         }
 
@@ -121,11 +132,6 @@ export function RootLayout() {
             return <CallsList />;
         }
 
-        // Избранное
-        if (path.startsWith(ROUTES.FAVORITES)) {
-            return <FavoritesList />;
-        }
-
         // Настройки
         if (path.startsWith(ROUTES.SETTINGS) || path.startsWith(ROUTES.ADMIN)) {
             return <SettingsSidebar />;
@@ -147,6 +153,11 @@ export function RootLayout() {
     // Скрин лоадера во время проверки авторизации
     if (loading) {
         return <div className={styles.loading}>{t("common.loading")}</div>;
+    }
+
+    // PIN-экран Ghost Mode (рендерится поверх всего)
+    if (ghostEnabled && ghostStatus === "locked") {
+        return <PinScreen />;
     }
 
     // Рендер для неавторизованных пользователей или "чистых" экранов (Login, Home)

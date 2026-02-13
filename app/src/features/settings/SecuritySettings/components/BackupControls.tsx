@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import type { StatusMessage } from "../hooks/useKeysBackup";
-import styles from "../SecuritySettings/security.module.css";
+import styles from "../security.module.css";
 
 interface BackupControlsProps {
     backupPassword: string;

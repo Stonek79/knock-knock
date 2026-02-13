@@ -1,21 +1,16 @@
-import { Flex, Text } from "@radix-ui/themes";
-import { useTranslation } from "react-i18next";
+import { Navigate } from "@tanstack/react-router";
 import { SettingsMenu } from "@/features/settings/SettingsMenu";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { ROUTES } from "@/lib/constants";
 
 export function SettingsIndexPage() {
-    const { t } = useTranslation();
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
-    if (isMobile) {
-        return <SettingsMenu />;
+    // На десктопе редирект на первый раздел настроек
+    if (!isMobile) {
+        return <Navigate to={ROUTES.SETTINGS_ACCOUNT} />;
     }
 
-    return (
-        <Flex align="center" justify="center" height="100%">
-            <Text color="gray">
-                {t("settings.selectItem", "Выберите раздел настроек")}
-            </Text>
-        </Flex>
-    );
+    // На мобильной показываем меню настроек
+    return <SettingsMenu />;
 }

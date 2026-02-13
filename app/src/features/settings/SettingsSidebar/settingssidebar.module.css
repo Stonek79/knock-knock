@@ -1,32 +1,30 @@
 .sidebar {
-    /* Background comes from parent layout (var(--surface)) */
     display: flex;
     flex-direction: column;
     height: 100%;
 }
 
 .desktopItem {
-    padding: 10px 16px;
-    color: var(--muted-foreground);
+    padding: var(--space-3) var(--space-4);
+    color: var(--muted);
     text-decoration: none;
-    transition:
-        background-color 0.2s,
-        color 0.2s;
+    transition: all 0.2s ease;
     border-radius: var(--radius-md);
-    margin: 0 8px;
+    margin: 0 var(--space-2);
 }
 
 .desktopItem:hover {
-    background-color: var(--slate-3); /* --muted */
+    background: var(--glass-hover-bg);
     color: var(--foreground);
 }
 
 .active {
-    background-color: var(--blue-3); /* --accent-3 equivalent */
-    color: var(--blue-11); /* --accent-11 equivalent */
+    background: var(--glass-bg);
+    color: var(--accent-primary);
     font-weight: 500;
+    border: 1px solid var(--glass-border);
 }
 
 .icon {
-    color: var(--primary);
+    color: var(--accent-primary);
 }

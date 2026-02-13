@@ -14,7 +14,7 @@
 .avatarPlaceholder {
     width: 64px;
     height: 64px;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     background: var(--muted);
     display: flex;
     align-items: center;

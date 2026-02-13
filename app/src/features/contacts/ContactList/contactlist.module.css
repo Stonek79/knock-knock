@@ -17,7 +17,7 @@
 .item {
     display: flex;
     align-items: center;
-    padding: var(--space-3) var(--space-4); /* px-4 py-3 equivalent */
+    padding: var(--space-3) var(--space-4);
     gap: var(--space-3);
     cursor: pointer;
     transition: background-color 0.2s;
@@ -40,7 +40,7 @@
     right: 0;
     width: 10px;
     height: 10px;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     border: 2px solid var(--surface);
 }
 
@@ -60,7 +60,7 @@
 .name {
     font-weight: 500;
     color: var(--foreground);
-    margin-bottom: 2px;
+    margin-bottom: var(--space-1);
 }
 
 .statusText {

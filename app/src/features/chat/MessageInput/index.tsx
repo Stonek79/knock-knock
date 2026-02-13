@@ -19,6 +19,8 @@ interface MessageInputProps {
     initialValue?: string | null;
     /** Коллбэк при изменении ввода (для скролла) */
     onInputChange?: () => void;
+    /** Коллбэк уведомления о печати (typing indicator) */
+    onTyping?: (isTyping: boolean) => void;
 }
 
 export function MessageInput({
@@ -27,6 +29,7 @@ export function MessageInput({
     disabled,
     initialValue,
     onInputChange,
+    onTyping,
 }: MessageInputProps) {
     const { t } = useTranslation();
 
@@ -82,6 +85,7 @@ export function MessageInput({
                     onChange={(e) => {
                         setMessage(e.target.value);
                         onInputChange?.();
+                        onTyping?.(e.target.value.length > 0);
                     }}
                     onKeyDown={handleKeyDown}
                     disabled={disabled || sending}

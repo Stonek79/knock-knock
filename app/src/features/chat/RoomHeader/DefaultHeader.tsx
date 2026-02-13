@@ -2,6 +2,7 @@ import { Avatar, Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { ChevronLeft, Phone, Trash2, Video } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
+import { usePresence } from "@/features/contacts/hooks/usePresence";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { ROOM_TYPE } from "@/lib/constants";
 import type { RoomWithMembers } from "@/lib/types/room";
@@ -35,6 +36,7 @@ export function DefaultHeader({
     const { t } = useTranslation();
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
     const { user } = useAuthStore();
+    const onlineUsers = usePresence();
 
     const handleInfoClick = () => {
         if (peerUser?.id) {
@@ -118,9 +120,20 @@ export function DefaultHeader({
                             {room?.is_ephemeral ? "🔒 " : ""}
                             {displayName}
                         </Heading>
-                        {isDM && resolvedPeer?.username && (
+                        {isDM && resolvedPeer && (
                             <Text size="1" color="gray" truncate>
-                                @{resolvedPeer.username}
+                                {onlineUsers[resolvedPeer.id] === "online" ? (
+                                    <Flex align="center" gap="1" asChild>
+                                        <span>
+                                            <Box className={styles.onlineDot} />
+                                            {t("chat.online", "в сети")}
+                                        </span>
+                                    </Flex>
+                                ) : resolvedPeer?.username ? (
+                                    `@${resolvedPeer.username}`
+                                ) : (
+                                    t("chat.offline", "не в сети")
+                                )}
                             </Text>
                         )}
                         {isGroup && memberNames && (

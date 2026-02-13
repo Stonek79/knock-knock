@@ -1,3 +1,5 @@
+/* Стили для FavoritesList */
+
 .container {
     height: 100%;
     display: flex;
@@ -5,10 +7,31 @@
 }
 
 .header {
-    padding: 16px;
-    border-bottom: 1px solid var(--gray-4);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.loadingState {
+    flex: 1;
+    min-height: 200px;
 }
 
 .icon {
-    color: var(--accent-9);
+    color: var(--accent-primary);
+    opacity: 0.6;
+}
+
+/* Анимация вращения загрузки */
+.spinner {
+    color: var(--accent-primary);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }

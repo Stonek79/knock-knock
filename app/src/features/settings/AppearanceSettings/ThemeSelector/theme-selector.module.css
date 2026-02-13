@@ -1,0 +1,74 @@
+/**
+ * CSS-модуль для компонента ThemeSelector.
+ * Использует CSS-переменные из index.css для интеграции с дизайн-системой.
+ */
+
+.container {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+}
+
+.section {
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.modeBtn {
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--foreground);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modeBtn:hover {
+    background: var(--glass-hover-bg);
+}
+
+.active {
+    background: var(--accent-primary);
+    color: var(--foreground);
+    border-color: transparent;
+}
+
+.themeCard {
+    cursor: pointer;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.themeCard:hover {
+    background: var(--glass-hover-bg);
+}
+
+.selected {
+    border-color: var(--accent-primary);
+    background: var(--glass-bg);
+    box-shadow: 0 0 20px var(--glow-soft);
+}
+
+/* ============================================= */
+/* Theme Previews */
+/* Показывают фиксированные цвета каждой темы */
+/* ============================================= */
+
+.previewNeon {
+    height: 72px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, #00f0ff 0%, #bc13fe 100%);
+    box-shadow: 0 var(--space-1) var(--space-4) rgba(0, 240, 255, 0.2);
+}
+
+.previewEmerald {
+    height: 72px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, #d4af37 0%, #10b981 100%);
+    box-shadow: 0 var(--space-1) var(--space-4) rgba(212, 175, 55, 0.2);
+}

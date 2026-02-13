@@ -1,0 +1,15 @@
+.backLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: var(--radius-md);
+    color: var(--muted);
+    transition: all 0.2s ease;
+}
+
+.backLink:hover {
+    background: var(--glass-hover-bg);
+    color: var(--accent-primary);
+}

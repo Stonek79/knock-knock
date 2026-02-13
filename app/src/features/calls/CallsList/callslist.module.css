@@ -5,7 +5,7 @@
 }
 
 .header {
-    padding: 16px;
+    padding: var(--space-4);
     border-bottom: 1px solid var(--gray-4);
 }
 

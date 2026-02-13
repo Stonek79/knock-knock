@@ -20,8 +20,8 @@
     height: 100vh;
     overflow: hidden;
     background: transparent;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-right: 1px solid var(--glass-border);
 }
 
@@ -38,18 +38,18 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    font-size: 1.25rem;
+    font-size: var(--text-lg);
     color: var(--muted);
 }
 
 .banner {
     background-color: var(--amber-9);
-    color: white;
+    color: var(--bubble-out-fg);
     text-align: center;
-    padding: 0.5rem;
+    padding: var(--space-2);
     font-weight: bold;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     position: sticky;
     top: 0;
-    z-index: 9999;
+    z-index: var(--z-overlay);
 }

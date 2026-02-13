@@ -1,0 +1,161 @@
+/**
+ * Стили экрана PIN-кода (Ghost Mode).
+ *
+ * Используем CSS-переменные из index.css.
+ * Цвета ошибок через var(--error-color) вместо hardcoded #ef4444.
+ */
+
+/* === Оверлей (полноэкранный) === */
+.overlay {
+    --pin-error-color: var(--color-error);
+    --pin-error-glow: color-mix(in srgb, var(--color-error), transparent 50%);
+    --pin-dot-size: 16px;
+    --pin-key-size: 72px;
+    --pin-key-font-size: var(--text-2xl);
+
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    background: var(--bg-app);
+    backdrop-filter: var(--glass-blur);
+    cursor: default;
+}
+
+/* === Контейнер контента === */
+.container {
+    padding: var(--space-6);
+    max-width: 320px;
+    width: 100%;
+}
+
+/* === Иконка замка === */
+.lockIcon {
+    color: var(--accent-primary);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 8px var(--accent-primary));
+}
+
+/* === Заголовок === */
+.title {
+    color: var(--foreground);
+    text-align: center;
+    font-weight: 600;
+}
+
+/* === Точки ввода PIN === */
+.dotsContainer {
+    min-height: 24px;
+}
+
+.dot {
+    width: var(--pin-dot-size);
+    height: var(--pin-dot-size);
+    border-radius: var(--radius-full);
+    border: 2px solid var(--glass-border-active, var(--accent-primary));
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.dot.filled {
+    background: var(--accent-primary);
+    box-shadow: 0 0 8px var(--accent-primary);
+}
+
+/* Ошибка — тряска контейнера + красные точки */
+.dotsContainer.error {
+    animation: shake 0.3s ease-in-out;
+}
+
+.dot.error {
+    border-color: var(--pin-error-color);
+    background: var(--pin-error-color);
+    box-shadow: 0 0 8px var(--pin-error-glow);
+}
+
+/* === Цифровая клавиатура === */
+.numpad {
+    max-width: 280px;
+    width: 100%;
+}
+
+.numpadKey {
+    width: var(--pin-key-size);
+    height: var(--pin-key-size);
+    margin: 0 auto;
+    border-radius: var(--radius-full);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--foreground);
+    font-size: var(--pin-key-font-size);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.numpadKey:hover {
+    background: var(--accent-primary);
+    color: var(--bubble-out-fg);
+    box-shadow: 0 0 12px var(--accent-primary);
+}
+
+.numpadKey:active {
+    transform: scale(0.95);
+}
+
+/* Пуcтая ячейка — невидимый placeholder */
+.emptyCell {
+    width: var(--pin-key-size);
+    height: var(--pin-key-size);
+    margin: 0 auto;
+    visibility: hidden;
+}
+
+/* Кнопка удаления */
+.deleteKey {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+}
+
+.deleteKey:hover {
+    color: var(--foreground);
+    background: var(--glass-hover-bg);
+    box-shadow: none;
+}
+
+/* === Текст ошибки === */
+.errorText {
+    color: var(--pin-error-color);
+    font-size: var(--text-xs);
+    min-height: 20px;
+    text-align: center;
+}
+
+/* === Скрытый input для нативной мобильной клавиатуры === */
+.hiddenInput {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* === Анимация тряски при ошибке === */
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(calc(-1 * var(--space-2)));
+    }
+    50% {
+        transform: translateX(var(--space-2));
+    }
+    75% {
+        transform: translateX(calc(-1 * var(--space-1)));
+    }
+}

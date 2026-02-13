@@ -8,8 +8,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    border-radius: var(--radius-glass, 8px);
+    gap: var(--space-2);
+    border-radius: var(--radius-glass, var(--radius-md));
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -65,7 +65,7 @@
 }
 
 .ghost:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-hover-bg);
     color: var(--accent-primary);
 }
 
@@ -84,7 +84,7 @@
 
 /* Soft - мягкая кнопка (аналог Radix soft) */
 .soft {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-hover-bg);
     color: var(--foreground);
     border-color: transparent;
 }
@@ -101,45 +101,45 @@
 /* Radix-совместимые размеры */
 .size1 {
     height: 28px;
-    padding: 0 8px;
-    font-size: 12px;
+    padding: 0 var(--space-2);
+    font-size: var(--text-xs);
 }
 
 .size2 {
     height: 32px;
-    padding: 0 12px;
-    font-size: 13px;
+    padding: 0 var(--space-3);
+    font-size: var(--text-xs);
 }
 
 .size3 {
     height: 36px;
-    padding: 0 16px;
-    font-size: 14px;
+    padding: 0 var(--space-4);
+    font-size: var(--text-sm);
 }
 
 .size4 {
     height: 44px;
-    padding: 0 24px;
-    font-size: 16px;
+    padding: 0 var(--space-6);
+    font-size: var(--text-base);
 }
 
 /* Семантические размеры */
 .sm {
     height: 32px;
-    padding: 0 12px;
-    font-size: 13px;
+    padding: 0 var(--space-3);
+    font-size: var(--text-xs);
 }
 
 .md {
     height: 36px;
-    padding: 0 16px;
-    font-size: 14px;
+    padding: 0 var(--space-4);
+    font-size: var(--text-sm);
 }
 
 .lg {
     height: 44px;
-    padding: 0 24px;
-    font-size: 16px;
+    padding: 0 var(--space-6);
+    font-size: var(--text-base);
 }
 
 .icon {

@@ -7,15 +7,18 @@ import { useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { useToast } from "@/components/ui/Toast";
 import { useChatActions } from "@/features/chat/hooks/useChatActions";
 import { useChatPeer } from "@/features/chat/hooks/useChatPeer";
 import { useChatRoomData } from "@/features/chat/hooks/useChatRoomData";
 import { useMessageSelection } from "@/features/chat/hooks/useMessageSelection";
 import { useMessages } from "@/features/chat/hooks/useMessages";
+import { useTypingIndicator } from "@/features/chat/hooks/useTypingIndicator";
 import { useUnreadTracking } from "@/features/chat/hooks/useUnreadTracking";
 import { MessageInput } from "@/features/chat/MessageInput";
 import { MessageList } from "@/features/chat/MessageList";
 import { RoomHeader } from "@/features/chat/RoomHeader";
+import { TypingIndicator } from "@/features/chat/TypingIndicator";
 import { useAuthStore } from "@/stores/auth";
 import styles from "../chat.module.css";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
@@ -35,6 +38,7 @@ export function ChatRoom({ roomId: propRoomId }: ChatRoomProps) {
 
     const { t } = useTranslation();
     const { user } = useAuthStore();
+    const toast = useToast();
 
     // Состояние диалогов
     const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
@@ -62,6 +66,12 @@ export function ChatRoom({ roomId: propRoomId }: ChatRoomProps) {
         roomId ?? "",
         roomKey,
     );
+
+    // Индикатор печати
+    const { typingUsers, setTyping } = useTypingIndicator({
+        roomId: roomId ?? "",
+        displayName: peerUser?.display_name,
+    });
 
     // Действия чата
     const { sendMessage, endSession, deleteMessage, updateMessage, ending } =
@@ -125,11 +135,24 @@ export function ChatRoom({ roomId: propRoomId }: ChatRoomProps) {
     };
 
     const handleSend = async (text: string) => {
-        if (editingId) {
-            await handleMessageUpdate(editingId, text);
-        } else {
-            await sendMessage(text);
-            markAsRead(); // Обновляем статус прочтения при отправке
+        try {
+            if (editingId) {
+                await handleMessageUpdate(editingId, text);
+            } else {
+                await sendMessage(text);
+                markAsRead();
+            }
+            // Сбрасываем индикатор печати после отправки
+            setTyping(false);
+        } catch (e) {
+            toast({
+                title: t("chat.sendError", "Ошибка отправки"),
+                description:
+                    e instanceof Error
+                        ? e.message
+                        : t("common.unknownError", "Неизвестная ошибка"),
+                variant: "error",
+            });
         }
     };
 
@@ -212,6 +235,9 @@ export function ChatRoom({ roomId: propRoomId }: ChatRoomProps) {
                 </main>
             </Box>
 
+            {/* Индикатор печати */}
+            <TypingIndicator typingUsers={typingUsers} />
+
             {/* Поле ввода */}
             <Box className={styles.inputArea}>
                 <MessageInput
@@ -221,6 +247,7 @@ export function ChatRoom({ roomId: propRoomId }: ChatRoomProps) {
                         !roomKey || !roomId || selectedMessageIds.size > 0
                     }
                     initialValue={editingContent}
+                    onTyping={setTyping}
                 />
             </Box>
         </Flex>

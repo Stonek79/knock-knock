@@ -16,6 +16,7 @@ import {
 } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ToastProvider } from "@/components/ui/Toast";
 import { ClipboardService } from "@/lib/services/clipboard";
 import { ok } from "@/lib/utils/result";
 import { ChatRoom } from "./ChatRoom";
@@ -165,7 +166,9 @@ describe("Действия с сообщениями в чате", () => {
         await act(async () => {
             result = render(
                 <QueryClientProvider client={queryClient}>
-                    <Theme>{ui}</Theme>
+                    <ToastProvider>
+                        <Theme>{ui}</Theme>
+                    </ToastProvider>
                 </QueryClientProvider>,
             );
         });

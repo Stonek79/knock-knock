@@ -5,50 +5,50 @@
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%);
-    padding: 2rem;
+    padding: var(--space-8);
     position: relative;
     overflow: hidden;
 }
 
 .content {
     text-align: center;
-    z-index: 10;
+    z-index: var(--z-sticky);
     max-width: 600px;
     animation: fadeIn 1s ease-out;
 }
 
 .logoImage {
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
 }
 
 .title {
-    font-size: 2.5rem;
+    font-size: var(--text-3xl);
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
     color: var(--gray-12);
 }
 
 .description {
-    font-size: 1.25rem;
+    font-size: var(--text-lg);
     color: var(--gray-11);
     line-height: 1.6;
-    margin-bottom: 3rem;
+    margin-bottom: var(--space-12);
 }
 
 .footer {
     position: absolute;
-    bottom: 2rem;
+    bottom: var(--space-8);
     display: flex;
-    gap: 1rem;
+    gap: var(--space-4);
     align-items: center;
 }
 
 .devLink {
     color: var(--gray-8);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
     transition: all 0.2s;
     cursor: pointer;
 }
@@ -70,7 +70,7 @@
 }
 
 .badgeIcon {
-    margin-right: 6px;
+    margin-right: var(--space-2);
 }
 
 .descriptionText {

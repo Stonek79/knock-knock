@@ -1,6 +1,6 @@
 .mobileContainer {
     height: 100%;
-    background-color: var(--gray-2);
+    background: var(--glass-bg);
 }
 
 .mobileItemLink {
@@ -10,50 +10,58 @@
 }
 
 .mobileItem {
-    transition:
-        transform 0.2s,
-        background-color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .mobileItem:active {
     transform: scale(0.98);
-    background-color: var(--gray-4);
+    background: var(--glass-hover-bg);
 }
 
 .iconBox {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background-color: var(--gray-3);
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: var(--radius-md);
+    background: var(--glass-bg);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+/* ============================================= */
 /* Icon Colors */
+/* ============================================= */
+
 .iconBlue {
-    color: var(--blue-9);
-}
-.iconViolet {
-    color: var(--violet-9);
-}
-.iconGreen {
-    color: var(--green-9);
-}
-.iconOrange {
-    color: var(--orange-9);
-}
-.iconRed {
-    color: var(--red-9);
+    color: var(--accent-primary);
 }
 
+.iconViolet {
+    color: var(--accent-secondary);
+}
+
+.iconGreen {
+    color: var(--color-success);
+}
+
+.iconOrange {
+    color: var(--color-warning);
+}
+
+.iconRed {
+    color: var(--color-error);
+}
+
+/* ============================================= */
 /* Admin Specific Styles */
+/* ============================================= */
+
 .mobileItem.adminCard {
-    border-color: var(--primary);
+    border-color: var(--accent-primary);
     border-width: 1px;
 }
 
 .iconBox.adminIconBox {
-    background-color: var(--primary);
-    color: white;
+    background: var(--accent-primary);
+    color: var(--bubble-out-fg);
 }

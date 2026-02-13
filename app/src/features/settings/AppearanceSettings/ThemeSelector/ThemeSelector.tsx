@@ -1,42 +1,45 @@
 import { Box, Flex, Grid, Text } from "@radix-ui/themes";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
+import { DESIGN_THEME, THEME_MODE } from "@/lib/constants/theme";
 import { useThemeStore } from "@/stores/theme";
 import styles from "./theme-selector.module.css";
 
 export const ThemeSelector = () => {
+    const { t } = useTranslation();
     const { theme, setTheme, mode, setMode } = useThemeStore();
 
     return (
         <Flex direction="column" gap="4" className={styles.container}>
             <Text size="4" weight="bold">
-                Внешний вид (Appearance)
+                {t("settings.appearance", "Внешний вид")}
             </Text>
 
             {/* Mode Toggle */}
             <Flex gap="3" align="center" className={styles.section}>
                 <Text size="2" color="gray">
-                    Режим:
+                    {t("settings.mode", "Режим")}:
                 </Text>
                 <Flex gap="2">
                     <button
                         type="button"
-                        onClick={() => setMode("light")}
+                        onClick={() => setMode(THEME_MODE.LIGHT)}
                         className={clsx(
                             styles.modeBtn,
-                            mode === "light" && styles.active,
+                            mode === THEME_MODE.LIGHT && styles.active,
                         )}
                     >
-                        Light ☀️
+                        {t("theme.light", "Светлая")} ☀️
                     </button>
                     <button
                         type="button"
-                        onClick={() => setMode("dark")}
+                        onClick={() => setMode(THEME_MODE.DARK)}
                         className={clsx(
                             styles.modeBtn,
-                            mode === "dark" && styles.active,
+                            mode === THEME_MODE.DARK && styles.active,
                         )}
                     >
-                        Dark 🌑
+                        {t("theme.dark", "Темная")} 🌑
                     </button>
                 </Flex>
             </Flex>
@@ -47,14 +50,16 @@ export const ThemeSelector = () => {
                 <Box
                     className={clsx(
                         styles.themeCard,
-                        theme === "neon" && styles.selected,
+                        theme === DESIGN_THEME.NEON && styles.selected,
                     )}
-                    onClick={() => setTheme("neon")}
+                    onClick={() => setTheme(DESIGN_THEME.NEON)}
                 >
                     <Box className={styles.previewNeon} />
                     <Flex justify="between" align="center" mt="2">
-                        <Text weight="medium">Cosmic Neon</Text>
-                        {theme === "neon" && (
+                        <Text weight="medium">
+                            {t("theme.neonName", "Cosmic Neon")}
+                        </Text>
+                        {theme === DESIGN_THEME.NEON && (
                             <Text style={{ color: "var(--accent-primary)" }}>
                                 ✓
                             </Text>
@@ -66,14 +71,16 @@ export const ThemeSelector = () => {
                 <Box
                     className={clsx(
                         styles.themeCard,
-                        theme === "emerald" && styles.selected,
+                        theme === DESIGN_THEME.EMERALD && styles.selected,
                     )}
-                    onClick={() => setTheme("emerald")}
+                    onClick={() => setTheme(DESIGN_THEME.EMERALD)}
                 >
                     <Box className={styles.previewEmerald} />
                     <Flex justify="between" align="center" mt="2">
-                        <Text weight="medium">Emerald Luxury</Text>
-                        {theme === "emerald" && (
+                        <Text weight="medium">
+                            {t("theme.emeraldName", "Emerald Luxury")}
+                        </Text>
+                        {theme === DESIGN_THEME.EMERALD && (
                             <Text style={{ color: "var(--accent-primary)" }}>
                                 ✓
                             </Text>
