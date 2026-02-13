@@ -1,19 +1,17 @@
 import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { PinScreen } from "@/features/auth/PinScreen";
 import { CallsList } from "@/features/calls/CallsList";
 import { ChatList } from "@/features/chat/ChatList";
 import { ContactList } from "@/features/contacts/ContactList";
-
 import { SettingsSidebar } from "@/features/settings/SettingsSidebar";
 import { useKeySync } from "@/hooks/useKeySync";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { BottomNav } from "@/layouts/BottomNav";
 import { DesktopLayout } from "@/layouts/DesktopLayout";
 import { MobileHeader } from "@/layouts/MobileHeader";
-import { IS_DEV, ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
 import { useGhostStore } from "@/stores/ghost";
@@ -166,7 +164,6 @@ export function RootLayout() {
             <div className={styles.layout}>
                 {devModeBanner}
                 <Outlet />
-                {IS_DEV && <TanStackRouterDevtools position="bottom-right" />}
             </div>
         );
     }
@@ -180,7 +177,6 @@ export function RootLayout() {
                 <MobileHeader />
                 <Outlet />
                 <BottomNav />
-                {IS_DEV && <TanStackRouterDevtools position="bottom-right" />}
             </div>
         );
     }
@@ -191,7 +187,6 @@ export function RootLayout() {
         <DesktopLayout sidebarContent={sidebarContent}>
             {devModeBanner}
             <Outlet />
-            {IS_DEV && <TanStackRouterDevtools position="bottom-right" />}
         </DesktopLayout>
     );
 }
