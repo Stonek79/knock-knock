@@ -158,10 +158,17 @@ routes/
 Только объекты `as const`. Файлы должны быть "лёгкими".
 
 ```typescript
-// lib/constants/common.ts
-export const CHAT_TYPE = {
-    PUBLIC: 'public',
-    PRIVATE: 'private',
+// lib/constants/theme.ts
+export const RADIX_THEME = {
+    [DESIGN_THEME.EMERALD]: {
+        ACCENT: "gold",
+        GRAY: "olive",
+    },
+    [DESIGN_THEME.NEON]: {
+        ACCENT: "teal",
+        GRAY: "slate",
+    },
+    DEFAULT_RADIUS: "medium",
 } as const;
 ```
 

@@ -8,27 +8,12 @@
  *
  * PIN хранится в localStorage в хешированном виде (SHA-256).
  */
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-/** Ключи localStorage для Ghost Mode */
-const GHOST_STORAGE_KEY = "kk-ghost-mode";
-
-/** Статусы Ghost Mode */
-type GhostStatus = "locked" | "unlocked" | "decoy";
-
-/**
- * Хеширует PIN через SHA-256 для безопасного хранения.
- * Никогда не храним PIN в открытом виде.
- */
-async function hashPin(pin: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(pin);
-    const hash = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(hash))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-}
+import { GHOST_STATUS, GHOST_STORAGE_KEY } from "@/lib/constants";
+import { sha256 } from "@/lib/crypto";
+import type { GhostStatus } from "@/lib/types";
 
 interface GhostState {
     /** Активен ли Ghost Mode (установлен PIN) */
@@ -54,41 +39,44 @@ interface GhostState {
     isDecoy: () => boolean;
 }
 
+/**
+ * Стор для управления функционалом Ghost Mode.
+ */
 export const useGhostStore = create<GhostState>()(
     persist(
         (set, get) => ({
             enabled: false,
             pinHash: null,
             decoyPinHash: null,
-            status: "unlocked" as GhostStatus,
+            status: GHOST_STATUS.UNLOCKED,
 
             setPin: async (pin: string) => {
-                const hash = await hashPin(pin);
+                const hash = await sha256(pin);
                 set({
                     pinHash: hash,
                     enabled: true,
-                    status: "locked",
+                    status: GHOST_STATUS.LOCKED,
                 });
             },
 
             setDecoyPin: async (pin: string) => {
-                const hash = await hashPin(pin);
+                const hash = await sha256(pin);
                 set({ decoyPinHash: hash });
             },
 
             unlock: async (pin: string) => {
                 const state = get();
-                const inputHash = await hashPin(pin);
+                const inputHash = await sha256(pin);
 
                 // Проверяем основной PIN
                 if (inputHash === state.pinHash) {
-                    set({ status: "unlocked" });
+                    set({ status: GHOST_STATUS.UNLOCKED });
                     return true;
                 }
 
                 // Проверяем ложный PIN
                 if (state.decoyPinHash && inputHash === state.decoyPinHash) {
-                    set({ status: "decoy" });
+                    set({ status: GHOST_STATUS.DECOY });
                     return true;
                 }
 
@@ -98,7 +86,7 @@ export const useGhostStore = create<GhostState>()(
             lock: () => {
                 const state = get();
                 if (state.enabled) {
-                    set({ status: "locked" });
+                    set({ status: GHOST_STATUS.LOCKED });
                 }
             },
 
@@ -107,11 +95,11 @@ export const useGhostStore = create<GhostState>()(
                     enabled: false,
                     pinHash: null,
                     decoyPinHash: null,
-                    status: "unlocked",
+                    status: GHOST_STATUS.UNLOCKED,
                 });
             },
 
-            isDecoy: () => get().status === "decoy",
+            isDecoy: () => get().status === GHOST_STATUS.DECOY,
         }),
         {
             name: GHOST_STORAGE_KEY,

@@ -45,3 +45,13 @@ export interface RoomWithMembers extends Room {
         } | null;
     }[];
 }
+
+/**
+ * Упрощенная структура пользователя-собеседника для отображения в интерфейсе
+ */
+export interface PeerUser {
+    id: string;
+    display_name: string;
+    username?: string;
+    avatar_url?: string;
+}

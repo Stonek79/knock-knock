@@ -40,3 +40,9 @@ export const REALTIME_EVENTS = {
     UPDATE: "UPDATE",
     DELETE: "DELETE",
 } as const;
+
+/** Настройки индикатора печати */
+export const TYPING_CONFIG = {
+    TIMEOUT_MS: 3000,
+    CHANNEL_PREFIX: "typing:",
+} as const;

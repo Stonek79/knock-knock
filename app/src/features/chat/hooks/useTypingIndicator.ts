@@ -5,16 +5,13 @@
  * Каждый участник комнаты отправляет событие typing: true/false,
  * а хук собирает и возвращает список пользователей, которые сейчас печатают.
  */
+
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TYPING_CONFIG } from "@/lib/constants/chat";
+import { CHANNEL_STATUS } from "@/lib/constants/supabase";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
-
-/** Задержка дебаунса перед сбросом статуса "печатает" (мс) */
-const TYPING_TIMEOUT_MS = 3000;
-
-/** Канал presence привязан к комнате */
-const TYPING_CHANNEL_PREFIX = "typing:";
 
 /** Структура данных Presence для печати */
 interface TypingPresence {
@@ -41,6 +38,26 @@ interface UseTypingIndicatorResult {
 }
 
 /**
+ * Извлекает имена пользователей, которые печатают в данный момент, из объекта PresenceState.
+ * Исключает текущего пользователя из списка.
+ *
+ * @param state - Текущее состояние Presence в канале
+ * @param currentUserId - ID текущего пользователя
+ * @returns Массив имен печатающих пользователей
+ */
+function parseTypingNames(
+    state: PresenceState,
+    currentUserId: string,
+): string[] {
+    return Object.entries(state)
+        .filter(([userId]) => userId !== currentUserId) // Не показываем себя
+        .flatMap(([_, presences]) => {
+            const latest = presences[presences.length - 1];
+            return latest?.is_typing ? [latest.display_name || "Unknown"] : [];
+        });
+}
+
+/**
  * Хук индикатора печати.
  *
  * @param roomId — ID комнаты
@@ -55,93 +72,89 @@ export function useTypingIndicator({
     const [typingUsers, setTypingUsers] = useState<string[]>([]);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+    const displayNameRef = useRef(displayName);
+    displayNameRef.current = displayName;
 
     /**
      * Отправка статуса "печатает" через Presence.
-     * Автоматически сбрасывает статус через TYPING_TIMEOUT_MS.
+     * Автоматически сбрасывает статус через TYPING_CONFIG.TIMEOUT_MS.
      */
     const setTyping = useCallback(
         (isTyping: boolean) => {
-            if (!channelRef.current || !user) {
+            const channel = channelRef.current;
+            if (!channel || !user) {
                 return;
             }
 
-            channelRef.current.track({
+            // Транслируем наш статус всем участникам
+            channel.track({
                 user_id: user.id,
                 display_name: displayName,
                 is_typing: isTyping,
             });
 
-            // Автоматический сброс статуса при бездействии
+            // Автоматический сброс статуса при затишье (бездействии)
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
             }
 
             if (isTyping) {
                 timeoutRef.current = setTimeout(() => {
-                    channelRef.current?.track({
-                        user_id: user?.id ?? "",
+                    channel.track({
+                        user_id: user.id,
                         display_name: displayName,
                         is_typing: false,
                     });
-                }, TYPING_TIMEOUT_MS);
+                }, TYPING_CONFIG.TIMEOUT_MS);
             }
         },
         [user, displayName],
     );
 
+    /**
+     * Эффект управления жизненным циклом канала.
+     * Подписывается на события Presence при входе в комнату и отписывается при выходе.
+     */
     useEffect(() => {
-        if (!roomId || !user) {
+        if (!roomId || !user || import.meta.env.VITE_USE_MOCK === "true") {
             return;
         }
 
-        // В Mock-режиме не подписываемся (typing работает только с реальным бэкендом)
-        if (import.meta.env.VITE_USE_MOCK === "true") {
-            return;
-        }
-
-        const channel = supabase.channel(`${TYPING_CHANNEL_PREFIX}${roomId}`, {
-            config: {
-                presence: {
-                    key: user.id,
+        const channel = supabase.channel(
+            `${TYPING_CONFIG.CHANNEL_PREFIX}${roomId}`,
+            {
+                config: {
+                    presence: {
+                        key: user.id,
+                    },
                 },
             },
-        });
+        );
 
         channelRef.current = channel;
 
         channel
             .on("presence", { event: "sync" }, () => {
                 const state = channel.presenceState() as PresenceState;
-                const names: string[] = [];
-
-                for (const [userId, presences] of Object.entries(state)) {
-                    // Не показываем себя
-                    if (userId === user.id) {
-                        continue;
-                    }
-
-                    const latest = presences[presences.length - 1];
-                    if (latest?.is_typing) {
-                        names.push(latest.display_name || "Unknown");
-                    }
-                }
-
-                setTypingUsers(names);
+                setTypingUsers(parseTypingNames(state, user.id));
             })
             .subscribe((status) => {
-                if (status === "SUBSCRIBED") {
-                    // Изначально не печатаем
+                if (status === CHANNEL_STATUS.SUBSCRIBED) {
+                    // При успешной подписке инициализируем Presence (не печатаем)
                     channel.track({
                         user_id: user.id,
-                        display_name: displayName,
+                        display_name: displayNameRef.current,
                         is_typing: false,
                     });
                 }
-                logger.info("Typing channel status", {
-                    status,
-                    roomId,
-                });
+
+                if (status === CHANNEL_STATUS.CHANNEL_ERROR) {
+                    logger.error("Typing channel subscription error", {
+                        roomId,
+                    });
+                }
+
+                logger.info("Typing channel status", { status, roomId });
             });
 
         return () => {
@@ -150,8 +163,23 @@ export function useTypingIndicator({
             }
             supabase.removeChannel(channel);
             channelRef.current = null;
+            setTypingUsers([]); // Сбрасываем список при выходе
         };
-    }, [roomId, user, displayName]);
+    }, [roomId, user]); // Зависим только от ID комнаты и юзера
+
+    /**
+     * Эффект обновления Presence при изменении имени пользователя.
+     * Если имя сменилось в процессе, обновляем наш объект track без переподключения.
+     */
+    useEffect(() => {
+        if (channelRef.current && user && displayName) {
+            channelRef.current.track({
+                user_id: user.id,
+                display_name: displayName,
+                is_typing: false,
+            });
+        }
+    }, [displayName, user]);
 
     return { typingUsers, setTyping };
 }

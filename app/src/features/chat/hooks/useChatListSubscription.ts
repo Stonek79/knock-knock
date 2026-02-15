@@ -10,7 +10,7 @@
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { DB_TABLES, REALTIME_EVENTS } from "@/lib/constants";
+import { CHANNEL_STATUS, DB_TABLES, REALTIME_EVENTS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
@@ -103,6 +103,9 @@ export function useChatListSubscription() {
                 },
             )
             .subscribe((status) => {
+                if (status === CHANNEL_STATUS.CHANNEL_ERROR) {
+                    logger.error("ChatList subscription error");
+                }
                 logger.info("ChatList subscription status", { status });
             });
 

@@ -1,0 +1,26 @@
+.chatContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    padding: var(--space-4);
+}
+
+.emptyIconBox {
+    margin-bottom: var(--space-4);
+    padding: var(--space-5);
+    background: var(--accent-3);
+    color: var(--accent-9);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholderText {
+    max-width: 320px;
+    line-height: 1.5;
+}

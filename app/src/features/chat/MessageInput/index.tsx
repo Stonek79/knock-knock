@@ -90,7 +90,7 @@ export function MessageInput({
                     onKeyDown={handleKeyDown}
                     disabled={disabled || sending}
                     className={styles.textArea}
-                    size="3"
+                    size="2"
                     variant="soft"
                 />
             </div>

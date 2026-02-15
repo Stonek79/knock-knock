@@ -1,90 +1,84 @@
-import { Avatar, Box, Flex, Heading, Text } from "@radix-ui/themes";
-import { ChevronLeft, Phone, Trash2, Video } from "lucide-react";
+import { Box, Flex } from "@radix-ui/themes";
+import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/Button";
-import { usePresence } from "@/features/contacts/hooks/usePresence";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import { ROOM_TYPE } from "@/lib/constants";
-import type { RoomWithMembers } from "@/lib/types/room";
-import { useAuthStore } from "@/stores/auth";
+import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
+import { RoomHeaderActions } from "./components/RoomHeaderActions";
+import { RoomHeaderAvatar } from "./components/RoomHeaderAvatar";
+import { RoomHeaderTitle } from "./components/RoomHeaderTitle";
+import { useRoomHeaderInfo } from "./hooks/useRoomHeaderInfo";
 import styles from "./roomheader.module.css";
 
-interface PeerUser {
-    id: string;
-    display_name: string;
-    username?: string;
-    avatar_url?: string;
-}
-
 interface DefaultHeaderProps {
+    /** Данные комнаты */
     room?: RoomWithMembers;
+    /** ID комнаты */
     roomId: string;
+    /** Данные собеседника (для личных чатов) */
     peerUser?: PeerUser | null;
+    /** Колбэк завершения сессии (для эфемерных чатов) */
     onEndSession?: () => void;
-    /** Флаг загрузки при завершении сессии */
+    /** Флаг процесса завершения сессии */
     ending?: boolean;
+    /** Колбэк возврата назад */
     onBack: () => void;
+    /** Список печатающих пользователей */
+    typingUsers?: string[];
 }
 
+/**
+ * Базовый заголовок комнаты чата.
+ * Поддерживает отображение личных чатов (собеседник, статус) и групп.
+ * Декомпозирован на логику (хук) и мелкие презентационные компоненты.
+ */
 export function DefaultHeader({
     room,
     peerUser,
     onEndSession,
     ending,
     onBack,
+    typingUsers = [],
 }: DefaultHeaderProps) {
     const { t } = useTranslation();
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
-    const { user } = useAuthStore();
-    const onlineUsers = usePresence();
+
+    // Используем хук для вычисления всей информации о комнате
+    const {
+        isDM,
+        resolvedPeer,
+        displayName,
+        avatarUrl,
+        avatarFallback,
+        memberNames,
+    } = useRoomHeaderInfo({ room, peerUser });
 
     const handleInfoClick = () => {
-        if (peerUser?.id) {
-            console.log("Navigate to contact profile:", peerUser.id);
+        if (resolvedPeer?.id) {
+            // TODO: Реализовать навигацию в профиль
         }
     };
 
-    const isDM = room?.type === ROOM_TYPE.DIRECT;
-    const isGroup = room?.type === ROOM_TYPE.GROUP;
-
-    let resolvedPeer = peerUser;
-    if (isDM && !resolvedPeer && room?.room_members && user) {
-        const otherMember = room.room_members.find(
-            (m) => m.user_id !== user.id,
-        );
-        if (otherMember?.profiles) {
-            resolvedPeer = {
-                id: otherMember.user_id,
-                display_name: otherMember.profiles.display_name,
-                username: otherMember.profiles.username,
-                avatar_url: otherMember.profiles.avatar_url || undefined,
-            };
+    /** Формируем текст в зависимости от количества печатающих */
+    const getTypingText = (): string | null => {
+        if (!typingUsers || typingUsers.length === 0) {
+            return null;
         }
-    }
 
-    const isSelfChat =
-        isDM &&
-        room?.room_members?.length === 1 &&
-        room.room_members[0].user_id === user?.id;
+        if (typingUsers.length === 1) {
+            return t("chat.typing.one", "{{name}} печатает...", {
+                name: typingUsers[0],
+            });
+        }
+        if (typingUsers.length === 2) {
+            return t("chat.typing.two", "{{name1}} и {{name2}} печатают...", {
+                name1: typingUsers[0],
+                name2: typingUsers[1],
+            });
+        }
+        return t("chat.typing.many", "Несколько участников печатают...");
+    };
 
-    const displayName = isSelfChat
-        ? t("chat.favorites", "Избранное")
-        : isDM && resolvedPeer
-          ? resolvedPeer.display_name
-          : room?.name || t("chat.unknownRoom", "Чат");
-
-    const avatarFallback = isSelfChat
-        ? "⭐"
-        : displayName?.[0]?.toUpperCase() || "?";
-    const avatarUrl = isDM ? resolvedPeer?.avatar_url : room?.avatar_url;
-
-    const memberNames =
-        isGroup && room?.room_members
-            ? room.room_members
-                  .map((m) => m.profiles?.display_name)
-                  .filter(Boolean)
-                  .join(", ")
-            : "";
+    const typingText = getTypingText();
 
     return (
         <header className={styles.roomHeader}>
@@ -98,87 +92,29 @@ export function DefaultHeader({
                     </Box>
                 )}
 
-                <Flex
-                    align="center"
-                    gap="3"
-                    className={styles.titleArea}
-                    onClick={handleInfoClick}
-                >
-                    <Avatar
-                        src={avatarUrl ?? undefined}
+                <Flex align="center" gap="3" className={styles.titleArea}>
+                    <RoomHeaderAvatar
+                        src={avatarUrl}
                         fallback={avatarFallback}
-                        radius="full"
-                        size="2"
-                        color="gray"
                     />
-                    <Flex direction="column" gap="0">
-                        <Heading
-                            size="3"
-                            truncate
-                            className={styles.displayName}
-                        >
-                            {room?.is_ephemeral ? "🔒 " : ""}
-                            {displayName}
-                        </Heading>
-                        {isDM && resolvedPeer && (
-                            <Text size="1" color="gray" truncate>
-                                {onlineUsers[resolvedPeer.id] === "online" ? (
-                                    <Flex align="center" gap="1" asChild>
-                                        <span>
-                                            <Box className={styles.onlineDot} />
-                                            {t("chat.online", "в сети")}
-                                        </span>
-                                    </Flex>
-                                ) : resolvedPeer?.username ? (
-                                    `@${resolvedPeer.username}`
-                                ) : (
-                                    t("chat.offline", "не в сети")
-                                )}
-                            </Text>
-                        )}
-                        {isGroup && memberNames && (
-                            <Text
-                                size="1"
-                                color="gray"
-                                truncate
-                                className={styles.membersList}
-                            >
-                                {memberNames}
-                            </Text>
-                        )}
-                    </Flex>
+
+                    <RoomHeaderTitle
+                        displayName={displayName}
+                        isEphemeral={room?.is_ephemeral}
+                        isDM={isDM}
+                        peer={resolvedPeer}
+                        memberNames={memberNames}
+                        onClick={handleInfoClick}
+                        typingText={typingText}
+                    />
                 </Flex>
             </Flex>
 
-            <Flex align="center" gap="1">
-                <Button
-                    variant="ghost"
-                    color="gray"
-                    className={styles.actionButton}
-                >
-                    <Phone size={20} />
-                </Button>
-                <Button
-                    variant="ghost"
-                    color="gray"
-                    className={styles.actionButton}
-                >
-                    <Video size={20} />
-                </Button>
-
-                {room?.is_ephemeral && onEndSession && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onEndSession}
-                        disabled={ending}
-                        className={styles.endSessionButton}
-                    >
-                        <Trash2 size={16} />
-                        {t("chat.endSession")}
-                    </Button>
-                )}
-            </Flex>
+            <RoomHeaderActions
+                isEphemeral={room?.is_ephemeral}
+                onEndSession={onEndSession}
+                ending={ending}
+            />
         </header>
     );
 }

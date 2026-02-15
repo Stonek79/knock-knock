@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { supabase } from "@/lib/supabase";
-import { useAuthStore } from "./auth";
+import { useAuthStore } from ".";
 
 // Mock Supabase
 vi.mock("@/lib/supabase", () => ({

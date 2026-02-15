@@ -1,6 +1,6 @@
 .mobileContainer {
     height: 100%;
-    background: var(--glass-bg);
+    overflow-y: auto;
 }
 
 .content {

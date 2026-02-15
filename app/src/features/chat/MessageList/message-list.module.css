@@ -11,7 +11,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
-    padding: var(--space-2) 0;
+    padding: var(--space-2);
 }
 
 .loadingBox,

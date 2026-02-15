@@ -4,6 +4,7 @@
  */
 
 export * from "./encryption";
+export * from "./hash";
 export * from "./keys";
 export * from "./keystore";
 export * from "./messages";

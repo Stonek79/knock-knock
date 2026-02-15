@@ -1,162 +1,59 @@
-/**
- * Компонент комнаты чата.
- * Поддерживает режим выделения сообщений и редактирование.
- */
-import { Box, Container, Flex, Heading } from "@radix-ui/themes";
-import { useParams } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Container, Flex, Heading } from "@radix-ui/themes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
-import { useToast } from "@/components/ui/Toast";
-import { useChatActions } from "@/features/chat/hooks/useChatActions";
-import { useChatPeer } from "@/features/chat/hooks/useChatPeer";
-import { useChatRoomData } from "@/features/chat/hooks/useChatRoomData";
-import { useMessageSelection } from "@/features/chat/hooks/useMessageSelection";
-import { useMessages } from "@/features/chat/hooks/useMessages";
-import { useTypingIndicator } from "@/features/chat/hooks/useTypingIndicator";
-import { useUnreadTracking } from "@/features/chat/hooks/useUnreadTracking";
-import { MessageInput } from "@/features/chat/MessageInput";
-import { MessageList } from "@/features/chat/MessageList";
-import { RoomHeader } from "@/features/chat/RoomHeader";
-import { TypingIndicator } from "@/features/chat/TypingIndicator";
-import { useAuthStore } from "@/stores/auth";
-import styles from "../chat.module.css";
-import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
-import { EndSessionDialog } from "./EndSessionDialog";
-import { PrivacyBanner } from "./PrivacyBanner";
+import { ChatRoomDialogs } from "./components/ChatRoomDialogs";
+import { ChatRoomHeader } from "./components/ChatRoomHeader";
+import { ChatRoomInputArea } from "./components/ChatRoomInputArea";
+import { ChatRoomLayout } from "./components/ChatRoomLayout";
+import { ChatRoomMessages } from "./components/ChatRoomMessages";
+import { PrivacyBanner } from "./components/PrivacyBanner";
+import { useChatRoom } from "./hooks/useChatRoom";
+import { ChatRoomProvider } from "./store";
 
 interface ChatRoomProps {
     roomId: string;
 }
 
-export function ChatRoom({ roomId: propRoomId }: ChatRoomProps) {
-    const params = useParams({ strict: false }) as Record<
-        string,
-        string | undefined
-    >;
-    const roomId = propRoomId || params?.roomId;
-
-    const { t } = useTranslation();
-    const { user } = useAuthStore();
-    const toast = useToast();
-
-    // Состояние диалогов
-    const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
-    const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] =
-        useState(false);
-
-    // Ref для управления скроллом списка сообщений
-    const scrollRef = useRef<{ scrollToBottom: () => void } | null>(null);
-
-    // Данные комнаты
-    const {
-        data: roomInfo,
-        isLoading: loading,
-        error: fetchError,
-    } = useChatRoomData(roomId);
-
-    const room = roomInfo?.room;
-    const roomKey = roomInfo?.roomKey;
-    const otherUserId = roomInfo?.otherUserId;
-    const error = fetchError instanceof Error ? fetchError.message : null;
-
-    // Данные собеседника и сообщений
-    const { data: peerUser } = useChatPeer(otherUserId, room?.type);
-    const { data: messages = [], isLoading: messagesLoading } = useMessages(
-        roomId ?? "",
-        roomKey,
+/**
+ * Основной компонент комнаты чата.
+ * Служит входной точкой, оборачивает контент в Provider и управляет Layout.
+ */
+export function ChatRoom({ roomId }: ChatRoomProps) {
+    return (
+        <ChatRoomProvider key={roomId}>
+            <ChatRoomInternal roomId={roomId} />
+        </ChatRoomProvider>
     );
+}
 
-    // Индикатор печати
-    const { typingUsers, setTyping } = useTypingIndicator({
-        roomId: roomId ?? "",
-        displayName: peerUser?.display_name,
-    });
-
-    // Действия чата
-    const { sendMessage, endSession, deleteMessage, updateMessage, ending } =
-        useChatActions({
-            roomId,
-            roomKey,
-            user,
-            room,
-        });
-
-    // Логика выделения и редактирования
+/**
+ * Внутренний контент комнаты, имеющий доступ к ChatRoomStore.
+ */
+function ChatRoomInternal({ roomId }: { roomId: string }) {
     const {
-        selectedMessageIds,
-        editingId,
-        editingContent,
-        canEditSelected,
-        toggleSelection,
-        clearSelection,
+        t,
+        user,
+        room,
+        roomKey,
+        peerUser,
+        messages,
+        messagesLoading,
+        loading,
+        error,
+        typingUsers,
+        setTyping,
+        ending,
+        firstUnreadId,
+        scrollRef,
+        showEndSessionDialog,
+        setShowEndSessionDialog,
+        showDeleteConfirmDialog,
+        setShowDeleteConfirmDialog,
+        handleSend,
         handleDeleteSelected,
         handleCopySelected,
-        handleReplySelected,
-        handleForwardSelected,
-        handleEditSelected,
-        handleMessageUpdate,
-        cancelEdit,
-    } = useMessageSelection({
-        deleteMessage,
-        updateMessage,
-        user,
-        messages,
-    });
+        confirmEndSession,
+    } = useChatRoom(roomId);
 
-    // Логика непрочитанных сообщений
-    const { firstUnreadId, markAsRead } = useUnreadTracking(
-        roomId ?? "",
-        messages,
-    );
-
-    // Сохраняем время прочтения при размонтировании (выходе из чата)
-    useEffect(() => {
-        return () => {
-            markAsRead();
-        };
-    }, [markAsRead]);
-
-    // Обработчики диалогов
-    const confirmEndSession = async () => {
-        await endSession();
-        setShowEndSessionDialog(false);
-    };
-
-    const handleDeleteRequest = () => {
-        if (selectedMessageIds.size > 0) {
-            setShowDeleteConfirmDialog(true);
-        }
-    };
-
-    const confirmDeleteMessages = () => {
-        handleDeleteSelected();
-        setShowDeleteConfirmDialog(false);
-    };
-
-    const handleSend = async (text: string) => {
-        try {
-            if (editingId) {
-                await handleMessageUpdate(editingId, text);
-            } else {
-                await sendMessage(text);
-                markAsRead();
-            }
-            // Сбрасываем индикатор печати после отправки
-            setTyping(false);
-        } catch (e) {
-            toast({
-                title: t("chat.sendError", "Ошибка отправки"),
-                description:
-                    e instanceof Error
-                        ? e.message
-                        : t("common.unknownError", "Неизвестная ошибка"),
-                variant: "error",
-            });
-        }
-    };
-
-    // Состояния загрузки и ошибки
     if (loading) {
         return (
             <Flex justify="center" align="center" height="100%">
@@ -180,76 +77,53 @@ export function ChatRoom({ roomId: propRoomId }: ChatRoomProps) {
         );
     }
 
-    if (!roomId) {
-        return null;
-    }
-
     return (
-        <Flex direction="column" className={styles.roomWrapper}>
-            {/* Диалоги */}
-            <EndSessionDialog
-                open={showEndSessionDialog}
-                onOpenChange={setShowEndSessionDialog}
-                onConfirm={confirmEndSession}
-            />
-            <DeleteConfirmDialog
-                open={showDeleteConfirmDialog}
-                onOpenChange={setShowDeleteConfirmDialog}
-                onConfirm={confirmDeleteMessages}
-            />
-
-            {/* Заголовок */}
-            <RoomHeader
-                room={room}
-                roomId={roomId}
-                peerUser={peerUser}
-                onEndSession={() => setShowEndSessionDialog(true)}
-                ending={ending}
-                selectedCount={selectedMessageIds.size}
-                onClearSelection={clearSelection}
-                onDeleteSelected={handleDeleteRequest}
-                onCopySelected={handleCopySelected}
-                onReplySelected={handleReplySelected}
-                onForwardSelected={handleForwardSelected}
-                onEditSelected={handleEditSelected}
-                canEditSelected={canEditSelected}
-            />
-
-            {/* Баннер приватности */}
-            {room?.is_ephemeral && <PrivacyBanner />}
-
-            {/* Список сообщений */}
-            <Box className={styles.messageArea} asChild>
-                <main>
-                    {roomKey && roomId && (
-                        <MessageList
-                            messages={messages}
-                            messagesLoading={messagesLoading}
-                            selectedMessageIds={selectedMessageIds}
-                            onToggleSelection={toggleSelection}
-                            editingId={editingId}
-                            scrollRef={scrollRef}
-                            firstUnreadId={firstUnreadId}
-                        />
-                    )}
-                </main>
-            </Box>
-
-            {/* Индикатор печати */}
-            <TypingIndicator typingUsers={typingUsers} />
-
-            {/* Поле ввода */}
-            <Box className={styles.inputArea}>
-                <MessageInput
+        <ChatRoomLayout
+            dialogs={
+                <ChatRoomDialogs
+                    showEndSession={showEndSessionDialog}
+                    onEndSessionChange={setShowEndSessionDialog}
+                    onEndSessionConfirm={confirmEndSession}
+                    showDeleteConfirm={showDeleteConfirmDialog}
+                    onDeleteConfirmChange={setShowDeleteConfirmDialog}
+                    onDeleteConfirm={handleDeleteSelected}
+                />
+            }
+            header={
+                <ChatRoomHeader
+                    room={room}
+                    roomId={roomId}
+                    peerUser={peerUser}
+                    onEndSession={() => setShowEndSessionDialog(true)}
+                    ending={ending}
+                    onDeleteSelected={() => setShowDeleteConfirmDialog(true)}
+                    onCopySelected={handleCopySelected}
+                    onReplySelected={() => console.log("Reply")}
+                    onForwardSelected={() => console.log("Forward")}
+                    messages={messages}
+                    userId={user?.id}
+                    typingUsers={typingUsers}
+                />
+            }
+            banner={room?.is_ephemeral ? <PrivacyBanner /> : null}
+            messages={
+                <ChatRoomMessages
+                    messages={messages}
+                    isLoading={messagesLoading}
+                    roomId={roomId}
+                    roomKey={roomKey}
+                    scrollRef={scrollRef}
+                    firstUnreadId={firstUnreadId}
+                    userId={user?.id}
+                />
+            }
+            input={
+                <ChatRoomInputArea
                     onSend={handleSend}
-                    onCancel={cancelEdit}
-                    disabled={
-                        !roomKey || !roomId || selectedMessageIds.size > 0
-                    }
-                    initialValue={editingContent}
+                    disabled={!roomKey}
                     onTyping={setTyping}
                 />
-            </Box>
-        </Flex>
+            }
+        />
     );
 }

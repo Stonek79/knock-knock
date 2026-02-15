@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { Search } from "@/components/Search/Search";
 import { CreateChatDialog } from "@/features/chat/CreateChatDialog";
 import { CreateGroupDialog } from "@/features/chat/CreateGroupDialog";
-import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { CHAT_TYPE } from "@/lib/constants";
 import type { ChatType } from "@/lib/types";
 import { useChatList } from "../hooks/useChatList";
@@ -32,7 +31,6 @@ type ChatDialogType = ChatType | null;
  */
 export function ChatList() {
     const { t } = useTranslation();
-    const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
     const [openDialog, setOpenDialog] = useState<ChatDialogType>(null);
     const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
@@ -82,20 +80,15 @@ export function ChatList() {
         <>
             <Flex direction="column" className={styles.container}>
                 {/* Заголовок с меню (только для десктопа) */}
-                {!isMobile && (
-                    <>
-                        <ChatListHeader
-                            onOpenChatDialog={handleOpenChatDialog}
-                            onOpenGroupDialog={handleOpenGroupDialog}
-                        />
-                        <div className={styles.searchWrapper}>
-                            <Search
-                                value={searchQuery}
-                                onChange={setSearchQuery}
-                            />
-                        </div>
-                    </>
-                )}
+                <div className={styles.desktopOnly}>
+                    <ChatListHeader
+                        onOpenChatDialog={handleOpenChatDialog}
+                        onOpenGroupDialog={handleOpenGroupDialog}
+                    />
+                    <div className={styles.searchWrapper}>
+                        <Search value={searchQuery} onChange={setSearchQuery} />
+                    </div>
+                </div>
 
                 {/* Пустой список */}
                 {chats.length === 0 ? (

@@ -1,7 +1,7 @@
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
-import { DB_TABLES, REALTIME_EVENTS } from "@/lib/constants";
+import { CHANNEL_STATUS, DB_TABLES, REALTIME_EVENTS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { MessageService } from "@/lib/services/message";
 import { supabase } from "@/lib/supabase";
@@ -164,12 +164,10 @@ export function useMessageSubscription({
                 },
             )
             .subscribe((status) => {
-                console.log(
-                    "Realtime Subscription Status:",
-                    status,
-                    "Room:",
-                    roomId,
-                ); // DEBUG LOG
+                if (status === CHANNEL_STATUS.CHANNEL_ERROR) {
+                    logger.error("Message subscription error", { roomId });
+                }
+                logger.info("Message subscription status", { status, roomId });
             });
 
         // Очистка при размонтировании

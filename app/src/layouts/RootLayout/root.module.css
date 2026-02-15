@@ -1,55 +1,104 @@
-.layout {
+.container {
     display: flex;
-    flex-direction: column;
     height: 100dvh;
+    width: 100%;
+    overflow: hidden;
+    background: var(--bg-cosmos, var(--bg-app));
+}
+
+/* ========================== */
+/* === ДЕСКТОПНЫЙ LAYOUT  === */
+/* ========================== */
+
+/* Основная область (sidebar + content) */
+.main {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    height: 100%;
     overflow: hidden;
 }
 
-/* === DESKTOP LAYOUT === */
-.desktopLayout {
-    display: grid;
-    grid-template-columns: 60px 350px 1fr;
-    height: 100vh;
+/* Боковая панель */
+.sidebar {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--glass-border);
+    width: var(--panel-width);
+    min-width: var(--panel-width);
+    height: 100%;
+}
+
+/* Контент сайдбара (список чатов и т.д.) */
+.sidebarContent {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Обёртка навигации (общая для desktop и mobile) */
+.navigationWrapper {
+    flex-shrink: 0;
+    z-index: var(--z-sticky);
+    width: 100%;
+    height: var(--footer-height);
+}
+
+/* Основной контент (справа от sidebar) */
+.content {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    position: relative;
+    background: transparent;
+}
+
+/* Контент на всю ширину (когда sidebar отсутствует) */
+.fullWidth {
+    width: 100%;
+}
+
+/* ======================== */
+/* === МОБИЛЬНЫЙ LAYOUT === */
+/* ======================== */
+
+/* Мобильный контейнер: вертикальный стек */
+.mobileLayout {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
     width: 100%;
     overflow: hidden;
 }
 
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-    background: transparent;
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-right: 1px solid var(--glass-border);
+/* Обёртка мобильного заголовка */
+.mobileHeaderWrapper {
+    flex-shrink: 0;
+    z-index: var(--z-sticky);
+    min-height: var(--header-height);
 }
 
-.mainContent {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+/* Контент мобильный (занимает всё пространство между header и nav) */
+.mobileContent {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     position: relative;
+    background: transparent;
 }
 
-.loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-size: var(--text-lg);
-    color: var(--muted);
+/* Граница над навигацией на мобильном */
+@media (max-width: 767px) {
+    .navigationWrapper {
+        border-top: 1px solid var(--glass-border);
+    }
 }
 
-.banner {
-    background-color: var(--amber-9);
-    color: var(--bubble-out-fg);
-    text-align: center;
-    padding: var(--space-2);
-    font-weight: bold;
-    font-size: var(--text-sm);
-    position: sticky;
-    top: 0;
-    z-index: var(--z-overlay);
+/* Утилитарный класс */
+.hidden {
+    display: none;
 }

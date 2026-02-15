@@ -14,6 +14,16 @@
     justify-content: space-between;
 }
 
+.desktopOnly {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .desktopOnly {
+        display: none;
+    }
+}
+
 .appTitle {
     font-size: var(--text-lg);
     font-weight: 800;
@@ -58,7 +68,7 @@
 .chatListItem {
     display: flex;
     align-items: center;
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-1) var(--space-2);
     margin: var(--space-1);
     border-radius: var(--radius-glass);
     text-decoration: none;
@@ -134,10 +144,4 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-@media (max-width: 768px) {
-    .container {
-        height: calc(100% - var(--header-height) * 2);
-    }
 }

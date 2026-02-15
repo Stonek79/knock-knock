@@ -1,6 +1,9 @@
 /** Название приложения */
 export const APP_NAME = "KnokKnok";
 
+/** ID корневого элемента в DOM */
+export const DOM_ROOT_ID = "root";
+
 /** Версия приложения */
 export const APP_VERSION = "0.1.0";
 

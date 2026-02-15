@@ -15,6 +15,7 @@ import { Flex, Text } from "@radix-ui/themes";
 import { Lock } from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { GHOST_STATUS } from "@/lib/constants";
 import { useGhostStore } from "@/stores/ghost";
 import { usePinInput } from "../hooks/usePinInput";
 import { Numpad } from "./Numpad";
@@ -39,11 +40,11 @@ export function PinScreen() {
     const { pin, hasError, errorMessage, addDigit, removeLastDigit } =
         usePinInput({
             unlock,
-            isActive: status === "locked",
+            isActive: status === GHOST_STATUS.LOCKED,
         });
 
     // Не показываем, если уже разблокирован или в режиме decoy
-    if (status !== "locked") {
+    if (status !== GHOST_STATUS.LOCKED) {
         return null;
     }
 

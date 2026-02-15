@@ -1,0 +1,47 @@
+.loaderWrapper {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-app);
+    z-index: var(--z-overlay);
+}
+
+.iconContainer {
+    position: relative;
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pulseRing {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 2px solid var(--accent-primary);
+    border-radius: var(--radius-full);
+    opacity: 0;
+    animation: pulse 2s infinite;
+}
+
+.loadingText {
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+/* Иконка таймаута (ошибка подключения) */
+.timeoutIcon {
+    width: 32px;
+    height: 32px;
+    color: var(--color-error);
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.6);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}

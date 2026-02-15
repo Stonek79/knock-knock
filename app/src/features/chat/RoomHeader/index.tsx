@@ -1,30 +1,37 @@
 import { useRouter } from "@tanstack/react-router";
-import type { RoomWithMembers } from "@/lib/types/room";
+import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
 import { DefaultHeader } from "./DefaultHeader";
 import { SelectionHeader } from "./SelectionHeader";
 
-interface PeerUser {
-    id: string;
-    display_name: string;
-    username?: string;
-    avatar_url?: string;
-}
-
 interface RoomHeaderProps {
+    /** Данные комнаты */
     room?: RoomWithMembers;
+    /** ID комнаты */
     roomId: string;
+    /** Данные собеседника */
     peerUser?: PeerUser | null;
+    /** Завершить сессию (только для эфемерных) */
     onEndSession?: () => void;
-    /** Флаг завершения сессии */
+    /** Состояние завершения */
     ending?: boolean;
+    /** Количество выбранных сообщений */
     selectedCount?: number;
+    /** Можно ли редактировать выбранное сообщение */
     canEditSelected?: boolean;
+    /** Сброс выбора */
     onClearSelection?: () => void;
+    /** Удаление выбранных */
     onDeleteSelected?: () => void;
+    /** Копирование текста сообщения */
     onCopySelected?: () => void;
+    /** Ответ на сообщение */
     onReplySelected?: () => void;
+    /** Пересылка сообщения */
     onForwardSelected?: () => void;
+    /** Редактирование сообщения */
     onEditSelected?: () => void;
+    /** Список печатающих пользователей */
+    typingUsers?: string[];
 }
 
 /**
@@ -45,6 +52,7 @@ export function RoomHeader({
     onReplySelected,
     onForwardSelected,
     onEditSelected,
+    typingUsers,
 }: RoomHeaderProps) {
     const router = useRouter();
 
@@ -75,6 +83,7 @@ export function RoomHeader({
             onEndSession={onEndSession}
             ending={ending}
             onBack={handleBack}
+            typingUsers={typingUsers}
         />
     );
 }
