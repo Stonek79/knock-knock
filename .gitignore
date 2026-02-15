@@ -8,6 +8,8 @@ node_modules/
 .env.local
 .env.production
 .env.development
+.env.supabase
+.wireguard_keys
 dist/
 build/
 .agent/logs/

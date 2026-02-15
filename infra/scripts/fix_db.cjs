@@ -3,10 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 const SERVER_IP = "192.168.1.142";
-const SQL_FILE = path.join(
-	__dirname,
-	"../supabase/migrations/20240101000000_init_profiles.sql",
-);
+const SQL_DIR = path.join(__dirname, "../../app/supabase/migrations");
 
 async function main() {
 	console.log("🚀 Начинаем принудительную миграцию...");
@@ -15,7 +12,7 @@ async function main() {
 		// 1. Пытаемся определить имя контейнера с базой на сервере
 		console.log("🔍 Ищем контейнер базы данных на сервере...");
 		const containerName = execSync(
-			`ssh root@${SERVER_IP} "docker ps --filter name=db --format '{{.Names}}' | head -n 1"`,
+			`ssh alex@${SERVER_IP} "docker ps --filter name=db --format '{{.Names}}' | head -n 1"`,
 			{ encoding: "utf8" },
 		).trim();
 
@@ -28,18 +25,25 @@ async function main() {
 
 		console.log(`✅ Найден контейнер: ${containerName}`);
 
-		// 2. Читаем SQL файл
-		const sql = fs.readFileSync(SQL_FILE, "utf8");
+		// 2. Получаем список всех миграций
+		const files = fs
+			.readdirSync(SQL_DIR)
+			.filter((f) => f.endsWith(".sql"))
+			.sort();
+		console.log(`📂 Найдено миграций: ${files.length}`);
 
-		// 3. Выполняем SQL через SSH пайп
-		console.log("⚡ Отправляем SQL запрос в базу...");
-		const output = execSync(
-			`ssh root@${SERVER_IP} "docker exec -i ${containerName} psql -U postgres"`,
-			{
-				input: sql,
-				encoding: "utf8",
-			},
-		);
+		for (const file of files) {
+			console.log(`⚡ Выполняем ${file}...`);
+			const sql = fs.readFileSync(path.join(SQL_DIR, file), "utf8");
+
+			execSync(
+				`ssh alex@${SERVER_IP} "docker exec -i ${containerName} psql -U postgres"`,
+				{
+					input: sql,
+					encoding: "utf8",
+				},
+			);
+		}
 
 		console.log("\n--- Результат выполнения ---");
 		console.log(output);
