@@ -1,10 +1,11 @@
-import { Navigate, Outlet } from "@tanstack/react-router";
+import { Navigate } from "@tanstack/react-router";
+import { AppLayout } from "@/layouts/AppLayout";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 
 /**
  * Layout для защищённых роутов.
- * Проверяет авторизацию и редиректит на /login если пользователь не авторизован.
+ * Проверяет авторизацию и рендерит AppLayout (с сайдбаром), если пользователь авторизован.
  */
 export function AuthLayout() {
     const { user, loading } = useAuthStore();
@@ -17,5 +18,6 @@ export function AuthLayout() {
         return <Navigate to={ROUTES.LOGIN as string} />;
     }
 
-    return <Outlet />;
+    // Рендерим оболочку приложения
+    return <AppLayout />;
 }
