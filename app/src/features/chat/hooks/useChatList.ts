@@ -53,9 +53,13 @@ export function useChatList() {
                         id,
                         name,
                         type,
-                        is_ephemeral,
-                        # last_message, -- TODO: Вернуть после миграции 20260215_add_last_message
-                        room_members (
+						is_ephemeral,
+						last_message: messages!last_message_id (
+							content,
+							created_at,
+							sender_id
+						),
+						room_members (
                             user_id,
                             profiles (
                                 display_name,
