@@ -13,6 +13,7 @@ import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
 import type { Profile } from "@/lib/types/profile";
+import { useAuthStore } from "@/stores/auth";
 import styles from "./contactpicker.module.css";
 
 /**
@@ -61,17 +62,28 @@ export function ContactPicker({
     /**
      * Фильтрация контактов по поисковому запросу.
      */
+    const { user } = useAuthStore();
+
+    /**
+     * Фильтрация контактов по поисковому запросу и исключение текущего пользователя.
+     */
     const filteredContacts = useMemo(() => {
+        // Исключаем себя из списка
+        let list = contacts;
+        if (user) {
+            list = list.filter((c) => c.id !== user.id);
+        }
+
         if (!deferredSearchQuery.trim()) {
-            return contacts;
+            return list;
         }
         const query = deferredSearchQuery.toLowerCase();
-        return contacts.filter(
+        return list.filter(
             (contact) =>
-                contact.display_name.toLowerCase().includes(query) ||
-                contact.username.toLowerCase().includes(query),
+                contact.display_name?.toLowerCase().includes(query) ||
+                contact.username?.toLowerCase().includes(query),
         );
-    }, [contacts, deferredSearchQuery]);
+    }, [contacts, deferredSearchQuery, user]);
 
     /**
      * Обработчик клика по контакту.

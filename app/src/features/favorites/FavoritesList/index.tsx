@@ -59,16 +59,22 @@ export function FavoritesList() {
                         "favorites.createError",
                         "Не удалось открыть избранное",
                     ),
+                    description: result.error.message,
                     variant: "error",
                 });
                 setLoading(false);
             }
-        } catch {
+        } catch (error: unknown) {
+            console.error("Favorites error:", error);
+            const errorMessage =
+                error instanceof Error ? error.message : "Unknown error";
+
             toast({
                 title: t(
                     "favorites.createError",
                     "Не удалось открыть избранное",
                 ),
+                description: errorMessage,
                 variant: "error",
             });
             setLoading(false);
