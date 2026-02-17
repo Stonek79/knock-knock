@@ -27,6 +27,7 @@ const createMsg = (
     iv: "iv",
     deleted_by: [],
     is_deleted: false,
+    is_starred: false,
 });
 
 describe("ChatRoomStore", () => {
