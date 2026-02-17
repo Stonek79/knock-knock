@@ -3,6 +3,9 @@
     display: flex;
     flex-direction: column;
     background: transparent;
+    height: 100%;
+    flex: 1;
+    overflow: hidden;
 }
 
 .header {

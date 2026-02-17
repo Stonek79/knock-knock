@@ -91,15 +91,20 @@
     flex-shrink: 0;
     z-index: var(--z-sticky);
     min-height: var(--header-height);
+    position: sticky;
+    top: 0;
+    background: var(--bg-cosmos); /* Ensure background is opaque */
 }
 
 /* Контент мобильный (занимает всё пространство между header и nav) */
 .mobileContent {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden; /* Disable enhance global scroll, let children scroll */
     position: relative;
     background: transparent;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Граница над навигацией на мобильном */

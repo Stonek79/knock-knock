@@ -145,6 +145,103 @@ async function seed() {
 		}
 	}
 
+	// 3. Генерация ключей для пользователей (включая существующих)
+	console.log("🔑 Проверка ключей пользователей...");
+	const { data: allProfiles } = await supabase
+		.from("profiles")
+		.select("id, public_key_x25519");
+
+	if (allProfiles) {
+		const { webcrypto } = require("node:crypto");
+
+		for (const profile of allProfiles) {
+			if (
+				!profile.public_key_x25519 ||
+				profile.public_key_x25519 === "mock_key"
+			) {
+				console.log(`   � Генерация ключей для ${profile.id}...`);
+
+				// ECDH P-256 for messaging
+				const keyPair = await webcrypto.subtle.generateKey(
+					{ name: "ECDH", namedCurve: "P-256" },
+					true,
+					["deriveKey", "deriveBits"],
+				);
+
+				const publicKeyRaw = await webcrypto.subtle.exportKey(
+					"raw",
+					keyPair.publicKey,
+				);
+				const publicKeyBase64 = Buffer.from(publicKeyRaw).toString("base64");
+
+				await supabase
+					.from("profiles")
+					.update({
+						public_key_x25519: publicKeyBase64,
+						updated_at: new Date(),
+					})
+					.eq("id", profile.id);
+
+				console.log(`      ✅ Ключи обновлены.`);
+			}
+		}
+	}
+
+	// 4. Создаем чат "Избранное" (Saved Messages) для каждого пользователя
+	console.log("🌟 Создаем чаты 'Избранное'...");
+	const { data: profilesForChat } = await supabase
+		.from("profiles")
+		.select("id");
+
+	if (profilesForChat) {
+		for (const profile of profilesForChat) {
+			const { data: existingMembers } = await supabase
+				.from("room_members")
+				.select("room_id")
+				.eq("user_id", profile.id);
+
+			let hasSelfChat = false;
+			if (existingMembers && existingMembers.length > 0) {
+				const roomIds = existingMembers.map((m) => m.room_id);
+				const { data: rooms } = await supabase
+					.from("rooms")
+					.select("id, type, room_members(user_id)")
+					.in("id", roomIds)
+					.eq("type", "direct");
+
+				if (rooms) {
+					hasSelfChat = rooms.some(
+						(r) =>
+							r.room_members.length === 1 &&
+							r.room_members[0].user_id === profile.id,
+					);
+				}
+			}
+
+			if (!hasSelfChat) {
+				const roomId = faker.string.uuid();
+				console.log(`   ➕ Создаем Saved Messages для ${profile.id}`);
+				const { error: roomErr } = await supabase.from("rooms").insert({
+					id: roomId,
+					type: "direct",
+				});
+
+				if (!roomErr) {
+					await supabase.from("room_members").insert({
+						room_id: roomId,
+						user_id: profile.id,
+						role: "member",
+					});
+					console.log(`      ✅ Saved Messages создан: ${roomId}`);
+				} else {
+					console.error(
+						`      ❌ Ошибка создания Saved Messages: ${roomErr.message}`,
+					);
+				}
+			}
+		}
+	}
+
 	console.log("🏁 Посев завершен!");
 }
 

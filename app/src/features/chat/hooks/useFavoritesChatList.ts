@@ -39,7 +39,7 @@ interface RoomQueryResult {
  */
 export function useFavoritesChatList() {
     const { t } = useTranslation();
-    const { user } = useAuthStore();
+    const { user, profile } = useAuthStore();
 
     return useQuery({
         queryKey: ["rooms", "favorites", user?.id],
@@ -92,8 +92,7 @@ export function useFavoritesChatList() {
                 throw allErr;
             }
 
-            // 3. Мапим результат, добавляя признак наличия избранных сообщений
-            return (
+            let results =
                 (allRooms?.map((item) => {
                     const room = item.rooms;
                     return {
@@ -109,8 +108,47 @@ export function useFavoritesChatList() {
                               }
                             : null,
                     };
-                }) as RoomQueryResult[]) || []
+                }) as RoomQueryResult[]) || [];
+
+            // 3. GUARANTEE SELF-CHAT (Saved Messages) existence
+            // Even if it's not in DB yet, we show it. clicking it will create it via findOrCreateDM logic in ChatRoom
+            const deterministicId = await import("@/lib/crypto").then((m) =>
+                m.generateDeterministicRoomId(user.id),
             );
+
+            const hasSelfChat = results.some(
+                (r) => r.rooms?.id === deterministicId,
+            );
+
+            if (!hasSelfChat) {
+                // Add virtual self-chat
+                const virtualRoom: RoomQueryResult = {
+                    room_id: deterministicId,
+                    rooms: {
+                        id: deterministicId,
+                        name: null, // Will be "Favorites" in selector
+                        type: "direct",
+                        is_ephemeral: false,
+                        last_message: null,
+                        room_members: [
+                            {
+                                user_id: user.id,
+                                profiles: {
+                                    display_name:
+                                        profile?.display_name ||
+                                        user.email ||
+                                        "Me",
+                                    avatar_url: profile?.avatar_url || null,
+                                },
+                            },
+                        ],
+                        starred_messages: [],
+                    },
+                };
+                results = [virtualRoom, ...results];
+            }
+
+            return results;
         },
         select: (data: RoomQueryResult[]): ChatItem[] => {
             if (!user) {
@@ -126,13 +164,17 @@ export function useFavoritesChatList() {
 
                     // 1. Чат с самим собой (Saved Messages)
                     // Проверяем: либо это Direct с 1 участником (собой), либо это Direct где current==target
+                    // OR if it matches our deterministic ID (virtual or real)
                     const isSelf =
-                        room.type === "direct" &&
-                        room.room_members.some((m) => m.user_id === user.id) &&
-                        (room.room_members.length === 1 ||
-                            room.room_members.every(
+                        (room.type === "direct" &&
+                            room.room_members.some(
                                 (m) => m.user_id === user.id,
-                            ));
+                            ) &&
+                            (room.room_members.length === 1 ||
+                                room.room_members.every(
+                                    (m) => m.user_id === user.id,
+                                ))) ||
+                        false; // The deterministic check effectively covered by the structure above for virtual
 
                     // 2. Чаты с избранными сообщениями
                     const hasStarred = (room.starred_messages?.length || 0) > 0;
