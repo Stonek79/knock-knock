@@ -1,4 +1,4 @@
-import { Box, Flex, ScrollArea, Spinner, Text } from "@radix-ui/themes";
+import { Box, Flex, ScrollArea, Text } from "@radix-ui/themes";
 import { MessageSquareOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { useChatListSubscription } from "../hooks/useChatListSubscription";
 import { useUnreadCounts } from "../hooks/useUnreadCounts";
 import { ChatListHeader } from "./ChatListHeader";
 import { ChatListItem } from "./ChatListItem";
+import { ChatListLoadingState } from "./ChatListItemSkeleton";
 import styles from "./chatlist.module.css";
 
 /**
@@ -40,43 +41,35 @@ export function ChatList() {
     const { data: chats = [], isLoading } = useChatList();
     const { getCount } = useUnreadCounts();
 
+    // Фильтрация чатов по строке поиска
+    const filteredChats = chats.filter((chat) =>
+        chat.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+
     // Realtime-подписка на новые сообщения и комнаты
     useChatListSubscription();
 
-    // Состояние загрузки
-    // Состояние загрузки
-    if (isLoading) {
-        return (
-            <Flex
-                align="center"
-                justify="center"
-                height="100%"
-                direction="column"
-                gap="3"
-            >
-                <Spinner size="3" />
-                <Text color="gray" size="2">
-                    {t("common.loading")}
-                </Text>
-            </Flex>
-        );
-    }
-
     return (
         <Flex direction="column" className={styles.container}>
-            {/* Заголовок с меню (только для десктопа) */}
-            <Box display={{ initial: "none", md: "block" }}>
+            {/* Header: Knock Knock + Search */}
+            <Box>
                 <ChatListHeader
                     onOpenChatDialog={(type) => setOpenDialog(type)}
                     onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
                 />
                 <Box p="3">
-                    <Search value={searchQuery} onChange={setSearchQuery} />
+                    <Search
+                        placeholder={t("chat.searchPlaceholder", "Поиск")}
+                        value={searchQuery}
+                        onChange={(value) => setSearchQuery(value)}
+                    />
                 </Box>
             </Box>
 
-            {/* Пустой список */}
-            {chats.length === 0 ? (
+            {/* Состояние списка: Загрузка / Пусто / Список */}
+            {isLoading ? (
+                <ChatListLoadingState />
+            ) : filteredChats.length === 0 ? (
                 <Flex
                     direction="column"
                     align="center"
@@ -85,19 +78,27 @@ export function ChatList() {
                     p="5"
                     gap="3"
                 >
-                    <MessageSquareOff size={48} color="var(--gray-8)" />
+                    <MessageSquareOff size={48} className={styles.emptyIcon} />
                     <Text align="center" size="3" weight="medium">
                         {t("chat.noRooms", "У вас пока нет чатов")}
                     </Text>
                     <Text align="center" size="2" color="gray">
-                        Начните общение, создав новый чат
+                        {searchQuery
+                            ? t(
+                                  "chat.noSearchResults",
+                                  "По вашему запросу ничего не найдено",
+                              )
+                            : t(
+                                  "chat.startChattingDescription",
+                                  "Начните общение, создав новый чат",
+                              )}
                     </Text>
                 </Flex>
             ) : (
                 // Список чатов
                 <ScrollArea type="hover" className={styles.chatList}>
                     <Flex direction="column">
-                        {chats.map((chat) => (
+                        {filteredChats.map((chat) => (
                             <ChatListItem
                                 key={chat.id}
                                 chat={{

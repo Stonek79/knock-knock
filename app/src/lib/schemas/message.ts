@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MESSAGE_POSITION } from "@/lib/constants";
+import { MESSAGE_POSITION, MESSAGE_STATUS } from "@/lib/constants";
 
 /**
  * Схема сообщения (messages)
@@ -12,10 +12,17 @@ export const messageSchema = z.object({
     iv: z.string().nullable(),
     created_at: z.string(),
     updated_at: z.string().optional(),
-    status: z.enum(["sent", "delivered", "read"]).default("sent"),
+    status: z
+        .enum([
+            MESSAGE_STATUS.SENT,
+            MESSAGE_STATUS.DELIVERED,
+            MESSAGE_STATUS.READ,
+        ])
+        .default(MESSAGE_STATUS.SENT),
     deleted_by: z.array(z.string()).default([]),
     is_edited: z.boolean().default(false),
     is_deleted: z.boolean().default(false),
+    is_starred: z.boolean().default(false),
 });
 
 /**

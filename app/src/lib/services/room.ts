@@ -1,9 +1,10 @@
 import type { PostgrestError } from "@supabase/supabase-js";
-import { DB_TABLES } from "@/lib/constants";
+import { DB_TABLES, MEMBER_ROLE } from "@/lib/constants";
 import { ERROR_CODES } from "@/lib/constants/errors";
 import {
     arrayBufferToBase64,
     base64ToArrayBuffer,
+    generateDeterministicRoomId,
     generateRoomId,
     generateRoomKey,
     wrapRoomKey,
@@ -38,10 +39,11 @@ export const RoomService = {
         peerIds: string[],
         isEphemeral = false,
         avatarUrl: string | null = null,
+        forcedRoomId?: string, // Опциональный ID (для детерминированных чатов)
     ): Promise<Result<{ roomId: string; roomKey: CryptoKey }, RoomError>> {
         const allMemberIds = [...new Set([myUserId, ...peerIds])];
         const roomKey = await generateRoomKey();
-        const roomId = generateRoomId();
+        const roomId = forcedRoomId || generateRoomId();
 
         // 1. Получаем публичные ключи участников
         const { data: profiles, error: profilesError } = await supabase
@@ -64,11 +66,26 @@ export const RoomService = {
             const missingIds = allMemberIds.filter(
                 (id) => !foundIds.includes(id),
             );
-            return err(
-                appError(ERROR_CODES.MISSING_KEYS, "Some users not found", {
-                    userIds: missingIds,
-                }),
-            );
+
+            // В режиме MOCK разрешаем создавать комнату даже если профилей нет в БД
+            if (import.meta.env.VITE_USE_MOCK === "true") {
+                logger.warn("Using mock profiles for missing users", {
+                    missingIds,
+                });
+                // Добавляем недостающие профили как заглушки для последующей логики
+                for (const id of missingIds) {
+                    profiles?.push({
+                        id,
+                        public_key_x25519: "mock_key", // Будет пропущено в блоке if (MOCK) ниже
+                    });
+                }
+            } else {
+                return err(
+                    appError(ERROR_CODES.MISSING_KEYS, "Some users not found", {
+                        userIds: missingIds,
+                    }),
+                );
+            }
         }
 
         // 2. Шифруем RoomKey для каждого участника
@@ -81,7 +98,10 @@ export const RoomService = {
                 roomMembers.push({
                     room_id: roomId,
                     user_id: profile.id,
-                    role: profile.id === myUserId ? "admin" : "member",
+                    role:
+                        profile.id === myUserId
+                            ? MEMBER_ROLE.ADMIN
+                            : MEMBER_ROLE.MEMBER,
                 });
                 encryptedKeys.push({
                     room_id: roomId,
@@ -139,7 +159,10 @@ export const RoomService = {
                 roomMembers.push({
                     room_id: roomId,
                     user_id: profile.id,
-                    role: profile.id === myUserId ? "admin" : "member",
+                    role:
+                        profile.id === myUserId
+                            ? MEMBER_ROLE.ADMIN
+                            : MEMBER_ROLE.MEMBER,
                 });
             } catch (e) {
                 logger.error("Crypto error during createRoom", e);
@@ -264,6 +287,43 @@ export const RoomService = {
         targetUserId: string,
         isEphemeral = false,
     ): Promise<Result<string, RoomError>> {
+        // Оптимизация для Self-Chat: используем детерминированный ID
+        if (currentUserId === targetUserId) {
+            const deterministicId =
+                await generateDeterministicRoomId(currentUserId);
+
+            // Проверяем существование (быстрый лукап по ID)
+            const { data: existingRoom } = await supabase
+                .from(DB_TABLES.ROOMS)
+                .select("id")
+                .eq("id", deterministicId)
+                .single();
+
+            if (existingRoom) {
+                return ok(existingRoom.id);
+            }
+
+            // Если нет - создаем с этим ID
+            logger.info("Creating deterministic Self-Chat room", {
+                deterministicId,
+            });
+            const createResult = await this.createRoom(
+                null,
+                "direct",
+                currentUserId,
+                [targetUserId], // Это тот же самый юзер
+                false,
+                null,
+                deterministicId, // !!! Передаем фиксированный ID
+            );
+
+            if (createResult.isErr()) {
+                return err(createResult.error);
+            }
+
+            return ok(createResult.value.roomId);
+        }
+
         // 1. Получаем список комнат текущего пользователя
         const { data: myMemberships, error: mbError } = await supabase
             .from(DB_TABLES.ROOM_MEMBERS)

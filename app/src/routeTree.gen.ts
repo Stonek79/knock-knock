@@ -29,6 +29,7 @@ import { Route as AuthSettingsPrivacyRouteImport } from './routes/_auth/settings
 import { Route as AuthSettingsNotificationsRouteImport } from './routes/_auth/settings/notifications'
 import { Route as AuthSettingsAppearanceRouteImport } from './routes/_auth/settings/appearance'
 import { Route as AuthSettingsAccountRouteImport } from './routes/_auth/settings/account'
+import { Route as AuthFavoritesRoomIdRouteImport } from './routes/_auth/favorites.$roomId'
 import { Route as AuthDmUserIdRouteImport } from './routes/_auth/dm.$userId'
 import { Route as AuthChatRoomIdRouteImport } from './routes/_auth/chat/$roomId'
 import { Route as AuthAdminUsersRouteImport } from './routes/_auth/admin/users'
@@ -133,6 +134,11 @@ const AuthSettingsAccountRoute = AuthSettingsAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthSettingsRoute,
 } as any)
+const AuthFavoritesRoomIdRoute = AuthFavoritesRoomIdRouteImport.update({
+  id: '/$roomId',
+  path: '/$roomId',
+  getParentRoute: () => AuthFavoritesRoute,
+} as any)
 const AuthDmUserIdRoute = AuthDmUserIdRouteImport.update({
   id: '/dm/$userId',
   path: '/dm/$userId',
@@ -156,13 +162,14 @@ export interface FileRoutesByFullPath {
   '/calls': typeof AuthCallsRoute
   '/chat': typeof AuthChatRouteWithChildren
   '/contacts': typeof AuthContactsRoute
-  '/favorites': typeof AuthFavoritesRoute
+  '/favorites': typeof AuthFavoritesRouteWithChildren
   '/private': typeof AuthPrivateRouteWithChildren
   '/profile': typeof AuthProfileRoute
   '/settings': typeof AuthSettingsRouteWithChildren
   '/admin/users': typeof AuthAdminUsersRoute
   '/chat/$roomId': typeof AuthChatRoomIdRoute
   '/dm/$userId': typeof AuthDmUserIdRoute
+  '/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
   '/settings/account': typeof AuthSettingsAccountRoute
   '/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
@@ -178,11 +185,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/calls': typeof AuthCallsRoute
   '/contacts': typeof AuthContactsRoute
-  '/favorites': typeof AuthFavoritesRoute
+  '/favorites': typeof AuthFavoritesRouteWithChildren
   '/profile': typeof AuthProfileRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/chat/$roomId': typeof AuthChatRoomIdRoute
   '/dm/$userId': typeof AuthDmUserIdRoute
+  '/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
   '/settings/account': typeof AuthSettingsAccountRoute
   '/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
@@ -202,13 +210,14 @@ export interface FileRoutesById {
   '/_auth/calls': typeof AuthCallsRoute
   '/_auth/chat': typeof AuthChatRouteWithChildren
   '/_auth/contacts': typeof AuthContactsRoute
-  '/_auth/favorites': typeof AuthFavoritesRoute
+  '/_auth/favorites': typeof AuthFavoritesRouteWithChildren
   '/_auth/private': typeof AuthPrivateRouteWithChildren
   '/_auth/profile': typeof AuthProfileRoute
   '/_auth/settings': typeof AuthSettingsRouteWithChildren
   '/_auth/admin/users': typeof AuthAdminUsersRoute
   '/_auth/chat/$roomId': typeof AuthChatRoomIdRoute
   '/_auth/dm/$userId': typeof AuthDmUserIdRoute
+  '/_auth/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
   '/_auth/settings/account': typeof AuthSettingsAccountRoute
   '/_auth/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/_auth/settings/notifications': typeof AuthSettingsNotificationsRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
+    | '/favorites/$roomId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/notifications'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
+    | '/favorites/$roomId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/notifications'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/_auth/admin/users'
     | '/_auth/chat/$roomId'
     | '/_auth/dm/$userId'
+    | '/_auth/favorites/$roomId'
     | '/_auth/settings/account'
     | '/_auth/settings/appearance'
     | '/_auth/settings/notifications'
@@ -439,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSettingsAccountRouteImport
       parentRoute: typeof AuthSettingsRoute
     }
+    '/_auth/favorites/$roomId': {
+      id: '/_auth/favorites/$roomId'
+      path: '/$roomId'
+      fullPath: '/favorites/$roomId'
+      preLoaderRoute: typeof AuthFavoritesRoomIdRouteImport
+      parentRoute: typeof AuthFavoritesRoute
+    }
     '/_auth/dm/$userId': {
       id: '/_auth/dm/$userId'
       path: '/dm/$userId'
@@ -491,6 +510,18 @@ const AuthChatRouteWithChildren = AuthChatRoute._addFileChildren(
   AuthChatRouteChildren,
 )
 
+interface AuthFavoritesRouteChildren {
+  AuthFavoritesRoomIdRoute: typeof AuthFavoritesRoomIdRoute
+}
+
+const AuthFavoritesRouteChildren: AuthFavoritesRouteChildren = {
+  AuthFavoritesRoomIdRoute: AuthFavoritesRoomIdRoute,
+}
+
+const AuthFavoritesRouteWithChildren = AuthFavoritesRoute._addFileChildren(
+  AuthFavoritesRouteChildren,
+)
+
 interface AuthPrivateRouteChildren {
   AuthPrivateIndexRoute: typeof AuthPrivateIndexRoute
 }
@@ -530,7 +561,7 @@ interface AuthRouteChildren {
   AuthCallsRoute: typeof AuthCallsRoute
   AuthChatRoute: typeof AuthChatRouteWithChildren
   AuthContactsRoute: typeof AuthContactsRoute
-  AuthFavoritesRoute: typeof AuthFavoritesRoute
+  AuthFavoritesRoute: typeof AuthFavoritesRouteWithChildren
   AuthPrivateRoute: typeof AuthPrivateRouteWithChildren
   AuthProfileRoute: typeof AuthProfileRoute
   AuthSettingsRoute: typeof AuthSettingsRouteWithChildren
@@ -542,7 +573,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthCallsRoute: AuthCallsRoute,
   AuthChatRoute: AuthChatRouteWithChildren,
   AuthContactsRoute: AuthContactsRoute,
-  AuthFavoritesRoute: AuthFavoritesRoute,
+  AuthFavoritesRoute: AuthFavoritesRouteWithChildren,
   AuthPrivateRoute: AuthPrivateRouteWithChildren,
   AuthProfileRoute: AuthProfileRoute,
   AuthSettingsRoute: AuthSettingsRouteWithChildren,

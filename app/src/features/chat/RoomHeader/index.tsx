@@ -57,7 +57,7 @@ export function RoomHeader({
     const router = useRouter();
 
     const handleBack = () => {
-        router.navigate({ to: "/chat" });
+        router.history.back();
     };
 
     if (selectedCount > 0) {

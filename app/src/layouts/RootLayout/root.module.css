@@ -62,6 +62,17 @@
     width: 100%;
 }
 
+/* Верхняя шапка десктопа */
+.desktopHeader {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-5);
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    flex-shrink: 0;
+}
+
 /* ======================== */
 /* === МОБИЛЬНЫЙ LAYOUT === */
 /* ======================== */

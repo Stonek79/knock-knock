@@ -1,69 +1,71 @@
-import { Box, Flex, Spinner, Text } from "@radix-ui/themes";
-import { useQuery } from "@tanstack/react-query";
+import { Box, Flex, Skeleton, Text } from "@radix-ui/themes";
+import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { FavoritesChatList } from "@/features/chat/ChatList/FavoritesChatList";
 import { ChatRoom } from "@/features/chat/ChatRoom";
-import { RoomService } from "@/lib/services/room";
-import { useAuthStore } from "@/stores/auth";
+import { useFavoritesRoom } from "@/features/favorites/hooks/useFavoritesRoom";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 import styles from "./favoritespage.module.css";
 
 /**
  * Страница избранного.
- * Автоматически открывает (или создает) чат с самим собой.
+ * Автоматически открывает (или создает) чат с самим собой, если roomId не указан.
  */
 export function FavoritesPage() {
     const { t } = useTranslation();
-    const { user } = useAuthStore();
+    const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
+    const { roomId: paramRoomId } = useParams({ strict: false }) as {
+        roomId?: string;
+    };
+    const { data: selfRoomId, isLoading, error } = useFavoritesRoom();
 
-    // Загружаем ID комнаты для "Избранного" (чат с самим собой)
-    const {
-        data: roomId,
-        isLoading,
-        error,
-    } = useQuery({
-        queryKey: ["favorites", user?.id],
-        queryFn: async () => {
-            if (!user) {
-                throw new Error("Unauthorized");
-            }
-            // Находим или создаем чат с самим собой (targetUserId = currentUserId)
-            const res = await RoomService.findOrCreateDM(user.id, user.id);
-            if (res.isErr()) {
-                throw new Error(res.error.message);
-            }
-            return res.value;
-        },
-        enabled: !!user,
-    });
+    const roomId = paramRoomId || selfRoomId;
 
-    if (isLoading) {
+    // На мобильном: если нет выбранной комнаты (paramRoomId), показываем список
+    if (isMobile && !paramRoomId) {
         return (
-            <Flex align="center" justify="center" flexGrow="1">
-                <Spinner size="3" />
-            </Flex>
-        );
-    }
-
-    if (error || !roomId) {
-        return (
-            <Flex
-                align="center"
-                justify="center"
-                flexGrow="1"
-                direction="column"
-                gap="2"
-            >
-                <Text color="red">
-                    {t("common.error", "Ошибка")}:{" "}
-                    {error instanceof Error ? error.message : "Unknown error"}
-                </Text>
-            </Flex>
+            <Box className={styles.container}>
+                <FavoritesChatList />
+            </Box>
         );
     }
 
     // Рендерим комнату чата
     return (
         <Box className={styles.container}>
-            <ChatRoom roomId={roomId} />
+            {isLoading && !roomId ? (
+                <Flex direction="column" height="100%">
+                    <Flex direction="column" p="4" gap="4">
+                        <Flex gap="3" align="end">
+                            <Skeleton width="40px" height="40px" />
+                            <Skeleton width="200px" height="60px" />
+                        </Flex>
+                        <Flex gap="3" align="end" justify="end">
+                            <Skeleton width="150px" height="40px" />
+                        </Flex>
+                        <Flex gap="3" align="end">
+                            <Skeleton width="40px" height="40px" />
+                            <Skeleton width="250px" height="100px" />
+                        </Flex>
+                    </Flex>
+                </Flex>
+            ) : error ? (
+                <Flex
+                    align="center"
+                    justify="center"
+                    flexGrow="1"
+                    direction="column"
+                    gap="2"
+                >
+                    <Text color="red">
+                        {t("common.error", "Ошибка")}:{" "}
+                        {getAuthErrorMessage(error)}
+                    </Text>
+                </Flex>
+            ) : roomId ? (
+                <ChatRoom roomId={roomId} />
+            ) : null}
         </Box>
     );
 }

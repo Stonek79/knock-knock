@@ -7,7 +7,7 @@ export function CallsList() {
     const { t } = useTranslation();
 
     return (
-        <Box className={styles.container}>
+        <Box>
             <Flex align="center" gap="2" className={styles.header}>
                 <Phone className={styles.icon} />
                 <Heading size="4">{t("calls.title", "Звонки")}</Heading>

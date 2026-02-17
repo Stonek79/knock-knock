@@ -5,4 +5,5 @@ export const DB_TABLES = {
     ROOM_MEMBERS: "room_members",
     ROOM_KEYS: "room_keys",
     MESSAGES: "messages",
+    FAVORITES: "favorites",
 } as const;

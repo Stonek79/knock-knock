@@ -59,6 +59,11 @@
     width: 100%;
 }
 
+.emptyIcon {
+    color: var(--gray-8);
+    opacity: 0.5;
+}
+
 .chatList {
     flex: 1;
     overflow-y: auto;
@@ -129,6 +134,10 @@
 
 .time {
     font-size: var(--text-xs);
+    color: var(--muted);
+}
+
+.muted {
     color: var(--muted);
 }
 

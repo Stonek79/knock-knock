@@ -1,28 +1,36 @@
 import { DropdownMenu, IconButton } from "@radix-ui/themes";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import clsx from "clsx";
+import { MoreVertical, Pencil, Star, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import styles from "./message-bubble.module.css";
 
 interface MessageActionsProps {
     isOwn: boolean;
+    isStarred?: boolean;
     isDeleted?: boolean;
     isEditing?: boolean;
     onEdit: () => void;
     onDelete?: () => void;
+    onToggleStar?: (isStarred: boolean) => void;
 }
 
 export function MessageActions({
     isOwn,
+    isStarred,
     isDeleted,
     isEditing,
     onEdit,
     onDelete,
+    onToggleStar,
 }: MessageActionsProps) {
     const { t } = useTranslation();
 
     if (!isOwn || isDeleted || isEditing) {
         return null;
     }
+
+    const starIconClass = clsx(styles.iconSmall, isStarred && styles.star);
+    const iconsStyles = clsx(styles.iconSmall, styles.iconsStyles);
 
     return (
         <div className={styles.actionsOverlay}>
@@ -37,18 +45,22 @@ export function MessageActions({
                     </IconButton>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content size="1">
+                    <DropdownMenu.Item
+                        onClick={() => onToggleStar?.(!isStarred)}
+                    >
+                        <Star className={starIconClass} />
+                        {isStarred
+                            ? t("common.unstar", "Убрать")
+                            : t("common.star", "В избранное")}
+                    </DropdownMenu.Item>
+
                     <DropdownMenu.Item onClick={onEdit}>
-                        <Pencil
-                            className={styles.iconMini}
-                            style={{ marginRight: 6 }}
-                        />{" "}
+                        <Pencil className={iconsStyles} />{" "}
                         {t("common.edit", "Редактировать")}
                     </DropdownMenu.Item>
+
                     <DropdownMenu.Item color="red" onClick={onDelete}>
-                        <Trash2
-                            className={styles.iconMini}
-                            style={{ marginRight: 6 }}
-                        />{" "}
+                        <Trash2 className={iconsStyles} />{" "}
                         {t("common.delete", "Удалить")}
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>

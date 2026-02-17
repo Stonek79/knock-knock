@@ -1,4 +1,5 @@
 import { Navigate } from "@tanstack/react-router";
+import { MainLayoutSkeleton } from "@/components/Skeletons/Skeletons";
 import { AppLayout } from "@/layouts/AppLayout";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
@@ -11,7 +12,7 @@ export function AuthLayout() {
     const { user, loading } = useAuthStore();
 
     if (loading) {
-        return null; // или <Loader />
+        return <MainLayoutSkeleton />;
     }
 
     if (!user) {

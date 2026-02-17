@@ -28,3 +28,8 @@
 .icon {
     color: var(--accent-primary);
 }
+
+.topPadding {
+    padding-top: var(--header-height);
+    border-bottom: 1px solid var(--glass-border);
+}

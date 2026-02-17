@@ -1,12 +1,23 @@
-import { Box, Flex } from "@radix-ui/themes";
+import { Box, Flex, Heading } from "@radix-ui/themes";
 import { Outlet, useLocation } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { MobileHeader } from "@/layouts/MobileHeader";
 import { Navigation } from "@/layouts/RootLayout/components/Navigation";
 import { useSidebarResolver } from "@/layouts/RootLayout/hooks/useSidebarResolver";
 import styles from "@/layouts/RootLayout/root.module.css";
-import { ROUTES } from "@/lib/constants";
+import { APP_NAME, ROUTES } from "@/lib/constants";
+
+// Маппинг роутов на ключи перевода
+const ROUTE_TITLE_KEYS: Record<string, string> = {
+    [ROUTES.FAVORITES]: "favorites.title",
+    [ROUTES.CALLS]: "calls.title",
+    [ROUTES.CONTACTS]: "contacts.title",
+    [ROUTES.SETTINGS]: "settings.title",
+    [ROUTES.PROFILE]: "profile.title",
+    [ROUTES.ADMIN]: "admin.title",
+};
 
 /**
  * AppLayout - Оболочка для авторизованной части приложения.
@@ -17,15 +28,62 @@ export function AppLayout() {
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
     const sidebarContent = useSidebarResolver();
     const location = useLocation();
+    const { t } = useTranslation();
+
+    // Определение заголовка страницы
+    const getPageTitle = useMemo(() => {
+        const path = location.pathname;
+
+        // Ищем точное совпадение или начало пути в маппинге
+        const routeKey = Object.keys(ROUTE_TITLE_KEYS).find((route) =>
+            path.startsWith(route),
+        );
+
+        if (routeKey) {
+            const translationKey = ROUTE_TITLE_KEYS[routeKey];
+            // Дефолтные значения для случаев, когда перевод еще не добавлен
+            const defaults: Record<string, string> = {
+                "favorites.title": "Избранное",
+                "calls.title": "Звонки",
+                "contacts.title": "Контакты",
+                "settings.title": "Настройки",
+                "profile.title": "Профиль",
+                "admin.title": "Админка",
+            };
+            return t(translationKey, defaults[translationKey] || "");
+        }
+
+        return APP_NAME;
+    }, [location.pathname, t]);
+
+    // Проверка, является ли текущая страница чатом (там своя шапка)
+    const isChatHeaderPage = useMemo(() => {
+        const path = location.pathname;
+        return (
+            path.startsWith(ROUTES.CHAT_LIST) || // Любая страница чатов (список или комната)
+            path.startsWith(ROUTES.FAVORITES)
+        );
+    }, [location.pathname]);
 
     // Логика скрытия навигации (только для мобильных чатов)
-    const hideNavInMobileChat = useMemo(() => {
+    const isChatRoomOpen = useMemo(() => {
+        const path = location.pathname;
+        // Если это чат/избранное И есть ID (длина пути > 2)
         return (
-            isMobile &&
-            location.pathname.startsWith(ROUTES.CHAT_LIST) &&
-            location.pathname.split("/").length > 2
+            (path.startsWith(ROUTES.CHAT_LIST) &&
+                path.split(ROUTES.HOME).length > 2) ||
+            (path.startsWith(ROUTES.FAVORITES) &&
+                path.split(ROUTES.HOME).length > 2)
         );
-    }, [isMobile, location.pathname]);
+    }, [location.pathname]);
+
+    const hideMobileNav = useMemo(() => {
+        return isMobile && isChatRoomOpen;
+    }, [isMobile, isChatRoomOpen]);
+
+    const hideMobileHeader = useMemo(() => {
+        return isMobile && isChatHeaderPage; // Скрываем на всех страницах чата, т.к. там свои хедеры
+    }, [isMobile, isChatHeaderPage]);
 
     return (
         <div id="app-container" className={styles.container}>
@@ -33,9 +91,9 @@ export function AppLayout() {
                 /* === МОБИЛЬНЫЙ LAYOUT === */
                 <Flex direction="column" className={styles.mobileLayout}>
                     {/* Заголовок (скрывается в чат-руме) */}
-                    {!hideNavInMobileChat && (
+                    {!hideMobileHeader && (
                         <Box className={styles.mobileHeaderWrapper}>
-                            <MobileHeader />
+                            <MobileHeader title={getPageTitle} />
                         </Box>
                     )}
 
@@ -45,7 +103,7 @@ export function AppLayout() {
                     </Box>
 
                     {/* Навигация внизу (скрывается в чат-руме) */}
-                    {!hideNavInMobileChat && (
+                    {!hideMobileNav && (
                         <Box className={styles.navigationWrapper}>
                             <Navigation />
                         </Box>
@@ -63,7 +121,6 @@ export function AppLayout() {
                         <Box className={styles.sidebarContent}>
                             {sidebarContent}
                         </Box>
-
                         <Box className={styles.navigationWrapper}>
                             <Navigation />
                         </Box>
@@ -74,6 +131,14 @@ export function AppLayout() {
                         id="app-content"
                         className={`${styles.content} ${!sidebarContent ? styles.fullWidth : ""}`}
                     >
+                        {/* Desktop Header for standard pages */}
+                        {!isChatHeaderPage && (
+                            <header className={styles.desktopHeader}>
+                                <Heading size="5" weight="bold">
+                                    {getPageTitle}
+                                </Heading>
+                            </header>
+                        )}
                         <Outlet />
                     </Box>
                 </Flex>

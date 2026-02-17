@@ -13,6 +13,7 @@ interface ChatRoomMessagesProps {
     scrollRef: RefObject<{ scrollToBottom: () => void } | null>;
     firstUnreadId: string | null;
     userId?: string;
+    isFavoritesView?: boolean;
 }
 
 /**
@@ -26,6 +27,7 @@ export function ChatRoomMessages({
     scrollRef,
     firstUnreadId,
     userId,
+    isFavoritesView = false,
 }: ChatRoomMessagesProps) {
     const selectedMessageIds = useChatRoomStore((s) => s.selectedMessageIds);
     const editingId = useChatRoomStore((s) => s.editingId);
@@ -48,6 +50,7 @@ export function ChatRoomMessages({
                     editingId={editingId}
                     scrollRef={scrollRef}
                     firstUnreadId={firstUnreadId}
+                    isFavoritesView={isFavoritesView}
                 />
             </main>
         </Box>

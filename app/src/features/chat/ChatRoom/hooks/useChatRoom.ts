@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useLocation } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
 import { useChatActions } from "@/features/chat/hooks/useChatActions";
@@ -7,6 +8,7 @@ import { useChatRoomData } from "@/features/chat/hooks/useChatRoomData";
 import { useMessages } from "@/features/chat/hooks/useMessages";
 import { useTypingIndicator } from "@/features/chat/hooks/useTypingIndicator";
 import { useUnreadTracking } from "@/features/chat/hooks/useUnreadTracking";
+import { ROUTES } from "@/lib/constants";
 import { ClipboardService } from "@/lib/services/clipboard";
 import { useAuthStore } from "@/stores/auth";
 import { useChatRoomStore } from "../store";
@@ -116,6 +118,23 @@ export function useChatRoom(roomId: string) {
         clearSelection();
     };
 
+    const { pathname } = useLocation();
+    const isFavoritesView = pathname.startsWith(ROUTES.FAVORITES);
+
+    // Проверка на чат с самим собой
+    const isSelfChat =
+        room?.type === "direct" &&
+        room.room_members?.length === 1 &&
+        room.room_members[0].user_id === user?.id;
+
+    // В Избранном (кроме self-chat) показываем только сообщения со звездочкой
+    const filteredMessages = useMemo(() => {
+        if (isFavoritesView && !isSelfChat) {
+            return messages.filter((m) => m.is_starred);
+        }
+        return messages;
+    }, [messages, isFavoritesView, isSelfChat]);
+
     return {
         t,
         user,
@@ -123,9 +142,11 @@ export function useChatRoom(roomId: string) {
         roomId,
         roomKey,
         peerUser,
-        messages,
+        messages: filteredMessages,
+        allMessages: messages, // Сохраняем все для других нужд если надо
         messagesLoading,
-        loading,
+        isFavoritesView,
+        isLoading: loading,
         error: fetchError instanceof Error ? fetchError.message : null,
         typingUsers,
         setTyping,

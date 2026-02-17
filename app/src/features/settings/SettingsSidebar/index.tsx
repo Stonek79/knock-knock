@@ -1,9 +1,10 @@
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
+import { Box, Flex, Text } from "@radix-ui/themes";
 import { Link, useLocation } from "@tanstack/react-router";
 import clsx from "clsx";
 import { ShieldAlert } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SETTINGS_ITEMS } from "@/config/settings";
+import { MEMBER_ROLE, ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./settingssidebar.module.css";
 
@@ -13,9 +14,7 @@ export function SettingsSidebar() {
 
     return (
         <Box className={styles.sidebar}>
-            <Box px="4" pt="4" mb="4">
-                <Heading size="4">{t("nav.settings", "Настройки")}</Heading>
-            </Box>
+            <Box px="4" pt="4" mb="4" className={styles.topPadding}></Box>
             <Flex direction="column" gap="1">
                 {SETTINGS_ITEMS.map((item) => {
                     const Icon = item.icon;
@@ -51,15 +50,15 @@ function AdminSidebarItem() {
     const { t } = useTranslation();
     const location = useLocation();
 
-    if (profile?.role !== "admin") {
+    if (profile?.role !== MEMBER_ROLE.ADMIN) {
         return null;
     }
 
-    const isActive = location.pathname.startsWith("/admin");
+    const isActive = location.pathname.startsWith(ROUTES.ADMIN);
 
     return (
         <Link
-            to="/admin"
+            to={ROUTES.ADMIN}
             className={clsx(styles.desktopItem, isActive && styles.active)}
         >
             <Flex align="center" gap="3">

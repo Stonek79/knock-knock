@@ -4,10 +4,13 @@
  * Поддерживает режим выделения (Selection Mode) и редактирования.
  */
 import { Box, Flex, IconButton, Text } from "@radix-ui/themes";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowDown } from "lucide-react";
 import { type RefObject, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
 import { useUserActivity } from "@/hooks/useUserActivity";
+import { DB_TABLES } from "@/lib/constants";
+import { MessageService } from "@/lib/services/message";
 import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 import { getMessageGroupPosition } from "@/lib/utils/messageGrouping";
 import { useAuthStore } from "@/stores/auth";
@@ -26,6 +29,8 @@ interface MessageListProps {
     scrollRef?: RefObject<{ scrollToBottom: () => void } | null>;
     /** ID первого непрочитанного сообщения */
     firstUnreadId?: string | null;
+    /** Состояние Избранного (фильтрация только звезд) */
+    isFavoritesView?: boolean;
 }
 
 export function MessageList({
@@ -36,6 +41,7 @@ export function MessageList({
     editingId,
     scrollRef,
     firstUnreadId,
+    isFavoritesView,
 }: MessageListProps) {
     const { t } = useTranslation();
     const { user } = useAuthStore();
@@ -64,6 +70,17 @@ export function MessageList({
         scrollToBottom,
     ]);
 
+    const queryClient = useQueryClient();
+
+    const handleToggleStar = async (messageId: string, isStarred: boolean) => {
+        const result = await MessageService.toggleStar(messageId, isStarred);
+        if (result.isOk()) {
+            // Инвалидируем сообщения комнаты и список избранного
+            queryClient.invalidateQueries({ queryKey: [DB_TABLES.MESSAGES] });
+            queryClient.invalidateQueries({ queryKey: [DB_TABLES.FAVORITES] });
+        }
+    };
+
     // Состояние загрузки
     if (messagesLoading) {
         return (
@@ -82,7 +99,12 @@ export function MessageList({
         return (
             <Flex justify="center" align="center" className={styles.emptyBox}>
                 <Text color="gray">
-                    {t("chat.noMessages", "Нет сообщений")}
+                    {isFavoritesView
+                        ? t(
+                              "chat.noFavoritesInThisChat",
+                              "В этом чате нет избранных сообщений",
+                          )
+                        : t("chat.noMessages", "Нет сообщений")}
                 </Text>
             </Flex>
         );
@@ -128,6 +150,10 @@ export function MessageList({
                                         status={msg.status}
                                         isEdited={msg.is_edited}
                                         isDeleted={msg.is_deleted}
+                                        isStarred={msg.is_starred}
+                                        onToggleStar={(starred) =>
+                                            handleToggleStar(msg.id, starred)
+                                        }
                                         isSelected={selectedMessageIds?.has(
                                             msg.id,
                                         )}

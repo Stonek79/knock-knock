@@ -13,7 +13,7 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CreateChatDialog } from "@/features/chat/CreateChatDialog";
-import { APP_NAME, CHAT_TYPE, ROUTES } from "@/lib/constants";
+import { APP_NAME, CHAT_TYPE } from "@/lib/constants";
 import type { ChatType } from "@/lib/types";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./mobileheader.module.css";
@@ -61,7 +61,7 @@ export function MobileHeader({
     const isSubRoute = location.pathname.split("/").filter(Boolean).length > 1;
 
     const handleBack = () => {
-        router.navigate({ to: ROUTES.CHAT_LIST });
+        router.history.back();
     };
 
     const handleDialogChange = (open: boolean) => {

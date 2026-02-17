@@ -1,8 +1,10 @@
 import { Avatar, Box, Text } from "@radix-ui/themes";
+import { Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MESSAGE_POSITION, MESSAGE_STATUS } from "@/lib/constants";
 import type { MessagePosition, MessageStatus } from "@/lib/types/message";
 import { getUserColor } from "@/lib/utils/colors";
+import { MessageActions } from "./MessageActions";
 import styles from "./message-bubble.module.css";
 import { StatusIcon } from "./StatusIcon";
 
@@ -18,6 +20,8 @@ interface MessageBubbleProps {
     isSelected?: boolean;
     onToggleSelection?: () => void;
     isEditing?: boolean;
+    isStarred?: boolean;
+    onToggleStar?: (isStarred: boolean) => void;
     groupPosition?: MessagePosition;
 }
 
@@ -33,6 +37,8 @@ export function MessageBubble({
     isSelected = false,
     onToggleSelection,
     isEditing = false,
+    isStarred = false,
+    onToggleStar,
     groupPosition = MESSAGE_POSITION.SINGLE,
 }: MessageBubbleProps) {
     const { t } = useTranslation();
@@ -100,6 +106,7 @@ export function MessageBubble({
                 )}
 
                 <Box className={styles.metadata}>
+                    {isStarred && <Star size={12} className={styles.star} />}
                     <Text className={styles.time}>
                         {timeString}
                         {isEdited &&
@@ -112,6 +119,16 @@ export function MessageBubble({
                         isDeleted={isDeleted}
                     />
                 </Box>
+                {!isDeleted && (
+                    <MessageActions
+                        isOwn={isOwn}
+                        isStarred={isStarred}
+                        isEditing={isEditing}
+                        onEdit={() => {}} // Handle in MessageList
+                        onDelete={() => {}} // Handle in MessageList
+                        onToggleStar={onToggleStar}
+                    />
+                )}
             </Box>
         </Box>
     );

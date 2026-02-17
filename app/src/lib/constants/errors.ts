@@ -10,4 +10,5 @@ export const ERROR_CODES = {
     UNSUPPORTED_VERSION: "unsupported-version",
     DECRYPT_FAILED: "decrypt-failed",
     INVALID_BACKUP: "invalid-backup_format",
+    UNAUTHORIZED: "unauthorized",
 } as const;

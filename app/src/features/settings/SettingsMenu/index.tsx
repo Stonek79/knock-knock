@@ -1,4 +1,4 @@
-import { Box, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import { Box, Card, Flex, Text } from "@radix-ui/themes";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import { ChevronRight, ShieldAlert } from "lucide-react";
@@ -16,9 +16,6 @@ export function SettingsMenu() {
 
     return (
         <Box className={styles.mobileContainer}>
-            <Box px="4" pt="2" mb="4">
-                <Heading size="5">{t("nav.settings", "Настройки")}</Heading>
-            </Box>
             <Flex direction="column" gap="2" px="4">
                 {SETTINGS_ITEMS.map((item) => {
                     const Icon = item.icon;

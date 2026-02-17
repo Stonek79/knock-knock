@@ -68,7 +68,16 @@
     height: 14px;
 }
 
-/* Selection Styles */
+.iconsStyles {
+    margin-bottom: var(--space-1);
+}
+
+.star {
+    margin-right: var(--space-1);
+    fill: var(--yellow-9);
+    color: var(--yellow-9);
+}
+
 .selected {
     position: relative;
 }
@@ -85,7 +94,6 @@
     pointer-events: none;
 }
 
-/* Ensure bubble stays on top of selection background */
 .bubble {
     position: relative;
     z-index: 1;

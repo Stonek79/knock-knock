@@ -261,4 +261,28 @@ export const MessageService = {
 
         return ok(undefined);
     },
+    /**
+     * Помечает сообщение как избранное (звездочка).
+     */
+    async toggleStar(
+        messageId: string,
+        isStarred: boolean,
+    ): Promise<Result<void, MessageError>> {
+        const { error } = await supabase
+            .from(DB_TABLES.MESSAGES)
+            .update({ is_starred: isStarred })
+            .eq("id", messageId);
+
+        if (error) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    "Failed to toggle favorite status",
+                    error,
+                ),
+            );
+        }
+
+        return ok(undefined);
+    },
 };

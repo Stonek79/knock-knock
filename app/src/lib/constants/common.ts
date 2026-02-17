@@ -1,5 +1,8 @@
 /** Название приложения */
 export const APP_NAME = "KnokKnok";
+export const APP_NAME_RU = "Тук-Тук";
+
+export const FULL_APP_NAME = "Knock Knock";
 
 /** ID корневого элемента в DOM */
 export const DOM_ROOT_ID = "root";

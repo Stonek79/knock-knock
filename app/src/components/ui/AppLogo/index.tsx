@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, APP_NAME_RU } from "@/lib/constants";
 import styles from "./AppLogo.module.css";
 
 interface AppLogoProps {
@@ -19,7 +19,7 @@ export function AppLogo({
     const isRu = i18n.language.startsWith("ru");
 
     // Текст логотипа
-    const logoText = isRu ? "Тук-Тук" : APP_NAME;
+    const logoText = isRu ? APP_NAME_RU : APP_NAME;
 
     // Фавикон всегда "Кулак" (favicon-en.png)
     const faviconSrc = "/images/favicon-en.png";

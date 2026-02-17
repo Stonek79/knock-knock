@@ -37,7 +37,8 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
         peerUser,
         messages,
         messagesLoading,
-        loading,
+        isLoading,
+        isFavoritesView,
         error,
         typingUsers,
         setTyping,
@@ -54,7 +55,7 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
         confirmEndSession,
     } = useChatRoom(roomId);
 
-    if (loading) {
+    if (isLoading) {
         return (
             <Flex justify="center" align="center" height="100%">
                 <Heading size="3" color="gray">
@@ -115,6 +116,7 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
                     scrollRef={scrollRef}
                     firstUnreadId={firstUnreadId}
                     userId={user?.id}
+                    isFavoritesView={isFavoritesView}
                 />
             }
             input={
