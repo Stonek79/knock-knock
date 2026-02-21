@@ -5,7 +5,7 @@
  * - Кнопка "Назад" показывается только на мобильной версии
  * - Заголовок отображается корректно
  */
-import { Theme } from "@radix-ui/themes";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
@@ -56,7 +56,7 @@ describe("SettingsHeader", () => {
     const renderWithProviders = (ui: ReactElement) => {
         return render(
             <QueryClientProvider client={queryClient}>
-                <Theme>{ui}</Theme>
+                {ui}
             </QueryClientProvider>,
         );
     };

@@ -7,7 +7,6 @@
  * - Содержит кнопку "Попробовать снова"
  * - Кнопка вызывает reset и router.invalidate
  */
-import { Theme } from "@radix-ui/themes";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RouteErrorFallback } from "./RouteErrorFallback";
@@ -36,13 +35,11 @@ describe("RouteErrorFallback", () => {
 
     const renderComponent = (error: Error = new Error("Тестовая ошибка")) =>
         render(
-            <Theme>
-                <RouteErrorFallback
-                    error={error}
-                    reset={mockReset}
-                    info={undefined}
-                />
-            </Theme>,
+            <RouteErrorFallback
+                error={error}
+                reset={mockReset}
+                info={undefined}
+            />,
         );
 
     it("показывает заголовок ошибки", () => {

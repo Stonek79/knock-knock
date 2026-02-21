@@ -28,12 +28,10 @@ export function PrivateChatPage() {
                 <Lock size={ICON_SIZE["2xl"]} />
             </Box>
 
-            {/* Нативный h2 вместо Radix Heading */}
             <h2 className={styles.title}>
                 {t("private.title", "Приватный чат")}
             </h2>
 
-            {/* Нативный p вместо Radix Text */}
             <p className={styles.description}>
                 {t(
                     "private.description",
@@ -49,7 +47,7 @@ export function PrivateChatPage() {
                 )}
             </Box>
 
-            <Button variant="soft" size="3" className={styles.selectButton}>
+            <Button variant="soft" size="md" className={styles.selectButton}>
                 <UserSearch size={ICON_SIZE.sm} />
                 {t("private.selectContact", "Выбрать контакт")}
             </Button>

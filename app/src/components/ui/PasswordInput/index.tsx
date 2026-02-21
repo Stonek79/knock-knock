@@ -1,7 +1,14 @@
 import { Eye, EyeOff } from "lucide-react";
 import { type ComponentPropsWithoutRef, forwardRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { TextField } from "../TextField";
 import styles from "./styles.module.css";
+
+export const INPUT_TYPE = {
+    TEXT: "text",
+    PASSWORD: "password",
+} as const;
 
 /**
  * Пропсы компонента PasswordInput.
@@ -21,6 +28,7 @@ type PasswordInputProps = Omit<
  */
 export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     ({ className, ...props }, ref) => {
+        const { t } = useTranslation();
         const [showPassword, setShowPassword] = useState(false);
 
         /** Переключение видимости пароля */
@@ -29,23 +37,25 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         return (
             <TextField
                 ref={ref}
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? INPUT_TYPE.TEXT : INPUT_TYPE.PASSWORD}
                 className={className}
                 {...props}
             >
-                <TextField.Slot side="right">
+                <TextField.Slot>
                     <button
                         type="button"
                         onClick={toggleVisibility}
                         className={styles.toggleButton}
                         aria-label={
-                            showPassword ? "Скрыть пароль" : "Показать пароль"
+                            showPassword
+                                ? t("common.hidePassword")
+                                : t("common.showPassword")
                         }
                     >
                         {showPassword ? (
-                            <EyeOff size="var(--size-icon-sm)" />
+                            <EyeOff size={ICON_SIZE.sm} />
                         ) : (
-                            <Eye size="var(--size-icon-sm)" />
+                            <Eye size={ICON_SIZE.sm} />
                         )}
                     </button>
                 </TextField.Slot>

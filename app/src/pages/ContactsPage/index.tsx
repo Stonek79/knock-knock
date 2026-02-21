@@ -38,7 +38,7 @@ export function ContactsPage() {
                 )}
             </p>
 
-            <Button variant="soft" size="3" className={styles.addButton}>
+            <Button variant="soft" size="md" className={styles.addButton}>
                 <UserPlus size={ICON_SIZE.sm} />
                 {t("contacts.addContact", "Добавить контакт")}
             </Button>

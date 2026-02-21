@@ -2,6 +2,11 @@
  * CSS-модуль для формы профиля.
  */
 
+.container {
+    max-width: var(--max-w-profile);
+    width: 100%;
+}
+
 .fieldLabel {
     font-size: var(--text-sm);
     font-weight: var(--font-weight-medium);

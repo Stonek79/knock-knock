@@ -6,18 +6,12 @@
  * - Содержит Radix Spinner (span-элемент)
  * - НЕ использует position: fixed (в отличие от GlobalLoader)
  */
-import { Theme } from "@radix-ui/themes";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { SectionLoader } from "./SectionLoader";
+import { SectionLoader } from ".";
 
 describe("SectionLoader", () => {
-    const renderComponent = () =>
-        render(
-            <Theme>
-                <SectionLoader />
-            </Theme>,
-        );
+    const renderComponent = () => render(<SectionLoader />);
 
     it("рендерится без ошибок", () => {
         const { container } = renderComponent();

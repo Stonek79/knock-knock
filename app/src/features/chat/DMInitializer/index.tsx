@@ -63,7 +63,7 @@ export function DMInitializer() {
     if (error) {
         return (
             <Box p="4">
-                <Alert variant="destructive">
+                <Alert variant="danger">
                     <AlertTitle>{t("common.error", "Ошибка")}</AlertTitle>
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
@@ -73,7 +73,6 @@ export function DMInitializer() {
 
     return (
         <Box className={styles.container}>
-            {/* Наш кастомный Spinner вместо Radix Spinner */}
             <Spinner size="lg" />
             <span className={styles.initText}>
                 {t("chat.initializing", "Инициализация чата...")}

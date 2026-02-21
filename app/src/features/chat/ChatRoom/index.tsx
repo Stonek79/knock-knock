@@ -71,7 +71,7 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
     if (error) {
         return (
             <Container size="1" p="4">
-                <Alert variant="destructive">
+                <Alert variant="danger">
                     <AlertTitle>
                         {t("common.error", "Ошибка доступа")}
                     </AlertTitle>

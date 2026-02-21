@@ -8,6 +8,8 @@ export const common = {
     error: "Ошибка",
     success: "Успешно",
     password: "Пароль",
+    showPassword: "Показать пароль",
+    hidePassword: "Скрыть пароль",
     required: "Обязательное поле",
     back: "Назад",
     search: "Поиск",

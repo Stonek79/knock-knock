@@ -6,10 +6,9 @@
  * - После таймаута (8 сек) показывает сообщение об ошибке
  * - Показывает кнопку "Попробовать снова" после таймаута
  */
-import { Theme } from "@radix-ui/themes";
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GlobalLoader } from "./GlobalLoader";
+import { GlobalLoader } from ".";
 
 // Мокаем useTranslation
 vi.mock("react-i18next", () => ({
@@ -27,12 +26,7 @@ describe("GlobalLoader", () => {
         vi.useRealTimers();
     });
 
-    const renderComponent = () =>
-        render(
-            <Theme>
-                <GlobalLoader />
-            </Theme>,
-        );
+    const renderComponent = () => render(<GlobalLoader />);
 
     it("изначально показывает текст загрузки", () => {
         renderComponent();

@@ -3,7 +3,6 @@
  * Проверяем: копирование, удаление, редактирование, отмену редактирования.
  */
 
-import { Theme } from "@radix-ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
     act,
@@ -166,9 +165,7 @@ describe("Действия с сообщениями в чате", () => {
         await act(async () => {
             result = render(
                 <QueryClientProvider client={queryClient}>
-                    <ToastProvider>
-                        <Theme>{ui}</Theme>
-                    </ToastProvider>
+                    <ToastProvider>{ui}</ToastProvider>
                 </QueryClientProvider>,
             );
         });

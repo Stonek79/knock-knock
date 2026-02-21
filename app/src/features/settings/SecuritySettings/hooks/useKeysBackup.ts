@@ -2,10 +2,12 @@ import { type ChangeEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileDownloader } from "@/hooks/useFileDownloader";
 import { useKeystore } from "@/hooks/useKeystore";
+import { COMPONENT_INTENT } from "@/lib/constants/ui";
 import type { KeyBackup } from "@/lib/crypto/recovery";
+import type { ComponentIntent } from "@/lib/types/ui";
 
 export interface StatusMessage {
-    type: "success" | "error";
+    type: ComponentIntent;
     text: string;
 }
 
@@ -28,7 +30,7 @@ export function useKeysBackup() {
         setStatusMessage(null);
         if (!backupPassword) {
             setStatusMessage({
-                type: "error",
+                type: COMPONENT_INTENT.DANGER,
                 text: t("profile.enterBackupPassword"),
             });
             return;
@@ -36,7 +38,10 @@ export function useKeysBackup() {
 
         const backup = await exportKeys(backupPassword);
         if (!backup) {
-            setStatusMessage({ type: "error", text: t("profile.backupError") });
+            setStatusMessage({
+                type: COMPONENT_INTENT.DANGER,
+                text: t("profile.backupError"),
+            });
             return;
         }
 
@@ -45,7 +50,7 @@ export function useKeysBackup() {
 
         setBackupPassword("");
         setStatusMessage({
-            type: "success",
+            type: COMPONENT_INTENT.SUCCESS,
             text: t("profile.backupCreated"),
         });
     };
@@ -59,7 +64,7 @@ export function useKeysBackup() {
 
         if (!backupPassword) {
             setStatusMessage({
-                type: "error",
+                type: COMPONENT_INTENT.DANGER,
                 text: t("profile.enterBackupPassword"),
             });
             if (fileInputRef.current) {
@@ -75,14 +80,14 @@ export function useKeysBackup() {
                 const backupData = JSON.parse(text) as KeyBackup;
                 await restoreKeys(backupData, backupPassword);
                 setStatusMessage({
-                    type: "success",
+                    type: COMPONENT_INTENT.SUCCESS,
                     text: t("profile.keysRestored"),
                 });
                 setBackupPassword("");
             } catch (err) {
                 console.error(err);
                 setStatusMessage({
-                    type: "error",
+                    type: COMPONENT_INTENT.DANGER,
                     text: t("profile.restoreError"),
                 });
             } finally {

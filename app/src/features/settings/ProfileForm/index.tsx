@@ -7,8 +7,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { DB_TABLES, VALIDATION } from "@/lib/constants";
+import { COMPONENT_INTENT } from "@/lib/constants/ui";
 import { profileSchema } from "@/lib/schemas/profile";
 import { supabase } from "@/lib/supabase";
+import type { ComponentIntent } from "@/lib/types/ui";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./profileform.module.css";
 
@@ -22,7 +24,7 @@ export function ProfileForm() {
     const queryClient = useQueryClient();
 
     const [statusMessage, setStatusMessage] = useState<{
-        type: "success" | "error";
+        type: ComponentIntent;
         text: string;
     } | null>(null);
 
@@ -65,11 +67,14 @@ export function ProfileForm() {
             });
 
             if (error) {
-                setStatusMessage({ type: "error", text: error.message });
+                setStatusMessage({
+                    type: COMPONENT_INTENT.DANGER,
+                    text: error.message,
+                });
             } else {
                 queryClient.invalidateQueries({ queryKey: ["profile"] });
                 setStatusMessage({
-                    type: "success",
+                    type: COMPONENT_INTENT.SUCCESS,
                     text: t("profile.profileUpdated"),
                 });
             }
@@ -77,17 +82,11 @@ export function ProfileForm() {
     });
 
     return (
-        <Flex direction="column" gap="4" maxWidth="var(--max-w-profile)">
+        <Flex direction="column" gap="4" className={styles.container}>
             {statusMessage && (
-                <Alert
-                    variant={
-                        statusMessage.type === "success"
-                            ? "success"
-                            : "destructive"
-                    }
-                >
+                <Alert variant={statusMessage.type}>
                     <AlertTitle>
-                        {statusMessage.type === "success"
+                        {statusMessage.type === COMPONENT_INTENT.SUCCESS
                             ? t("common.success")
                             : t("common.error")}
                     </AlertTitle>
@@ -110,7 +109,6 @@ export function ProfileForm() {
                     >
                         {(field) => (
                             <Flex direction="column" gap="2">
-                                {/* Нативный label вместо Radix Text as="label" */}
                                 <label
                                     htmlFor="username"
                                     className={styles.fieldLabel}

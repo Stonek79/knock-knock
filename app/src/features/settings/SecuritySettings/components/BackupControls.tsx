@@ -5,6 +5,7 @@ import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
+import { COMPONENT_INTENT } from "@/lib/constants/ui";
 import type { StatusMessage } from "../hooks/useKeysBackup";
 import styles from "../security.module.css";
 
@@ -37,15 +38,9 @@ export function BackupControls({
         <Flex direction="column" gap="4">
             {statusMessage && (
                 <Box>
-                    <Alert
-                        variant={
-                            statusMessage.type === "success"
-                                ? "success"
-                                : "destructive"
-                        }
-                    >
+                    <Alert variant={statusMessage.type}>
                         <AlertTitle>
-                            {statusMessage.type === "success"
+                            {statusMessage.type === COMPONENT_INTENT.SUCCESS
                                 ? t("common.success")
                                 : t("common.error")}
                         </AlertTitle>
@@ -57,7 +52,6 @@ export function BackupControls({
             )}
 
             <Flex direction="column" gap="2">
-                {/* Нативный label вместо Radix Text as="label" */}
                 <label htmlFor="backupPassword" className={styles.fieldLabel}>
                     {t("profile.backupPassword")}
                 </label>

@@ -47,7 +47,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             </Box>
 
             {submitError && (
-                <Alert variant="destructive">
+                <Alert variant="danger">
                     <AlertTitle>{t("auth.error")}</AlertTitle>
                     <AlertDescription>{submitError}</AlertDescription>
                 </Alert>
@@ -154,7 +154,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                     type="submit"
                                     disabled={!canSubmit}
                                     variant="solid"
-                                    size="3"
+                                    size="md"
                                     className={styles.submitButton}
                                 >
                                     {isSubmitting
@@ -168,7 +168,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
                         <Button
                             variant="ghost"
-                            size="2"
+                            size="sm"
                             onClick={toggleAuthMode}
                             className={styles.centerButton}
                             type="button"
@@ -186,7 +186,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                             </span>
                             <Button
                                 variant="ghost"
-                                size="2"
+                                size="sm"
                                 onClick={toggleViewMode}
                                 className={styles.toggleModeButton}
                                 type="button"
