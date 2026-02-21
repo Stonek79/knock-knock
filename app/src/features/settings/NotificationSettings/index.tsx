@@ -1,8 +1,13 @@
-import { Flex, Text } from "@radix-ui/themes";
 import { Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
 import { SettingsHeader } from "@/features/settings/SettingsHeader";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
+import styles from "./notificationsettings.module.css";
 
+/**
+ * Страница настроек уведомлений (заглушка).
+ */
 export function NotificationSettings() {
     const { t } = useTranslation();
 
@@ -12,12 +17,13 @@ export function NotificationSettings() {
                 title="Уведомления"
                 titleKey="settings.notifications"
             >
-                <Bell size={20} />
+                <Bell size={ICON_SIZE.sm} />
             </SettingsHeader>
             <Flex direction="column" gap="4" px="4" pb="4">
-                <Text color="gray">
+                {/* Нативный span вместо Radix Text */}
+                <span className={styles.comingSoon}>
                     {t("common.soon", "Настройки уведомлений появятся скоро")}
-                </Text>
+                </span>
             </Flex>
         </Flex>
     );

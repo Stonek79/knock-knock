@@ -1,21 +1,36 @@
-import { TextField } from "@radix-ui/themes";
 import { Eye, EyeOff } from "lucide-react";
 import { type ComponentPropsWithoutRef, forwardRef, useState } from "react";
+import { TextField } from "../TextField";
 import styles from "./styles.module.css";
 
-type PasswordInputProps = ComponentPropsWithoutRef<typeof TextField.Root>;
+/**
+ * Пропсы компонента PasswordInput.
+ * Наследует все пропсы нашего кастомного TextField.
+ */
+type PasswordInputProps = Omit<
+    ComponentPropsWithoutRef<typeof TextField>,
+    "type"
+>;
 
+/**
+ * Компонент поля ввода пароля с переключателем видимости.
+ * Обёртка над кастомным TextField с кнопкой Eye/EyeOff.
+ *
+ * @example
+ * <PasswordInput placeholder="Введите пароль" />
+ */
 export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     ({ className, ...props }, ref) => {
         const [showPassword, setShowPassword] = useState(false);
 
-        const toggleVisibility = () => setShowPassword(!showPassword);
+        /** Переключение видимости пароля */
+        const toggleVisibility = () => setShowPassword((prev) => !prev);
 
         return (
-            <TextField.Root
-                className={className}
+            <TextField
                 ref={ref}
                 type={showPassword ? "text" : "password"}
+                className={className}
                 {...props}
             >
                 <TextField.Slot side="right">
@@ -24,17 +39,17 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                         onClick={toggleVisibility}
                         className={styles.toggleButton}
                         aria-label={
-                            showPassword ? "Hide password" : "Show password"
+                            showPassword ? "Скрыть пароль" : "Показать пароль"
                         }
                     >
                         {showPassword ? (
-                            <EyeOff size={16} />
+                            <EyeOff size="var(--size-icon-sm)" />
                         ) : (
-                            <Eye size={16} />
+                            <Eye size="var(--size-icon-sm)" />
                         )}
                     </button>
                 </TextField.Slot>
-            </TextField.Root>
+            </TextField>
         );
     },
 );

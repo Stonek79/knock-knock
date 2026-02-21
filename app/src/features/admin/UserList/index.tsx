@@ -1,15 +1,15 @@
-import {
-    Badge,
-    Button,
-    DropdownMenu,
-    Flex,
-    Table,
-    Text,
-    TextField,
-} from "@radix-ui/themes";
 import { MoreHorizontal, Search, UserCheck, UserX } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { DropdownMenu } from "@/components/ui/DropdownMenu";
+import { Table } from "@/components/ui/Table";
+import { Text } from "@/components/ui/Text";
+import { TextField } from "@/components/ui/TextField";
+import { COMPONENT_INTENT, USER_ROLE } from "@/lib/constants";
 import { useUserManagement } from "../hooks/useUserManagement";
+import styles from "./userlist.module.css";
 
 export function UserList() {
     const { t } = useTranslation();
@@ -24,23 +24,23 @@ export function UserList() {
     };
 
     return (
-        <Flex direction="column" gap="4">
-            <Flex justify="between" align="center">
-                <Text size="5" weight="bold">
+        <Flex direction="column" gap="4" className={styles.container}>
+            <div className={styles.header}>
+                <Text size="xl" weight="bold">
                     {t("admin.userManagement", "User Management")}
                 </Text>
-                <TextField.Root
+                <TextField
                     placeholder={t("admin.searchUsers", "Search users...")}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 >
                     <TextField.Slot>
-                        <Search size={16} />
+                        <Search className={styles.searchIcon} />
                     </TextField.Slot>
-                </TextField.Root>
-            </Flex>
+                </TextField>
+            </div>
 
-            <Table.Root variant="surface">
+            <Table.Root>
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeaderCell>
@@ -73,29 +73,30 @@ export function UserList() {
                                         <Text weight="bold">
                                             {user.display_name}
                                         </Text>
-                                        <Text color="gray" size="2">
+                                        <Text className={styles.userRole}>
                                             (@{user.username})
                                         </Text>
                                     </Flex>
                                 </Table.RowHeaderCell>
                                 <Table.Cell>
                                     <Badge
-                                        color={
-                                            user.role === "admin"
-                                                ? "purple"
-                                                : "gray"
+                                        intent={
+                                            user.role === USER_ROLE.ADMIN
+                                                ? COMPONENT_INTENT.PRIMARY
+                                                : COMPONENT_INTENT.NEUTRAL
                                         }
+                                        variant="soft"
                                     >
-                                        {user.role || "user"}
+                                        {user.role || USER_ROLE.USER}
                                     </Badge>
                                 </Table.Cell>
                                 <Table.Cell>
                                     {isBanned ? (
-                                        <Badge color="red">
+                                        <Badge intent="danger" variant="solid">
                                             {t("admin.statusBanned", "Banned")}
                                         </Badge>
                                     ) : (
-                                        <Badge color="green">
+                                        <Badge intent="success" variant="soft">
                                             {t("admin.statusActive", "Active")}
                                         </Badge>
                                     )}
@@ -105,12 +106,13 @@ export function UserList() {
                                 </Table.Cell>
                                 <Table.Cell>
                                     <DropdownMenu.Root>
-                                        <DropdownMenu.Trigger>
-                                            <Button
-                                                variant="ghost"
-                                                color="gray"
-                                            >
-                                                <MoreHorizontal size={16} />
+                                        <DropdownMenu.Trigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <MoreHorizontal
+                                                    className={
+                                                        styles.actionIcon
+                                                    }
+                                                />
                                             </Button>
                                         </DropdownMenu.Trigger>
                                         <DropdownMenu.Content>
@@ -125,7 +127,11 @@ export function UserList() {
                                                         gap="2"
                                                         align="center"
                                                     >
-                                                        <UserCheck size={16} />{" "}
+                                                        <UserCheck
+                                                            className={
+                                                                styles.actionIcon
+                                                            }
+                                                        />{" "}
                                                         {t(
                                                             "admin.actionUnban",
                                                             "Unban User",
@@ -134,7 +140,7 @@ export function UserList() {
                                                 </DropdownMenu.Item>
                                             ) : (
                                                 <DropdownMenu.Item
-                                                    color="red"
+                                                    intent="danger"
                                                     onSelect={() =>
                                                         banUser(user.id)
                                                     }
@@ -143,7 +149,11 @@ export function UserList() {
                                                         gap="2"
                                                         align="center"
                                                     >
-                                                        <UserX size={16} />{" "}
+                                                        <UserX
+                                                            className={
+                                                                styles.actionIcon
+                                                            }
+                                                        />{" "}
                                                         {t(
                                                             "admin.actionBan7",
                                                             "Ban (7 Days)",

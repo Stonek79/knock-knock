@@ -1,25 +1,32 @@
-import { Box, Flex, Grid, Text } from "@radix-ui/themes";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Grid } from "@/components/layout/Grid";
 import { DESIGN_THEME, THEME_MODE } from "@/lib/constants/theme";
 import { useThemeStore } from "@/stores/theme";
 import styles from "./theme-selector.module.css";
 
+/**
+ * Компонент выбора темы и режима отображения.
+ * Использует нативные span вместо Radix Text.
+ */
 export const ThemeSelector = () => {
     const { t } = useTranslation();
     const { theme, setTheme, mode, setMode } = useThemeStore();
 
     return (
         <Flex direction="column" gap="4" className={styles.container}>
-            <Text size="4" weight="bold">
+            {/* Нативный span вместо Radix Text */}
+            <span className={styles.sectionTitle}>
                 {t("settings.appearance", "Внешний вид")}
-            </Text>
+            </span>
 
             {/* Mode Toggle */}
             <Flex gap="3" align="center" className={styles.section}>
-                <Text size="2" color="gray">
+                <span className={styles.modeLabel}>
                     {t("settings.mode", "Режим")}:
-                </Text>
+                </span>
                 <Flex gap="2">
                     <button
                         type="button"
@@ -56,13 +63,11 @@ export const ThemeSelector = () => {
                 >
                     <Box className={styles.previewNeon} />
                     <Flex justify="between" align="center" mt="2">
-                        <Text weight="medium">
+                        <span className={styles.themeName}>
                             {t("theme.neonName", "Cosmic Neon")}
-                        </Text>
+                        </span>
                         {theme === DESIGN_THEME.NEON && (
-                            <Text style={{ color: "var(--accent-primary)" }}>
-                                ✓
-                            </Text>
+                            <span className={styles.checkIcon}>✓</span>
                         )}
                     </Flex>
                 </Box>
@@ -77,13 +82,11 @@ export const ThemeSelector = () => {
                 >
                     <Box className={styles.previewEmerald} />
                     <Flex justify="between" align="center" mt="2">
-                        <Text weight="medium">
+                        <span className={styles.themeName}>
                             {t("theme.emeraldName", "Emerald Luxury")}
-                        </Text>
+                        </span>
                         {theme === DESIGN_THEME.EMERALD && (
-                            <Text style={{ color: "var(--accent-primary)" }}>
-                                ✓
-                            </Text>
+                            <span className={styles.checkIcon}>✓</span>
                         )}
                     </Flex>
                 </Box>

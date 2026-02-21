@@ -4,7 +4,8 @@
  * Отображает ряд точек, заполняющихся по мере ввода цифр.
  * Поддерживает состояние ошибки (красные точки + анимация тряски).
  */
-import { Box, Flex } from "@radix-ui/themes";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import { PIN_DOTS } from "./pin.constants";
 import styles from "./pin.module.css";
 

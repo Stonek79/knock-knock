@@ -1,7 +1,12 @@
-import { Button, Card, Flex, Grid, Text } from "@radix-ui/themes";
 import { Link } from "@tanstack/react-router";
 import { AlertOctagon, ShieldAlert, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
+import { Grid } from "@/components/layout/Grid";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Text } from "@/components/ui/Text";
+import { ROUTES } from "@/lib/constants/routes";
 import { TestTools } from "./TestTools";
 
 export function AdminDashboard() {
@@ -9,22 +14,22 @@ export function AdminDashboard() {
 
     return (
         <Flex direction="column" gap="6">
-            <Text size="5" weight="bold">
+            <Text size="xl" weight="bold">
                 {t("admin.dashboard", "Dashboard")}
             </Text>
 
-            <Grid columns={{ initial: "1", md: "3" }} gap="4">
+            <Grid columns="1" gap="4">
                 <Card>
                     <Flex direction="column" gap="2">
                         <Flex align="center" gap="2">
-                            <Users size={20} />
+                            <Users />
                             <Text weight="bold">
                                 {t("admin.users", "Users")}
                             </Text>
                         </Flex>
-                        <Text size="7">--</Text>
+                        <Text size="xxl">--</Text>
                         <Button variant="soft" asChild>
-                            <Link to="/admin/users">
+                            <Link to={ROUTES.ADMIN_USERS}>
                                 {t("admin.manageUsers", "Manage Users")}
                             </Link>
                         </Button>
@@ -34,12 +39,12 @@ export function AdminDashboard() {
                 <Card>
                     <Flex direction="column" gap="2">
                         <Flex align="center" gap="2">
-                            <ShieldAlert size={20} />
+                            <ShieldAlert />
                             <Text weight="bold">
                                 {t("admin.reports", "Reports")}
                             </Text>
                         </Flex>
-                        <Text size="7">0</Text>
+                        <Text size="xxl">0</Text>
                         <Button variant="soft" disabled>
                             {t("admin.queueEmpty", "Queue Empty")}
                         </Button>
@@ -49,10 +54,10 @@ export function AdminDashboard() {
                 <Card>
                     <Flex direction="column" gap="2">
                         <Flex align="center" gap="2">
-                            <AlertOctagon size={20} />
+                            <AlertOctagon />
                             <Text weight="bold">{t("admin.bans", "Bans")}</Text>
                         </Flex>
-                        <Text size="7">--</Text>
+                        <Text size="xxl">--</Text>
                         <Button variant="soft" disabled>
                             {t("admin.viewBans", "View Bans")}
                         </Button>
@@ -62,7 +67,7 @@ export function AdminDashboard() {
 
             <TestTools />
 
-            <Text mt="4" color="gray" size="2">
+            <Text intent="secondary" size="md">
                 Admin Tools v1.0 - Use responsibly.
             </Text>
         </Flex>

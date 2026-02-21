@@ -1,7 +1,7 @@
 .statusIndicator {
     width: 10px;
     height: 10px;
-    border-radius: var(--radius-full);
+    border-radius: var(--kk-radius-full);
 }
 
 .statusActive {
@@ -26,4 +26,24 @@
     gap: var(--space-4);
     display: flex;
     flex-direction: column;
+}
+
+/* Стили для BackupControls */
+.fieldLabel {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--space-1);
+    display: block;
+}
+
+/* Стили для KeysStatusCard */
+.statusTitle {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--foreground);
+}
+
+.statusDesc {
+    font-size: var(--text-xs);
+    color: var(--muted);
 }

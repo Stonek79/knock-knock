@@ -1,0 +1,53 @@
+.loaderWrapper {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-app);
+    z-index: var(--z-overlay);
+}
+
+.iconContainer {
+    position: relative;
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pulseRing {
+    position: absolute;
+    width: var(--size-loader-ring);
+    height: var(--size-loader-ring);
+    border: 2px solid var(--accent-primary);
+    border-radius: var(--kk-radius-full);
+    opacity: 0;
+    animation: pulse 2s infinite;
+}
+
+.loadingText {
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+/* Иконка таймаута (ошибка подключения) */
+.timeoutIcon {
+    width: var(--size-error-icon-sm);
+    height: var(--size-error-icon-sm);
+    color: var(--color-error);
+}
+
+.refresh {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    color: var(--color-error);
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.6);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}

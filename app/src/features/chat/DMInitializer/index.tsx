@@ -1,8 +1,9 @@
-import { Box, Spinner, Text } from "@radix-ui/themes";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
 import { useCreateDM } from "@/features/chat/hooks/useCreateDM";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./dminitializer.module.css";
@@ -32,15 +33,12 @@ export function DMInitializer() {
 
         const initializeDM = async () => {
             try {
-                // Используем мутацию для поиска/создания чата
-                // Хук useCreateDM сам инвалидирует кеш при успехе
                 const roomId = await createDM.mutateAsync({
                     currentUserId: user.id,
                     targetUserId: userId,
                     isPrivate,
                 });
 
-                // Редирект на комнату чата
                 navigate({
                     to: "/chat/$roomId",
                     params: { roomId },
@@ -75,10 +73,11 @@ export function DMInitializer() {
 
     return (
         <Box className={styles.container}>
-            <Spinner size="3" />
-            <Text color="gray" size="2">
+            {/* Наш кастомный Spinner вместо Radix Spinner */}
+            <Spinner size="lg" />
+            <span className={styles.initText}>
                 {t("chat.initializing", "Инициализация чата...")}
-            </Text>
+            </span>
         </Box>
     );
 }

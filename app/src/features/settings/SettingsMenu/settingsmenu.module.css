@@ -9,7 +9,7 @@
 }
 
 .mobileItem {
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .mobileItem:active {
@@ -20,7 +20,7 @@
 .iconBox {
     width: var(--space-8);
     height: var(--space-8);
-    border-radius: var(--radius-md);
+    border-radius: var(--kk-radius-md);
     background: var(--glass-bg);
     display: flex;
     align-items: center;
@@ -57,10 +57,16 @@
 
 .mobileItem.adminCard {
     border-color: var(--accent-primary);
-    border-width: 1px;
+    border-width: var(--border-width-base);
 }
 
 .iconBox.adminIconBox {
     background: var(--accent-primary);
     color: var(--bubble-out-fg);
+}
+
+.icon {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    stroke-width: 2.5px; /* Чуть толще для читаемости */
 }

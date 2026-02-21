@@ -1,8 +1,14 @@
 .container {
-    max-width: 600px;
+    max-width: var(--max-w-content);
 }
 
 .signOutCard {
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--kk-radius-lg);
+}
+
+/* Нативный span вместо Radix Text */
+.emailText {
+    font-size: var(--text-sm);
+    color: var(--foreground);
 }

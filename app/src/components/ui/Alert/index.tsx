@@ -1,61 +1,75 @@
-import { Callout } from "@radix-ui/themes";
-import { CircleCheck, Info, TriangleAlert } from "lucide-react";
+import clsx from "clsx";
+import {
+    AlertCircle,
+    CheckCircle,
+    Info,
+    type LucideIcon,
+    TriangleAlert,
+} from "lucide-react";
 import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
+import type { ComponentIntent } from "@/lib/types/ui";
 import styles from "./alert.module.css";
 
 /**
  * Свойства компонента Alert.
  */
-export interface AlertProps extends VariableAlertProps {
-    /** Вариант стиля уведомления */
-    variant?: "default" | "destructive" | "success";
+export interface AlertProps
+    extends Omit<HTMLAttributes<HTMLDivElement>, "color"> {
+    /** Вариант (намерение) уведомления */
+    variant?: ComponentIntent;
     /** Заголовок уведомления (опционально) */
     title?: string;
     /** Отображать ли иконку (по умолчанию true) */
     icon?: boolean;
 }
 
-type VariableAlertProps = Omit<HTMLAttributes<HTMLDivElement>, "color">;
+/**
+ * Маппинг иконок на варианты.
+ */
+const ICON_MAP: Partial<Record<ComponentIntent, LucideIcon>> = {
+    info: Info,
+    success: CheckCircle,
+    warning: TriangleAlert,
+    danger: AlertCircle,
+    neutral: Info,
+};
 
 /**
  * Компонент уведомления (Alert).
- * Обертка над Radix Themes Callout.
+ * Замена Radix Themes Callout.
  */
 const Alert = forwardRef<HTMLDivElement, AlertProps>(
-    ({ children, variant = "default", title, icon = true, ...props }, ref) => {
-        let color: "blue" | "red" | "green" = "blue";
-        let IconComponent = Info;
+    (
+        { children, variant = "info", title, icon = true, className, ...props },
+        ref,
+    ) => {
+        const IconComponent = ICON_MAP[variant] || Info;
 
-        if (variant === "destructive") {
-            color = "red";
-            IconComponent = TriangleAlert;
-        } else if (variant === "success") {
-            color = "green";
-            IconComponent = CircleCheck;
-        }
+        const rootClasses = clsx(styles.alert, styles[variant], className);
 
         return (
-            <Callout.Root color={color} ref={ref} {...props}>
+            <div className={rootClasses} ref={ref} role="alert" {...props}>
                 {icon && (
-                    <Callout.Icon>
-                        <IconComponent size={16} />
-                    </Callout.Icon>
+                    <div className={styles.iconWrapper}>
+                        <IconComponent className={styles.icon} />
+                    </div>
                 )}
-                <Callout.Text>
-                    {title && <strong className={styles.title}>{title}</strong>}
-                    {children}
-                </Callout.Text>
-            </Callout.Root>
+                <div className={styles.content}>
+                    {title && <h5 className={styles.title}>{title}</h5>}
+                    <div className={styles.description}>{children}</div>
+                </div>
+            </div>
         );
     },
 );
 Alert.displayName = "Alert";
 
 const AlertTitle = ({ children }: { children: ReactNode }) => (
-    <strong className={styles.alertTitle}>{children}</strong>
+    <h5 className={styles.title}>{children}</h5>
 );
+
 const AlertDescription = ({ children }: { children: ReactNode }) => (
-    <span>{children}</span>
+    <div className={styles.description}>{children}</div>
 );
 
 export { Alert, AlertTitle, AlertDescription };

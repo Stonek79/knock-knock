@@ -1,7 +1,9 @@
-import { Box, Flex, ScrollArea } from "@radix-ui/themes";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search } from "@/components/Search/Search";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { ScrollArea } from "@/components/ui/ScrollArea";
+import { Search } from "@/components/ui/Search";
 import { ROUTES } from "@/lib/constants";
 import { useFavoritesChatList } from "../hooks/useFavoritesChatList";
 import { ChatListHeader } from "./ChatListHeader";
@@ -24,7 +26,6 @@ export function FavoritesChatList() {
 
     return (
         <Flex direction="column" className={styles.container}>
-            {/* Header: Favorites + Search */}
             <Box>
                 <ChatListHeader
                     title={t("nav.favorites", "Избранное")}

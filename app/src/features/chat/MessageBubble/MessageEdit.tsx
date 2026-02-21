@@ -1,6 +1,10 @@
-import { Box, Flex, IconButton, TextArea } from "@radix-ui/themes";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { IconButton } from "@/components/ui/IconButton";
+import { TextArea } from "@/components/ui/TextArea";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./message-bubble.module.css";
 
 interface MessageEditProps {
@@ -9,6 +13,10 @@ interface MessageEditProps {
     onSave: (content: string) => void;
 }
 
+/**
+ * Компонент редактирования сообщения.
+ * Использует наши кастомные IconButton и TextArea вместо Radix.
+ */
 export function MessageEdit({
     initialContent,
     onCancel,
@@ -25,20 +33,15 @@ export function MessageEdit({
                 rows={2}
             />
             <Flex gap="2" justify="end" mt="2">
-                <IconButton
-                    size="1"
-                    variant="soft"
-                    color="gray"
-                    onClick={onCancel}
-                >
-                    <X className={styles.iconSmall} />
+                <IconButton size="sm" variant="ghost" onClick={onCancel}>
+                    <X size={ICON_SIZE.xs} />
                 </IconButton>
                 <IconButton
-                    size="1"
+                    size="sm"
                     variant="solid"
                     onClick={() => onSave(content)}
                 >
-                    <Check className={styles.iconSmall} />
+                    <Check size={ICON_SIZE.xs} />
                 </IconButton>
             </Flex>
         </Box>

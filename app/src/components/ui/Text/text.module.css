@@ -1,0 +1,114 @@
+/**
+ * CSS-модуль для кастомного компонента Text.
+ * Управляет цветом, размером и начертанием текста через токены дизайн-системы.
+ */
+
+.text {
+    margin: 0;
+}
+
+/* =========================================== */
+/* Варианты цвета (intent) */
+/* =========================================== */
+
+.neutral {
+    color: inherit; /* Обычно наследуется или foreground */
+}
+
+.secondary {
+    color: var(--muted);
+}
+
+.danger {
+    color: var(--color-error);
+}
+
+.warning {
+    color: var(--color-warning);
+}
+
+.success {
+    color: var(--color-success);
+}
+
+.primary {
+    color: var(--accent-primary);
+}
+
+.info {
+    color: var(--color-info);
+}
+
+/* =========================================== */
+/* Размеры текста (size) */
+/* =========================================== */
+
+.xs {
+    font-size: var(--text-xs);
+}
+
+.sm {
+    font-size: var(--text-sm);
+}
+
+.md {
+    font-size: var(--text-base);
+}
+
+.lg {
+    font-size: var(--text-lg);
+}
+
+.xl {
+    font-size: var(--text-xl);
+}
+
+.xxl {
+    font-size: var(--text-2xl);
+}
+
+/* =========================================== */
+/* Начертание (weight) */
+/* =========================================== */
+
+.normal {
+    font-weight: var(--font-weight-normal);
+}
+
+.medium {
+    font-weight: var(--font-weight-medium);
+}
+
+.semibold {
+    font-weight: var(--font-weight-semibold);
+}
+
+.bold {
+    font-weight: var(--font-weight-bold);
+}
+
+/* =========================================== */
+/* Выравнивание (align) */
+/* =========================================== */
+
+.left {
+    text-align: left;
+}
+
+.center {
+    text-align: center;
+}
+
+.right {
+    text-align: right;
+}
+
+/* =========================================== */
+/* Утилиты */
+/* =========================================== */
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

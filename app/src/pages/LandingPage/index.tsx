@@ -1,9 +1,12 @@
-import { Badge, Box, Button, Flex, Heading, Text } from "@radix-ui/themes";
 import { useNavigate } from "@tanstack/react-router";
 import { Construction } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import { AppLogo } from "@/components/ui/AppLogo";
+import { Button } from "@/components/ui/Button";
 import { ROUTES } from "@/lib/constants";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./landing.module.css";
 
 /**
@@ -28,36 +31,27 @@ export function LandingPage() {
                 className={styles.content}
                 gap="5"
             >
-                <Badge color="orange" size="3" variant="surface" radius="full">
-                    <Construction size={16} className={styles.badgeIcon} />
+                <span className={styles.badge}>
+                    <Construction
+                        size={ICON_SIZE.xs}
+                        className={styles.badgeIcon}
+                    />
                     {t("common.landing.badge")}
-                </Badge>
+                </span>
 
-                <AppLogo
-                    width={280}
-                    className={styles.logoImage}
-                    updateFavicon
-                />
+                <AppLogo size="xl" className={styles.logoImage} updateFavicon />
 
-                <Heading size="8" align="center" weight="medium">
-                    {t("common.landing.title")}
-                </Heading>
+                <h1 className={styles.title}>{t("common.landing.title")}</h1>
 
-                <Text
-                    size="5"
-                    align="center"
-                    color="gray"
-                    className={styles.descriptionText}
-                >
+                <p className={styles.descriptionText}>
                     {t("common.landing.description")}
-                </Text>
+                </p>
             </Flex>
 
             <Box position="absolute" bottom="5">
                 <Button
                     variant="ghost"
-                    color="gray"
-                    highContrast
+                    intent="secondary"
                     onClick={() => navigate({ to: ROUTES.LOGIN })}
                 >
                     {t("common.landing.devLogin")}

@@ -1,8 +1,12 @@
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { Phone } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import styles from "./callslist.module.css";
 
+/**
+ * Список звонков (заглушка).
+ */
 export function CallsList() {
     const { t } = useTranslation();
 
@@ -10,12 +14,14 @@ export function CallsList() {
         <Box>
             <Flex align="center" gap="2" className={styles.header}>
                 <Phone className={styles.icon} />
-                <Heading size="4">{t("calls.title", "Звонки")}</Heading>
+                {/* Нативный h2 вместо Radix Heading */}
+                <h2 className={styles.title}>{t("calls.title", "Звонки")}</h2>
             </Flex>
             <Box p="4">
-                <Text color="gray" size="2">
+                {/* Нативный span вместо Radix Text */}
+                <span className={styles.emptyText}>
                     {t("calls.empty", "История звонков пуста")}
-                </Text>
+                </span>
             </Box>
         </Box>
     );

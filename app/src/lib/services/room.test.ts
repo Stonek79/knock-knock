@@ -10,13 +10,19 @@ vi.mock("@/lib/supabase", () => ({
     },
 }));
 
-vi.mock("@/lib/crypto", async (importOriginal) => {
-    const actual = await importOriginal();
+vi.mock("@/lib/crypto/rooms", async (importOriginal) => {
+    const actual = await importOriginal<Record<string, unknown>>();
     return {
-        // @ts-expect-error spread
         ...actual,
         generateRoomKey: vi.fn().mockResolvedValue("mock-room-key"),
         generateRoomId: vi.fn().mockReturnValue("new-room-id"),
+    };
+});
+
+vi.mock("@/lib/crypto/encryption", async (importOriginal) => {
+    const actual = await importOriginal<Record<string, unknown>>();
+    return {
+        ...actual,
         wrapRoomKey: vi.fn().mockResolvedValue({
             ephemeralPublicKey: new ArrayBuffer(0),
             iv: new ArrayBuffer(0),

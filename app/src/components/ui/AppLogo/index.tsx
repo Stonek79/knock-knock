@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { APP_NAME, APP_NAME_RU } from "@/lib/constants";
+import type { ComponentSize } from "@/lib/types/ui";
 import styles from "./AppLogo.module.css";
 
 interface AppLogoProps {
-    width?: number | string; // Игнорируем или используем как размер шрифта
-    height?: number | string;
+    size?: ComponentSize;
     className?: string;
     updateFavicon?: boolean;
 }
@@ -13,7 +13,7 @@ interface AppLogoProps {
 export function AppLogo({
     className,
     updateFavicon = false,
-    width,
+    size = "md",
 }: AppLogoProps) {
     const { i18n } = useTranslation();
     const isRu = i18n.language.startsWith("ru");
@@ -42,13 +42,10 @@ export function AppLogo({
         }
     }, [updateFavicon]);
 
-    // Вычисляем размер шрифта, если передан width (эвристика)
-    const fontSize = typeof width === "number" ? width / 3.5 : undefined;
-
     return (
         <span
             className={`${styles.logoText} ${className || ""}`}
-            style={{ fontSize: fontSize }}
+            data-size={size}
         >
             {logoText}
         </span>

@@ -1,6 +1,6 @@
-import { Heading, Text } from "@radix-ui/themes";
 import { MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "../chat-placeholder.module.css";
 
 /**
@@ -12,17 +12,18 @@ export function ChatPlaceholder() {
     return (
         <div className={styles.chatContainer}>
             <div className={styles.emptyIconBox}>
-                <MessageCircle size={64} strokeWidth={1.5} />
+                {/* ICON_SIZE.xl = 48px — числовое значение, SVG-атрибут работает корректно */}
+                <MessageCircle size={ICON_SIZE.xl} strokeWidth={1.5} />
             </div>
-            <Heading size="5" mb="2">
+            <h2 className={styles.placeholderTitle}>
                 {t("chat.selectChat", "Выберите чат")}
-            </Heading>
-            <Text color="gray" size="3" className={styles.placeholderText}>
+            </h2>
+            <p className={styles.placeholderText}>
                 {t(
                     "chat.selectChatDesc",
                     "Выберите пользователя из списка слева, чтобы начать общение.",
                 )}
-            </Text>
+            </p>
         </div>
     );
 }

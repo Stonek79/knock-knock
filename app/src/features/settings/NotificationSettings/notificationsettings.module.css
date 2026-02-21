@@ -1,0 +1,6 @@
+/* Стили для страницы настроек уведомлений */
+
+.comingSoon {
+    font-size: var(--text-sm);
+    color: var(--muted);
+}

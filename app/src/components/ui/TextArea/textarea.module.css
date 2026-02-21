@@ -1,0 +1,26 @@
+/**
+ * CSS-модуль для кастомного компонента TextArea.
+ * Управляет стилем через токены дизайн-системы.
+ */
+
+.textArea {
+    width: 100%;
+    border-radius: var(--kk-radius-md);
+    border: var(--border-width-base) solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--foreground);
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    padding: var(--space-3);
+    resize: vertical;
+    transition:
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+    outline: none;
+}
+
+.textArea:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 var(--border-width-focus)
+        color-mix(in srgb, var(--accent-primary) 20%, transparent);
+}

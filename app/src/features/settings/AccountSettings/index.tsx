@@ -1,12 +1,18 @@
-import { Button, Card, Flex, Text } from "@radix-ui/themes";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ProfileForm } from "@/features/profile/ProfileForm";
+import { Flex } from "@/components/layout/Flex";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Text } from "@/components/ui/Text";
+import { ProfileForm } from "@/features/settings/ProfileForm";
 import { SettingsHeader } from "@/features/settings/SettingsHeader";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./accountsettings.module.css";
 
+/**
+ * Страница настроек аккаунта.
+ */
 export function AccountSettings() {
     const { t } = useTranslation();
     const { user, signOut } = useAuthStore();
@@ -27,12 +33,12 @@ export function AccountSettings() {
             <Flex direction="column" gap="4" px="4" pb="4">
                 <Card className={styles.signOutCard}>
                     <Flex justify="between" align="center">
-                        <Text>
+                        <Text size="md" intent="secondary">
                             {t("common.email")}: {user.email}
                         </Text>
                         <Button
-                            variant="soft"
-                            color="red"
+                            variant="outline"
+                            size="md"
                             onClick={handleSignOut}
                         >
                             {t("common.signOut")}

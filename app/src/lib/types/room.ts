@@ -53,5 +53,5 @@ export interface PeerUser {
     id: string;
     display_name: string;
     username?: string;
-    avatar_url?: string;
+    avatar_url?: string | null;
 }

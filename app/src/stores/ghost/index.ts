@@ -12,7 +12,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { GHOST_STATUS, GHOST_STORAGE_KEY } from "@/lib/constants";
-import { sha256 } from "@/lib/crypto";
+import { sha256 } from "@/lib/crypto/hash";
 import type { GhostStatus } from "@/lib/types";
 
 interface GhostState {

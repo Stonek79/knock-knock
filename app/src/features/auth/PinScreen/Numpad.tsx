@@ -2,12 +2,16 @@
  * Компонент цифровой клавиатуры PIN-кода.
  *
  * Отображает сетку 3×4 с цифрами 0-9, кнопкой удаления и пустой ячейкой.
- * Использует Radix UI Button/IconButton вместо нативных HTML-кнопок.
+ * Использует наш кастомный IconButton вместо Radix IconButton.
  */
-import { Box, Grid, IconButton } from "@radix-ui/themes";
+
 import { Delete } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { DELETE_ICON_SIZE, NUMPAD_KEYS } from "./pin.constants";
+import { Box } from "@/components/layout/Box";
+import { Grid } from "@/components/layout/Grid";
+import { IconButton } from "@/components/ui/IconButton";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { NUMPAD_KEYS } from "./pin.constants";
 import styles from "./pin.module.css";
 
 interface NumpadProps {
@@ -41,20 +45,20 @@ export function Numpad({ onDigit, onDelete, disabled }: NumpadProps) {
                     return <Box key={keyDef.id} className={styles.emptyCell} />;
                 }
 
-                /* Кнопка удаления */
+                /* Кнопка удаления — наш кастомный IconButton */
                 if (keyDef.type === "action") {
                     return (
                         <IconButton
                             key={keyDef.id}
                             variant="ghost"
-                            radius="full"
-                            size="4"
+                            shape="round"
+                            size="lg"
                             className={`${styles.numpadKey} ${styles.deleteKey}`}
                             onClick={onDelete}
                             disabled={disabled}
                             aria-label={t("ghost.delete", "Удалить")}
                         >
-                            <Delete size={DELETE_ICON_SIZE} />
+                            <Delete size={ICON_SIZE.md} />
                         </IconButton>
                     );
                 }
@@ -64,8 +68,8 @@ export function Numpad({ onDigit, onDelete, disabled }: NumpadProps) {
                     <IconButton
                         key={keyDef.id}
                         variant="ghost"
-                        radius="full"
-                        size="4"
+                        shape="round"
+                        size="lg"
                         className={styles.numpadKey}
                         onClick={() => onDigit(keyDef.value)}
                         disabled={disabled}

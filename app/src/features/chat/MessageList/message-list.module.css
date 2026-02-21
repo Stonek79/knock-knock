@@ -57,3 +57,7 @@
     pointer-events: none;
     transform: translateY(10px);
 }
+
+.messageWrapper {
+    width: 100%;
+}

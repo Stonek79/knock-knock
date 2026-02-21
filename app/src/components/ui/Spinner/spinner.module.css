@@ -1,0 +1,50 @@
+/**
+ * CSS-модуль для кастомного компонента Spinner.
+ * Управляет размером через токены дизайн-системы.
+ */
+
+/* =========================================== */
+/* Базовые стили */
+/* =========================================== */
+
+.spinner {
+    display: inline-block;
+    border-radius: var(--kk-radius-full);
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+    border-top-color: var(--accent-primary);
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+/* =========================================== */
+/* Размеры (size) */
+/* =========================================== */
+
+.sm {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    border-width: var(--border-width-focus);
+}
+
+.md {
+    width: var(--size-icon-md);
+    height: var(--size-icon-md);
+    border-width: var(--border-width-focus);
+}
+
+.lg {
+    width: var(--size-icon-lg);
+    height: var(--size-icon-lg);
+    border-width: calc(var(--border-width-focus) * 1.5);
+}
+
+/* =========================================== */
+/* Анимация */
+/* =========================================== */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

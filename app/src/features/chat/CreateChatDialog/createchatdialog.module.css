@@ -6,3 +6,17 @@
 .icon {
     color: var(--muted-foreground);
 }
+
+/* Нативный span вместо Radix Text для выбранного контакта */
+.selectedInfo {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--muted);
+    margin-top: var(--space-3);
+}
+
+.description {
+    font-size: var(--text-sm);
+    color: var(--muted);
+    margin-bottom: var(--space-4);
+}

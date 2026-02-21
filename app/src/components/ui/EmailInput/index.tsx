@@ -1,24 +1,28 @@
-import { TextField } from "@radix-ui/themes";
 import { Mail } from "lucide-react";
 import { type ComponentPropsWithoutRef, forwardRef } from "react";
+import { TextField } from "../TextField";
 
-// import styles from './styles.module.css'; // Раскомментировать если понадобятся стили
+/**
+ * Пропсы компонента EmailInput.
+ * Наследует все пропсы нашего кастомного TextField.
+ */
+type EmailInputProps = Omit<ComponentPropsWithoutRef<typeof TextField>, "type">;
 
-type EmailInputProps = ComponentPropsWithoutRef<typeof TextField.Root>;
-
+/**
+ * Компонент поля ввода email.
+ * Обёртка над кастомным TextField с иконкой Mail.
+ *
+ * @example
+ * <EmailInput placeholder="your@email.com" />
+ */
 export const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
     ({ className, ...props }, ref) => {
         return (
-            <TextField.Root
-                className={className}
-                ref={ref}
-                type="email"
-                {...props}
-            >
+            <TextField ref={ref} type="email" className={className} {...props}>
                 <TextField.Slot>
-                    <Mail size={16} />
+                    <Mail size="var(--size-icon-sm)" />
                 </TextField.Slot>
-            </TextField.Root>
+            </TextField>
         );
     },
 );

@@ -1,12 +1,33 @@
 .logoText {
-    font-weight: 900;
-    line-height: 1.1;
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-black);
+    line-height: var(--line-height-none);
     letter-spacing: -0.04em;
     background: linear-gradient(to right, var(--accent-9), var(--accent-11));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     user-select: none;
-    font-family: var(--font-fallback); /* Or ensure main font is loaded */
+    font-family: var(--font-fallback);
     display: inline-block;
+}
+
+.logoText[data-size="sm"] {
+    font-size: var(--text-sm);
+}
+
+.logoText[data-size="md"] {
+    font-size: var(--text-2xl);
+}
+
+.logoText[data-size="lg"] {
+    font-size: var(--space-12);
+}
+
+.logoText[data-size="xl"] {
+    font-size: var(--space-17);
+}
+
+.logoText[data-size="xxl"] {
+    font-size: var(--space-18);
 }

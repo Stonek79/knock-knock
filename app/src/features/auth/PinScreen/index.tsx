@@ -11,16 +11,18 @@
  * - Нет утечек памяти (таймеры очищаются в usePinInput)
  * - Все магические значения — в pin.constants.ts
  */
-import { Flex, Text } from "@radix-ui/themes";
+
 import { Lock } from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
 import { GHOST_STATUS } from "@/lib/constants";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useGhostStore } from "@/stores/ghost";
 import { usePinInput } from "../hooks/usePinInput";
 import { Numpad } from "./Numpad";
 import { PinDots } from "./PinDots";
-import { LOCK_ICON_SIZE, PIN_LENGTH } from "./pin.constants";
+import { PIN_LENGTH } from "./pin.constants";
 import styles from "./pin.module.css";
 
 /**
@@ -70,19 +72,19 @@ export function PinScreen() {
                 gap="6"
                 className={styles.container}
             >
-                {/* Иконка замка */}
-                <Lock size={LOCK_ICON_SIZE} className={styles.lockIcon} />
+                {/* Иконка замка — числовое значение вместо CSS-переменной */}
+                <Lock size={ICON_SIZE["2xl"]} className={styles.lockIcon} />
 
-                {/* Заголовок */}
-                <Text size="4" className={styles.title}>
+                {/* Нативный span вместо Radix Text */}
+                <span className={styles.title}>
                     {t("ghost.enterPin", "Введите PIN-код")}
-                </Text>
+                </span>
 
                 {/* Точки ввода */}
                 <PinDots filledCount={pin.length} hasError={hasError} />
 
                 {/* Сообщение об ошибке */}
-                <Text className={styles.errorText}>{errorMessage}</Text>
+                <span className={styles.errorText}>{errorMessage}</span>
 
                 {/* Цифровая клавиатура */}
                 <Numpad

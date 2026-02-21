@@ -1,25 +1,20 @@
-import {
-    Avatar,
-    Box,
-    Checkbox,
-    Flex,
-    ScrollArea,
-    Spinner,
-    Text,
-    TextField,
-} from "@radix-ui/themes";
-import { Search, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Avatar } from "@/components/ui/Avatar";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { ScrollArea } from "@/components/ui/ScrollArea";
+import { Search } from "@/components/ui/Search";
+import { Spinner } from "@/components/ui/Spinner";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
+import { CONTACT_PICKER_MODE } from "@/lib/constants";
 import type { Profile } from "@/lib/types/profile";
+import type { ContactPickerMode } from "@/lib/types/ui";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./contactpicker.module.css";
-
-/**
- * Режим работы компонента ContactPicker.
- */
-export type ContactPickerMode = "single" | "multi";
 
 interface ContactPickerProps {
     /**
@@ -38,11 +33,7 @@ interface ContactPickerProps {
 
 /**
  * Компонент выбора контактов для диалогов создания чатов.
- *
- * Поддерживает одиночный и множественный выбор.
- * Использует useContacts для загрузки контактов.
- *
- * @param props - Пропсы компонента
+ * Использует наши кастомные компоненты Avatar, Search, Spinner.
  */
 export function ContactPicker({
     mode,
@@ -54,21 +45,11 @@ export function ContactPicker({
     const [searchQuery, setSearchQuery] = useState("");
     const deferredSearchQuery = useDeferredValue(searchQuery);
 
-    /**
-     * Запрос списка контактов.
-     */
     const { data: contacts = [], isLoading, isError } = useContacts();
 
-    /**
-     * Фильтрация контактов по поисковому запросу.
-     */
     const { user } = useAuthStore();
 
-    /**
-     * Фильтрация контактов по поисковому запросу и исключение текущего пользователя.
-     */
     const filteredContacts = useMemo(() => {
-        // Исключаем себя из списка
         let list = contacts;
         if (user) {
             list = list.filter((c) => c.id !== user.id);
@@ -85,15 +66,10 @@ export function ContactPicker({
         );
     }, [contacts, deferredSearchQuery, user]);
 
-    /**
-     * Обработчик клика по контакту.
-     */
     const handleContactClick = (contact: Profile) => {
-        if (mode === "single") {
-            // Одиночный выбор — просто заменяем
+        if (mode === CONTACT_PICKER_MODE.SINGLE) {
             onSelectionChange([contact.id]);
         } else {
-            // Множественный выбор — toggle
             const isSelected = selectedIds.includes(contact.id);
             if (isSelected) {
                 onSelectionChange(
@@ -105,55 +81,45 @@ export function ContactPicker({
         }
     };
 
-    const isSearching = searchQuery !== deferredSearchQuery;
-
     return (
         <Flex direction="column" className={styles.container}>
-            {/* Поиск */}
+            {/* Поиск — используем наш компонент Search */}
             <Box className={styles.searchWrapper}>
-                <TextField.Root
+                <Search
                     placeholder={
                         searchPlaceholder || t("contacts.search", "Поиск...")
                     }
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                >
-                    <TextField.Slot>
-                        {isSearching ? (
-                            <Spinner size="1" />
-                        ) : (
-                            <Search size={16} />
-                        )}
-                    </TextField.Slot>
-                </TextField.Root>
+                    onChange={setSearchQuery}
+                />
             </Box>
 
             {/* Состояние загрузки */}
             {isLoading && (
                 <Box className={styles.emptyContainer}>
-                    <Spinner size="3" />
-                    <Text color="gray" size="2">
+                    <Spinner size="md" />
+                    <span className={styles.loadingText}>
                         {t("common.loading", "Загрузка...")}
-                    </Text>
+                    </span>
                 </Box>
             )}
 
             {/* Состояние ошибки */}
             {isError && (
                 <Box className={styles.emptyContainer}>
-                    <Text color="red" size="2">
+                    <span className={styles.errorText}>
                         {t("contacts.error", "Ошибка загрузки")}
-                    </Text>
+                    </span>
                 </Box>
             )}
 
             {/* Пустой результат */}
             {!isLoading && !isError && filteredContacts.length === 0 && (
                 <Box className={styles.emptyContainer}>
-                    <UserPlus size={40} />
-                    <Text size="2">
+                    <UserPlus size={ICON_SIZE.md} />
+                    <span className={styles.emptyText}>
                         {t("contacts.empty", "Контакты не найдены")}
-                    </Text>
+                    </span>
                 </Box>
             )}
 
@@ -168,7 +134,7 @@ export function ContactPicker({
                                 className={`${styles.item} ${isSelected ? styles.itemSelected : ""}`}
                                 onClick={() => handleContactClick(contact)}
                             >
-                                {mode === "multi" && (
+                                {mode === CONTACT_PICKER_MODE.MULTI && (
                                     <Checkbox
                                         checked={isSelected}
                                         className={styles.checkbox}
@@ -178,22 +144,21 @@ export function ContactPicker({
                                     />
                                 )}
                                 <Avatar
-                                    size="2"
-                                    fallback={contact.display_name[0]}
-                                    radius="full"
-                                    color="indigo"
+                                    size="md"
+                                    name={contact.display_name}
                                     src={contact.avatar_url ?? undefined}
+                                    className={styles.avatar}
                                 />
                                 <Flex
                                     direction="column"
                                     className={styles.info}
                                 >
-                                    <Text className={styles.name}>
+                                    <span className={styles.name}>
                                         {contact.display_name}
-                                    </Text>
-                                    <Text className={styles.username}>
+                                    </span>
+                                    <span className={styles.username}>
                                         @{contact.username}
-                                    </Text>
+                                    </span>
                                 </Flex>
                             </Box>
                         );

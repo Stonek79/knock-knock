@@ -8,7 +8,7 @@
 
 .loginCard {
     width: 100%;
-    max-width: 450px;
+    max-width: var(--max-w-auth);
 }
 
 .formContainer {
@@ -23,4 +23,46 @@
 
 .centerButton {
     margin: 0 auto;
+}
+
+.toggleModeButton {
+    margin: 0;
+    padding: 0;
+    height: auto;
+}
+
+/* Нативный h1 вместо Radix Heading */
+.title {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--foreground);
+    text-align: center;
+    margin: 0 0 var(--space-2);
+}
+
+/* Нативный p вместо Radix Text */
+.subtitle {
+    font-size: var(--text-base);
+    color: var(--muted);
+    text-align: center;
+    margin: 0;
+}
+
+/* Нативный label вместо Radix Text as="label" */
+.fieldLabel {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--foreground);
+}
+
+/* Ошибка поля */
+.fieldError {
+    font-size: var(--text-xs);
+    color: var(--color-error);
+}
+
+/* Текст переключения режима */
+.toggleText {
+    font-size: var(--text-sm);
+    color: var(--muted);
 }

@@ -9,6 +9,10 @@
     background-color: var(--surface);
 }
 
+.addContactButton {
+    cursor: pointer;
+}
+
 .list {
     flex: 1;
     overflow-y: auto;
@@ -20,7 +24,7 @@
     padding: var(--space-3) var(--space-4);
     gap: var(--space-3);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color var(--transition-base);
     border-bottom: 1px solid var(--border);
     text-decoration: none;
     color: inherit;
@@ -40,7 +44,7 @@
     right: 0;
     width: 10px;
     height: 10px;
-    border-radius: var(--radius-full);
+    border-radius: var(--kk-radius-full);
     border: 2px solid var(--surface);
 }
 

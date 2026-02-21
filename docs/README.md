@@ -7,11 +7,14 @@
 - `/infra` — Конфигурации инфраструктуры (Docker, Nginx, WireGuard).
 - `/docs` — Проектные правила и технические спецификации.
 
-- [Архитектура](file:///Users/alexstone/WebstormProjects/knock-knock/docs/ARCHITECTURE.md)
-- [Инструкция по деплою](file:///Users/alexstone/WebstormProjects/knock-knock/docs/DEPLOYMENT.md)
-- [Правила проекта](file:///Users/alexstone/WebstormProjects/knock-knock/docs/RULES.md)
-- [AI Агенты и Навыки](file:///Users/alexstone/WebstormProjects/knock-knock/docs/AGENTS.md)
-- **[Roadmap проекта](file:///Users/alexstone/WebstormProjects/knock-knock/docs/ROADMAP.md)** (Актуальный статус)
+- [Архитектура](./ARCHITECTURE.md)
+- [Дизайн-система](./DESIGN.md)
+- [Инструкция по деплою](./DEPLOYMENT.md)
+- [Правила проекта](./RULES.md)
+- [AI Агенты и Навыки](./AGENTS.md)
+- [Тестирование](./TESTING.md)
+- [План рефакторинга](./REFACTORING_PLAN.md)
+- **[Roadmap проекта](./ROADMAP.md)** (Актуальный статус)
 
 ## Как запустить локально
 ```bash

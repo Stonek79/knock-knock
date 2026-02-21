@@ -1,5 +1,6 @@
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { AppLogo } from "@/components/ui/AppLogo";
 import { Button } from "@/components/ui/Button";
@@ -33,16 +34,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <Flex direction="column" gap="5">
             <Box>
                 <Flex justify="center" mb="4">
-                    <AppLogo width={120} />
+                    <AppLogo size="md" />
                 </Flex>
-                <Heading size="6" align="center" mb="2">
+                {/* Нативный h1 вместо Radix Heading */}
+                <h1 className={styles.title}>
                     {viewMode === AUTH_VIEW_MODES.LOGIN
                         ? t("auth.loginTitle")
                         : t("auth.registerTitle")}
-                </Heading>
-                <Text as="p" align="center" color="gray">
-                    {t("auth.signInToAccount")}
-                </Text>
+                </h1>
+                {/* Нативный p вместо Radix Text */}
+                <p className={styles.subtitle}>{t("auth.signInToAccount")}</p>
             </Box>
 
             {submitError && (
@@ -75,14 +76,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                     >
                         {(field) => (
                             <Flex direction="column" gap="2">
-                                <Text
-                                    as="label"
+                                {/* Нативный label вместо Radix Text as="label" */}
+                                <label
                                     htmlFor={field.name}
-                                    size="2"
-                                    weight="medium"
+                                    className={styles.fieldLabel}
                                 >
                                     {t("common.email")}
-                                </Text>
+                                </label>
                                 <EmailInput
                                     id={field.name}
                                     name={field.name}
@@ -95,9 +95,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                 />
                                 {field.state.meta.isTouched &&
                                 field.state.meta.errors.length ? (
-                                    <Text color="red" size="1">
+                                    <span className={styles.fieldError}>
                                         {field.state.meta.errors.join(", ")}
-                                    </Text>
+                                    </span>
                                 ) : null}
                             </Flex>
                         )}
@@ -113,14 +113,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                         >
                             {(field) => (
                                 <Flex direction="column" gap="2">
-                                    <Text
-                                        as="label"
+                                    <label
                                         htmlFor={field.name}
-                                        size="2"
-                                        weight="medium"
+                                        className={styles.fieldLabel}
                                     >
                                         {t("common.password")}
-                                    </Text>
+                                    </label>
                                     <PasswordInput
                                         id={field.name}
                                         name={field.name}
@@ -135,9 +133,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                     />
                                     {field.state.meta.isTouched &&
                                     field.state.meta.errors.length ? (
-                                        <Text color="red" size="1">
+                                        <span className={styles.fieldError}>
                                             {field.state.meta.errors.join(", ")}
-                                        </Text>
+                                        </span>
                                     ) : null}
                                 </Flex>
                             )}
@@ -181,20 +179,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                         </Button>
 
                         <Flex justify="center" align="center" gap="2" mt="2">
-                            <Text size="2" color="gray">
+                            <span className={styles.toggleText}>
                                 {viewMode === AUTH_VIEW_MODES.LOGIN
                                     ? t("auth.noAccount")
                                     : t("auth.hasAccount")}
-                            </Text>
+                            </span>
                             <Button
                                 variant="ghost"
                                 size="2"
                                 onClick={toggleViewMode}
-                                style={{
-                                    margin: 0,
-                                    padding: 0,
-                                    height: "auto",
-                                }}
+                                className={styles.toggleModeButton}
                                 type="button"
                             >
                                 {viewMode === AUTH_VIEW_MODES.LOGIN

@@ -1,5 +1,7 @@
-import { Container, Flex, Heading } from "@radix-ui/themes";
+import { Container } from "@/components/layout/Container";
+import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import styles from "./chatroom.module.css";
 import { ChatRoomDialogs } from "./components/ChatRoomDialogs";
 import { ChatRoomHeader } from "./components/ChatRoomHeader";
 import { ChatRoomInputArea } from "./components/ChatRoomInputArea";
@@ -58,9 +60,10 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
     if (isLoading) {
         return (
             <Flex justify="center" align="center" height="100%">
-                <Heading size="3" color="gray">
+                {/* Нативный span вместо Radix Heading */}
+                <span className={styles.loadingText}>
                     {t("common.loading", "Загрузка чата...")}
-                </Heading>
+                </span>
             </Flex>
         );
     }

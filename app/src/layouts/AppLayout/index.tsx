@@ -1,13 +1,14 @@
-import { Box, Flex, Heading } from "@radix-ui/themes";
 import { Outlet, useLocation } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Heading } from "@/components/ui/Heading";
+import { MobileHeader, Navigation } from "@/features/navigation";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import { MobileHeader } from "@/layouts/MobileHeader";
-import { Navigation } from "@/layouts/RootLayout/components/Navigation";
-import { useSidebarResolver } from "@/layouts/RootLayout/hooks/useSidebarResolver";
-import styles from "@/layouts/RootLayout/root.module.css";
 import { APP_NAME, ROUTES } from "@/lib/constants";
+import styles from "./applayout.module.css";
+import { SidebarContent, shouldShowSidebar } from "./components/SidebarContent";
 
 // Маппинг роутов на ключи перевода
 const ROUTE_TITLE_KEYS: Record<string, string> = {
@@ -26,8 +27,8 @@ const ROUTE_TITLE_KEYS: Record<string, string> = {
  */
 export function AppLayout() {
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
-    const sidebarContent = useSidebarResolver();
     const location = useLocation();
+    const showSidebarContent = shouldShowSidebar(location.pathname);
     const { t } = useTranslation();
 
     // Определение заголовка страницы
@@ -119,7 +120,7 @@ export function AppLayout() {
                         className={styles.sidebar}
                     >
                         <Box className={styles.sidebarContent}>
-                            {sidebarContent}
+                            <SidebarContent />
                         </Box>
                         <Box className={styles.navigationWrapper}>
                             <Navigation />
@@ -129,14 +130,12 @@ export function AppLayout() {
                     {/* Контент страницы */}
                     <Box
                         id="app-content"
-                        className={`${styles.content} ${!sidebarContent ? styles.fullWidth : ""}`}
+                        className={`${styles.content} ${!showSidebarContent ? styles.fullWidth : ""}`}
                     >
                         {/* Desktop Header for standard pages */}
                         {!isChatHeaderPage && (
                             <header className={styles.desktopHeader}>
-                                <Heading size="5" weight="bold">
-                                    {getPageTitle}
-                                </Heading>
+                                <Heading size="xl">{getPageTitle}</Heading>
                             </header>
                         )}
                         <Outlet />

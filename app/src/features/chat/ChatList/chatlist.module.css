@@ -9,11 +9,11 @@
 }
 
 .header {
-    height: var(--header-height); /* 72px */
+    height: var(--header-height);
     padding: 0 var(--space-4);
     display: flex;
     align-items: center;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: var(--border-width-base) solid var(--glass-border);
     justify-content: space-between;
 }
 
@@ -29,11 +29,11 @@
 
 .appTitle {
     font-size: var(--text-lg);
-    font-weight: 800;
+    font-weight: var(--font-weight-extrabold);
     letter-spacing: -0.5px;
     color: var(--accent-primary);
-    filter: drop-shadow(0 0 10px var(--accent-primary));
-    transition: all 0.3s ease;
+    filter: drop-shadow(var(--shadow-glow) var(--accent-primary));
+    transition: all var(--transition-slow);
     cursor: default;
     user-select: none;
 }
@@ -45,7 +45,7 @@
 
 .createButton {
     color: var(--muted);
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .createButton:hover {
@@ -55,7 +55,7 @@
 
 .searchWrapper {
     padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: var(--border-width-base) solid var(--glass-border);
 }
 
 .searchContainer {
@@ -78,16 +78,17 @@
     align-items: center;
     padding: var(--space-1) var(--space-2);
     margin: var(--space-1);
-    border-radius: var(--radius-glass);
+    border-radius: var(--kk-radius-md);
     text-decoration: none;
     color: inherit;
-    transition: all 0.2s ease;
-    border: 1px solid var(--glass-border);
+    transition: all var(--transition-base);
+    border: var(--border-width-base) solid var(--glass-border);
 }
 
 .chatListItem:hover:not(.chatListItemActive) {
-    box-shadow: 0 0 10px var(--glass-border);
-    border: 2px solid var(--glass-border);
+    box-shadow: 0 4px 12px var(--glass-border);
+    border: var(--border-width-base) solid var(--glass-border);
+    opacity: 0.7;
 }
 
 .chatListItemActive {
@@ -102,29 +103,28 @@
 /* Неоновое кольцо вокруг аватарки активного чата */
 .activeAvatar {
     box-shadow:
-        0 0 0 2px var(--accent-primary),
-        0 0 12px var(--glow-soft);
+        0 0 0 var(--border-width-focus) var(--accent-primary),
+        var(--shadow-glow) var(--glow-soft);
 }
 
 .chatInfo {
     flex: 1;
     min-width: 0;
     margin-left: var(--space-3);
-    overflow: hidden;
-    width: 0;
+    width: 100%;
 }
 
 .chatName {
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     font-size: var(--text-base);
     margin-bottom: var(--space-1);
+    white-space: nowrap;
 }
 
 .lastMessage {
     font-size: var(--text-sm);
     color: var(--muted);
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 
@@ -140,6 +140,31 @@
     color: var(--muted);
 }
 
+.name {
+    display: flex;
+    justify-content: space-between;
+}
+
+.chatTime {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.itemContainer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    width: 100%;
+}
+
+.truncate {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;
+}
+
 .muted {
     color: var(--muted);
 }
@@ -148,11 +173,11 @@
     background: var(--accent-primary);
     color: var(--bubble-out-fg);
     font-size: var(--text-xs);
-    font-weight: 800;
+    font-weight: var(--font-weight-extrabold);
     padding: 0 var(--space-2);
-    min-width: 18px;
-    height: 18px;
-    border-radius: 9px;
+    min-width: var(--size-badge);
+    height: var(--size-badge);
+    border-radius: var(--size-badge-radius);
     display: flex;
     align-items: center;
     justify-content: center;

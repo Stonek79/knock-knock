@@ -1,16 +1,22 @@
-import { Box, Card, Flex, Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Card } from "@/components/ui/Card";
 import styles from "../security.module.css";
 
 interface KeysStatusCardProps {
     areKeysPublished: boolean;
 }
 
+/**
+ * Карточка статуса ключей шифрования.
+ * Использует нативные span вместо Radix Text.
+ */
 export function KeysStatusCard({ areKeysPublished }: KeysStatusCardProps) {
     const { t } = useTranslation();
 
     return (
-        <Card size="2" variant="surface">
+        <Card variant="surface">
             <Flex align="center" gap="3">
                 <Box
                     className={`${styles.statusIndicator} ${
@@ -20,7 +26,7 @@ export function KeysStatusCard({ areKeysPublished }: KeysStatusCardProps) {
                     }`}
                 />
                 <Flex direction="column">
-                    <Text weight="bold" size="2">
+                    <span className={styles.statusTitle}>
                         {areKeysPublished
                             ? t(
                                   "profile.encryptionActiveTitle",
@@ -30,8 +36,8 @@ export function KeysStatusCard({ areKeysPublished }: KeysStatusCardProps) {
                                   "profile.encryptionSyncing",
                                   "Синхронизация ключей...",
                               )}
-                    </Text>
-                    <Text size="1" color="gray">
+                    </span>
+                    <span className={styles.statusDesc}>
                         {areKeysPublished
                             ? t(
                                   "profile.keysSyncedDesc",
@@ -41,7 +47,7 @@ export function KeysStatusCard({ areKeysPublished }: KeysStatusCardProps) {
                                   "profile.keysSyncingDesc",
                                   "Генерация криптографических ключей...",
                               )}
-                    </Text>
+                    </span>
                 </Flex>
             </Flex>
         </Card>

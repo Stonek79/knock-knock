@@ -11,10 +11,14 @@
     gap: var(--space-3);
 }
 
+.nameField {
+    flex: 1;
+}
+
 .avatarPlaceholder {
-    width: 64px;
-    height: 64px;
-    border-radius: var(--radius-full);
+    width: var(--size-avatar-xl-temp);
+    height: var(--size-avatar-xl-temp);
+    border-radius: var(--kk-radius-full);
     background: var(--muted);
     display: flex;
     align-items: center;
@@ -44,7 +48,7 @@
     gap: var(--space-1);
     padding: var(--space-1) var(--space-2);
     background: var(--blue-3);
-    border-radius: var(--radius-full);
+    border-radius: var(--kk-radius-full);
     font-size: var(--text-sm);
     color: var(--blue-11);
 }
@@ -57,4 +61,33 @@
 
 .removeChip:hover {
     opacity: 1;
+}
+
+/* Название участника в chip */
+.chipLabel {
+    font-size: var(--text-xs);
+    color: inherit;
+}
+
+/* Подпись выбора участников */
+.participantsLabel {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--foreground);
+    margin-bottom: var(--space-2);
+}
+
+/* Предупреждение о минимуме участников */
+.warningText {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-warning);
+    margin-top: var(--space-2);
+}
+
+.description {
+    font-size: var(--text-sm);
+    color: var(--muted);
+    margin-bottom: var(--space-4);
 }

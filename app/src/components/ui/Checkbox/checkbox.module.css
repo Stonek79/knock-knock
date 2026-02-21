@@ -1,0 +1,68 @@
+/* checkbox.module.css */
+.root {
+    all: unset;
+    background-color: var(--glass-bg);
+    border: var(--border-width-base) solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--kk-radius-sm);
+    box-shadow: var(--shadow-bubble);
+    transition: all var(--transition-fast) ease-out;
+    cursor: pointer;
+}
+
+.root:hover {
+    background-color: var(--glass-hover-bg);
+}
+
+.root:focus-visible {
+    box-shadow: 0 0 0 var(--border-width-focus) var(--accent-primary);
+}
+
+.root[data-state="checked"] {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.indicator {
+    color: var(--color-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon {
+    width: 80%;
+    height: 80%;
+}
+
+.xs {
+    width: var(--size-icon-xs);
+    height: var(--size-icon-xs);
+}
+
+.sm {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+}
+
+.md {
+    width: var(--size-icon-md);
+    height: var(--size-icon-md);
+}
+
+.lg {
+    width: var(--size-icon-lg);
+    height: var(--size-icon-lg);
+}
+
+.xl {
+    width: var(--size-icon-xl);
+    height: var(--size-icon-xl);
+}
+
+.xxl {
+    width: calc(var(--size-icon-xl) * 1.5);
+    height: calc(var(--size-icon-xl) * 1.5);
+}

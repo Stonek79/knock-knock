@@ -1,5 +1,5 @@
-import { Flex } from "@radix-ui/themes";
 import type { ReactNode } from "react";
+import { Flex } from "@/components/layout/Flex";
 import styles from "../chatroom.module.css";
 
 interface ChatRoomLayoutProps {

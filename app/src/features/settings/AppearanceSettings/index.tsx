@@ -1,4 +1,4 @@
-import { Flex } from "@radix-ui/themes";
+import { Flex } from "@/components/layout/Flex";
 import { SettingsHeader } from "@/features/settings/SettingsHeader";
 import { ThemeSelector } from "./ThemeSelector/ThemeSelector";
 

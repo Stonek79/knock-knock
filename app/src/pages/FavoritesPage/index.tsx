@@ -1,11 +1,13 @@
-import { Box, Flex, Skeleton, Text } from "@radix-ui/themes";
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { getAuthErrorMessage } from "@/features/auth/utils/auth-errors";
 import { FavoritesChatList } from "@/features/chat/ChatList/FavoritesChatList";
 import { ChatRoom } from "@/features/chat/ChatRoom";
 import { useFavoritesRoom } from "@/features/favorites/hooks/useFavoritesRoom";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import { getAuthErrorMessage } from "@/lib/auth-errors";
 import styles from "./favoritespage.module.css";
 
 /**
@@ -38,15 +40,15 @@ export function FavoritesPage() {
                 <Flex direction="column" height="100%">
                     <Flex direction="column" p="4" gap="4">
                         <Flex gap="3" align="end">
-                            <Skeleton width="40px" height="40px" />
-                            <Skeleton width="200px" height="60px" />
+                            <Skeleton className={styles.skeletonAvatar} />
+                            <Skeleton className={styles.skeletonTextMedium} />
                         </Flex>
                         <Flex gap="3" align="end" justify="end">
-                            <Skeleton width="150px" height="40px" />
+                            <Skeleton className={styles.skeletonTextShort} />
                         </Flex>
                         <Flex gap="3" align="end">
-                            <Skeleton width="40px" height="40px" />
-                            <Skeleton width="250px" height="100px" />
+                            <Skeleton className={styles.skeletonAvatar} />
+                            <Skeleton className={styles.skeletonTextLong} />
                         </Flex>
                     </Flex>
                 </Flex>
@@ -58,10 +60,10 @@ export function FavoritesPage() {
                     direction="column"
                     gap="2"
                 >
-                    <Text color="red">
+                    <span className={styles.errorText}>
                         {t("common.error", "Ошибка")}:{" "}
                         {getAuthErrorMessage(error)}
-                    </Text>
+                    </span>
                 </Flex>
             ) : roomId ? (
                 <ChatRoom roomId={roomId} />

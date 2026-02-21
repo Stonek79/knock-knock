@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PrivateLayout } from "@/layouts/PrivateLayout";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/private")({
-    component: PrivateLayout,
+    component: () => <Outlet />,
 });

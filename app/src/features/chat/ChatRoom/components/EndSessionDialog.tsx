@@ -2,8 +2,11 @@
  * Диалог подтверждения завершения сеанса чата.
  * При подтверждении удаляет историю и ключи шифрования.
  */
-import { AlertDialog, Button, Flex } from "@radix-ui/themes";
+
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
+import { AlertDialog } from "@/components/ui/AlertDialog";
+import { Button } from "@/components/ui/Button";
 
 interface EndSessionDialogProps {
     /** Открыт ли диалог */
@@ -23,24 +26,24 @@ export function EndSessionDialog({
 
     return (
         <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-            <AlertDialog.Content maxWidth="450px">
+            <AlertDialog.Content>
                 <AlertDialog.Title>
                     {t("chat.endSessionTitle", "Завершить сеанс?")}
                 </AlertDialog.Title>
-                <AlertDialog.Description size="2">
+                <AlertDialog.Description>
                     {t(
                         "chat.endSessionConfirm",
                         "Вы уверены? История чата и ключи шифрования будут удалены навсегда.",
                     )}
                 </AlertDialog.Description>
                 <Flex gap="3" mt="4" justify="end">
-                    <AlertDialog.Cancel>
-                        <Button variant="soft" color="gray">
+                    <AlertDialog.Cancel asChild>
+                        <Button variant="soft" intent="neutral">
                             {t("common.cancel", "Отмена")}
                         </Button>
                     </AlertDialog.Cancel>
-                    <AlertDialog.Action>
-                        <Button color="red" onClick={onConfirm}>
+                    <AlertDialog.Action asChild>
+                        <Button intent="danger" onClick={onConfirm}>
                             {t("chat.endSessionAction", "Удалить чат")}
                         </Button>
                     </AlertDialog.Action>

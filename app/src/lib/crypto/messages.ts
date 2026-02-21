@@ -3,7 +3,7 @@
  * Использует AES-GCM (256-bit) с симметричным ключом комнаты.
  */
 
-import { arrayBufferToBase64, base64ToArrayBuffer } from "./index";
+import { arrayBufferToBase64, base64ToArrayBuffer } from "./keys";
 
 const subtle = window.crypto.subtle;
 const ENCODER = new TextEncoder();

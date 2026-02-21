@@ -1,0 +1,43 @@
+/**
+ * CSS-модуль для кастомного компонента Card.
+ * Управляет вариантом через токены дизайн-системы.
+ */
+
+/* =========================================== */
+/* Базовые стили */
+/* =========================================== */
+
+.card {
+    border-radius: var(--kk-radius-lg);
+    padding: var(--space-4);
+    transition: background-color var(--transition-base);
+}
+
+/* =========================================== */
+/* Варианты (variant) */
+/* =========================================== */
+
+/** Стеклянный — glassmorphism */
+.glass {
+    background: var(--glass-bg);
+    border: var(--border-width-base) solid var(--glass-border);
+    backdrop-filter: var(--glass-blur-sm);
+}
+
+/** Поверхностный — лёгкий фон */
+.surface {
+    background: var(--glass-bg);
+    border: var(--border-width-base) solid var(--glass-border);
+}
+
+/** Прозрачный — без фона */
+.ghost {
+    background: transparent;
+    border: var(--border-width-base) solid var(--glass-border);
+}
+
+/** Классический — с тенью */
+.classic {
+    background: var(--glass-bg);
+    box-shadow: var(--shadow-premium);
+}

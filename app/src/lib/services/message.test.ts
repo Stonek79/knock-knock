@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ERROR_CODES } from "@/lib/constants/errors";
-import { encryptMessage } from "@/lib/crypto";
+import { encryptMessage } from "@/lib/crypto/messages";
 import { supabase } from "@/lib/supabase";
 import { MessageService } from "./message";
 
@@ -11,7 +11,7 @@ vi.mock("@/lib/supabase", () => ({
     },
 }));
 
-vi.mock("@/lib/crypto", () => ({
+vi.mock("@/lib/crypto/messages", () => ({
     encryptMessage: vi.fn(),
 }));
 

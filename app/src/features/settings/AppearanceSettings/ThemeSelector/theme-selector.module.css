@@ -8,7 +8,7 @@
     backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     padding: var(--space-6);
-    border-radius: var(--radius-lg);
+    border-radius: var(--kk-radius-lg);
 }
 
 .section {
@@ -18,12 +18,12 @@
 
 .modeBtn {
     padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-full);
+    border-radius: var(--kk-radius-full);
     border: 1px solid var(--glass-border);
     background: transparent;
     color: var(--foreground);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .modeBtn:hover {
@@ -39,9 +39,9 @@
 .themeCard {
     cursor: pointer;
     padding: var(--space-2);
-    border-radius: var(--radius-md);
+    border-radius: var(--kk-radius-md);
     border: 2px solid transparent;
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .themeCard:hover {
@@ -61,14 +61,37 @@
 
 .previewNeon {
     height: 72px;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, #00f0ff 0%, #bc13fe 100%);
-    box-shadow: 0 var(--space-1) var(--space-4) rgba(0, 240, 255, 0.2);
+    border-radius: var(--kk-radius-sm);
+    background: var(--preview-neon-gradient);
+    box-shadow: 0 var(--space-1) var(--space-4) var(--preview-neon-glow);
 }
 
 .previewEmerald {
     height: 72px;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, #d4af37 0%, #10b981 100%);
-    box-shadow: 0 var(--space-1) var(--space-4) rgba(212, 175, 55, 0.2);
+    border-radius: var(--kk-radius-sm);
+    background: var(--preview-emerald-gradient);
+    box-shadow: 0 var(--space-1) var(--space-4) var(--preview-emerald-glow);
+}
+
+.checkIcon {
+    color: var(--accent-primary);
+    font-weight: bold;
+}
+
+/* Нативные элементы вместо Radix Text */
+.sectionTitle {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--foreground);
+}
+
+.modeLabel {
+    font-size: var(--text-sm);
+    color: var(--muted);
+}
+
+.themeName {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--foreground);
 }

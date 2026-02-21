@@ -1,0 +1,20 @@
+.container {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.size1 {
+    max-width: var(--max-w-empty-state);
+}
+
+.size2 {
+    max-width: var(--max-w-card);
+}
+
+.size3 {
+    max-width: var(--max-w-auth);
+}
+
+.size4 {
+    max-width: var(--max-w-content);
+}

@@ -3,11 +3,97 @@
  * Стили для компонента уведомлений.
  */
 
-.title {
-    display: block;
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--kk-radius-md);
+    border: var(--border-width-base) solid transparent;
+    background: var(--glass-bg);
+    color: var(--foreground);
+    backdrop-filter: var(--glass-blur-sm);
 }
 
-.alertTitle {
-    display: block;
-    margin-bottom: var(--space-1);
+.iconWrapper {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: var(--space-05);
+}
+
+.icon {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    flex-grow: 1;
+}
+
+.title {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-sm);
+    color: inherit;
+    margin: 0;
+    line-height: var(--line-height-tight);
+}
+
+.description {
+    font-size: var(--text-sm);
+    color: var(--muted);
+    line-height: var(--line-height-normal);
+}
+
+/* =========================================== */
+/* Варианты (Intents) */
+/* =========================================== */
+
+.info {
+    border-color: color-mix(in srgb, var(--accent-secondary) 30%, transparent);
+    background: color-mix(in srgb, var(--accent-secondary) 10%, transparent);
+}
+.info .icon,
+.info .title {
+    color: var(--accent-secondary);
+}
+
+.success {
+    border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+}
+.success .icon,
+.success .title {
+    color: var(--color-success);
+}
+
+.warning {
+    border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+}
+.warning .icon,
+.warning .title {
+    color: var(--color-warning);
+}
+
+.danger {
+    border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+.danger .icon,
+.danger .title {
+    color: var(--color-error);
+}
+
+.neutral {
+    border-color: var(--glass-border);
+    background: var(--glass-bg);
+}
+.neutral .icon,
+.neutral .title {
+    color: var(--foreground);
 }

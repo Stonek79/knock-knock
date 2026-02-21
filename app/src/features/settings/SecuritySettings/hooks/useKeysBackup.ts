@@ -2,7 +2,7 @@ import { type ChangeEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileDownloader } from "@/hooks/useFileDownloader";
 import { useKeystore } from "@/hooks/useKeystore";
-import type { KeyBackup } from "@/lib/crypto";
+import type { KeyBackup } from "@/lib/crypto/recovery";
 
 export interface StatusMessage {
     type: "success" | "error";

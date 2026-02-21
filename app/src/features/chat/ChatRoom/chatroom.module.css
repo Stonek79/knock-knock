@@ -10,8 +10,8 @@
 }
 
 .roomHeader {
-    height: 64px;
-    min-height: 64px;
+    height: var(--header-height);
+    min-height: var(--header-height);
     padding: 0 var(--space-4);
     display: flex;
     align-items: center;

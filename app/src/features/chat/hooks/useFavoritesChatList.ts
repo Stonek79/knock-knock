@@ -112,8 +112,8 @@ export function useFavoritesChatList() {
 
             // 3. GUARANTEE SELF-CHAT (Saved Messages) existence
             // Even if it's not in DB yet, we show it. clicking it will create it via findOrCreateDM logic in ChatRoom
-            const deterministicId = await import("@/lib/crypto").then((m) =>
-                m.generateDeterministicRoomId(user.id),
+            const deterministicId = await import("@/lib/crypto/rooms").then(
+                (m) => m.generateDeterministicRoomId(user.id),
             );
 
             const hasSelfChat = results.some(

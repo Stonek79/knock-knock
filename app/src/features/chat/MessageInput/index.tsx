@@ -2,10 +2,13 @@
  * Компонент ввода сообщения.
  * Оптимизирован для мобильных устройств и десктопа.
  */
-import { IconButton, TextArea } from "@radix-ui/themes";
+
 import { Mic, Paperclip, SendHorizontal, Smile } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { IconButton } from "@/components/ui/IconButton";
+import { TextArea } from "@/components/ui/TextArea";
 import { useMessageInput } from "@/features/chat/hooks/useMessageInput";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./message-input.module.css";
 
 interface MessageInputProps {
@@ -23,6 +26,11 @@ interface MessageInputProps {
     onTyping?: (isTyping: boolean) => void;
 }
 
+/**
+ * Компонент ввода сообщения.
+ * Использует наши кастомные IconButton и TextArea вместо Radix.
+ * Иконки через ICON_SIZE — числовые значения, корректно работают в SVG.
+ */
 export function MessageInput({
     onSend,
     onCancel,
@@ -53,30 +61,30 @@ export function MessageInput({
             {/* Кнопка эмодзи */}
             <IconButton
                 variant="ghost"
-                color="gray"
-                radius="full"
+                size="md"
+                shape="round"
                 disabled={disabled}
                 type="button"
-                size="3"
                 className={styles.actionButton}
+                aria-label="Эмодзи"
             >
-                <Smile size={20} />
+                <Smile size={ICON_SIZE.sm} />
             </IconButton>
 
             {/* Кнопка вложения */}
             <IconButton
                 variant="ghost"
-                color="gray"
-                radius="full"
+                size="md"
+                shape="round"
                 disabled={disabled}
                 type="button"
-                size="3"
                 className={styles.actionButton}
+                aria-label="Прикрепить файл"
             >
-                <Paperclip size={20} />
+                <Paperclip size={ICON_SIZE.sm} />
             </IconButton>
 
-            {/* Поле ввода */}
+            {/* Поле ввода — наш кастомный TextArea */}
             <div className={styles.textAreaContainer}>
                 <TextArea
                     ref={textareaRef}
@@ -90,36 +98,33 @@ export function MessageInput({
                     onKeyDown={handleKeyDown}
                     disabled={disabled || sending}
                     className={styles.textArea}
-                    size="2"
-                    variant="soft"
                 />
             </div>
 
             {/* Кнопка отправки / микрофон */}
             {hasText ? (
                 <IconButton
-                    size="3"
-                    radius="full"
+                    size="md"
+                    shape="round"
                     variant="ghost"
                     onClick={handleSend}
                     disabled={disabled || sending}
-                    className={styles.actionButton}
+                    className={`${styles.actionButton} ${styles.sendButton}`}
                     aria-label={t("chat.send", "Отправить")}
-                    style={{ color: "var(--accent-primary)" }}
                 >
-                    <SendHorizontal size={20} />
+                    <SendHorizontal size={ICON_SIZE.sm} />
                 </IconButton>
             ) : (
                 <IconButton
                     variant="ghost"
-                    color="gray"
-                    radius="full"
+                    size="md"
+                    shape="round"
                     disabled={disabled}
                     type="button"
-                    size="3"
                     className={styles.actionButton}
+                    aria-label="Голосовое сообщение"
                 >
-                    <Mic size={22} />
+                    <Mic size={ICON_SIZE.md} />
                 </IconButton>
             )}
         </div>

@@ -1,19 +1,18 @@
-import {
-    Avatar,
-    Box,
-    Button,
-    Dialog,
-    Flex,
-    Text,
-    TextField,
-} from "@radix-ui/themes";
 import { Camera, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { TextField } from "@/components/ui/TextField";
 import { useCreateGroup } from "@/features/chat/hooks/useCreateGroup";
 import {
     ContactPicker,
     useSelectedContacts,
 } from "@/features/contacts/ContactPicker";
+import { CONTACT_PICKER_MODE } from "@/lib/constants";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./creategroupdialog.module.css";
 
 interface CreateGroupDialogProps {
@@ -51,11 +50,11 @@ export function CreateGroupDialog({
 
     return (
         <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-            <Dialog.Content maxWidth="500px">
+            <Dialog.Content>
                 <Dialog.Title>
                     {t("chat.newGroup", "Новая группа")}
                 </Dialog.Title>
-                <Dialog.Description size="2" mb="4">
+                <Dialog.Description className={styles.description}>
                     {t(
                         "chat.groupDescription",
                         "Создайте группу для общения с несколькими людьми",
@@ -72,25 +71,27 @@ export function CreateGroupDialog({
                         <Box
                             className={styles.avatarPlaceholder}
                             onClick={handleAvatarClick}
-                            style={{ cursor: "pointer" }}
                         >
                             {avatarUrl ? (
+                                /* Наш кастомный Avatar вместо Radix Avatar */
                                 <Avatar
                                     src={avatarUrl}
-                                    fallback={<Camera size={24} />}
-                                    size="5"
-                                    radius="full"
+                                    name="Группа"
+                                    size="lg"
                                 />
                             ) : (
-                                <Camera size={24} className={styles.camera} />
+                                <Camera
+                                    size={ICON_SIZE.md}
+                                    className={styles.camera}
+                                />
                             )}
                         </Box>
-                        <TextField.Root
+                        {/* Наш кастомный TextField вместо Radix TextField.Root */}
+                        <TextField
                             placeholder={t("chat.groupName", "Название группы")}
                             value={groupName}
                             onChange={(e) => setGroupName(e.target.value)}
-                            style={{ flex: 1 }}
-                            size="3"
+                            className={styles.nameField}
                         />
                     </Flex>
                 </Box>
@@ -104,13 +105,16 @@ export function CreateGroupDialog({
                                 className={styles.selectedChip}
                             >
                                 <Avatar
-                                    size="1"
+                                    size="xs"
                                     fallback={contact.display_name[0]}
-                                    radius="full"
+                                    name={contact.display_name}
                                 />
-                                <Text size="1">{contact.display_name}</Text>
+                                {/* Нативный span вместо Radix Text */}
+                                <span className={styles.chipLabel}>
+                                    {contact.display_name}
+                                </span>
                                 <X
-                                    size={14}
+                                    size={ICON_SIZE.xs}
                                     className={styles.removeChip}
                                     onClick={() =>
                                         removeParticipant(contact.id)
@@ -121,33 +125,33 @@ export function CreateGroupDialog({
                     </Box>
                 )}
 
-                {/* Выбор участников */}
-                <Text size="2" weight="medium" mb="2">
+                {/* Подпись выбора участников */}
+                <span className={styles.participantsLabel}>
                     {t("chat.selectParticipants", "Выберите участников")} (
                     {selectedIds.length}/∞)
-                </Text>
+                </span>
 
                 <ContactPicker
-                    mode="multi"
+                    mode={CONTACT_PICKER_MODE.MULTI}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
                     searchPlaceholder={t("common.search", "Поиск")}
                 />
 
                 {selectedIds.length > 0 && selectedIds.length < 2 && (
-                    <Text size="1" color="amber" mt="2">
+                    <span className={styles.warningText}>
                         {t(
                             "chat.minParticipants",
                             "Выберите минимум 2 участников для группы",
                         )}
-                    </Text>
+                    </span>
                 )}
 
                 <Flex gap="3" mt="4" justify="end">
-                    <Dialog.Close>
+                    <Dialog.Close asChild>
                         <Button
                             variant="soft"
-                            color="gray"
+                            intent="neutral"
                             disabled={isCreating}
                         >
                             {t("common.cancel")}
@@ -155,7 +159,6 @@ export function CreateGroupDialog({
                     </Dialog.Close>
                     <Button
                         disabled={!canCreate || isCreating}
-                        loading={isCreating}
                         onClick={handleCreateGroup}
                     >
                         {t("chat.createGroup", "Создать группу")}

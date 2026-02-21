@@ -1,8 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { type MouseEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getAuthErrorMessage } from "@/features/auth/utils/auth-errors";
 import { useRateLimiter } from "@/hooks/useRateLimiter";
-import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { AUTH_MODES, AUTH_VIEW_MODES } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { loginSchema } from "@/lib/schemas/auth";

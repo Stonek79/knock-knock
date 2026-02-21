@@ -3,15 +3,16 @@
  * Отображает сообщения, обрабатывает скролл и состояния загрузки/пустого списка.
  * Поддерживает режим выделения (Selection Mode) и редактирования.
  */
-import { Box, Flex, IconButton, Text } from "@radix-ui/themes";
-import { useQueryClient } from "@tanstack/react-query";
+
 import { ArrowDown } from "lucide-react";
 import { type RefObject, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { IconButton } from "@/components/ui/IconButton";
 import { useUserActivity } from "@/hooks/useUserActivity";
-import { DB_TABLES } from "@/lib/constants";
-import { MessageService } from "@/lib/services/message";
 import type { DecryptedMessageWithProfile } from "@/lib/types/message";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { getMessageGroupPosition } from "@/lib/utils/messageGrouping";
 import { useAuthStore } from "@/stores/auth";
 import { UnreadDivider } from "../components/UnreadDivider";
@@ -61,7 +62,6 @@ export function MessageList({
     // Общий обработчик прокрутки
     const handleScroll = () => {
         handleChatScroll();
-        // Также обновляем активность при прокрутке
         triggerActivity();
     };
 
@@ -70,26 +70,15 @@ export function MessageList({
         scrollToBottom,
     ]);
 
-    const queryClient = useQueryClient();
-
-    const handleToggleStar = async (messageId: string, isStarred: boolean) => {
-        const result = await MessageService.toggleStar(messageId, isStarred);
-        if (result.isOk()) {
-            // Инвалидируем сообщения комнаты и список избранного
-            queryClient.invalidateQueries({ queryKey: [DB_TABLES.MESSAGES] });
-            queryClient.invalidateQueries({ queryKey: [DB_TABLES.FAVORITES] });
-        }
-    };
-
     // Состояние загрузки
     if (messagesLoading) {
         return (
             <Flex justify="center" align="center" className={styles.loadingBox}>
-                <Text color="gray">
+                <span className={styles.statusText}>
                     {user?.id
                         ? t("chat.loadingMessages", "Загрузка сообщений...")
                         : t("common.authorizing", "Авторизация...")}
-                </Text>
+                </span>
             </Flex>
         );
     }
@@ -98,14 +87,14 @@ export function MessageList({
     if (messages?.length === 0) {
         return (
             <Flex justify="center" align="center" className={styles.emptyBox}>
-                <Text color="gray">
+                <span className={styles.statusText}>
                     {isFavoritesView
                         ? t(
                               "chat.noFavoritesInThisChat",
                               "В этом чате нет избранных сообщений",
                           )
                         : t("chat.noMessages", "Нет сообщений")}
-                </Text>
+                </span>
             </Flex>
         );
     }
@@ -125,7 +114,6 @@ export function MessageList({
                             const isEditing = editingId === msg.id && isOwn;
                             const isFirstUnread = msg.id === firstUnreadId;
 
-                            // Grouping Logic
                             const prevMsg = messages[index - 1];
                             const nextMsg = messages[index + 1];
 
@@ -136,7 +124,10 @@ export function MessageList({
                             );
 
                             return (
-                                <Box key={msg.id} style={{ width: "100%" }}>
+                                <Box
+                                    key={msg.id}
+                                    className={styles.messageWrapper}
+                                >
                                     {isFirstUnread && <UnreadDivider />}
                                     <MessageBubble
                                         content={msg.content}
@@ -151,9 +142,6 @@ export function MessageList({
                                         isEdited={msg.is_edited}
                                         isDeleted={msg.is_deleted}
                                         isStarred={msg.is_starred}
-                                        onToggleStar={(starred) =>
-                                            handleToggleStar(msg.id, starred)
-                                        }
                                         isSelected={selectedMessageIds?.has(
                                             msg.id,
                                         )}
@@ -172,14 +160,13 @@ export function MessageList({
             {showScrollButton && (
                 <Box className={styles.scrollButtonWrapper}>
                     <IconButton
-                        size="3"
-                        radius="full"
+                        size="lg"
+                        shape="round"
                         variant="solid"
-                        color="blue"
                         onClick={() => scrollToBottom()}
                         className={`${styles.scrollButton} ${!isUserActive ? styles.scrollButtonHidden : ""}`}
                     >
-                        <ArrowDown width="18" height="18" />
+                        <ArrowDown size={ICON_SIZE.sm} />
                     </IconButton>
                 </Box>
             )}

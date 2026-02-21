@@ -1,32 +1,25 @@
-import { Theme } from "@radix-ui/themes";
 import type { Meta, StoryObj } from "@storybook/react";
-import {
-    CallsLoadingState,
-    ContactsLoadingState,
-} from "@/components/Skeletons/Skeletons";
+import { ListLoadingState } from "@/components/ui/Skeleton";
 import { ChatListLoadingState } from "./ChatListItemSkeleton";
 
+// Обертка для историй, задающая базовые стили
 const meta: Meta = {
     title: "UI/Skeletons",
     component: () => <div />, // Placeholder
     decorators: [
         (Story) => (
-            <Theme
-                appearance="dark"
-                accentColor="teal"
-                grayColor="slate"
-                panelBackground="translucent"
-            >
+            <div className="knock-root" data-theme="emerald" data-mode="dark">
                 <div
                     style={{
-                        padding: "20px",
+                        padding: "var(--space-4)",
                         maxWidth: "400px",
-                        background: "var(--color-background)",
+                        background: "var(--bg-app)",
+                        color: "var(--foreground)",
                     }}
                 >
                     <Story />
                 </div>
-            </Theme>
+            </div>
         ),
     ],
 };
@@ -38,47 +31,56 @@ export const ChatList: StoryObj = {
 };
 
 export const CallsList: StoryObj = {
-    render: () => <CallsLoadingState count={5} />,
+    render: () => <ListLoadingState count={5} />,
 };
 
 export const ContactsList: StoryObj = {
-    render: () => <ContactsLoadingState count={5} />,
+    render: () => <ListLoadingState count={5} />,
 };
 
 export const FavoritesRoom: StoryObj = {
     render: () => (
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-4)",
+            }}
+        >
             <header
                 style={{
-                    height: "72px",
-                    borderBottom: "1px solid var(--gray-5)",
+                    height: "var(--header-height)",
+                    borderBottom:
+                        "var(--border-width-base) solid var(--glass-border)",
                     display: "flex",
                     alignItems: "center",
                 }}
             >
-                <span style={{ fontWeight: "bold" }}>Избранное</span>
+                <span style={{ fontWeight: "var(--font-weight-bold)" }}>
+                    Избранное
+                </span>
             </header>
             <div
                 style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: "10px",
+                    gap: "var(--space-2)",
                 }}
             >
                 <div
                     style={{
-                        height: "40px",
+                        height: "var(--space-10)",
                         width: "60%",
-                        background: "var(--gray-3)",
-                        borderRadius: "8px",
+                        background: "var(--glass-bg)",
+                        borderRadius: "var(--kk-radius-md)",
                     }}
                 />
                 <div
                     style={{
-                        height: "60px",
+                        height: "calc(var(--space-12) + var(--space-2))",
                         width: "40%",
-                        background: "var(--gray-4)",
-                        borderRadius: "8px",
+                        background: "var(--glass-hover-bg)",
+                        borderRadius: "var(--kk-radius-md)",
                         alignSelf: "flex-end",
                     }}
                 />

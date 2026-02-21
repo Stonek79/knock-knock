@@ -1,5 +1,5 @@
-import { Box } from "@radix-ui/themes";
 import type { ReactNode } from "react";
+import { Box } from "@/components/layout/Box";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import styles from "./settingslayout.module.css";
 

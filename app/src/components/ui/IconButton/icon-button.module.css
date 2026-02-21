@@ -1,0 +1,128 @@
+/**
+ * CSS-модуль для кастомного компонента IconButton.
+ * Управляет размером, вариантом и формой через токены дизайн-системы.
+ */
+
+/* =========================================== */
+/* Базовые стили */
+/* =========================================== */
+
+.iconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        opacity var(--transition-fast);
+    border-radius: var(--kk-radius-md);
+    color: var(--foreground);
+    background: transparent;
+    flex-shrink: 0;
+}
+
+.iconButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/** Маленький — для чипов, мелких элементов */
+.xs {
+    width: var(--size-btn-h-1);
+    height: var(--size-btn-h-1);
+}
+
+/** Средний-малый */
+.sm {
+    width: var(--size-btn-h-2);
+    height: var(--size-btn-h-2);
+}
+
+/** Средний — стандартный */
+.md {
+    width: var(--size-btn-h-3);
+    height: var(--size-btn-h-3);
+}
+
+/** Большой */
+.lg {
+    width: var(--size-touch);
+    height: var(--size-touch);
+}
+
+/** Очень большой */
+.xl {
+    width: var(--size-btn-h-4);
+    height: var(--size-btn-h-4);
+}
+
+/* =========================================== */
+/* Варианты (variant) */
+/* =========================================== */
+
+/** Прозрачный — только иконка */
+.ghost {
+    background: transparent;
+}
+
+.ghost:hover {
+    background: var(--glass-hover-bg);
+    color: var(--accent-primary);
+}
+
+/** Мягкий — полупрозрачный фон */
+.soft {
+    background: var(--glass-bg);
+    border: var(--border-width-base) solid var(--glass-border);
+}
+
+.soft:hover {
+    background: var(--glass-hover-bg);
+}
+
+/** Акцентный — заливка */
+.solid {
+    background: var(--accent-primary);
+    color: var(--bubble-out-fg);
+}
+
+.solid:hover {
+    opacity: 0.85;
+}
+
+/* =========================================== */
+/* Интенты (intent) */
+/* =========================================== */
+
+.danger.ghost {
+    color: var(--color-error);
+}
+.danger.ghost:hover {
+    background: var(--color-error-alpha);
+    color: var(--bubble-out-fg);
+}
+
+.danger.solid {
+    background: var(--color-error);
+    color: white;
+}
+
+.success.ghost {
+    color: var(--color-success);
+}
+
+/* =========================================== */
+/* Форма (shape) */
+/* =========================================== */
+
+.round {
+    border-radius: var(--kk-radius-full);
+}
+
+.square {
+    border-radius: var(--kk-radius-sm);
+}

@@ -8,8 +8,8 @@
     padding: var(--space-3) var(--space-4);
     color: var(--muted);
     text-decoration: none;
-    transition: all 0.2s ease;
-    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+    border-radius: var(--kk-radius-md);
     margin: 0 var(--space-2);
 }
 
@@ -27,6 +27,12 @@
 
 .icon {
     color: var(--accent-primary);
+}
+
+/* Нативный span вместо Radix Text */
+.itemLabel {
+    font-size: var(--text-base);
+    color: inherit;
 }
 
 .topPadding {

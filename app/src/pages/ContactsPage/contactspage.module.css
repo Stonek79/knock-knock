@@ -3,9 +3,9 @@
 }
 
 .iconBox {
-    width: 80px;
-    height: 80px;
-    border-radius: var(--radius-full);
+    width: var(--size-icon-box-lg);
+    height: var(--size-icon-box-lg);
+    border-radius: var(--kk-radius-full);
     background: linear-gradient(135deg, var(--blue-4), var(--blue-6));
     display: flex;
     align-items: center;
@@ -15,11 +15,16 @@
 
 .title {
     color: var(--gray-12);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    margin: var(--space-2) 0;
 }
 
 .description {
-    max-width: 300px;
+    max-width: var(--max-w-empty-state);
     color: var(--gray-11);
+    font-size: var(--text-base);
+    line-height: 1.5;
 }
 
 .addButton {

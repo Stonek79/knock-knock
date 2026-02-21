@@ -1,0 +1,106 @@
+/**
+ * CSS-модуль для кастомного компонента Avatar.
+ * Управляет размером через токены дизайн-системы.
+ */
+
+/* =========================================== */
+/* Базовые стили */
+/* =========================================== */
+
+.avatar {
+    border-radius: var(--kk-radius-full);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-weight-semibold);
+    background: var(--glass-bg);
+    color: var(--foreground);
+    border: var(--border-width-base) solid var(--glass-border);
+}
+
+/* =========================================== */
+/* Радиус (radius) */
+/* =========================================== */
+
+.radius-full {
+    border-radius: var(--kk-radius-full);
+}
+.radius-large {
+    border-radius: var(--kk-radius-lg);
+}
+.radius-medium {
+    border-radius: var(--kk-radius-md);
+}
+.radius-small {
+    border-radius: var(--kk-radius-sm);
+}
+.radius-none {
+    border-radius: 0;
+}
+
+/* =========================================== */
+/* Размеры (size) */
+/* =========================================== */
+
+.xs {
+    width: var(--size-avatar-xs);
+    height: var(--size-avatar-xs);
+    font-size: var(--text-xs);
+}
+
+.sm {
+    width: var(--size-avatar-sm);
+    height: var(--size-avatar-sm);
+    font-size: var(--text-sm);
+}
+
+.md {
+    width: var(--size-avatar-md);
+    height: var(--size-avatar-md);
+    font-size: var(--text-base);
+}
+
+.lg {
+    width: var(--size-avatar-lg);
+    height: var(--size-avatar-lg);
+    font-size: var(--text-2xl);
+}
+
+.xl {
+    width: var(--size-avatar-xl);
+    height: var(--size-avatar-xl);
+    font-size: var(--text-3xl);
+}
+
+.xxl {
+    width: var(--size-avatar-xxl);
+    height: var(--size-avatar-xxl);
+    font-size: var(--text-4xl);
+}
+
+/* =========================================== */
+/* Изображение внутри аватара */
+/* =========================================== */
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* =========================================== */
+/* Fallback (инициалы) */
+/* =========================================== */
+
+.fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-primary);
+    color: var(--bubble-out-fg);
+    font-weight: var(--font-weight-bold);
+}

@@ -1,7 +1,9 @@
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { UserPlus, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./contactspage.module.css";
 
 /**
@@ -22,22 +24,22 @@ export function ContactsPage() {
             className={styles.container}
         >
             <Box className={styles.iconBox}>
-                <Users size={40} />
+                <Users size={ICON_SIZE["2xl"]} />
             </Box>
 
-            <Heading size="5" weight="bold" className={styles.title}>
-                {t("contacts.title", "Контакты")}
-            </Heading>
+            {/* Нативный h2 вместо Radix Heading */}
+            <h2 className={styles.title}>{t("contacts.title", "Контакты")}</h2>
 
-            <Text size="3" className={styles.description}>
+            {/* Нативный p вместо Radix Text */}
+            <p className={styles.description}>
                 {t(
                     "contacts.emptyDescription",
                     "Здесь будут отображаться ваши контакты. Добавьте друзей, чтобы начать общение.",
                 )}
-            </Text>
+            </p>
 
             <Button variant="soft" size="3" className={styles.addButton}>
-                <UserPlus size={18} />
+                <UserPlus size={ICON_SIZE.sm} />
                 {t("contacts.addContact", "Добавить контакт")}
             </Button>
         </Flex>

@@ -1,10 +1,11 @@
-import { Box, Flex } from "@radix-ui/themes";
 import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Avatar } from "@/components/ui/Avatar";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
 import { RoomHeaderActions } from "./components/RoomHeaderActions";
-import { RoomHeaderAvatar } from "./components/RoomHeaderAvatar";
 import { RoomHeaderTitle } from "./components/RoomHeaderTitle";
 import { useRoomHeaderInfo } from "./hooks/useRoomHeaderInfo";
 import styles from "./roomheader.module.css";
@@ -43,14 +44,8 @@ export function DefaultHeader({
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
     // Используем хук для вычисления всей информации о комнате
-    const {
-        isDM,
-        resolvedPeer,
-        displayName,
-        avatarUrl,
-        avatarFallback,
-        memberNames,
-    } = useRoomHeaderInfo({ room, peerUser });
+    const { isDM, resolvedPeer, displayName, avatarUrl, memberNames } =
+        useRoomHeaderInfo({ room, peerUser });
 
     const handleInfoClick = () => {
         if (resolvedPeer?.id) {
@@ -88,15 +83,12 @@ export function DefaultHeader({
                         className={`${styles.iconButton} ${styles.backButton}`}
                         onClick={onBack}
                     >
-                        <ChevronLeft size={26} />
+                        <ChevronLeft className={styles.backIcon} />
                     </Box>
                 )}
 
                 <Flex align="center" gap="3" className={styles.titleArea}>
-                    <RoomHeaderAvatar
-                        src={avatarUrl}
-                        fallback={avatarFallback}
-                    />
+                    <Avatar size="sm" src={avatarUrl} name={displayName} />
 
                     <RoomHeaderTitle
                         displayName={displayName}

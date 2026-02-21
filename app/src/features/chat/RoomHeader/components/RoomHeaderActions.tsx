@@ -1,7 +1,9 @@
-import { Flex } from "@radix-ui/themes";
 import { Phone, Trash2, Video } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "../roomheader.module.css";
 
 interface RoomHeaderActionsProps {
@@ -15,6 +17,7 @@ interface RoomHeaderActionsProps {
 
 /**
  * Группа кнопок действий в заголовке чата.
+ * Использует наши кастомные IconButton, иконки через ICON_SIZE.
  */
 export function RoomHeaderActions({
     isEphemeral,
@@ -25,20 +28,24 @@ export function RoomHeaderActions({
 
     return (
         <Flex align="center" gap="1">
-            <Button
+            <IconButton
                 variant="ghost"
-                color="gray"
+                size="md"
+                shape="round"
                 className={styles.actionButton}
+                aria-label={t("chat.call", "Позвонить")}
             >
-                <Phone size={20} />
-            </Button>
-            <Button
+                <Phone size={ICON_SIZE.sm} />
+            </IconButton>
+            <IconButton
                 variant="ghost"
-                color="gray"
+                size="md"
+                shape="round"
                 className={styles.actionButton}
+                aria-label={t("chat.videoCall", "Видеозвонок")}
             >
-                <Video size={20} />
-            </Button>
+                <Video size={ICON_SIZE.sm} />
+            </IconButton>
 
             {isEphemeral && onEndSession && (
                 <Button
@@ -48,7 +55,7 @@ export function RoomHeaderActions({
                     disabled={ending}
                     className={styles.endSessionButton}
                 >
-                    <Trash2 size={16} />
+                    <Trash2 size={ICON_SIZE.sm} />
                     {t("chat.endSession")}
                 </Button>
             )}

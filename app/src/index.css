@@ -1,20 +1,33 @@
 /* CSS Variables for Premium Design System */
 :root {
     /* =========================================== */
-    /* Spacing System (4px base) */
+    /* Scale Factor (Telegram-style) */
     /* =========================================== */
-    --space-1: 4px;
-    --space-2: 8px;
-    --space-3: 12px;
-    --space-4: 16px;
-    --space-5: 20px;
-    --space-6: 24px;
-    --space-8: 32px;
-    --space-10: 40px;
-    --space-12: 48px;
+    --scale-factor: 1;
 
     /* =========================================== */
-    /* Typography System */
+    /* Spacing System (Scalable) */
+    /* =========================================== */
+    --space-05: calc(2px * var(--scale-factor));
+    --space-1: calc(4px * var(--scale-factor));
+    --space-2: calc(8px * var(--scale-factor));
+    --space-3: calc(12px * var(--scale-factor));
+    --space-4: calc(16px * var(--scale-factor));
+    --space-5: calc(20px * var(--scale-factor));
+    --space-6: calc(24px * var(--scale-factor));
+    --space-8: calc(32px * var(--scale-factor));
+    --space-10: calc(40px * var(--scale-factor));
+    --space-12: calc(48px * var(--scale-factor));
+    --space-16: calc(64px * var(--scale-factor));
+    --space-17: calc(80px * var(--scale-factor));
+    --space-18: calc(96px * var(--scale-factor));
+    --space-24: calc(128px * var(--scale-factor));
+    --space-32: calc(160px * var(--scale-factor));
+    --space-48: calc(256px * var(--scale-factor));
+    --space-64: calc(512px * var(--scale-factor));
+
+    /* =========================================== */
+    /* Typography System (Static for now, scalable later if needed) */
     /* =========================================== */
     --text-xs: 12px;
     --text-sm: 14px;
@@ -24,15 +37,107 @@
     --text-2xl: 24px;
     --text-3xl: 30px;
 
+    /* Шрифтовые начертания */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+    --font-weight-black: 900;
+
+    --line-height-none: 1;
+    --line-height-tight: 1.25;
+    --line-height-snug: 1.375;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+
+    /* Семейство шрифтов */
+    --font-family:
+        "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+    /* Межбуквенный интервал */
+    --letter-spacing-tight: -0.02em;
+    --letter-spacing-normal: 0;
+    --letter-spacing-wide: 0.04em;
+
     /* =========================================== */
     /* Border Radius System */
     /* =========================================== */
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --radius-2xl: 20px;
-    --radius-full: 9999px;
+    --kk-radius-sm: 4px;
+    --kk-radius-md: 8px;
+    --kk-radius-lg: 12px;
+    --kk-radius-xl: 16px;
+    --kk-radius-2xl: 20px;
+    --kk-radius-full: 50%;
+    --kk-radius-glass: 16px;
+
+    /* =========================================== */
+    /* Component Sizes (Scalable) */
+    /* =========================================== */
+    --size-icon-xs: calc(14px * var(--scale-factor));
+    --size-icon-sm: calc(18px * var(--scale-factor));
+    --size-icon-md: calc(24px * var(--scale-factor));
+    --size-icon-lg: calc(32px * var(--scale-factor));
+
+    --size-avatar-xs: calc(24px * var(--scale-factor));
+    --size-avatar-sm: calc(32px * var(--scale-factor));
+    --size-avatar-md: calc(40px * var(--scale-factor));
+    --size-avatar-lg: calc(80px * var(--scale-factor));
+    --size-avatar-xl: calc(120px * var(--scale-factor));
+    --size-avatar-xxl: calc(160px * var(--scale-factor));
+
+    --size-btn-h-1: calc(28px * var(--scale-factor));
+    --size-btn-h-2: calc(32px * var(--scale-factor));
+    --size-btn-h-3: calc(36px * var(--scale-factor));
+    --size-btn-h-4: calc(44px * var(--scale-factor));
+
+    --size-input-h: calc(36px * var(--scale-factor));
+    --size-touch: calc(40px * var(--scale-factor));
+    --size-nav-icon-bg: calc(50px * var(--scale-factor));
+    --size-nav-item-min: 56px; /* Статичный min-width для навигации */
+    --size-nav-item-max: 80px; /* Статичный max-width для навигации */
+    --size-nav-icon-h: calc(32px * var(--scale-factor));
+
+    --size-badge: calc(18px * var(--scale-factor));
+    --size-badge-radius: calc(9px * var(--scale-factor));
+
+    --size-loader-ring: calc(60px * var(--scale-factor));
+    --size-online-dot: calc(6px * var(--scale-factor));
+    --size-error-icon-lg: calc(64px * var(--scale-factor));
+    --size-error-icon-sm: calc(32px * var(--scale-factor));
+    --size-icon-box-lg: calc(80px * var(--scale-factor));
+
+    /* =========================================== */
+    /* Layout Sizes (Scalable) */
+    /* =========================================== */
+    --header-height: calc(72px * var(--scale-factor));
+    --footer-height: calc(72px * var(--scale-factor));
+    --panel-width: 360px; /* Sidebar width usually static */
+
+    /* =========================================== */
+    /* Container Max Widths (Static) */
+    /* =========================================== */
+    --max-w-auth: 450px;
+    --max-w-dialog: 450px;
+    --max-w-content: 600px;
+    --max-w-profile: 480px;
+    --max-w-toast: 380px;
+    --max-w-empty-state: 300px;
+    --max-w-card: 320px;
+
+    /* Viewport Proportions */
+    --vw-dialog: 90vw;
+    --vh-dialog: 85vh;
+    --min-w-dropdown: 180px;
+
+    /* =========================================== */
+    /* Opacity & Borders */
+    /* =========================================== */
+    --opacity-disabled: 0.5;
+    --opacity-hover: 0.8;
+    --border-width-base: 1px;
+    --border-width-focus: 2px;
 
     /* =========================================== */
     /* Z-Index Scale */
@@ -46,32 +151,56 @@
     --z-overlay: 9999;
 
     /* =========================================== */
-    /* Shared Layout Sizes */
+    /* Transitions */
     /* =========================================== */
-    --panel-width: 360px;
-    --header-height: 72px;
-    --footer-height: 72px;
-    --input-height: 72px;
-    --radius-glass: 16px;
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+    --transition-slow: 0.3s ease;
+
+    /* =========================================== */
+    /* Shadows & Blurs */
+    /* =========================================== */
+    --glass-blur: blur(20px);
+    --glass-blur-sm: blur(10px);
+    --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --shadow-bubble: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 10px;
+
+    /* =========================================== */
+    /* Theme Previews */
+    /* =========================================== */
+    --preview-neon-gradient: linear-gradient(135deg, #00f0ff 0%, #bc13fe 100%);
+    --preview-neon-glow: rgba(0, 240, 255, 0.2);
+    --preview-emerald-gradient: linear-gradient(
+        135deg,
+        #d4af37 0%,
+        #10b981 100%
+    );
+    --preview-emerald-glow: rgba(212, 175, 55, 0.2);
 
     /* =========================================== */
     /* Status Colors with Alpha Variants */
     /* =========================================== */
+    --color-white: #ffffff;
+    --color-black: #000000;
     --color-error-alpha: rgba(239, 68, 68, 0.5);
     --color-success-alpha: rgba(16, 185, 129, 0.5);
     --color-warning-alpha: rgba(245, 158, 11, 0.5);
 
     /* =========================================== */
-    /* Shared Shadows & Blurs */
+    /* Gradients */
     /* =========================================== */
-    --glass-blur: blur(20px);
-    --glass-blur-sm: blur(10px);
-    --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --gradient-primary: linear-gradient(
+        135deg,
+        var(--accent-primary),
+        var(--accent-secondary)
+    );
 
     /* Default Mode (Neon Dark as fallback) */
     --bg-app: #020a12;
     --foreground: #e0f7fa;
     --muted: #708ca3;
+    --muted-foreground: #a4b8c6;
     --accent-primary: #00f0ff;
     --accent-secondary: #00a8e8;
 

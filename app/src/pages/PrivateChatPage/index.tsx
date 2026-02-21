@@ -1,7 +1,9 @@
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { Lock, UserSearch } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./privatechatpage.module.css";
 
 /**
@@ -23,19 +25,21 @@ export function PrivateChatPage() {
             className={styles.container}
         >
             <Box className={styles.iconBox}>
-                <Lock size={40} />
+                <Lock size={ICON_SIZE["2xl"]} />
             </Box>
 
-            <Heading size="5" weight="bold" className={styles.title}>
+            {/* Нативный h2 вместо Radix Heading */}
+            <h2 className={styles.title}>
                 {t("private.title", "Приватный чат")}
-            </Heading>
+            </h2>
 
-            <Text size="3" className={styles.description}>
+            {/* Нативный p вместо Radix Text */}
+            <p className={styles.description}>
                 {t(
                     "private.description",
                     "Начните защищённый разговор. Выберите контакт, чтобы отправить приватное сообщение.",
                 )}
-            </Text>
+            </p>
 
             <Box className={styles.warning}>
                 ⚠️{" "}
@@ -46,7 +50,7 @@ export function PrivateChatPage() {
             </Box>
 
             <Button variant="soft" size="3" className={styles.selectButton}>
-                <UserSearch size={18} />
+                <UserSearch size={ICON_SIZE.sm} />
                 {t("private.selectContact", "Выбрать контакт")}
             </Button>
         </Flex>

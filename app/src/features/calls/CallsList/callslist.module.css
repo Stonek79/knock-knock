@@ -11,3 +11,17 @@
 .icon {
     color: var(--accent-9);
 }
+
+/* Нативный h2 вместо Radix Heading */
+.title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--foreground);
+    margin: 0;
+}
+
+/* Нативный span вместо Radix Text */
+.emptyText {
+    font-size: var(--text-sm);
+    color: var(--muted);
+}

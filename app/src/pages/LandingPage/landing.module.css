@@ -13,7 +13,7 @@
 .content {
     text-align: center;
     z-index: var(--z-sticky);
-    max-width: 600px;
+    max-width: var(--max-w-content);
     animation: fadeIn 1s ease-out;
 }
 
@@ -22,10 +22,12 @@
 }
 
 .title {
-    font-size: var(--text-3xl);
-    font-weight: 700;
-    margin-bottom: var(--space-4);
-    color: var(--gray-12);
+    font-size: var(--text-4xl); /* size="8" ~ 3-4rem, но text-4xl норм */
+    font-weight: var(--font-weight-bold);
+    color: var(--foreground);
+    text-align: center;
+    margin: 0;
+    line-height: 1.1;
 }
 
 .description {
@@ -33,6 +35,21 @@
     color: var(--gray-11);
     line-height: 1.6;
     margin-bottom: var(--space-12);
+}
+
+/* Badge (нативный span вместо Radix Badge) */
+.badge {
+    background: var(--surface);
+    color: var(--orange-11);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--kk-radius-full);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    border: var(--border-width-base) solid var(--accent-primary);
+    box-shadow: var(--shadow-bubble);
 }
 
 .footer {
@@ -48,8 +65,8 @@
     font-size: var(--text-sm);
     text-decoration: none;
     padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-md);
-    transition: all 0.2s;
+    border-radius: var(--kk-radius-md);
+    transition: all var(--transition-base);
     cursor: pointer;
 }
 
@@ -61,7 +78,7 @@
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(var(--space-5));
     }
     to {
         opacity: 1;
@@ -74,6 +91,6 @@
 }
 
 .descriptionText {
-    max-width: 600px;
+    max-width: var(--max-w-content);
     line-height: 1.6;
 }

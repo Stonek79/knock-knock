@@ -1,6 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { GlobalLoader } from "@/components/ui/Loading/GlobalLoader";
+import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { ToastProvider } from "@/components/ui/Toast";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./root.module.css";

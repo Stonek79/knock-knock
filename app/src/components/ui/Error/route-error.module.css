@@ -2,7 +2,7 @@
 .container {
     width: 100%;
     height: 100%;
-    min-height: 200px;
+    min-height: calc(var(--space-10) * 5);
     padding: var(--space-6);
 }
 
@@ -11,26 +11,31 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
-    border-radius: var(--radius-full);
+    width: var(--size-error-icon-lg);
+    height: var(--size-error-icon-lg);
+    border-radius: var(--kk-radius-full);
     background: var(--color-error-alpha);
 }
 
 /* Иконка */
 .icon {
-    width: 32px;
-    height: 32px;
+    width: var(--size-error-icon-sm);
+    height: var(--size-error-icon-sm);
     color: var(--color-error);
 }
 
 /* Сообщение об ошибке */
 .message {
-    max-width: 320px;
+    max-width: var(--max-w-card);
     opacity: 0.8;
 }
 
 /* Кнопка повтора */
 .retryButton {
     cursor: pointer;
+}
+
+.buttonIcon {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
 }

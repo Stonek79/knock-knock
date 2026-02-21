@@ -8,6 +8,11 @@
     padding: var(--space-4);
 }
 
+.initText {
+    font-size: var(--text-sm);
+    color: var(--muted);
+}
+
 .spinner {
     animation: spin 1s linear infinite;
 }

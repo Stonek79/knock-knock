@@ -5,18 +5,22 @@
 import { useCallback, useEffect, useState } from "react";
 import {
     arrayBufferToBase64,
-    clearAllKeys,
-    createBackup,
     exportPublicKey,
     generateIdentityKeyPair,
     generatePreKeyPair,
+} from "@/lib/crypto/keys";
+import {
+    clearAllKeys,
     getKeyPair,
     hasKeys,
+    saveKeyPair,
+} from "@/lib/crypto/keystore";
+import type { RecoveryError, RestoredKeys } from "@/lib/crypto/recovery";
+import {
+    createBackup,
     type KeyBackup,
     restoreBackup,
-    saveKeyPair,
-} from "@/lib/crypto";
-import type { RecoveryError, RestoredKeys } from "@/lib/crypto/recovery";
+} from "@/lib/crypto/recovery";
 import type { Result } from "@/lib/types/result";
 
 export interface KeystoreState {

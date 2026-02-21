@@ -1,18 +1,18 @@
-import {
-    Avatar,
-    Box,
-    Flex,
-    Heading,
-    ScrollArea,
-    Spinner,
-    Text,
-    TextField,
-} from "@radix-ui/themes";
+import clsx from "clsx";
 import { Search, UserPlus } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Avatar } from "@/components/ui/Avatar";
+import { Heading } from "@/components/ui/Heading";
+import { ScrollArea } from "@/components/ui/ScrollArea";
+import { Spinner } from "@/components/ui/Spinner";
+import { Text } from "@/components/ui/Text";
+import { TextField } from "@/components/ui/TextField";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
-import { usePresence } from "@/features/contacts/hooks/usePresence";
+import { usePresence } from "@/hooks/usePresence";
+import { USER_CONTACTS_MODES, USER_WEB_STATUS } from "@/lib/constants/user";
 import type { Profile } from "@/lib/types/profile";
 import styles from "./contactlist.module.css";
 
@@ -62,7 +62,7 @@ export function ContactList({ mode = "list", onSelect }: ContactListProps) {
     }, [contacts, deferredSearchQuery]);
 
     const title =
-        mode === "select"
+        mode === USER_CONTACTS_MODES.SELECT
             ? t("contacts.selectTitle", "Выбрать контакт")
             : t("contacts.title", "Контакты");
 
@@ -74,8 +74,8 @@ export function ContactList({ mode = "list", onSelect }: ContactListProps) {
         if (isLoading) {
             return (
                 <Box className={styles.emptyContainer}>
-                    <Spinner size="3" />
-                    <Text color="gray">
+                    <Spinner size="lg" />
+                    <Text intent="secondary">
                         {t("common.loading", "Загрузка...")}
                     </Text>
                 </Box>
@@ -86,10 +86,10 @@ export function ContactList({ mode = "list", onSelect }: ContactListProps) {
         if (isError) {
             return (
                 <Box className={styles.emptyContainer}>
-                    <Text color="red">
+                    <Text intent="danger">
                         {t("contacts.error", "Ошибка загрузки контактов")}
                     </Text>
-                    <Text size="1" color="gray">
+                    <Text size="sm" intent="secondary">
                         {error instanceof Error
                             ? error.message
                             : "Unknown error"}
@@ -111,7 +111,8 @@ export function ContactList({ mode = "list", onSelect }: ContactListProps) {
         return (
             <ScrollArea type="hover" className={styles.list}>
                 {filteredContacts.map((contact) => {
-                    const isOnline = onlineUsers[contact.id] === "online";
+                    const isOnline =
+                        onlineUsers[contact.id] === USER_WEB_STATUS.ONLINE;
 
                     return (
                         <Box
@@ -121,15 +122,17 @@ export function ContactList({ mode = "list", onSelect }: ContactListProps) {
                         >
                             <Box className={styles.avatarContainer}>
                                 <Avatar
-                                    size="3"
+                                    size="md"
                                     fallback={contact.display_name[0]}
                                     radius="full"
-                                    color="indigo"
                                     src={contact.avatar_url ?? undefined}
                                 />
                                 {isOnline && (
                                     <Box
-                                        className={`${styles.statusIndicator} ${styles.statusOnline}`}
+                                        className={clsx(
+                                            styles.statusIndicator,
+                                            styles.statusOnline,
+                                        )}
                                     />
                                 )}
                             </Box>
@@ -140,7 +143,11 @@ export function ContactList({ mode = "list", onSelect }: ContactListProps) {
                                 <Text className={styles.statusText}>
                                     @{contact.username}
                                     {isOnline && (
-                                        <Text color="green" size="1" ml="2">
+                                        <Text
+                                            intent="success"
+                                            size="sm"
+                                            className={styles.statusOnlineText}
+                                        >
                                             Online
                                         </Text>
                                     )}
@@ -158,29 +165,25 @@ export function ContactList({ mode = "list", onSelect }: ContactListProps) {
             {/* Заголовок и поиск */}
             <Box className={styles.header} p="3">
                 <Flex justify="between" align="center" mb="3">
-                    <Heading size="4">{title}</Heading>
-                    {mode === "list" && (
+                    <Heading size="lg">{title}</Heading>
+                    {mode === USER_CONTACTS_MODES.LIST && (
                         <Box
-                            style={{ cursor: "pointer" }}
+                            className={styles.addContactButton}
                             onClick={() => console.log("Add contact")}
                         >
-                            <UserPlus size={20} />
+                            <UserPlus />
                         </Box>
                     )}
                 </Flex>
-                <TextField.Root
+                <TextField
                     placeholder={t("contacts.search", "Поиск по имени...")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 >
                     <TextField.Slot>
-                        {isSearching ? (
-                            <Spinner size="1" />
-                        ) : (
-                            <Search size={16} />
-                        )}
+                        {isSearching ? <Spinner size="sm" /> : <Search />}
                     </TextField.Slot>
-                </TextField.Root>
+                </TextField>
             </Box>
 
             {/* Контент списка */}

@@ -1,7 +1,9 @@
-import { DropdownMenu, IconButton } from "@radix-ui/themes";
 import clsx from "clsx";
 import { MoreVertical, Pencil, Star, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { DropdownMenu } from "@/components/ui/DropdownMenu";
+import { IconButton } from "@/components/ui/IconButton";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./message-bubble.module.css";
 
 interface MessageActionsProps {
@@ -14,6 +16,9 @@ interface MessageActionsProps {
     onToggleStar?: (isStarred: boolean) => void;
 }
 
+/**
+ * Контекстное меню действий над сообщением.
+ */
 export function MessageActions({
     isOwn,
     isStarred,
@@ -35,16 +40,16 @@ export function MessageActions({
     return (
         <div className={styles.actionsOverlay}>
             <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
+                <DropdownMenu.Trigger asChild>
                     <IconButton
-                        size="1"
+                        size="sm"
                         variant="ghost"
                         className={styles.actionButton}
                     >
-                        <MoreVertical className={styles.iconSmall} />
+                        <MoreVertical size={ICON_SIZE.xs} />
                     </IconButton>
                 </DropdownMenu.Trigger>
-                <DropdownMenu.Content size="1">
+                <DropdownMenu.Content>
                     <DropdownMenu.Item
                         onClick={() => onToggleStar?.(!isStarred)}
                     >
@@ -59,7 +64,7 @@ export function MessageActions({
                         {t("common.edit", "Редактировать")}
                     </DropdownMenu.Item>
 
-                    <DropdownMenu.Item color="red" onClick={onDelete}>
+                    <DropdownMenu.Item intent="danger" onClick={onDelete}>
                         <Trash2 className={iconsStyles} />{" "}
                         {t("common.delete", "Удалить")}
                     </DropdownMenu.Item>

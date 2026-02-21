@@ -15,4 +15,5 @@ export const ROUTES = {
     FAVORITES: "/favorites",
     CALLS: "/calls",
     ADMIN: "/admin",
+    ADMIN_USERS: "/admin/users",
 } as const;

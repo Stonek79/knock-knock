@@ -1,14 +1,13 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { DB_TABLES, MEMBER_ROLE } from "@/lib/constants";
 import { ERROR_CODES } from "@/lib/constants/errors";
+import { wrapRoomKey } from "@/lib/crypto/encryption";
+import { arrayBufferToBase64, base64ToArrayBuffer } from "@/lib/crypto/keys";
 import {
-    arrayBufferToBase64,
-    base64ToArrayBuffer,
     generateDeterministicRoomId,
     generateRoomId,
     generateRoomKey,
-    wrapRoomKey,
-} from "@/lib/crypto";
+} from "@/lib/crypto/rooms";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import type { AppError, Result } from "@/lib/types/result";

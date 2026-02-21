@@ -33,3 +33,10 @@
         transform: rotate(360deg);
     }
 }
+
+/* Нативный span вместо Radix Text */
+.statusText {
+    font-size: var(--text-sm);
+    color: var(--muted);
+    text-align: center;
+}

@@ -1,10 +1,14 @@
-import { Box, Card, Flex, Text } from "@radix-ui/themes";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import { ChevronRight, ShieldAlert } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Card } from "@/components/ui/Card";
+import { Text } from "@/components/ui/Text";
 import { SETTINGS_ITEMS } from "@/config/settings";
 import { ROUTES } from "@/lib/constants";
+import { USER_ROLE } from "@/lib/constants/auth";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./settingsmenu.module.css";
 
@@ -40,16 +44,19 @@ export function SettingsMenu() {
                                                 colorClass,
                                             )}
                                         >
-                                            <Icon size={20} />
+                                            <Icon className={styles.icon} />
                                         </Box>
-                                        <Text size="3" weight="medium">
+                                        <Text size="lg" weight="medium">
                                             {t(
                                                 item.labelKey,
                                                 item.defaultLabel,
                                             )}
                                         </Text>
                                     </Flex>
-                                    <ChevronRight color="gray" size={20} />
+                                    <ChevronRight
+                                        color="gray"
+                                        className={styles.icon}
+                                    />
                                 </Flex>
                             </Card>
                         </Link>
@@ -67,7 +74,7 @@ function AdminSettingsItem() {
     const { profile } = useAuthStore();
     const { t } = useTranslation();
 
-    if (profile?.role !== "admin") {
+    if (profile?.role !== USER_ROLE.ADMIN) {
         return null;
     }
 
@@ -82,13 +89,13 @@ function AdminSettingsItem() {
                                 styles.adminIconBox,
                             )}
                         >
-                            <ShieldAlert size={20} />
+                            <ShieldAlert className={styles.icon} />
                         </Box>
-                        <Text size="3" weight="medium">
+                        <Text size="lg" weight="medium">
                             {t("nav.admin", "Admin Panel")}
                         </Text>
                     </Flex>
-                    <ChevronRight color="gray" size={20} />
+                    <ChevronRight color="gray" className={styles.icon} />
                 </Flex>
             </Card>
         </Link>

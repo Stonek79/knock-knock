@@ -8,7 +8,7 @@
 
 .loginCard {
     width: 100%;
-    max-width: 450px;
+    max-width: var(--max-w-auth);
 }
 
 .formContainer {
@@ -23,4 +23,20 @@
 
 .centerButton {
     margin: 0 auto;
+}
+
+/* Стили для SuccessView */
+.title {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--foreground);
+    text-align: center;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: var(--text-base);
+    color: var(--muted);
+    text-align: center;
+    margin: 0;
 }

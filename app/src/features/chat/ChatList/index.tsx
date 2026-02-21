@@ -1,8 +1,9 @@
-import { Box, Flex, ScrollArea, Text } from "@radix-ui/themes";
 import { MessageSquareOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search } from "@/components/Search/Search";
+import { Box } from "@/components/layout/Box";
+import { ScrollArea } from "@/components/ui/ScrollArea";
+import { Search } from "@/components/ui/Search";
 import { CreateChatDialog } from "@/features/chat/CreateChatDialog";
 import { CreateGroupDialog } from "@/features/chat/CreateGroupDialog";
 import { CHAT_TYPE } from "@/lib/constants";
@@ -23,13 +24,6 @@ type ChatDialogType = ChatType | null;
 /**
  * Компонент списка чатов.
  * Используется как в Sidebar (десктоп), так и как основной контент на мобильных.
- *
- * Структура компонента:
- * - ChatListHeader: Заголовок с меню создания чатов
- * - ChatListItem: Элемент списка чатов
- * - useChatList: Хук для загрузки данных
- *
- * @returns JSX элемент списка чатов
  */
 export function ChatList() {
     const { t } = useTranslation();
@@ -50,7 +44,7 @@ export function ChatList() {
     useChatListSubscription();
 
     return (
-        <Flex direction="column" className={styles.container}>
+        <div className={styles.container}>
             {/* Header: Knock Knock + Search */}
             <Box>
                 <ChatListHeader
@@ -70,19 +64,12 @@ export function ChatList() {
             {isLoading ? (
                 <ChatListLoadingState />
             ) : filteredChats.length === 0 ? (
-                <Flex
-                    direction="column"
-                    align="center"
-                    justify="center"
-                    height="100%"
-                    p="5"
-                    gap="3"
-                >
-                    <MessageSquareOff size={48} className={styles.emptyIcon} />
-                    <Text align="center" size="3" weight="medium">
+                <div>
+                    <MessageSquareOff className={styles.emptyIcon} />
+                    <span className={styles.emptyTitle}>
                         {t("chat.noRooms", "У вас пока нет чатов")}
-                    </Text>
-                    <Text align="center" size="2" color="gray">
+                    </span>
+                    <span className={styles.emptySubtitle}>
                         {searchQuery
                             ? t(
                                   "chat.noSearchResults",
@@ -92,12 +79,12 @@ export function ChatList() {
                                   "chat.startChattingDescription",
                                   "Начните общение, создав новый чат",
                               )}
-                    </Text>
-                </Flex>
+                    </span>
+                </div>
             ) : (
                 // Список чатов
                 <ScrollArea type="hover" className={styles.chatList}>
-                    <Flex direction="column">
+                    <div>
                         {filteredChats.map((chat) => (
                             <ChatListItem
                                 key={chat.id}
@@ -107,7 +94,7 @@ export function ChatList() {
                                 }}
                             />
                         ))}
-                    </Flex>
+                    </div>
                 </ScrollArea>
             )}
 
@@ -126,6 +113,6 @@ export function ChatList() {
                 open={isGroupDialogOpen}
                 onOpenChange={setIsGroupDialogOpen}
             />
-        </Flex>
+        </div>
     );
 }

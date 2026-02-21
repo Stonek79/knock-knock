@@ -1,6 +1,6 @@
-import { Card } from "@radix-ui/themes";
 import { Navigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
@@ -26,7 +26,7 @@ export function LoginPage() {
 
     return (
         <div className={styles.loginPage}>
-            <Card size="4" className={styles.loginCard}>
+            <Card className={styles.loginCard}>
                 <LoginForm onSuccess={() => setIsSubmitted(true)} />
             </Card>
         </div>

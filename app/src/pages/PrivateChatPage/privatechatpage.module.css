@@ -7,30 +7,33 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 80px;
-    height: 80px;
+    width: var(--size-icon-box-lg);
+    height: var(--size-icon-box-lg);
     margin-bottom: var(--space-4);
     color: var(--accent-9);
     background: var(--accent-a3);
-    border-radius: var(--radius-full);
+    border-radius: var(--kk-radius-full);
 }
 
 .title {
     color: var(--gray-12);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-bold);
+    margin: var(--space-2) 0;
 }
 
 .description {
-    max-width: 320px;
+    max-width: var(--max-w-card);
     color: var(--gray-11);
     line-height: 1.5;
 }
 
 .warning {
-    max-width: 320px;
+    max-width: var(--max-w-card);
     padding: var(--space-3) var(--space-4);
     background: var(--orange-a3);
-    border: 1px solid var(--orange-6);
-    border-radius: var(--radius-md);
+    border: var(--border-width-base) solid var(--accent-primary);
+    border-radius: var(--kk-radius-md);
     color: var(--orange-11);
     font-size: var(--text-xs);
     line-height: 1.4;

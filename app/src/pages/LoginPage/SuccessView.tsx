@@ -1,6 +1,7 @@
-import { Card, Flex, Heading, Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import styles from "./login.module.css";
 
 interface SuccessViewProps {
@@ -12,14 +13,12 @@ export function SuccessView({ onBack }: SuccessViewProps) {
 
     return (
         <div className={styles.loginPage}>
-            <Card size="4" className={styles.loginCard}>
+            <Card className={styles.loginCard}>
                 <Flex direction="column" gap="4" align="center">
-                    <Heading size="6" align="center">
-                        {t("auth.checkEmail")}
-                    </Heading>
-                    <Text align="center" color="gray">
-                        {t("auth.magicLinkSent")}
-                    </Text>
+                    <h2 className={styles.title}>{t("auth.checkEmail")}</h2>
+
+                    <p className={styles.subtitle}>{t("auth.magicLinkSent")}</p>
+
                     <Button variant="ghost" onClick={onBack}>
                         {t("common.back")}
                     </Button>

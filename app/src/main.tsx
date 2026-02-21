@@ -2,11 +2,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "@radix-ui/themes/styles.css";
-import { Theme } from "@radix-ui/themes";
 import { RouteErrorFallback } from "@/components/ui/Error/RouteErrorFallback";
-import { SectionLoader } from "@/components/ui/Loading/SectionLoader";
-import { DESIGN_THEME, DOM_ROOT_ID, RADIX_THEME } from "@/lib/constants";
+import { SectionLoader } from "@/components/ui/SectionLoader";
+import { DOM_ROOT_ID } from "@/lib/constants";
 import "./lib/i18n";
 import "./index.css";
 
@@ -35,33 +33,17 @@ const queryClient = new QueryClient();
 
 /**
  * Корневой компонент приложения.
- * Управляет темами Radix UI и провайдерами данных.
- * Theme — единственная обёртка Radix Themes на весь проект.
+ * Управляет темами через data-theme и data-mode
  */
 function Root() {
     const { theme, mode } = useThemeStore();
 
-    // Динамически выбираем цвета Radix под нашу концепцию
-    const currentRadixConfig =
-        theme === DESIGN_THEME.EMERALD
-            ? RADIX_THEME[DESIGN_THEME.EMERALD]
-            : RADIX_THEME[DESIGN_THEME.NEON];
-
     return (
-        <Theme
-            appearance={mode}
-            accentColor={currentRadixConfig.ACCENT}
-            grayColor={currentRadixConfig.GRAY}
-            radius={RADIX_THEME.DEFAULT_RADIUS}
-            panelBackground={RADIX_THEME.DEFAULT_PANEL_BACKGROUND}
-            hasBackground={false}
-            data-theme={theme}
-            data-mode={mode}
-        >
+        <div data-theme={theme} data-mode={mode} className="knock-root">
             <QueryClientProvider client={queryClient}>
                 <RouterProvider router={router} />
             </QueryClientProvider>
-        </Theme>
+        </div>
     );
 }
 

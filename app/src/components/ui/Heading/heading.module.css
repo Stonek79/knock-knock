@@ -1,0 +1,106 @@
+/**
+ * CSS-модуль для кастомного компонента Heading.
+ * Управляет размером и цветом заголовков через токены дизайн-системы.
+ */
+
+.heading {
+    margin: 0;
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-snug);
+}
+
+/* =========================================== */
+/* Размеры заголовков (size) */
+/* =========================================== */
+
+.xs {
+    font-size: var(--text-base);
+}
+
+.sm {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-normal);
+}
+
+.md {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-snug);
+}
+
+.lg {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+}
+
+.xl {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-black);
+    line-height: var(--line-height-tight);
+}
+
+.xxl {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-weight-black);
+    line-height: var(--line-height-none);
+}
+
+/* =========================================== */
+/* Варианты цвета (intent) */
+/* =========================================== */
+
+.neutral {
+    color: var(--foreground);
+}
+
+.secondary {
+    color: var(--muted);
+}
+
+.primary {
+    color: var(--accent-primary);
+}
+
+.danger {
+    color: var(--color-error);
+}
+
+.warning {
+    color: var(--color-warning);
+}
+
+.success {
+    color: var(--color-success);
+}
+
+.info {
+    color: var(--color-info);
+}
+
+/* =========================================== */
+/* Выравнивание (align) */
+/* =========================================== */
+
+.left {
+    text-align: left;
+}
+
+.center {
+    text-align: center;
+}
+
+.right {
+    text-align: right;
+}
+
+/* =========================================== */
+/* Утилиты */
+/* =========================================== */
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

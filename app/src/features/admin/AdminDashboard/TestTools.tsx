@@ -1,6 +1,9 @@
-import { Button, Card, Flex, Text } from "@radix-ui/themes";
 import { MessageSquarePlus, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Text } from "@/components/ui/Text";
 import { useTestTools } from "@/features/admin/hooks/useTestTools";
 import { CreateChatDialog } from "@/features/chat/CreateChatDialog";
 import { CreateGroupDialog } from "@/features/chat/CreateGroupDialog";
@@ -20,10 +23,10 @@ export function TestTools() {
     return (
         <Card>
             <Flex direction="column" gap="4">
-                <Text weight="bold" size="4">
+                <Text weight="bold" size="lg">
                     {t("admin.testToolsTitle", "Test Data Tools (Production)")}
                 </Text>
-                <Text color="gray" size="2">
+                <Text intent="secondary" size="md">
                     {t(
                         "admin.testToolsDesc",
                         "Use these tools to quickly create chats and groups for testing purposes. Note: You act as the creator/admin of these rooms.",
@@ -32,21 +35,21 @@ export function TestTools() {
 
                 <Flex gap="3" wrap="wrap">
                     <Button onClick={() => setIsGroupOpen(true)}>
-                        <Users size={16} />{" "}
+                        <Users />{" "}
                         {t("admin.createTestGroup", "Create Test Group")}
                     </Button>
                     <Button
                         variant="soft"
                         onClick={() => openCreateChat(CHAT_TYPE.PUBLIC)}
                     >
-                        <MessageSquarePlus size={16} />{" "}
+                        <MessageSquarePlus />{" "}
                         {t("admin.createPublicChat", "Create Public Chat")}
                     </Button>
                     <Button
                         variant="soft"
                         onClick={() => openCreateChat(CHAT_TYPE.PRIVATE)}
                     >
-                        <MessageSquarePlus size={16} />{" "}
+                        <MessageSquarePlus />{" "}
                         {t("admin.createPrivateChat", "Create Private Chat")}
                     </Button>
                 </Flex>

@@ -1,6 +1,7 @@
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
-import { usePresence } from "@/features/contacts/hooks/usePresence";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { usePresence } from "@/hooks/usePresence";
 import type { PeerUser } from "@/lib/types/room";
 import styles from "../roomheader.module.css";
 
@@ -23,6 +24,7 @@ interface RoomHeaderTitleProps {
 
 /**
  * Компонент текстовой информации в заголовке чата (Имя + Статус).
+ * Использует нативные теги вместо Radix Text/Heading.
  */
 export function RoomHeaderTitle({
     displayName,
@@ -39,15 +41,15 @@ export function RoomHeaderTitle({
     const renderSubtitle = () => {
         if (typingText) {
             return (
-                <Text size="1" className={styles.typingText} truncate>
+                <span className={`${styles.subtitle} ${styles.typingText}`}>
                     {typingText}
-                </Text>
+                </span>
             );
         }
 
         if (isDM && peer) {
             return (
-                <Text size="1" color="gray" truncate>
+                <span className={styles.subtitle}>
                     {onlineUsers[peer.id] === "online" ? (
                         <Flex align="center" gap="1" asChild>
                             <span>
@@ -60,20 +62,15 @@ export function RoomHeaderTitle({
                     ) : (
                         t("chat.offline", "не в сети")
                     )}
-                </Text>
+                </span>
             );
         }
 
         if (memberNames) {
             return (
-                <Text
-                    size="1"
-                    color="gray"
-                    truncate
-                    className={styles.membersList}
-                >
+                <span className={`${styles.subtitle} ${styles.membersList}`}>
                     {memberNames}
-                </Text>
+                </span>
             );
         }
 
@@ -87,10 +84,11 @@ export function RoomHeaderTitle({
             onClick={onClick}
             className={styles.titleArea}
         >
-            <Heading size="3" truncate className={styles.displayName}>
+            {/* Нативный h2 вместо Radix Heading */}
+            <h2 className={styles.displayName}>
                 {isEphemeral ? "🔒 " : ""}
                 {displayName}
-            </Heading>
+            </h2>
 
             {renderSubtitle()}
         </Flex>

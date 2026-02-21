@@ -1,0 +1,62 @@
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    background: transparent;
+    color: var(--foreground);
+    border-bottom: 1px solid var(--glass-border);
+    position: relative;
+    z-index: var(--z-sticky);
+}
+
+.title {
+    color: var(--foreground);
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+.iconButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-touch);
+    height: var(--size-touch);
+    border-radius: var(--kk-radius-full);
+    cursor: pointer;
+    color: var(--foreground);
+    transition: background-color var(--transition-base);
+}
+
+.iconButton:hover {
+    background: var(--muted);
+}
+
+.iconButton:active {
+    background: var(--muted);
+    opacity: 0.2;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-touch);
+    height: var(--size-touch);
+    border-radius: var(--kk-radius-full);
+    cursor: pointer;
+    color: var(--foreground);
+    transition: background-color var(--transition-base);
+    margin-inline-end: -0.5rem;
+}
+
+.backButton:hover {
+    background: var(--muted);
+}
+
+/* Скрываем на десктопе */
+@media (min-width: 769px) {
+    .header {
+        display: none;
+    }
+}

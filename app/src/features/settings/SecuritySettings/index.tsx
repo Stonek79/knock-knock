@@ -1,5 +1,5 @@
-import { Flex } from "@radix-ui/themes";
 import { Shield } from "lucide-react";
+import { Flex } from "@/components/layout/Flex";
 import { SettingsHeader } from "@/features/settings/SettingsHeader";
 import { useAuthStore } from "@/stores/auth";
 import { BackupControls } from "./components/BackupControls";
@@ -23,7 +23,7 @@ export function SecuritySettings() {
                 title="Безопасность"
                 titleKey="profile.securityTitle"
             >
-                <Shield size={20} />
+                <Shield size="var(--size-icon-sm)" />
             </SettingsHeader>
 
             {/* Контент с отступами */}

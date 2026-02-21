@@ -1,0 +1,40 @@
+.grid {
+    display: grid;
+    box-sizing: border-box;
+    grid-template-columns: var(--grid-cols, none);
+    grid-template-rows: var(--grid-rows, none);
+}
+
+/* Align Items */
+.alignStart {
+    align-items: start;
+}
+.alignEnd {
+    align-items: end;
+}
+.alignCenter {
+    align-items: center;
+}
+.alignBaseline {
+    align-items: baseline;
+}
+.alignStretch {
+    align-items: stretch;
+}
+
+/* Justify Content */
+.justifyStart {
+    justify-content: start;
+}
+.justifyEnd {
+    justify-content: end;
+}
+.justifyCenter {
+    justify-content: center;
+}
+.justifyBetween {
+    justify-content: space-between;
+}
+.justifyAround {
+    justify-content: space-around;
+}

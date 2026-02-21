@@ -1,0 +1,152 @@
+/**
+ * CSS-модуль для компонента Skeleton.
+ * Анимированные заглушки для состояния загрузки.
+ */
+
+/* =========================================== */
+/* Базовый скелетон */
+/* =========================================== */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--glass-bg) 25%,
+        color-mix(in srgb, var(--foreground) 8%, transparent) 50%,
+        var(--glass-bg) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--kk-radius-sm);
+    flex-shrink: 0;
+}
+
+/* Круглый скелетон (для аватаров) */
+.round {
+    border-radius: var(--kk-radius-full);
+}
+
+/* Скелетон текстовой строки */
+.text {
+    border-radius: var(--kk-radius-sm);
+    height: 1em;
+}
+
+/* =========================================== */
+/* Анимация */
+/* =========================================== */
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* =========================================== */
+/* Составные скелетоны */
+/* =========================================== */
+
+/** Обёртка для элемента списка */
+.listItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+}
+
+/** Блок текстового контента в элементе списка */
+.listItemContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/** Аватар в элементе списка */
+.listItemAvatar {
+    width: var(--size-avatar-md);
+    height: var(--size-avatar-md);
+    border-radius: var(--kk-radius-full);
+    flex-shrink: 0;
+}
+
+/** Строка заголовка */
+.listItemTitle {
+    height: var(--space-4);
+    width: 60%;
+}
+
+/** Строка подзаголовка */
+.listItemSubtitle {
+    height: var(--space-3);
+    width: 40%;
+}
+
+/** Метка времени */
+.listItemTime {
+    height: var(--space-3);
+    width: var(--space-12);
+    flex-shrink: 0;
+}
+
+/* =========================================== */
+/* Sidebar skeleton */
+/* =========================================== */
+
+.sidebar {
+    border-right: var(--border-width-base) solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: var(--panel-width);
+    flex-shrink: 0;
+}
+
+.sidebarHeader {
+    padding: var(--space-4);
+    border-bottom: var(--border-width-base) solid var(--glass-border);
+}
+
+.sidebarHeaderContent {
+    font-weight: var(--font-weight-bold);
+    font-size: var(--text-lg);
+}
+
+.mainLayout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+.listItemRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mainContent {
+    flex: 1;
+    padding: var(--space-4);
+}
+
+.contentBlock {
+    margin-top: var(--space-4);
+}
+
+.sidebarHeaderSkeleton {
+    width: calc(var(--space-12) * 2.5);
+    height: var(--space-6);
+}
+
+.mainContentTitleSkeleton {
+    width: calc(var(--space-12) * 4);
+    height: var(--space-8);
+}
+
+.mainContentBodySkeleton {
+    width: 100%;
+    height: calc(var(--space-12) * 4);
+}

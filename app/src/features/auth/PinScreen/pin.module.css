@@ -17,7 +17,7 @@
 /* === Контейнер контента === */
 .container {
     padding: var(--space-6);
-    max-width: 320px;
+    max-width: var(--max-w-card);
     width: 100%;
 }
 
@@ -43,10 +43,10 @@
 .dot {
     width: var(--pin-dot-size);
     height: var(--pin-dot-size);
-    border-radius: var(--radius-full);
+    border-radius: var(--kk-radius-full);
     border: 2px solid var(--glass-border-active, var(--accent-primary));
     background: transparent;
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .dot.filled {
@@ -75,14 +75,14 @@
     width: var(--pin-key-size);
     height: var(--pin-key-size);
     margin: 0 auto;
-    border-radius: var(--radius-full);
+    border-radius: var(--kk-radius-full);
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     color: var(--foreground);
     font-size: var(--pin-key-font-size);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--transition-fast);
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }

@@ -1,7 +1,10 @@
-import { Button, Flex, Heading, Text } from "@radix-ui/themes";
 import { type ErrorComponentProps, useRouter } from "@tanstack/react-router";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
+import { Button } from "@/components/ui/Button";
+import { Heading } from "@/components/ui/Heading";
+import { Text } from "@/components/ui/Text";
 import styles from "./route-error.module.css";
 
 /**
@@ -39,14 +42,14 @@ export function RouteErrorFallback({ error, reset }: ErrorComponentProps) {
             </div>
 
             {/* Заголовок */}
-            <Heading size="4" align="center">
+            <Heading size="lg" align="center">
                 {t("errors.title", "Что-то пошло не так")}
             </Heading>
 
             {/* Описание ошибки */}
             <Text
-                size="2"
-                color="gray"
+                size="md"
+                intent="secondary"
                 align="center"
                 className={styles.message}
             >
@@ -55,12 +58,12 @@ export function RouteErrorFallback({ error, reset }: ErrorComponentProps) {
 
             {/* Кнопка повтора */}
             <Button
-                size="3"
+                size="md"
                 variant="soft"
                 onClick={handleRetry}
                 className={styles.retryButton}
             >
-                <RefreshCw size={16} />
+                <RefreshCw className={styles.buttonIcon} />
                 {t("errors.retry", "Попробовать снова")}
             </Button>
         </Flex>

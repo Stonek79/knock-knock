@@ -1,16 +1,20 @@
-import { Box, Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
 import styles from "./unread-divider.module.css";
 
+/**
+ * Разделитель непрочитанных сообщений.
+ */
 export function UnreadDivider() {
     const { t } = useTranslation();
 
     return (
         <Box className={styles.container}>
             <Box className={styles.line} />
-            <Text className={styles.text}>
+            {/* Нативный span вместо Radix Text */}
+            <span className={styles.text}>
                 {t("chat.unreadMessages", "Непрочитанные сообщения")}
-            </Text>
+            </span>
             <Box className={styles.line} />
         </Box>
     );

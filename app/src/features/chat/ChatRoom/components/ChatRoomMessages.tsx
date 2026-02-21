@@ -1,5 +1,5 @@
-import { Box } from "@radix-ui/themes";
 import type { RefObject } from "react";
+import { Box } from "@/components/layout/Box";
 import { MessageList } from "@/features/chat/MessageList";
 import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 import styles from "../chatroom.module.css";
@@ -38,7 +38,7 @@ export function ChatRoomMessages({
     }
 
     return (
-        <Box className={styles.messageArea} asChild>
+        <Box className={styles.messageArea}>
             <main>
                 <MessageList
                     messages={messages}

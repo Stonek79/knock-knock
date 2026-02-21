@@ -3,25 +3,32 @@ export interface MockUser {
 	email: string;
 	username: string;
 	display_name: string;
-	avatar_url?: string;
+	avatar_url?: string | null;
 	role?: "user" | "admin";
 }
 
 export interface MockRoom {
 	id: string;
-	name: string;
+	name: string | null;
 	created_at: string;
 	type?: "group" | "direct";
 	is_ephemeral?: boolean;
+	avatar_url?: string | null;
 }
 
 export interface MockMessage {
 	id: string;
 	room_id: string;
-	sender_id: string;
-	content: string;
+	sender_id: string | null;
+	iv?: string | null;
+	content: string | null;
 	created_at: string;
+	updated_at?: string;
+	status?: "sent" | "delivered" | "read";
 	deleted_by?: string[];
+	is_edited?: boolean;
+	is_deleted?: boolean;
+	is_starred?: boolean;
 }
 
 /** Вспомогательная функция для генерации времени N минут назад */
@@ -192,9 +199,9 @@ export interface MockRoomMember {
 	user_id: string;
 	rooms: MockRoom & {
 		last_message?: {
-			content: string;
+			content: string | null;
 			created_at: string;
-			sender_id: string;
+			sender_id: string | null;
 		};
 	};
 }

@@ -1,6 +1,8 @@
-import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { Phone, PhoneCall } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./callspage.module.css";
 
 /**
@@ -21,22 +23,22 @@ export function CallsPage() {
             className={styles.container}
         >
             <Box className={styles.iconBox}>
-                <Phone size={40} />
+                {/* Числовое значение вместо CSS-переменной в size */}
+                <Phone size={ICON_SIZE.xl} />
             </Box>
 
-            <Heading size="5" weight="bold" className={styles.title}>
-                {t("calls.title", "Звонки")}
-            </Heading>
+            {/* Нативные теги вместо Radix Heading/Text */}
+            <h2 className={styles.title}>{t("calls.title", "Звонки")}</h2>
 
-            <Text size="3" className={styles.description}>
+            <p className={styles.description}>
                 {t(
                     "calls.emptyDescription",
                     "Здесь будет отображаться история ваших голосовых и видеозвонков.",
                 )}
-            </Text>
+            </p>
 
             <Box className={styles.actionButton}>
-                <PhoneCall size={20} />
+                <PhoneCall size={ICON_SIZE.sm} />
                 {t("calls.startCall", "Начать звонок")}
             </Box>
         </Flex>

@@ -1,5 +1,7 @@
-import { Avatar, Box, Flex, Text } from "@radix-ui/themes";
 import { Link } from "@tanstack/react-router";
+import clsx from "clsx";
+import { Box } from "@/components/layout/Box";
+import { Avatar } from "@/components/ui/Avatar";
 import { ROUTES } from "@/lib/constants";
 import styles from "./chatlist.module.css";
 
@@ -25,13 +27,12 @@ interface ChatListItemProps {
 /**
  * Элемент списка чатов.
  * Кликабельная ссылка на комнату чата.
- *
- * @param props - Пропсы компонента
  */
 export function ChatListItem({
     chat,
     linkPrefix = ROUTES.CHAT_LIST,
 }: ChatListItemProps) {
+    const link = clsx(styles.chatListItem, styles.chatListItemActive);
     if (linkPrefix === ROUTES.FAVORITES) {
         return (
             <Link
@@ -39,7 +40,7 @@ export function ChatListItem({
                 params={{ roomId: chat.id }}
                 className={styles.chatListItem}
                 activeProps={{
-                    className: `${styles.chatListItem} ${styles.chatListItemActive}`,
+                    className: link,
                 }}
             >
                 <ChatListItemContent chat={chat} />
@@ -53,7 +54,7 @@ export function ChatListItem({
             params={{ roomId: chat.id }}
             className={styles.chatListItem}
             activeProps={{
-                className: `${styles.chatListItem} ${styles.chatListItemActive}`,
+                className: link,
             }}
         >
             <ChatListItemContent chat={chat} />
@@ -66,37 +67,25 @@ export function ChatListItem({
  */
 function ChatListItemContent({ chat }: { chat: ChatItem }) {
     return (
-        <Flex p="3" gap="3" align="center" width="100%">
+        <div className={styles.itemContainer}>
             <Avatar
-                size="3"
+                size="md"
                 src={chat.avatar}
-                fallback={chat.name.replace(/🔒\s*/, "")[0]}
-                radius="full"
-                color="gray"
-                variant="soft"
+                name={chat.name.replace(/🔒\s*/, "")}
             />
-            <Flex direction="column" className={styles.chatInfo}>
-                <Flex justify="between">
-                    <Text weight="bold" size="3" truncate>
-                        {chat.name}
-                    </Text>
-                    <Text color="gray" size="1">
-                        {chat.time}
-                    </Text>
-                </Flex>
-                <Text
-                    color="gray"
-                    size="2"
-                    truncate
-                    className={styles.lastMessage}
-                >
+            <div className={styles.chatInfo}>
+                <div className={styles.name}>
+                    <span className={styles.chatName}>{chat.name}</span>
+                    <span className={styles.chatTime}>{chat.time}</span>
+                </div>
+                <span className={clsx(styles.lastMessage, styles.truncate)}>
                     {chat.lastMessage}
-                </Text>
-            </Flex>
+                </span>
+            </div>
             {chat?.unread && chat.unread > 0 ? (
                 <Box className={styles.unreadBadge}>{chat?.unread}</Box>
             ) : null}
-        </Flex>
+        </div>
     );
 }
 

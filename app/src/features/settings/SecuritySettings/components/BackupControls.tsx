@@ -1,8 +1,10 @@
-import { Box, Flex, Text, TextField } from "@radix-ui/themes";
 import type { ChangeEvent, RefObject } from "react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { TextField } from "@/components/ui/TextField";
 import type { StatusMessage } from "../hooks/useKeysBackup";
 import styles from "../security.module.css";
 
@@ -55,15 +57,11 @@ export function BackupControls({
             )}
 
             <Flex direction="column" gap="2">
-                <Text
-                    as="label"
-                    htmlFor="backupPassword"
-                    size="2"
-                    weight="medium"
-                >
+                {/* Нативный label вместо Radix Text as="label" */}
+                <label htmlFor="backupPassword" className={styles.fieldLabel}>
                     {t("profile.backupPassword")}
-                </Text>
-                <TextField.Root
+                </label>
+                <TextField
                     id="backupPassword"
                     type="password"
                     placeholder={t("profile.backupPasswordPlaceholder")}

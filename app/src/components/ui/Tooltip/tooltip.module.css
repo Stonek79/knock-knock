@@ -1,0 +1,29 @@
+/* tooltip.module.css */
+.content {
+    background-color: var(--foreground);
+    color: var(--bg-app);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--kk-radius-sm);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    box-shadow: var(--shadow-bubble);
+    z-index: var(--z-tooltip);
+    animation: slideUpAndFade var(--transition-fast) ease-out;
+    max-width: var(--max-w-empty-state);
+    text-align: center;
+}
+
+.arrow {
+    fill: var(--foreground);
+}
+
+@keyframes slideUpAndFade {
+    from {
+        opacity: 0;
+        transform: translateY(var(--space-1));
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

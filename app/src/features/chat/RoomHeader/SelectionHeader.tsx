@@ -1,6 +1,9 @@
-import { Flex, Heading, IconButton, Tooltip } from "@radix-ui/themes";
 import { Copy, Forward, Pencil, Reply, Trash2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
+import { IconButton } from "@/components/ui/IconButton";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./roomheader.module.css";
 
 interface SelectionHeaderProps {
@@ -14,6 +17,10 @@ interface SelectionHeaderProps {
     onEditSelected?: () => void;
 }
 
+/**
+ * Заголовок режима выбора сообщений.
+ * Использует наши кастомные IconButton вместо Radix IconButton.
+ */
 export function SelectionHeader({
     selectedCount,
     canEditSelected,
@@ -31,52 +38,54 @@ export function SelectionHeader({
             <Flex align="center" gap="3" className={styles.leftSection}>
                 <IconButton
                     variant="ghost"
-                    color="gray"
+                    size="md"
+                    shape="round"
                     onClick={onClearSelection}
                     aria-label={t("common.close", "Закрыть")}
                 >
-                    <X size={24} />
+                    <X size={ICON_SIZE.md} />
                 </IconButton>
-                <Heading size="4">{selectedCount}</Heading>
+                <span className={styles.selectionCount}>{selectedCount}</span>
             </Flex>
 
             <Flex align="center" gap="5" className={styles.rightSection}>
-                {/* Primary Actions */}
                 <Flex gap="5">
                     <Tooltip content={t("common.reply", "Ответить")}>
                         <IconButton
                             variant="ghost"
-                            color="gray"
+                            size="md"
+                            shape="round"
                             onClick={onReplySelected}
                             aria-label={t("common.reply", "Ответить")}
                         >
-                            <Reply size={22} />
+                            <Reply size={ICON_SIZE.md} />
                         </IconButton>
                     </Tooltip>
 
                     <Tooltip content={t("common.forward", "Переслать")}>
                         <IconButton
                             variant="ghost"
-                            color="gray"
+                            size="md"
+                            shape="round"
                             onClick={onForwardSelected}
                             aria-label={t("common.forward", "Переслать")}
                         >
-                            <Forward size={22} />
+                            <Forward size={ICON_SIZE.md} />
                         </IconButton>
                     </Tooltip>
                 </Flex>
 
-                {/* Secondary Actions */}
                 <Flex gap="5">
                     {canEditSelected && (
                         <Tooltip content={t("common.edit", "Редактировать")}>
                             <IconButton
                                 variant="ghost"
-                                color="gray"
+                                size="md"
+                                shape="round"
                                 onClick={onEditSelected}
                                 aria-label={t("common.edit", "Редактировать")}
                             >
-                                <Pencil size={22} />
+                                <Pencil size={ICON_SIZE.md} />
                             </IconButton>
                         </Tooltip>
                     )}
@@ -84,22 +93,25 @@ export function SelectionHeader({
                     <Tooltip content={t("common.copy", "Копировать")}>
                         <IconButton
                             variant="ghost"
-                            color="gray"
+                            size="md"
+                            shape="round"
                             onClick={onCopySelected}
                             aria-label={t("common.copy", "Копировать")}
                         >
-                            <Copy size={22} />
+                            <Copy size={ICON_SIZE.md} />
                         </IconButton>
                     </Tooltip>
 
                     <Tooltip content={t("common.delete", "Удалить")}>
                         <IconButton
                             variant="ghost"
-                            color="gray"
+                            intent="danger"
+                            size="md"
+                            shape="round"
                             onClick={onDeleteSelected}
                             aria-label={t("common.delete", "Удалить")}
                         >
-                            <Trash2 size={22} />
+                            <Trash2 size={ICON_SIZE.md} />
                         </IconButton>
                     </Tooltip>
                 </Flex>

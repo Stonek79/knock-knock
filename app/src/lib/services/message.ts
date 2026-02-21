@@ -1,7 +1,7 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { DB_TABLES } from "@/lib/constants";
 import { ERROR_CODES } from "@/lib/constants/errors";
-import { encryptMessage } from "@/lib/crypto";
+import { encryptMessage } from "@/lib/crypto/messages";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import type { AppError, Result } from "@/lib/types/result";

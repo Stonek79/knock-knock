@@ -1,14 +1,20 @@
-import { Button, Callout, Dialog, Flex, Text } from "@radix-ui/themes";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertCircle } from "lucide-react";
+
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Flex } from "@/components/layout/Flex";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
 import { useCreateDM } from "@/features/chat/hooks/useCreateDM";
 import {
     ContactPicker,
     useSelectedContacts,
 } from "@/features/contacts/ContactPicker";
+import { CONTACT_PICKER_MODE } from "@/lib/constants";
+
 import { useAuthStore } from "@/stores/auth";
+import styles from "./createchatdialog.module.css";
 
 interface CreateChatDialogProps {
     /** Открыт ли диалог */
@@ -22,10 +28,6 @@ interface CreateChatDialogProps {
 /**
  * Диалог создания личного или приватного чата.
  * Позволяет выбрать контакт для начала переписки.
- *
- * Использует useCreateDM для атомарного создания чата без редиректов-посредников.
- *
- * @see https://www.radix-ui.com/themes/docs/components/dialog
  */
 export function CreateChatDialog({
     open,
@@ -44,7 +46,6 @@ export function CreateChatDialog({
 
     /**
      * Обработчик создания чата.
-     * Создаёт комнату (или находит существующую) и сразу переходит в неё.
      */
     const handleCreateChat = useCallback(async () => {
         if (selectedIds.length === 0 || !user) {
@@ -61,12 +62,10 @@ export function CreateChatDialog({
                 isPrivate,
             });
 
-            // Закрываем диалог и сбрасываем выбор
             onOpenChange(false);
             setSelectedIds([]);
             setError(null);
 
-            // Переходим сразу в чат
             navigate({
                 to: "/chat/$roomId",
                 params: { roomId },
@@ -96,45 +95,37 @@ export function CreateChatDialog({
 
     return (
         <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-            <Dialog.Content maxWidth="450px">
+            <Dialog.Content>
                 <Dialog.Title>
                     {isPrivate ? t("chat.newPrivate") : t("chat.newChat")}
                 </Dialog.Title>
-                <Dialog.Description size="2" mb="4">
+                <Dialog.Description className={styles.description}>
                     {t("chat.selectContact")}
                 </Dialog.Description>
 
-                {error && (
-                    <Callout.Root color="red" mb="4">
-                        <Callout.Icon>
-                            <AlertCircle size={16} />
-                        </Callout.Icon>
-                        <Callout.Text>{error}</Callout.Text>
-                    </Callout.Root>
-                )}
+                {error && <Alert variant="danger">{error}</Alert>}
 
                 <ContactPicker
-                    mode="single"
+                    mode={CONTACT_PICKER_MODE.SINGLE}
                     selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
                     searchPlaceholder={t("common.search", "Поиск")}
                 />
 
                 {canCreate && (
-                    <Text size="2" color="gray" mt="3">
-                        Выбран: <Text weight="medium">{selectedName}</Text>
-                    </Text>
+                    <span className={styles.selectedInfo}>
+                        Выбран: <strong>{selectedName}</strong>
+                    </span>
                 )}
 
                 <Flex gap="3" mt="4" justify="end">
-                    <Dialog.Close>
-                        <Button variant="soft" color="gray">
+                    <Dialog.Close asChild>
+                        <Button variant="soft" intent="neutral">
                             {t("common.cancel")}
                         </Button>
                     </Dialog.Close>
                     <Button
                         disabled={!canCreate || createDM.isPending}
-                        loading={createDM.isPending}
                         onClick={handleCreateChat}
                     >
                         {createDM.isPending

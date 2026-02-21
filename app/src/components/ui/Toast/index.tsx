@@ -110,7 +110,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         >
                             {/* Иконка варианта */}
                             <Icon
-                                size={18}
+                                size="var(--size-icon-sm)"
                                 className={`${styles.icon} ${styles[variant]}`}
                             />
 
@@ -130,7 +130,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
                             {/* Кнопка закрытия */}
                             <ToastPrimitive.Close className={styles.close}>
-                                <X size={16} />
+                                <X size="var(--size-icon-sm)" />
                             </ToastPrimitive.Close>
                         </ToastPrimitive.Root>
                     );
