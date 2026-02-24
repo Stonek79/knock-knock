@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/Text";
 import { ProfileForm } from "@/features/settings/ProfileForm";
-import { SettingsHeader } from "@/features/settings/SettingsHeader";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./accountsettings.module.css";
@@ -29,8 +28,7 @@ export function AccountSettings() {
 
     return (
         <Flex direction="column" gap="4">
-            <SettingsHeader title="Аккаунт" titleKey="settings.account" />
-            <Flex direction="column" gap="4" px="4" pb="4">
+            <Flex direction="column" gap="4" px="4" pb="4" pt="4">
                 <Card className={styles.signOutCard}>
                     <Flex justify="between" align="center">
                         <Text size="md" intent="secondary">

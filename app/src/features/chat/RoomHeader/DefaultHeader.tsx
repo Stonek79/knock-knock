@@ -47,6 +47,8 @@ export function DefaultHeader({
     const { isDM, resolvedPeer, displayName, avatarUrl, memberNames } =
         useRoomHeaderInfo({ room, peerUser });
 
+    console.log(displayName);
+
     const handleInfoClick = () => {
         if (resolvedPeer?.id) {
             // TODO: Реализовать навигацию в профиль

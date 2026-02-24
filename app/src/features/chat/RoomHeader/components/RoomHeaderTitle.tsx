@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { usePresence } from "@/hooks/usePresence";
 import type { PeerUser } from "@/lib/types/room";
@@ -52,8 +51,8 @@ export function RoomHeaderTitle({
                 <span className={styles.subtitle}>
                     {onlineUsers[peer.id] === "online" ? (
                         <Flex align="center" gap="1">
-                            <span>
-                                <Box className={styles.onlineDot} />
+                            <span className={styles.onlineDot} />
+                            <span className={styles.onlineText}>
                                 {t("chat.online", "в сети")}
                             </span>
                         </Flex>
@@ -84,7 +83,6 @@ export function RoomHeaderTitle({
             onClick={onClick}
             className={styles.titleArea}
         >
-            {/* Нативный h2 вместо Radix Heading */}
             <h2 className={styles.displayName}>
                 {isEphemeral ? "🔒 " : ""}
                 {displayName}

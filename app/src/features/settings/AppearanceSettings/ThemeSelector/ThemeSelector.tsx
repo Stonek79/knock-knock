@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Grid } from "@/components/layout/Grid";
+import { Button } from "@/components/ui/Button";
 import { DESIGN_THEME, THEME_MODE } from "@/lib/constants/theme";
 import { useThemeStore } from "@/stores/theme";
 import styles from "./theme-selector.module.css";
@@ -17,7 +18,6 @@ export const ThemeSelector = () => {
 
     return (
         <Flex direction="column" gap="4" className={styles.container}>
-            {/* Нативный span вместо Radix Text */}
             <span className={styles.sectionTitle}>
                 {t("settings.appearance", "Внешний вид")}
             </span>
@@ -28,8 +28,7 @@ export const ThemeSelector = () => {
                     {t("settings.mode", "Режим")}:
                 </span>
                 <Flex gap="2">
-                    <button
-                        type="button"
+                    <Button
                         onClick={() => setMode(THEME_MODE.LIGHT)}
                         className={clsx(
                             styles.modeBtn,
@@ -37,9 +36,8 @@ export const ThemeSelector = () => {
                         )}
                     >
                         {t("theme.light", "Светлая")} ☀️
-                    </button>
-                    <button
-                        type="button"
+                    </Button>
+                    <Button
                         onClick={() => setMode(THEME_MODE.DARK)}
                         className={clsx(
                             styles.modeBtn,
@@ -47,7 +45,7 @@ export const ThemeSelector = () => {
                         )}
                     >
                         {t("theme.dark", "Темная")} 🌑
-                    </button>
+                    </Button>
                 </Flex>
             </Flex>
 

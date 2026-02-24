@@ -19,8 +19,12 @@ export function SettingsSidebar() {
 
     return (
         <Box className={styles.sidebar}>
-            <Box px="4" pt="4" mb="4" className={styles.topPadding} />
-            <Flex direction="column" gap="1">
+            <header className={styles.header}>
+                <h2 className={styles.title}>
+                    {t("settings.title", "Настройки")}
+                </h2>
+            </header>
+            <Flex direction="column" gap="1" p="3">
                 {SETTINGS_ITEMS.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname.startsWith(item.path);

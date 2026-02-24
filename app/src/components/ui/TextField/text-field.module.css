@@ -10,7 +10,6 @@
 .textFieldWrapper {
     display: flex;
     align-items: center;
-    width: 100%;
     border-radius: var(--kk-radius-md);
     border: var(--border-width-base) solid var(--glass-border);
     background: var(--glass-bg);

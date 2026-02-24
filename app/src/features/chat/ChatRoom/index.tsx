@@ -60,7 +60,6 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
     if (isLoading) {
         return (
             <Flex justify="center" align="center" height="100%">
-                {/* Нативный span вместо Radix Heading */}
                 <span className={styles.loadingText}>
                     {t("common.loading", "Загрузка чата...")}
                 </span>

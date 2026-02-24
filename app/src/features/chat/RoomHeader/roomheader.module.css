@@ -31,6 +31,8 @@
     color: var(--foreground);
     filter: drop-shadow(0 0 var(--space-1) var(--accent-secondary));
     letter-spacing: 0.5px;
+    margin: 0;
+    padding: 4px 0;
 }
 
 .status {
@@ -97,6 +99,10 @@
     box-shadow: 0 0 4px var(--color-success-alpha);
     flex-shrink: 0;
     position: relative;
+}
+
+.onlineText {
+    transform: translateY(-1px);
 }
 
 .onlineDot::after {

@@ -1,6 +1,4 @@
-import { Shield } from "lucide-react";
 import { Flex } from "@/components/layout/Flex";
-import { SettingsHeader } from "@/features/settings/SettingsHeader";
 import { useAuthStore } from "@/stores/auth";
 import { BackupControls } from "./components/BackupControls";
 import { KeysStatusCard } from "./components/KeysStatusCard";
@@ -18,20 +16,8 @@ export function SecuritySettings() {
 
     return (
         <Flex direction="column" gap="4">
-            {/* Единый заголовок с кнопкой «Назад» на мобильном */}
-            <SettingsHeader
-                title="Безопасность"
-                titleKey="profile.securityTitle"
-            >
-                <Shield size="var(--size-icon-sm)" />
-            </SettingsHeader>
-
-            {/* Контент с отступами */}
-            <Flex direction="column" gap="4" px="4" pb="4">
-                {/* Индикатор статуса ключей */}
+            <Flex direction="column" gap="4" px="4" pb="4" pt="4">
                 <KeysStatusCard areKeysPublished={areKeysPublished} />
-
-                {/* Управление бэкапом */}
                 <BackupControls {...backupProps} />
             </Flex>
         </Flex>

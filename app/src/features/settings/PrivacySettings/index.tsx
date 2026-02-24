@@ -1,8 +1,5 @@
-import { Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
-import { SettingsHeader } from "@/features/settings/SettingsHeader";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./privacysettings.module.css";
 
 /**
@@ -13,14 +10,7 @@ export function PrivacySettings() {
 
     return (
         <Flex direction="column" gap="4">
-            <SettingsHeader
-                title="Конфиденциальность"
-                titleKey="settings.privacy"
-            >
-                <Lock size={ICON_SIZE.sm} />
-            </SettingsHeader>
-            <Flex direction="column" gap="4" px="4" pb="4">
-                {/* Нативный span вместо Radix Text */}
+            <Flex direction="column" gap="4" px="4" pb="4" pt="4">
                 <span className={styles.comingSoon}>
                     {t(
                         "common.soon",

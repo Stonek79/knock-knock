@@ -18,7 +18,6 @@
 
 .modeBtn {
     padding: var(--space-2) var(--space-3);
-    border-radius: var(--kk-radius-full);
     border: 1px solid var(--glass-border);
     background: transparent;
     color: var(--foreground);

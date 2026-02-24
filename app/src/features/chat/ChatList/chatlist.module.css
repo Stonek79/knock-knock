@@ -162,7 +162,7 @@
 .truncate {
     white-space: nowrap;
     text-overflow: ellipsis;
-    display: block;
+    display: flex;
 }
 
 .muted {

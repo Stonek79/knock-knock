@@ -1,26 +1,27 @@
 .header {
     height: var(--header-height);
-    padding: 0 var(--space-3);
-    border-bottom: 1px solid var(--glass-border);
+    padding: 0 var(--space-4);
     display: flex;
     align-items: center;
-    margin: 0;
-    box-sizing: border-box;
+    border-bottom: var(--border-width-base) solid var(--glass-border);
+    justify-content: space-between;
 }
 
 .icon {
     color: var(--accent-9);
 }
 
-/* Нативный h2 вместо Radix Heading */
 .title {
     font-size: var(--text-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--foreground);
-    margin: 0;
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: -0.5px;
+    color: var(--accent-primary);
+    filter: drop-shadow(var(--shadow-glow) var(--accent-primary));
+    transition: all var(--transition-slow);
+    cursor: default;
+    user-select: none;
 }
 
-/* Нативный span вместо Radix Text */
 .emptyText {
     font-size: var(--text-sm);
     color: var(--muted);

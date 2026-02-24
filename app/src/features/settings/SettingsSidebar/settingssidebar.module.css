@@ -4,6 +4,26 @@
     height: 100%;
 }
 
+.header {
+    height: var(--header-height);
+    padding: 0 var(--space-4);
+    display: flex;
+    align-items: center;
+    border-bottom: var(--border-width-base) solid var(--glass-border);
+    justify-content: space-between;
+}
+
+.title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: -0.5px;
+    color: var(--accent-primary);
+    filter: drop-shadow(var(--shadow-glow) var(--accent-primary));
+    transition: all var(--transition-slow);
+    cursor: default;
+    user-select: none;
+}
+
 .desktopItem {
     padding: var(--space-3) var(--space-4);
     color: var(--muted);

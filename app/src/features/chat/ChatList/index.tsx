@@ -2,6 +2,8 @@ import { MessageSquareOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
+import { Button } from "@/components/ui/Button";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Search } from "@/components/ui/Search";
 import { CreateChatDialog } from "@/features/chat/CreateChatDialog";
@@ -51,20 +53,29 @@ export function ChatList() {
                     onOpenChatDialog={(type) => setOpenDialog(type)}
                     onOpenGroupDialog={() => setIsGroupDialogOpen(true)}
                 />
-                <Box p="3">
-                    <Search
-                        placeholder={t("chat.searchPlaceholder", "Поиск")}
-                        value={searchQuery}
-                        onChange={(value) => setSearchQuery(value)}
-                    />
-                </Box>
+                {filteredChats?.length > 0 && (
+                    <Box p="3">
+                        <Search
+                            placeholder={t("chat.searchPlaceholder", "Поиск")}
+                            value={searchQuery}
+                            onChange={(value) => setSearchQuery(value)}
+                        />
+                    </Box>
+                )}
             </Box>
 
             {/* Состояние списка: Загрузка / Пусто / Список */}
             {isLoading ? (
                 <ChatListLoadingState />
-            ) : filteredChats.length === 0 ? (
-                <div>
+            ) : filteredChats?.length === 0 ? (
+                <Flex
+                    direction="column"
+                    gap="4"
+                    px="4"
+                    pb="4"
+                    pt="4"
+                    align="center"
+                >
                     <MessageSquareOff className={styles.emptyIcon} />
                     <span className={styles.emptyTitle}>
                         {t("chat.noRooms", "У вас пока нет чатов")}
@@ -80,7 +91,25 @@ export function ChatList() {
                                   "Начните общение, создав новый чат",
                               )}
                     </span>
-                </div>
+                    <Button
+                        onClick={() => setOpenDialog(CHAT_TYPE.PUBLIC)}
+                        variant="outline"
+                    >
+                        {t("chat.createChat", "Создать чат")}
+                    </Button>
+                    <Button
+                        onClick={() => setIsGroupDialogOpen(true)}
+                        variant="outline"
+                    >
+                        {t("chat.createGroup", "Создать группу")}
+                    </Button>
+                    <Button
+                        onClick={() => setOpenDialog(CHAT_TYPE.PRIVATE)}
+                        variant="outline"
+                    >
+                        {t("chat.createPrivateChat", "Создать приватный чат")}
+                    </Button>
+                </Flex>
             ) : (
                 // Список чатов
                 <ScrollArea type="hover" className={styles.chatList}>

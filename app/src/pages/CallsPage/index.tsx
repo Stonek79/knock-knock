@@ -23,11 +23,9 @@ export function CallsPage() {
             className={styles.container}
         >
             <Box className={styles.iconBox}>
-                {/* Числовое значение вместо CSS-переменной в size */}
                 <Phone size={ICON_SIZE.xl} />
             </Box>
 
-            {/* Нативные теги вместо Radix Heading/Text */}
             <h2 className={styles.title}>{t("calls.title", "Звонки")}</h2>
 
             <p className={styles.description}>

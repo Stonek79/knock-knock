@@ -88,7 +88,6 @@ export function FavoritesList() {
                     className={styles.loadingState}
                 >
                     <Loader2 size={ICON_SIZE.sm} className={styles.spinner} />
-                    {/* Нативный span вместо Radix Text */}
                     <span className={styles.statusText}>
                         {t("favorites.loading", "Открываем избранное...")}
                     </span>
