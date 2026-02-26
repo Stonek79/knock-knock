@@ -45,7 +45,7 @@ describe("useKeysBackup", () => {
             });
 
             expect(result.current.statusMessage).toEqual({
-                type: "error",
+                type: "danger",
                 text: "profile.enterBackupPassword",
             });
             expect(mockExportKeys).not.toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe("useKeysBackup", () => {
             });
 
             expect(result.current.statusMessage).toEqual({
-                type: "error",
+                type: "danger",
                 text: "profile.backupError",
             });
         });
@@ -111,7 +111,7 @@ describe("useKeysBackup", () => {
             });
 
             expect(result.current.statusMessage).toEqual({
-                type: "error",
+                type: "danger",
                 text: "profile.enterBackupPassword",
             });
         });
@@ -154,7 +154,7 @@ describe("useKeysBackup", () => {
             });
 
             expect(result.current.statusMessage).toEqual({
-                type: "error",
+                type: "danger",
                 text: "profile.restoreError",
             });
         });
@@ -173,7 +173,7 @@ describe("useKeysBackup", () => {
                 await new Promise((resolve) => setTimeout(resolve, 0));
             });
 
-            expect(result.current.statusMessage?.type).toBe("error");
+            expect(result.current.statusMessage?.type).toBe("danger");
             expect(result.current.statusMessage?.text).toBe(
                 "profile.restoreError",
             );

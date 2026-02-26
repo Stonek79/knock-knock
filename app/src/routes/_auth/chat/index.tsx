@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Chat } from "@/features/chat/Chat";
+import { ChatPlaceholder } from "@/features/chat/room";
 
 export const Route = createFileRoute("/_auth/chat/")({
-    component: Chat,
+    component: ChatPlaceholder,
 });

@@ -4,21 +4,12 @@ import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/Text";
-import { useTestTools } from "@/features/admin/hooks/useTestTools";
-import { CreateChatDialog } from "@/features/chat/CreateChatDialog";
-import { CreateGroupDialog } from "@/features/chat/CreateGroupDialog";
 import { CHAT_TYPE } from "@/lib/constants";
+import { useChatDialogs } from "@/stores/ui/chatDialogs";
 
 export function TestTools() {
     const { t } = useTranslation();
-    const {
-        isGroupOpen,
-        setIsGroupOpen,
-        isChatOpen,
-        setIsChatOpen,
-        chatType,
-        openCreateChat,
-    } = useTestTools();
+    const { setOpenDialog } = useChatDialogs();
 
     return (
         <Card>
@@ -34,37 +25,25 @@ export function TestTools() {
                 </Text>
 
                 <Flex gap="3" wrap="wrap">
-                    <Button onClick={() => setIsGroupOpen(true)}>
+                    <Button onClick={() => setOpenDialog(CHAT_TYPE.GROUP)}>
                         <Users />{" "}
                         {t("admin.createTestGroup", "Create Test Group")}
                     </Button>
                     <Button
                         variant="soft"
-                        onClick={() => openCreateChat(CHAT_TYPE.PUBLIC)}
+                        onClick={() => setOpenDialog(CHAT_TYPE.PUBLIC)}
                     >
                         <MessageSquarePlus />{" "}
                         {t("admin.createPublicChat", "Create Public Chat")}
                     </Button>
                     <Button
                         variant="soft"
-                        onClick={() => openCreateChat(CHAT_TYPE.PRIVATE)}
+                        onClick={() => setOpenDialog(CHAT_TYPE.PRIVATE)}
                     >
                         <MessageSquarePlus />{" "}
                         {t("admin.createPrivateChat", "Create Private Chat")}
                     </Button>
                 </Flex>
-
-                {/* Dialogs */}
-                <CreateGroupDialog
-                    open={isGroupOpen}
-                    onOpenChange={setIsGroupOpen}
-                />
-
-                <CreateChatDialog
-                    open={isChatOpen}
-                    onOpenChange={setIsChatOpen}
-                    isPrivate={chatType === CHAT_TYPE.PRIVATE}
-                />
             </Flex>
         </Card>
     );

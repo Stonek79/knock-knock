@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { useUnreadCounts } from "@/features/chat/list";
 import { supabase } from "@/lib/supabase";
-import { useUnreadCounts } from "./hooks/useUnreadCounts";
 
 // Wrapper for QueryClient
 const createWrapper = () => {

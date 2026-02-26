@@ -1,5 +1,5 @@
 import { useParams } from "@tanstack/react-router";
-import { ChatRoom } from "@/features/chat/ChatRoom";
+import { ChatRoom } from "@/features/chat/room";
 
 export function ChatRoomPage() {
     const { roomId } = useParams({ strict: false });

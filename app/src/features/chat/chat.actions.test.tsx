@@ -16,9 +16,9 @@ import {
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ChatRoom } from "@/features/chat/room";
 import { ClipboardService } from "@/lib/services/clipboard";
 import { ok } from "@/lib/utils/result";
-import { ChatRoom } from "./ChatRoom";
 
 // --- Стабильные константы и моки ---
 
@@ -64,6 +64,7 @@ vi.mock("@tanstack/react-router", () => ({
     useParams: vi.fn().mockReturnValue({ roomId: "room-1" }),
     useRouter: vi.fn().mockReturnValue({ navigate: vi.fn() }),
     useNavigate: vi.fn(),
+    useLocation: vi.fn().mockReturnValue({ pathname: "/chat/room-1" }),
 }));
 
 vi.mock("react-i18next", () => ({
@@ -76,56 +77,27 @@ vi.mock("@/stores/auth", () => ({
     useAuthStore: () => ({ user: MOCK_USER }),
 }));
 
-vi.mock("@/features/chat/hooks/useMessages", () => ({
-    useMessages: () => ({
-        data: MOCK_MESSAGES,
-        isLoading: false,
-    }),
-}));
-
-vi.mock("@/features/chat/hooks/useChatRoomData", () => ({
-    useChatRoomData: () => ({
-        data: {
-            room: { type: "direct" },
-            roomKey: "key",
-            otherUserId: "user-2",
-        },
-        isLoading: false,
-    }),
-}));
-
-vi.mock("@/features/chat/hooks/useChatPeer", () => ({
-    useChatPeer: () => ({
-        data: { display_name: "Peer User", id: "user-2" },
-        isLoading: false,
-    }),
-}));
-
-vi.mock("@/features/chat/hooks/useChatScroll", () => ({
-    useChatScroll: () => ({
-        viewportRef: { current: null },
-        showScrollButton: false,
-        scrollToBottom: vi.fn(),
-        handleScroll: vi.fn(),
-    }),
-}));
-
-vi.mock("@/features/chat/hooks/useUnreadTracking", () => ({
-    useUnreadTracking: () => ({
-        firstUnreadId: null,
-        markAsRead: MOCK_MARK_AS_READ,
-    }),
-}));
-
-vi.mock("@/features/chat/hooks/useChatActions", () => ({
-    useChatActions: () => ({
-        sendMessage: MOCK_SEND_MESSAGE,
-        deleteMessage: MOCK_DELETE_MESSAGE,
-        updateMessage: MOCK_UPDATE_MESSAGE,
-        endSession: vi.fn(),
-        ending: false,
-    }),
-}));
+vi.mock("@/features/chat/message", async (importOriginal) => {
+    const actual = await importOriginal<Record<string, unknown>>();
+    return {
+        ...actual,
+        useMessages: () => ({
+            data: MOCK_MESSAGES,
+            isLoading: false,
+        }),
+        useUnreadTracking: () => ({
+            firstUnreadId: null,
+            markAsRead: MOCK_MARK_AS_READ,
+        }),
+        useChatActions: () => ({
+            sendMessage: MOCK_SEND_MESSAGE,
+            deleteMessage: MOCK_DELETE_MESSAGE,
+            updateMessage: MOCK_UPDATE_MESSAGE,
+            endSession: vi.fn(),
+            ending: false,
+        }),
+    };
+});
 
 vi.mock("@/lib/services/clipboard", () => ({
     ClipboardService: {

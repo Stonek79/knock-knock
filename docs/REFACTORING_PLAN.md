@@ -70,11 +70,15 @@
 - Перенести `lib/auth-errors.ts` → `features/auth/utils/`
 - Обновить устаревшие docs
 
-### Модуль 2: FSD + Layouts
-- FSD: `usePresence` → global, `ProfileForm` → settings
-- Layouts: удалить ChatLayout, PrivateLayout
-- Layouts: MobileHeader → чистая шапка + action slots
-- Layouts: AuthLayout → `guards/AuthGuard`
+### Модуль 2: FSD + Развязка зависимостей (В процессе)
+- [x] Развязка зависимостей (Устранение Sibling Imports)
+- [x] Структурирование домена `chat` (Разбиение на под-домены: `room`, `message`, `list`, `creation`)
+- [x] Декомпозиция God Objects: `room.ts`
+- [x] Очистка Layouts от бизнес-логики (`SidebarContent`)
+- [ ] FSD: `usePresence` → global, `ProfileForm` → settings
+- [ ] Layouts: удалить ChatLayout, PrivateLayout
+- [ ] Layouts: MobileHeader → чистая шапка + action slots
+- [ ] Layouts: AuthLayout → `guards/AuthGuard`
 
 ### Модуль 3: Mock-система
 - Разбить `client.ts` на модули по таблицам

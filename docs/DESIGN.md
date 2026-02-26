@@ -6,7 +6,7 @@
 
 ## 🏗️ Архитектурный принцип
 
-Knock-Knock использует **кастомную дизайн-систему поверх Radix UI Themes**.
+Knock-Knock использует **кастомную дизайн-систему поверх Radix UI**.
 
 ### Правило слоёв
 
@@ -15,7 +15,7 @@ features/ pages/          ← импортируют ТОЛЬКО из @/compone
       ↓
 components/ui/            ← наши обёртки: Text, Heading, Avatar, Button...
       ↓
-@radix-ui/themes          ← используется ТОЛЬКО внутри components/ui/
+@radix-ui                 ← используется ТОЛЬКО внутри components/ui/
       ↓
 index.css                 ← единственный источник всех токенов
 ```
@@ -62,14 +62,11 @@ body[data-text-scale="large"] {
 
 ## 📦 Компоненты UI (`components/ui/`)
 
-### Структурные (layout) — импортировать напрямую из Radix везде допустимо
+### Структурные (layout) — импортировать напрямую из Radix только там, где это оправдано и нет кастомных обёрток
 
-Эти компоненты не несут стилизующих пропсов, только layout:
 
 ```tsx
-import { Flex, Box, Grid, ScrollArea, Container } from "@radix-ui/themes";
-import { Dialog, AlertDialog } from "@radix-ui/themes";
-import { Theme } from "@radix-ui/themes";
+import { Flex, Box, Grid, Container } from "@/components/layout";
 ```
 
 ### Стилизующие — ТОЛЬКО через наши обёртки `@/components/ui`
@@ -102,7 +99,7 @@ import { Text, Heading, Button, Avatar } from "@/components/ui";
 <Button variant="solid" size="md">Отправить</Button>
 
 // ❌ Запрещено в features/ и pages/
-import { Text } from "@radix-ui/themes";
+import { Text } from "@radix-ui";
 <Text color="gray" size="1">...</Text>
 ```
 
@@ -255,9 +252,9 @@ Radix spacing-пропсы (`gap`, `p`, `m`) допустимы на струк�
 import { Avatar } from "@/components/ui";
 <Avatar size="md" name="Иван" src={url} />
 
-// ❌ Запрещено
-import { Avatar } from "@radix-ui/themes";
-<Avatar size="3" radius="full" />
+// ❌ Запрещено (прямое использование примитивов)
+import * as AvatarPrimitive from "@radix-ui/react-avatar";
+<AvatarPrimitive.Root>...</AvatarPrimitive.Root>
 ```
 
 ---
@@ -299,16 +296,12 @@ const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 3. **Другие иконки** — только Lucide React
 4. **window.alert/confirm** — только UI компоненты
 5. **Хардкодные px-размеры** — только CSS-токены (`var(--size-icon-sm)`)
-6. **Radix стилизующие пропсы в features/pages**:
-   - `color="gray"`, `color="red"`, `color="amber"` на `Text`, `Button`, `Badge`
-   - `size="1"`, `size="2"`, `size="3"` на `Text`, `Avatar`, `IconButton`
-   - `radius="full"` на `Avatar`, `IconButton`, `Badge`
-   - `weight="bold"` на `Text`
-7. **Прямой импорт стилизующих Radix-компонентов** в `features/` и `pages/`:
+6. **@radix-ui/themes** — полностью удален из проекта (Headless Architecture), его установка и использование строго запрещены.
+7. **Прямой импорт Radix-примитивов** в `features/` и `pages/`:
    ```tsx
-   // ❌ Запрещено в features/ и pages/
-   import { Text, Button, Avatar } from "@radix-ui/themes";
+   // ❌ Запрещено в features/ и pages/ (только через обертки)
+   import * as DialogPrimitive from "@radix-ui/react-dialog";
    
    // ✅ Правильно
-   import { Text, Button, Avatar } from "@/components/ui";
+   import { Dialog, Button, Avatar } from "@/components/ui";
    ```

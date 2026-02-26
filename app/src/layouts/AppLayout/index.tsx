@@ -4,9 +4,11 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Heading } from "@/components/ui/Heading";
+import { CreateChatDialog, CreateGroupDialog } from "@/features/chat";
 import { MobileHeader, Navigation } from "@/features/navigation";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import { APP_NAME, ROUTES } from "@/lib/constants";
+import { APP_NAME, CHAT_TYPE, ROUTES } from "@/lib/constants";
+import { useChatDialogs } from "@/stores/ui/chatDialogs";
 import styles from "./applayout.module.css";
 import { SidebarContent, shouldShowSidebar } from "./components/SidebarContent";
 
@@ -22,14 +24,13 @@ const ROUTE_TITLE_KEYS: Record<string, string> = {
 
 /**
  * AppLayout - Оболочка для авторизованной части приложения.
- * Использует Radix UI примитивы (Flex, Box) поверх CSS Modules.
- * Сохраняет существующую структуру верстки для стабильности, но заменяет div на Box/Flex.
  */
 export function AppLayout() {
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
     const location = useLocation();
     const showSidebarContent = shouldShowSidebar(location.pathname);
     const { t } = useTranslation();
+    const { openDialog, closeDialogs } = useChatDialogs();
 
     // Определение заголовка страницы
     const getPageTitle = useMemo(() => {
@@ -142,6 +143,22 @@ export function AppLayout() {
                     </Box>
                 </Flex>
             )}
+
+            {/* Глобальные диалоги создания чатов */}
+            <CreateChatDialog
+                open={openDialog === CHAT_TYPE.PUBLIC}
+                onOpenChange={(open) => !open && closeDialogs()}
+                isPrivate={false}
+            />
+            <CreateChatDialog
+                open={openDialog === CHAT_TYPE.PRIVATE}
+                onOpenChange={(open) => !open && closeDialogs()}
+                isPrivate={true}
+            />
+            <CreateGroupDialog
+                open={openDialog === CHAT_TYPE.GROUP}
+                onOpenChange={(open) => !open && closeDialogs()}
+            />
         </div>
     );
 }

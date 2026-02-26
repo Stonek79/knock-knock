@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MessageInput } from "@/features/chat/MessageInput";
+import { MessageInput } from "@/features/chat/message";
 import { MessageService } from "@/lib/services/message";
 
 // Mocks
@@ -29,18 +29,26 @@ vi.mock("@/lib/services/room", async () => {
     };
 });
 
-vi.mock("@/features/chat/hooks/useMessages", () => ({
-    useMessages: () => ({
-        data: [],
-        isLoading: false,
-    }),
-}));
+vi.mock("@/features/chat/message", async (importOriginal) => {
+    const actual = await importOriginal<Record<string, unknown>>();
+    return {
+        ...actual,
+        useMessages: () => ({
+            data: [],
+            isLoading: false,
+        }),
+    };
+});
 
-vi.mock("react-i18next", () => ({
-    useTranslation: () => ({
-        t: (_key: string, defaultValue: string) => defaultValue,
-    }),
-}));
+vi.mock("react-i18next", async (importOriginal) => {
+    const actual = await importOriginal<Record<string, unknown>>();
+    return {
+        ...actual,
+        useTranslation: () => ({
+            t: (_key: string, defaultValue: string) => defaultValue,
+        }),
+    };
+});
 
 describe("Chat Integration Flow", () => {
     beforeEach(() => {

@@ -1,10 +1,10 @@
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useLocation } from "@tanstack/react-router";
 import { CallsList } from "@/features/calls/CallsList";
-import { ChatList } from "@/features/chat/ChatList";
-import { FavoritesChatList } from "@/features/chat/ChatList/FavoritesChatList";
+import { ChatList, FavoritesChatList } from "@/features/chat/list";
 import { ContactList } from "@/features/contacts/ContactList";
 import { SettingsSidebar } from "@/features/settings/SettingsSidebar";
 import { ROUTES } from "@/lib/constants";
+import { useSidebarNavigation } from "../hooks/useSidebarNavigation";
 
 /**
  * Проверяет, должен ли отображаться сайдбар на данном маршруте.
@@ -26,7 +26,8 @@ export function shouldShowSidebar(path: string): boolean {
  */
 export function SidebarContent() {
     const location = useLocation();
-    const navigate = useNavigate();
+    const { handlePrivateContactSelect, handleNormalContactSelect } =
+        useSidebarNavigation();
     const path = location.pathname;
 
     // Чаты
@@ -35,34 +36,15 @@ export function SidebarContent() {
     }
 
     // Выбор контакта (Private Chat)
-    // TODO: Это выглядит как логика фичи, возможно стоит вынести в отдельный роут или компонент
     if (path.startsWith(ROUTES.PRIVATE)) {
         return (
-            <ContactList
-                mode="select"
-                onSelect={(contact) => {
-                    navigate({
-                        to: "/dm/$userId",
-                        params: { userId: contact.id },
-                        search: (prev) => ({ ...prev, isPrivate: true }),
-                    });
-                }}
-            />
+            <ContactList mode="select" onSelect={handlePrivateContactSelect} />
         );
     }
 
     // Контакты
     if (path.startsWith(ROUTES.CONTACTS)) {
-        return (
-            <ContactList
-                mode="list"
-                onSelect={() => {
-                    navigate({
-                        to: ROUTES.PROFILE,
-                    });
-                }}
-            />
-        );
+        return <ContactList mode="list" onSelect={handleNormalContactSelect} />;
     }
 
     // Звонки

@@ -1,3 +1,4 @@
+import type { PostgrestError } from "@supabase/supabase-js";
 import type { z } from "zod";
 import type {
     chatTypeSchema,
@@ -7,6 +8,8 @@ import type {
     roomSchema,
     roomTypeSchema,
 } from "@/lib/schemas/room";
+import type { ERROR_CODES } from "../constants";
+import type { AppError } from "./result";
 
 /** Тип чата для создания: public | private | group */
 export type ChatType = z.infer<typeof chatTypeSchema>;
@@ -55,3 +58,12 @@ export interface PeerUser {
     username?: string;
     avatar_url?: string | null;
 }
+
+/**
+ * Типы ошибок, которые могут возникнуть при работе с комнатами
+ */
+export type RoomError =
+    | AppError<typeof ERROR_CODES.DB_ERROR, PostgrestError>
+    | AppError<typeof ERROR_CODES.MISSING_KEYS, { userIds: string[] }>
+    | AppError<typeof ERROR_CODES.CRYPTO_ERROR, Error>
+    | AppError<typeof ERROR_CODES.NOT_FOUND>;

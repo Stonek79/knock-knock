@@ -19,11 +19,15 @@ import { Suspense } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 // Мокаем ChatRoom компонент
-vi.mock("@/features/chat/ChatRoom", () => ({
-    ChatRoom: ({ roomId }: { roomId: string }) => (
-        <div data-testid="chat-room">Room ID: {roomId}</div>
-    ),
-}));
+vi.mock("@/features/chat/room", async (importOriginal) => {
+    const actual = await importOriginal<Record<string, unknown>>();
+    return {
+        ...actual,
+        ChatRoom: ({ roomId }: { roomId: string }) => (
+            <div data-testid="chat-room">Room ID: {roomId}</div>
+        ),
+    };
+});
 
 // Мокаем зависимости
 vi.mock("@/lib/supabase", () => ({
@@ -48,7 +52,7 @@ const createTestQueryClient = () =>
 describe("Chat Route", () => {
     it("передаёт roomId из URL параметров в ChatRoom", async () => {
         // Импортируем ChatRoom после мокирования
-        const { ChatRoom } = await import("@/features/chat/ChatRoom");
+        const { ChatRoom } = await import("@/features/chat/room");
 
         // Создаём тестовый роутер
         const rootRoute = createRootRoute();
