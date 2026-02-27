@@ -39,20 +39,18 @@ export function ChatRoomMessages({
 
     return (
         <Box className={styles.messageArea}>
-            <main>
-                <MessageList
-                    messages={messages}
-                    messagesLoading={isLoading}
-                    selectedMessageIds={selectedMessageIds}
-                    onToggleSelection={(id) =>
-                        toggleSelection(id, messages, userId)
-                    }
-                    editingId={editingId}
-                    scrollRef={scrollRef}
-                    firstUnreadId={firstUnreadId}
-                    isFavoritesView={isFavoritesView}
-                />
-            </main>
+            <MessageList
+                messages={messages}
+                messagesLoading={isLoading}
+                selectedMessageIds={selectedMessageIds}
+                onToggleSelection={(id) =>
+                    toggleSelection(id, messages, userId)
+                }
+                editingId={editingId}
+                scrollRef={scrollRef}
+                firstUnreadId={firstUnreadId}
+                isFavoritesView={isFavoritesView}
+            />
         </Box>
     );
 }

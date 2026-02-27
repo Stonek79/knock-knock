@@ -55,6 +55,8 @@
     height: 100%;
     position: relative;
     background: transparent;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Контент на всю ширину (когда sidebar отсутствует) */

@@ -5,14 +5,13 @@ import { Flex } from "@/components/layout/Flex";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { useCreateDM } from "@/features/chat/creation";
 import {
     ContactPicker,
     useSelectedContacts,
 } from "@/features/contacts/ContactPicker";
 import { CONTACT_PICKER_MODE } from "@/lib/constants";
-
 import { useAuthStore } from "@/stores/auth";
+import { useCreateDM } from "../../hooks/useCreateDM";
 import styles from "./createchatdialog.module.css";
 
 interface CreateChatDialogProps {

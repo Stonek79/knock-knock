@@ -47,6 +47,11 @@ export function useChatActions({
             // Здесь можно добавить toast error notification
             throw new Error(result.error.message); // Для совместимости с вызывающим кодом, если он ждет throw, или обработать тут
         }
+
+        // Инвалидируем список чатов, чтобы обновился last_message и применилась сортировка
+        await queryClient.invalidateQueries({
+            queryKey: ["rooms"],
+        });
     };
 
     /**

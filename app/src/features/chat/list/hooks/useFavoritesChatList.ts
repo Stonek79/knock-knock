@@ -209,11 +209,18 @@ export function useFavoritesChatList() {
                             ? formatChatTime(room.last_message.created_at, t)
                             : "",
                         isSelf, // Добавляем флаг для сортировки/дедупликации
-                    } as ChatItem & { isSelf: boolean };
+                        _rawDate:
+                            room.last_message?.created_at ||
+                            "1970-01-01T00:00:00Z",
+                    } as ChatItem & { isSelf: boolean; _rawDate: string };
                 })
                 .filter(
-                    (item): item is ChatItem & { isSelf: boolean } =>
-                        item !== null,
+                    (
+                        item,
+                    ): item is ChatItem & {
+                        isSelf: boolean;
+                        _rawDate: string;
+                    } => item !== null,
                 );
 
             // Дедупликация:
@@ -221,7 +228,7 @@ export function useFavoritesChatList() {
             // 2. Если есть несколько Self-Chats, оставляем только один (самый свежий или детерминированный)
             const uniqueChats = new Map<
                 string,
-                ChatItem & { isSelf: boolean }
+                ChatItem & { isSelf: boolean; _rawDate: string }
             >();
             let selfChatFound = false;
 
@@ -240,7 +247,24 @@ export function useFavoritesChatList() {
                 }
             }
 
-            return Array.from(uniqueChats.values());
+            return Array.from(uniqueChats.values())
+                .sort((a, b) => {
+                    // Чат с самим собой (Saved Messages) всегда наверху
+                    if (a.isSelf && !b.isSelf) {
+                        return -1;
+                    }
+
+                    if (!a.isSelf && b.isSelf) {
+                        return 1;
+                    }
+
+                    // Остальные сортируем по дате последнего сообщения (новые сверху)
+                    return (
+                        new Date(b._rawDate).getTime() -
+                        new Date(a._rawDate).getTime()
+                    );
+                })
+                .map(({ _rawDate, isSelf, ...item }) => item as ChatItem);
         },
         enabled: !!user,
     });

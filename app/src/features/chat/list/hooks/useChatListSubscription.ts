@@ -70,7 +70,7 @@ export function useChatListSubscription() {
 
                     // Инвалидируем кэш списка комнат
                     queryClient.invalidateQueries({
-                        queryKey: ["rooms", user.id],
+                        queryKey: ["rooms"],
                     });
 
                     // Также инвалидируем счётчик непрочитанных
@@ -98,7 +98,7 @@ export function useChatListSubscription() {
                     );
 
                     queryClient.invalidateQueries({
-                        queryKey: ["rooms", user.id],
+                        queryKey: ["rooms"],
                     });
                 },
             )

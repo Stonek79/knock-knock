@@ -130,8 +130,19 @@ export function useChatList() {
                         time: room.last_message?.created_at
                             ? formatChatTime(room.last_message.created_at, t)
                             : "",
-                    };
-                });
+                        // Добавляем сырую дату для сортировки
+                        _rawDate:
+                            room.last_message?.created_at ||
+                            "1970-01-01T00:00:00Z",
+                    } as ChatItem & { _rawDate: string };
+                })
+                .sort((a, b) => {
+                    return (
+                        new Date(b._rawDate).getTime() -
+                        new Date(a._rawDate).getTime()
+                    );
+                })
+                .map(({ _rawDate, ...item }) => item);
         },
         enabled: !!user,
         staleTime: 1000 * 30, // 30 секунд

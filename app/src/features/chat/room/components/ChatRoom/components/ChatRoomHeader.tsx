@@ -1,6 +1,6 @@
-import { RoomHeader as BaseRoomHeader } from "@/features/chat/room";
 import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
+import { RoomHeader as BaseRoomHeader } from "../../RoomHeader";
 import { useChatRoomStore } from "../store";
 
 interface ChatRoomHeaderProps {
