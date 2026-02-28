@@ -4,7 +4,7 @@ import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/Text";
-import { ProfileForm } from "@/features/settings/ProfileForm";
+import { ProfileForm } from "@/features/profile";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./accountsettings.module.css";

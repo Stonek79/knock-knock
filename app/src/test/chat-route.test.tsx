@@ -49,7 +49,7 @@ const createTestQueryClient = () =>
         },
     });
 
-describe("Chat Route", () => {
+describe("Маршрут чата", () => {
     it("передаёт roomId из URL параметров в ChatRoom", async () => {
         // Импортируем ChatRoom после мокирования
         const { ChatRoom } = await import("@/features/chat/room");

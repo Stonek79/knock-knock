@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
-import { usePresence } from "@/hooks/usePresence";
+import { usePresence } from "@/features/presence";
 import { USER_CONTACTS_MODES, USER_WEB_STATUS } from "@/lib/constants/user";
 import type { Profile } from "@/lib/types/profile";
 import styles from "./contactlist.module.css";
@@ -22,7 +22,7 @@ interface ContactListProps {
      * - 'list': Обычный список контактов
      * - 'select': Режим выбора контакта (например, для нового приватного чата)
      */
-    mode?: "list" | "select";
+    mode?: (typeof USER_CONTACTS_MODES)[keyof typeof USER_CONTACTS_MODES];
     /** Колбэк при выборе контакта */
     onSelect?: (contact: Profile) => void;
 }
@@ -36,7 +36,10 @@ interface ContactListProps {
  * @param props - Пропсы компонента
  * @returns JSX элемент списка контактов
  */
-export function ContactList({ mode = "list", onSelect }: ContactListProps) {
+export function ContactList({
+    mode = USER_CONTACTS_MODES.LIST,
+    onSelect,
+}: ContactListProps) {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
 

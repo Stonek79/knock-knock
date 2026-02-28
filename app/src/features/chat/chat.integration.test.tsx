@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ToastProvider } from "@/components/ui/Toast";
 import { MessageInput } from "@/features/chat/message";
 import { MessageService } from "@/lib/services/message";
 
@@ -50,12 +51,12 @@ vi.mock("react-i18next", async (importOriginal) => {
     };
 });
 
-describe("Chat Integration Flow", () => {
+describe("Интеграция чата", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("sending a message calls MessageService.sendMessage", async () => {
+    it("отправка сообщения вызывает MessageService.sendMessage", async () => {
         const handleSend = async (text: string) => {
             await MessageService.sendMessage(
                 "room-1",
@@ -65,7 +66,11 @@ describe("Chat Integration Flow", () => {
             );
         };
 
-        render(<MessageInput onSend={handleSend} />);
+        render(
+            <ToastProvider>
+                <MessageInput onSend={handleSend} />
+            </ToastProvider>,
+        );
 
         const input = screen.getByPlaceholderText("Сообщение");
         fireEvent.change(input, { target: { value: "Hello World" } });
@@ -85,11 +90,15 @@ describe("Chat Integration Flow", () => {
         });
     });
 
-    it("editing a message populates input and calls onSend with update logic", async () => {
+    it("редактирование сообщения заполняет поле ввода и вызывает onSend с логикой обновления", async () => {
         const handleSend = vi.fn();
 
         // Simulating "Edit Mode" where initialValue is passed
-        render(<MessageInput onSend={handleSend} initialValue="Old Content" />);
+        render(
+            <ToastProvider>
+                <MessageInput onSend={handleSend} initialValue="Old Content" />
+            </ToastProvider>,
+        );
 
         const input = screen.getByDisplayValue("Old Content");
         expect(input).toBeDefined();

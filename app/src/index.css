@@ -125,6 +125,9 @@
     --max-w-toast: 380px;
     --max-w-empty-state: 300px;
     --max-w-card: 320px;
+    --max-w-media-modal: 480px;
+    --max-h-attachment-img: 250px;
+    --max-h-textarea: 160px;
 
     /* Viewport Proportions */
     --vw-dialog: 90vw;
@@ -136,6 +139,7 @@
     /* =========================================== */
     --opacity-disabled: 0.5;
     --opacity-hover: 0.8;
+    --opacity-muted: 0.7;
     --border-width-base: 1px;
     --border-width-focus: 2px;
 

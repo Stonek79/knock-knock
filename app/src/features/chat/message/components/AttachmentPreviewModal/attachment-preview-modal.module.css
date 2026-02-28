@@ -1,0 +1,184 @@
+/* Модалка превью вложений — переопределяет стандартный Dialog */
+
+/* Оверлей: размытый, поверх всего */
+.overlay {
+    backdrop-filter: var(--glass-blur);
+}
+
+/*
+ * Переопределяем стандартный .content из dialog.module.css.
+ * Dialog.Content уже центрирует себя через top:50% + transform: translate(-50%, -50%).
+ * Нам нужно только перебить ширину, отступы и фон.
+ */
+.content.content {
+    max-width: var(--max-w-media-modal);
+    width: calc(100% - var(--space-8));
+    max-height: var(--vh-dialog);
+    padding: 0;
+    background: var(--surface-1, var(--bg-app));
+    border: var(--border-width-base) solid var(--glass-border);
+    /* flex-column: шапка + медиа + подвал делят высоту корректно */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* На мобильных модалка остаётся по центру, а не снизу */
+@media (max-width: 768px) {
+    .content.content {
+        max-width: calc(100% - var(--space-4));
+        max-height: var(--vh-dialog);
+        border-radius: var(--kk-radius-xl);
+        border: var(--border-width-base) solid var(--glass-border);
+        /* Переопределяем мобильный slideUp — оставляем по центру */
+        animation: dialogShow var(--transition-base)
+            cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+
+/* Шапка модалки */
+.header {
+    padding: var(--space-3);
+    background: transparent;
+}
+
+/* Кнопки шапки (закрыть, опции) */
+.headerBtn.headerBtn {
+    color: var(--accent-primary);
+    border: var(--border-width-focus) solid var(--accent-primary);
+    background: transparent;
+    border-radius: var(--kk-radius-full);
+    width: var(--size-btn-h-2);
+    height: var(--size-btn-h-2);
+}
+
+/* Кнопка «Опции» не имеет круглой рамки */
+.headerBtn.headerBtn:last-child {
+    border: none;
+}
+
+/* Заголовок (по центру) */
+.title {
+    flex: 1;
+    text-align: center;
+    font-weight: var(--font-weight-medium);
+    color: var(--foreground);
+    font-size: var(--text-base);
+}
+
+/* Область превью медиа — занимает всё свободное место между шапкой и подвалом */
+.mediaArea {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    padding: 0 var(--space-3) var(--space-3);
+}
+
+/* Элемент медиа (обёртка) */
+.mediaItem {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: var(--kk-radius-lg);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Превью изображения/видео — ограничено высотой родителя (mediaArea) */
+.mediaPreview {
+    width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--kk-radius-lg);
+    display: block;
+}
+
+/* Превью документа */
+.docPreview {
+    width: 100%;
+    height: var(--space-48);
+    padding: var(--space-4);
+    text-align: center;
+    background: var(--glass-hover-bg);
+    border-radius: var(--kk-radius-lg);
+}
+
+/* Иконка документа */
+.docIcon {
+    color: var(--accent-primary);
+}
+
+/* Имя документа */
+.docName {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--foreground);
+}
+
+/* Кнопка удаления вложения */
+.removeButton {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    box-shadow: var(--shadow-premium);
+    z-index: var(--z-dropdown);
+}
+
+/* Подвал: поле ввода и кнопки */
+.footer {
+    padding: var(--space-3);
+    background: var(--surface-2, var(--glass-bg));
+    border-top: var(--border-width-base) solid var(--glass-border);
+}
+
+/* Поле ввода подписи */
+.captionInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--foreground);
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    outline: none;
+    resize: none;
+    height: var(--size-btn-h-3);
+}
+
+.captionInput::placeholder {
+    color: var(--muted);
+}
+
+/* Кнопка эмодзи */
+button.emojiBtn {
+    color: var(--muted);
+    background: transparent;
+}
+
+/* Кнопка отправки */
+button.sendBtn {
+    color: var(--accent-primary);
+    background: transparent;
+}
+
+/* Анимация появления модалки */
+@keyframes dialogShow {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}

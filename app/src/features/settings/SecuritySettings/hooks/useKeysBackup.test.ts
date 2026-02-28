@@ -149,8 +149,12 @@ describe("useKeysBackup", () => {
             });
 
             await act(async () => {
-                result.current.handleRestoreBackup(mockEvent);
-                await new Promise((resolve) => setTimeout(resolve, 0));
+                await result.current.handleRestoreBackup(mockEvent);
+            });
+
+            // Ждём пока состояние обновится с ошибкой
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 50));
             });
 
             expect(result.current.statusMessage).toEqual({
@@ -169,8 +173,12 @@ describe("useKeysBackup", () => {
             });
 
             await act(async () => {
-                result.current.handleRestoreBackup(mockEvent);
-                await new Promise((resolve) => setTimeout(resolve, 0));
+                await result.current.handleRestoreBackup(mockEvent);
+            });
+
+            // Ждём пока состояние обновится с ошибкой
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 50));
             });
 
             expect(result.current.statusMessage?.type).toBe("danger");

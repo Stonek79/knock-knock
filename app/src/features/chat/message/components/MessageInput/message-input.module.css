@@ -11,6 +11,13 @@
     box-sizing: border-box;
 }
 
+/* Контейнер всего инпута */
+.inputContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
 /* Контейнер текстового поля */
 .textAreaContainer {
     flex: 1;
@@ -24,7 +31,7 @@
 .textArea {
     width: 100%;
     min-height: var(--size-touch);
-    line-height: 1.5;
+    line-height: var(--line-height-normal);
     max-height: 50vh;
     resize: none;
     outline: none;
@@ -32,7 +39,7 @@
     background: var(--bubble-in);
     color: var(--foreground);
     border-radius: var(--kk-radius-md);
-    font-family: var(--font-sans);
+    font-family: var(--font-family);
     scrollbar-width: thin;
     margin: 0;
     padding: var(--space-1) var(--space-2);
@@ -75,7 +82,7 @@
 @media (min-width: 769px) {
     .inputWrapper {
         padding: var(--space-2) var(--space-3);
-        max-height: 200px;
+        max-height: var(--max-h-textarea);
     }
 
     .actionButton {
@@ -86,5 +93,50 @@
     .textArea {
         min-height: var(--size-btn-h-3);
         padding: var(--space-1) var(--space-3);
+    }
+}
+
+/* Скрытый input для загрузки файлов */
+.hiddenInput {
+    display: none;
+}
+
+/* Состояние записи аудио */
+.recordingState {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    flex: 1;
+}
+
+.recordingPulse {
+    width: var(--size-online-dot);
+    height: var(--size-online-dot);
+    border-radius: var(--kk-radius-full);
+    background: var(--color-error);
+    animation: pulse var(--transition-slow) infinite alternate;
+}
+
+.recordingTime {
+    font-size: var(--text-sm);
+    color: var(--foreground);
+    font-family: var(--font-family);
+}
+
+.cancelRecordingBtn {
+    margin-left: auto;
+}
+
+.recordingBtnActive {
+    color: var(--color-error);
+}
+
+@keyframes pulse {
+    from {
+        opacity: var(--opacity-muted);
+    }
+    to {
+        opacity: 1;
     }
 }

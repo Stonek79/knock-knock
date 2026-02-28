@@ -40,8 +40,8 @@ vi.mock("@/stores/auth", () => ({
     }),
 }));
 
-describe("useUnreadCounts", () => {
-    it("fetches initial counts via RPC", async () => {
+describe("Хук useUnreadCounts", () => {
+    it("загружает начальные значения через RPC", async () => {
         // Setup RPC mock
         const mockCounts = [{ room_id: "room-1", count: 5 }];
         // biome-ignore lint/suspicious/noExplicitAny: Mocking RPC
@@ -62,7 +62,7 @@ describe("useUnreadCounts", () => {
         expect(result.current.getCount("room-2")).toBe(0);
     });
 
-    it("handles RPC errors gracefully", async () => {
+    it("корректно обрабатывает ошибки RPC", async () => {
         // biome-ignore lint/suspicious/noExplicitAny: Mocking RPC
         (supabase.rpc as unknown as any).mockResolvedValue({
             data: null,

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
-import { usePresence } from "@/hooks/usePresence";
+import { usePresence } from "@/features/presence";
 import { USER_WEB_STATUS } from "@/lib/constants/user";
 import type { PeerUser } from "@/lib/types/room";
 import styles from "../roomheader.module.css";
@@ -24,7 +24,6 @@ interface RoomHeaderTitleProps {
 
 /**
  * Компонент текстовой информации в заголовке чата (Имя + Статус).
- * Использует нативные теги вместо Radix Text/Heading.
  */
 export function RoomHeaderTitle({
     displayName,

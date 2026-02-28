@@ -6,6 +6,7 @@ export * from "./db";
 export * from "./errors";
 export * from "./ghost";
 export * from "./routes";
+export * from "./storage";
 export * from "./supabase";
 export * from "./theme";
 export * from "./ui";

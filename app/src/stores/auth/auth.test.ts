@@ -26,7 +26,7 @@ vi.mock("@/lib/mock/data", () => ({
     ],
 }));
 
-describe("useAuthStore", () => {
+describe("Хук useAuthStore", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         useAuthStore.setState({
@@ -37,7 +37,7 @@ describe("useAuthStore", () => {
         });
     });
 
-    it("should initialize with session", async () => {
+    it("должен инициализироваться сессией", async () => {
         const mockSession = { user: { id: "user-1" } };
         // biome-ignore lint/suspicious/noExplicitAny: Mocking internal data
         (supabase.auth.getSession as any).mockResolvedValue({
@@ -72,7 +72,7 @@ describe("useAuthStore", () => {
         expect(useAuthStore.getState().loading).toBe(false);
     });
 
-    it("should handle signOut", async () => {
+    it("должен обрабатывать выход (signOut)", async () => {
         await useAuthStore.getState().signOut();
         expect(supabase.auth.signOut).toHaveBeenCalled();
         expect(useAuthStore.getState().session).toBeNull();

@@ -11,7 +11,7 @@
     color: var(--foreground);
     font-family: var(--font-family);
     font-size: var(--text-base);
-    padding: var(--space-3);
+    padding: var(--space-1);
     resize: vertical;
     transition:
         border-color var(--transition-fast),

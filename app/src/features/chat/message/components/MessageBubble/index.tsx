@@ -1,13 +1,19 @@
 import clsx from "clsx";
-import { Star } from "lucide-react";
+import { Paperclip, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
-import { MESSAGE_POSITION, MESSAGE_STATUS } from "@/lib/constants";
+import { Text } from "@/components/ui/Text";
+import {
+    ATTACHMENT_TYPES,
+    MESSAGE_POSITION,
+    MESSAGE_STATUS,
+} from "@/lib/constants";
 import type { MessagePosition, MessageStatus } from "@/lib/types/message";
 import { getUserColor } from "@/lib/utils/colors";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
+import type { Attachment } from "../../services/uploadMedia";
 import styles from "./message-bubble.module.css";
 import { StatusIcon } from "./StatusIcon";
 
@@ -25,6 +31,7 @@ interface MessageBubbleProps {
     isEditing?: boolean;
     isStarred?: boolean;
     groupPosition?: MessagePosition;
+    attachments?: Attachment[] | null;
 }
 
 /**
@@ -45,6 +52,7 @@ export function MessageBubble({
     isEditing = false,
     isStarred = false,
     groupPosition = MESSAGE_POSITION.SINGLE,
+    attachments = null,
 }: MessageBubbleProps) {
     const { t } = useTranslation();
 
@@ -78,7 +86,7 @@ export function MessageBubble({
             }}
         >
             {!isOwn && (
-                <div className={styles.avatarContainer}>
+                <Box className={styles.avatarContainer}>
                     {groupPosition === MESSAGE_POSITION.SINGLE ||
                     groupPosition === MESSAGE_POSITION.END ? (
                         <Avatar
@@ -87,9 +95,9 @@ export function MessageBubble({
                             name={senderName}
                         />
                     ) : (
-                        <div className={styles.avatarPlaceholder} />
+                        <Box className={styles.avatarPlaceholder} />
                     )}
-                </div>
+                </Box>
             )}
 
             <Flex justify="between" className={bubble}>
@@ -104,14 +112,60 @@ export function MessageBubble({
                             {senderName}
                         </span>
                     )}
-                <Flex>
-                    {isDeleted ? (
-                        <span className={styles.deletedContent}>
-                            {t("chat.messageDeleted", "Сообщение удалено")}
-                        </span>
-                    ) : (
-                        <span className={styles.content}>{content}</span>
+                <Flex direction="column" gap="1">
+                    {attachments && attachments.length > 0 && (
+                        <Flex
+                            direction="column"
+                            gap="1"
+                            className={styles.attachments}
+                        >
+                            {attachments.map((att) => {
+                                if (att.type === ATTACHMENT_TYPES.IMAGE) {
+                                    return (
+                                        <img
+                                            key={att.id}
+                                            src={att.url}
+                                            alt={att.file_name}
+                                            className={styles.attachmentImage}
+                                            loading="lazy"
+                                        />
+                                    );
+                                }
+                                if (att.type === ATTACHMENT_TYPES.AUDIO) {
+                                    return (
+                                        <audio
+                                            key={att.id}
+                                            src={att.url}
+                                            controls
+                                            className={styles.attachmentAudio}
+                                        >
+                                            <track kind="captions" />
+                                        </audio>
+                                    );
+                                }
+                                return (
+                                    <a
+                                        key={att.id}
+                                        href={att.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={styles.attachmentDoc}
+                                    >
+                                        <Paperclip size={ICON_SIZE.sm} />
+                                        <Text size="sm">{att.file_name}</Text>
+                                    </a>
+                                );
+                            })}
+                        </Flex>
                     )}
+
+                    {isDeleted ? (
+                        <Text className={styles.deletedContent}>
+                            {t("chat.messageDeleted", "Сообщение удалено")}
+                        </Text>
+                    ) : content ? (
+                        <Text className={styles.content}>{content}</Text>
+                    ) : null}
 
                     <Box className={styles.metadata}>
                         {isStarred && (
