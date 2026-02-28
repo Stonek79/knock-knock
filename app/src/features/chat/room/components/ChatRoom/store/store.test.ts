@@ -17,6 +17,7 @@ const createMsg = (
     content = "text",
 ): DecryptedMessageWithProfile => ({
     id,
+    attachments: null,
     sender_id: senderId,
     content,
     created_at: new Date().toISOString(),
