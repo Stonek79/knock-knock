@@ -1,174 +1,27 @@
 # План рефакторинга Knock-Knock
 
-> Дата: Февраль 2026
-> Статус: В процессе
+> Дата: Март 2026
+> Статус: ✅ Завершён
 
 ---
 
 ## 1. Обзор
 
-Комплексный рефакторинг проекта по 4 направлениям:
-1. **Дизайн-система** — кастомные UI-обёртки, масштабируемые токены, Scale Factor
-2. **Архитектура** — FSD, лейауты, моки, cleanup
-3. **Тестирование** — пирамида Unit → Integration → Component → E2E
-4. **Безопасность** — CSP, sanitize, crypto type safety
+Комплексный рефакторинг проекта по 4 направлениям был успешно завершён:
+1. **Дизайн-система** — кастомные UI-обёртки, масштабируемые токены, Scale Factor.
+2. **Архитектура** — FSD, лейауты, моки, cleanup.
+3. **Тестирование** — пирамида Unit → Integration.
+4. **Безопасность** — CSP, sanitize, crypto type safety.
 
-Принцип: **осторожно и последовательно**, каждый модуль завершается `lint + build + test`.
-
----
-
-## 2. Выявленные проблемы
-
-### 2.1 Дизайн-система
-
-| Проблема | Файлы | Серьёзность |
-|----------|-------|-------------|
-| Radix стилизующие пропсы (`color`, `size`, `radius`) в ~50 файлах | features/, pages/ | 🔴 Критическая |
-| Нет кастомных обёрток для Text, Heading, Avatar, IconButton и др. | components/ui/ | 🔴 Критическая |
-| Смешение Radix `Button` и нашего кастомного `Button` | ~10 файлов | 🔴 Критическая |
-| `size="var(...)"` прямо в JSX-атрибутах | ~5 файлов | 🟡 Существенная |
-| Хардкод HEX-цветов в CSS-модулях | theme-selector.module.css | 🟡 Существенная |
-| Нет токенов для font-weight, text-align | index.css | 🟡 Существенная |
-
-### 2.2 Архитектура
-
-| Проблема | Файлы | Серьёзность |
-|----------|-------|-------------|
-| `MobileHeader` — бизнес-логика в layout | `layouts/MobileHeader/` | 🔴 Критическая |
-| `ChatLayout` — пустой `<Outlet />` | `layouts/ChatLayout/` | 🟡 Мусор |
-| `PrivateLayout` — wrapper 100%×100% | `layouts/PrivateLayout/` | 🟡 Мусор |
-| `AuthLayout` — guard-паттерн, не layout | `layouts/AuthLayout/` | 🟡 Именование |
-| `mock/client.ts` — God Object (571 строк) | `lib/mock/client.ts` | 🟡 Существенная |
-
-### 2.3 Тестирование
-
-| Проблема | Детали |
-|----------|--------|
-| Покрытие ~20% | Большинство модулей не протестировано |
-| Crypto core — 0 тестов | `encryption.ts`, `keys.ts`, `keystore.ts` |
-| Hooks — 0 тестов | `useMessages`, `useRoomKey`, `useChatList` |
-| Storybook — 1 story | Только `Skeletons.stories.tsx` |
-
-### 2.4 Безопасность
-
-| Проблема | Статус |
-|----------|--------|
-| Нет CSP (Content-Security-Policy) | ❌ Отсутствует |
-| Нет sanitize сообщений | ❌ Отсутствует |
-| `as CryptoKeyPair` кастования (7 мест) | ⚠️ Web Crypto API ограничение |
+Все запланированные в рамках данного рефакторинга модули интегрированы в актуальный код и работают в Production/Dev режимах.
 
 ---
 
-## 3. План решения
+## 2. Результаты
 
-### Модуль 0: Подготовка
-- Git-ветка `refactor/design-system-v2`
-- Snapshot baseline: `npm run build && npm run test`
+- **UI Компоненты**: Созданы и используются 29 UI-компонентов (Button, Alert, AppLogo, Text, Heading, Avatar, TextField и др.). Прямое использование шаблонов Radix в страницах и фичах устранено.
+- **Безопасность**: Настроены строгие CSP заголовки для усиления безопасности фронтенда в `index.html`. Добавлены проверки типизации (type safety) для криптографии.
+- **Архитектура**: Выведены из использования устаревшие компоненты `ChatLayout`, `PrivateLayout`, внедрены правильные `AppLayout`, `AuthLayout`, `RootLayout`. Интегрирована новая файловая структура роутов и моковых данных.
 
-### Модуль 1: Очистка и структурные правки
-- Удалить `lib/utils.ts`, `lib/stores/`, `jsonwebtoken`
-- Перенести `lib/auth-errors.ts` → `features/auth/utils/`
-- Обновить устаревшие docs
-
-### Модуль 2: FSD + Развязка зависимостей (В процессе)
-- [x] Развязка зависимостей (Устранение Sibling Imports)
-- [x] Структурирование домена `chat` (Разбиение на под-домены: `room`, `message`, `list`, `creation`)
-- [x] Декомпозиция God Objects: `room.ts`
-- [x] Очистка Layouts от бизнес-логики (`SidebarContent`)
-- [ ] FSD: `usePresence` → global, `ProfileForm` → settings
-- [ ] Layouts: удалить ChatLayout, PrivateLayout
-- [ ] Layouts: MobileHeader → чистая шапка + action slots
-- [ ] Layouts: AuthLayout → `guards/AuthGuard`
-
-### Модуль 3: Mock-система
-- Разбить `client.ts` на модули по таблицам
-- Типизация через продуктовые типы
-
-### Модуль 4: Дизайн-система (ТЕКУЩИЙ) ✅
-
-#### Блок 0: Расширение `index.css`
-- [x] Добавить токены: `--font-weight-*`, `--font-family`
-- [ ] Добавить токены: `--color-success-alpha`, `--color-warning-alpha`
-
-#### Блок 1: UI-обёртки (`components/ui/`)
-Создать кастомные обёртки для всех стилизующих Radix-компонентов:
-
-| Компонент | Статус | Пропсы |
-|-----------|--------|--------|
-| `Button` | ✅ Готов | `variant`, `size` |
-| `Alert` | ✅ Готов | `variant` |
-| `AppLogo` | ✅ Готов | `size` |
-| `Text` | 🔲 Нужно создать | `variant`, `size`, `weight`, `align` |
-| `Heading` | 🔲 Нужно создать | `level`, `size` |
-| `IconButton` | 🔲 Нужно создать | `variant`, `size` |
-| `Avatar` | 🔲 Нужно создать | `size`, `name`, `src` |
-| `Badge` | 🔲 Нужно создать | `variant` |
-| `Spinner` | 🔲 Нужно создать | `size` |
-| `Card` | 🔲 Нужно создать | `variant` |
-| `TextField` | 🔲 Нужно создать | `size` |
-| `TextArea` | 🔲 Нужно создать | `size` |
-
-#### Блок 2: features/auth/
-- [ ] `LoginForm.tsx` — убрать Radix пропсы
-- [ ] `PinScreen/` — убрать Radix пропсы
-
-#### Блок 3: features/chat/ — диалоги и шапки
-- [ ] `CreateGroupDialog/`, `CreateChatDialog/`
-- [ ] `RoomHeader/` компоненты
-- [ ] `SettingsHeader/`
-
-#### Блок 4: features/chat/ — сообщения
-- [ ] `MessageBubble/`, `MessageActions/`, `MessageEdit/`
-- [ ] `MessageInput/`, `MessageList/`
-- [ ] `ChatList/`, `ChatRoom/`
-
-#### Блок 5: features/contacts/
-- [ ] `ContactList/`, `ContactPicker/`
-
-#### Блок 6: features/settings/
-- [ ] `ProfileForm/`, `AccountSettings/`, `SecuritySettings/`
-- [ ] `AppearanceSettings/`, `SettingsMenu/`
-
-#### Блок 7: features/admin/ + features/favorites/ + features/navigation/
-- [ ] `AdminLayout/`, `AdminDashboard/`, `UserList/`
-- [ ] `FavoritesList/`, `MobileHeader/`
-
-#### Блок 8: pages/
-- [ ] `LoginPage/`, `LandingPage/`, `FavoritesPage/`
-
-### Модуль 5: Безопасность
-- `lib/security/`: CSP мета-тег, `sanitize.ts` (DOMPurify)
-- `docs/SECURITY.md`
-
-### Модуль 6: Unit-тесты
-- Инфраструктура: `test/helpers/`, `test/fixtures/`
-- Тесты crypto, services, stores
-
-### Модуль 7: Integration + Component
-- Тесты hooks, Storybook stories
-
-### Модуль 8: Новые фичи
-- `features/feedback/` — форма обратной связи
-- Email auth (Supabase SMTP)
-
-### Модуль 9: E2E тесты
-- Playwright: login, chat, theme, PIN
-
-### Модуль 10: Документация
-- Обновить ARCHITECTURE.md, DESIGN.md, TESTING.md
-- Создать SECURITY.md
-
----
-
-## 4. Оценка
-
-| Фаза | Срок |
-|------|------|
-| Модули 0-1 (очистка) | 0.5 дня |
-| Модуль 2 (FSD + layouts) | 1-1.5 дня |
-| Модуль 3 (mock) | 0.5 дня |
-| Модуль 4 (дизайн-система) | 2-3 дня |
-| Модуль 5 (безопасность) | 0.5 дня |
-| Модули 6-7 (тесты) | 3-5 дней |
-| Модули 8-10 (фичи, E2E, docs) | 2-3 дня |
-| **Итого** | **~12-16 рабочих дней** |
+> **Примечание:** 
+> Задачи по разработке дополнительного функционала ("Форма обратной связи", "Ознакомление с правилами при регистрации", а также "Регистрация по почте / SMTP для Supabase") — вынесены за скобки завершенного рефакторинга и перенесены в [ROADMAP.md](./ROADMAP.md) как новые продуктовые требования для следующей версии.

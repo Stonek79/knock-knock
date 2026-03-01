@@ -27,21 +27,30 @@
 ```
 app/src/
 ├── features/           # Бизнес-фичи по доменам
+│   ├── admin/          # Панель администратора
+│   ├── auth/           # Авторизация
 │   ├── chat/           # Чаты и сообщения
 │   ├── calls/          # Звонки
-│   ├── profile/        # Профиль пользователя
+│   ├── contacts/       # Контакты
 │   ├── favorites/      # Избранное
+│   ├── profile/        # Профиль
 │   └── settings/       # Настройки
 ├── layouts/            # Лейауты приложения
+│   ├── AppLayout/      # Навигация (Shell)
+│   ├── AuthLayout/     # Защита страниц 
 │   ├── RootLayout/     # Корневой: провайдеры, init
-│   ├── AppLayout/      # Shell: sidebar + content + nav
-│   ├── MobileHeader/   # Мобильная шапка
 │   └── SettingsRouteLayout/
 ├── pages/              # Страницы (контейнеры)
+│   ├── CallsPage/
+│   ├── ChatRoomPage/
+│   ├── ContactsPage/
+│   ├── FavoritesPage/
+│   ├── IndexPage/
 │   ├── LandingPage/
 │   ├── LoginPage/
-│   ├── CallsPage/
-│   └── ...
+│   ├── PrivateChatPage/
+│   ├── ProfilePage/
+│   └── SettingsIndexPage/
 ├── components/         # Переиспользуемые UI-компоненты
 │   ├── ui/             # Базовые (Button, Alert, AppLogo)
 │   └── layout/         # Лэйаут обертки над Radix компонентами

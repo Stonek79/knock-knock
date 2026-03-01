@@ -28,7 +28,7 @@ npm run storybook
 ### Создание stories
 
 ```tsx
-// src/features/chat/MessageBubble/MessageBubble.stories.tsx
+// src/features/chat/message/components/MessageBubble/MessageBubble.stories.tsx
 import type { Meta, StoryObj } from "@storybook/react";
 import { MessageBubble } from "./index";
 
@@ -135,9 +135,11 @@ app/
 ├── src/
 │   └── features/
 │       └── chat/
-│           └── MessageBubble/
-│               ├── index.tsx
-│               └── MessageBubble.stories.tsx  # Storybook
+│           └── message/
+│               └── components/
+│                   └── MessageBubble/
+│                       ├── index.tsx
+│                       └── MessageBubble.stories.tsx  # Storybook
 ├── e2e/
 │   └── chat-scroll.spec.ts  # Playwright
 └── playwright.config.ts
