@@ -80,7 +80,7 @@
     border: 1px solid var(--glass-border);
     color: var(--foreground);
     font-size: var(--pin-key-font-size);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: all var(--transition-fast);
     user-select: none;

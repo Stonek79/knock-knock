@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { ROUTES } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { MessageService } from "@/lib/services/message";
 import { RoomService } from "@/lib/services/room";
@@ -120,7 +121,7 @@ export function useChatActions({
                 }
             }
 
-            navigate({ to: "/chat" });
+            navigate({ to: ROUTES.CHAT_LIST });
         } catch (e) {
             logger.error("Error ending session", e);
         } finally {

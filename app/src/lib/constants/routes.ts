@@ -16,4 +16,8 @@ export const ROUTES = {
     CALLS: "/calls",
     ADMIN: "/admin",
     ADMIN_USERS: "/admin/users",
+    CHAT_ROOM: "/chat/$roomId",
+    FAVORITES_ROOM: "/favorites/$roomId",
+    DM: "/dm/$userId",
+    AUTH_DM: "/_auth/dm/$userId",
 } as const;

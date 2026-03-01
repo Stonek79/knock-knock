@@ -11,7 +11,7 @@ export function useSidebarNavigation() {
 
     const handlePrivateContactSelect = (contact: Profile) => {
         navigate({
-            to: "/dm/$userId",
+            to: ROUTES.DM,
             params: { userId: contact.id },
             search: (prev) => ({ ...prev, isPrivate: true }),
         });

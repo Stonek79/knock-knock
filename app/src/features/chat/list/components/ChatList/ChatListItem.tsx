@@ -37,7 +37,7 @@ export function ChatListItem({
     if (linkPrefix === ROUTES.FAVORITES) {
         return (
             <Link
-                to="/favorites/$roomId"
+                to={ROUTES.FAVORITES_ROOM}
                 params={{ roomId: chat.id }}
                 className={styles.chatListItem}
                 activeProps={{
@@ -51,7 +51,7 @@ export function ChatListItem({
 
     return (
         <Link
-            to="/chat/$roomId"
+            to={ROUTES.CHAT_ROOM}
             params={{ roomId: chat.id }}
             className={styles.chatListItem}
             activeProps={{

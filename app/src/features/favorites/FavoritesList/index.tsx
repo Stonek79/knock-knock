@@ -1,7 +1,3 @@
-/**
- * Компонент "Избранное" (Saved Messages).
- */
-
 import { useNavigate } from "@tanstack/react-router";
 import { Loader2, Star } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -10,6 +6,7 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { useToast } from "@/components/ui/Toast";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { ROUTES } from "@/lib/constants";
 import { RoomService } from "@/lib/services/room";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useAuthStore } from "@/stores/auth";
@@ -42,7 +39,7 @@ export function FavoritesList() {
 
             if (result.isOk()) {
                 navigate({
-                    to: "/chat/$roomId",
+                    to: ROUTES.CHAT_ROOM,
                     params: { roomId: result.value },
                 });
             } else {

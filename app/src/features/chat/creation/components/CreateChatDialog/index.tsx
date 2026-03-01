@@ -9,7 +9,7 @@ import {
     ContactPicker,
     useSelectedContacts,
 } from "@/features/contacts/ContactPicker";
-import { CONTACT_PICKER_MODE } from "@/lib/constants";
+import { CONTACT_PICKER_MODE, ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import { useCreateDM } from "../../hooks/useCreateDM";
 import styles from "./createchatdialog.module.css";
@@ -65,7 +65,7 @@ export function CreateChatDialog({
             setError(null);
 
             navigate({
-                to: "/chat/$roomId",
+                to: ROUTES.CHAT_ROOM,
                 params: { roomId },
             });
         } catch (err) {

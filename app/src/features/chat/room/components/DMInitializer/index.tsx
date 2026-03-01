@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import { useCreateDM } from "../../../creation/hooks/useCreateDM";
 import styles from "./dminitializer.module.css";
@@ -12,8 +13,8 @@ import styles from "./dminitializer.module.css";
  * Компонент инициализации DM-чата.
  */
 export function DMInitializer() {
-    const { userId } = useParams({ from: "/_auth/dm/$userId" });
-    const { isPrivate } = useSearch({ from: "/_auth/dm/$userId" });
+    const { userId } = useParams({ from: ROUTES.AUTH_DM });
+    const { isPrivate } = useSearch({ from: ROUTES.AUTH_DM });
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { t } = useTranslation();
@@ -40,7 +41,7 @@ export function DMInitializer() {
                 });
 
                 navigate({
-                    to: "/chat/$roomId",
+                    to: ROUTES.CHAT_ROOM,
                     params: { roomId },
                     replace: true,
                 });

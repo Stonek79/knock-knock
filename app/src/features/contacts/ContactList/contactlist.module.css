@@ -42,8 +42,8 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 10px;
-    height: 10px;
+    width: var(--size-online-dot);
+    height: var(--size-online-dot);
     border-radius: var(--kk-radius-full);
     border: 2px solid var(--surface);
 }
@@ -62,7 +62,7 @@
 }
 
 .name {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     color: var(--foreground);
     margin-bottom: var(--space-1);
 }

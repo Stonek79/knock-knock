@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
-import { CHAT_TYPE } from "@/lib/constants";
+import { CHAT_TYPE, ROUTES } from "@/lib/constants";
 import { MOCK_GROUP_AVATARS } from "@/lib/mock/data";
 import { RoomService } from "@/lib/services/room";
 import { useAuthStore } from "@/stores/auth";
@@ -79,7 +79,7 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
             resetState();
 
             navigate({
-                to: "/chat/$roomId",
+                to: ROUTES.CHAT_ROOM,
                 params: { roomId },
             });
         } catch (error) {
