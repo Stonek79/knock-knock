@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
+import { useToast } from "@/components/ui/Toast";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
 import { RoomHeaderActions } from "./components/RoomHeaderActions";
@@ -47,11 +48,17 @@ export function DefaultHeader({
     const { isDM, resolvedPeer, displayName, avatarUrl, memberNames } =
         useRoomHeaderInfo({ room, peerUser });
 
-    console.log(displayName);
+    const toast = useToast();
 
     const handleInfoClick = () => {
         if (resolvedPeer?.id) {
-            // TODO: Реализовать навигацию в профиль
+            toast({
+                title: t(
+                    "profile.notImplemented",
+                    "Просмотр профиля пока недоступен",
+                ),
+                variant: "info",
+            });
         }
     };
 

@@ -289,6 +289,13 @@ const mockFrom = (table: string) => {
 	return builder;
 };
 
+/**
+ * In-memory хранилище для mock-режима.
+ * Сохраняет blob-URL загруженных файлов, чтобы картинки/видео отображались в dev-сессии.
+ * При перезагрузке страницы blob-URLs теряются — это ожидаемое поведение для мока.
+ */
+const mockFileStore = new Map<string, string>();
+
 // Патчим createMockClient чтобы использовать mockFrom
 export const createClient = (): SupabaseClient => {
 	const mockClient = createMockClient();
@@ -299,11 +306,27 @@ export const createClient = (): SupabaseClient => {
 		storage: {
 			from: (bucket: string) => ({
 				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal client
-				upload: async (path: string, _file: any, _options: any) => {
+				upload: async (path: string, file: any, _options: any) => {
+					// Сохраняем файл как blob-URL для отображения в dev-режиме
+					if (file instanceof Blob || file instanceof File) {
+						const storeKey = `${bucket}/${path}`;
+						const blobUrl = URL.createObjectURL(file);
+						mockFileStore.set(storeKey, blobUrl);
+					}
 					return { data: { path }, error: null };
 				},
 				getPublicUrl: (path: string) => {
-					// Возвращаем фейковый URL
+					const storeKey = `${bucket}/${path}`;
+					const storedUrl = mockFileStore.get(storeKey);
+
+					// Если файл был загружен в текущей сессии — возвращаем blob-URL
+					if (storedUrl) {
+						return {
+							data: { publicUrl: storedUrl },
+						};
+					}
+
+					// Фолбэк: фейковый URL (файл не найден или сессия перезагружена)
 					const base =
 						typeof window !== "undefined"
 							? window.location.origin

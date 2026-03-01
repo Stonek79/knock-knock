@@ -478,3 +478,18 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-primary);
 }
+
+/* =========================================== */
+/* Lightbox (yet-another-react-lightbox) Theme */
+/* =========================================== */
+.yarl__root {
+    --yarl__color_backdrop: var(--glass-bg);
+    --yarl__color_button: var(--foreground);
+    --yarl__color_button_active: var(--accent-primary);
+    --yarl__color_button_disabled: var(--muted);
+    backdrop-filter: var(--glass-blur);
+}
+
+.yarl__button {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}

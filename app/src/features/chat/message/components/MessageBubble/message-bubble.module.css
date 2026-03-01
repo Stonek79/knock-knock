@@ -73,8 +73,8 @@
 
 .star {
     margin-right: var(--space-1);
-    fill: var(--yellow-9);
-    color: var(--yellow-9);
+    fill: var(--color-warning);
+    color: var(--color-warning);
 }
 
 .selected {
@@ -243,4 +243,54 @@
 
 .attachmentDoc:hover {
     background: var(--glow-soft);
+}
+
+/* Стили для сообщений, состоящих только из картинки (без текста) */
+.bubble.bubbleImageOnly {
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    border: none;
+}
+
+.bubble.bubbleImageOnly .attachments {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: block;
+}
+
+.bubble.bubbleImageOnly .imageButton {
+    border-radius: 0;
+    display: block;
+    width: 100%;
+    margin: 0;
+}
+
+.bubble.bubbleImageOnly .attachmentImage {
+    border-radius: 0;
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Метаданные (время и галочки) поверх картинки */
+.bubble.bubbleImageOnly .metadataOverlay {
+    position: absolute;
+    bottom: var(--space-1);
+    right: var(--space-1);
+    background: var(--glass-bg);
+    color: var(--foreground);
+    padding: var(--space-05) var(--space-2);
+    border-radius: var(--kk-radius-lg);
+    backdrop-filter: var(--glass-blur-sm);
+    margin: 0;
+    z-index: 2;
+}
+
+/* В режиме overlay статус иконки должны быть того же цвета */
+.bubble.bubbleImageOnly .metadataOverlay .status,
+.bubble.bubbleImageOnly .metadataOverlay .time {
+    color: var(--foreground);
+    opacity: 0.9;
 }

@@ -61,7 +61,7 @@ export function useFileAttachments({ toast, t }: UseFileAttachmentsProps) {
                                 maxSizeMB: COMPRESSION_OPTIONS.MAX_SIZE_MB,
                                 maxWidthOrHeight:
                                     COMPRESSION_OPTIONS.MAX_WIDTH_OR_HEIGHT,
-                                useWebWorker: true,
+                                useWebWorker: false,
                             };
                             return await imageCompression(file, options);
                         } catch (error) {

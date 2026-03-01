@@ -157,7 +157,7 @@ describe("Действия с сообщениями в чате", () => {
 
         // Клик может вызывать обновление состояния выделения
         await act(async () => {
-            fireEvent.click(myMsg);
+            fireEvent.mouseUp(myMsg);
         });
 
         const copyBtn = screen.getByRole("button", { name: /копировать/i });
@@ -173,7 +173,7 @@ describe("Действия с сообщениями в чате", () => {
 
         const myMsg = screen.getByText("My Message");
         await act(async () => {
-            fireEvent.click(myMsg);
+            fireEvent.mouseUp(myMsg);
         });
 
         const deleteBtn = screen.getByRole("button", { name: /удалить/i });
@@ -196,7 +196,7 @@ describe("Действия с сообщениями в чате", () => {
 
         const myMsg = screen.getByText("My Message");
         await act(async () => {
-            fireEvent.click(myMsg);
+            fireEvent.mouseUp(myMsg);
         });
 
         const editBtn = screen.getByRole("button", { name: /редактировать/i });
@@ -231,7 +231,7 @@ describe("Действия с сообщениями в чате", () => {
 
         const otherMsg = screen.getByText("Other Message");
         await act(async () => {
-            fireEvent.click(otherMsg);
+            fireEvent.mouseUp(otherMsg);
         });
 
         const editBtn = screen.queryByRole("button", {
@@ -245,7 +245,7 @@ describe("Действия с сообщениями в чате", () => {
 
         const myMsg = screen.getByText("My Message");
         await act(async () => {
-            fireEvent.click(myMsg);
+            fireEvent.mouseUp(myMsg);
         });
 
         const editBtn = screen.getByRole("button", { name: /редактировать/i });

@@ -1,14 +1,16 @@
 import clsx from "clsx";
-import { Star } from "lucide-react";
+import { Forward, Star } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Lightbox from "yet-another-react-lightbox";
+import DownloadPlugin from "yet-another-react-lightbox/plugins/download";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
 import { Text } from "@/components/ui/Text";
+import { useLongPress } from "@/hooks/useLongPress";
 import { MESSAGE_POSITION, MESSAGE_STATUS } from "@/lib/constants";
 import { ATTACHMENT_TYPES } from "@/lib/constants/storage";
 import type { MessagePosition, MessageStatus } from "@/lib/types/message";
@@ -41,9 +43,6 @@ interface MessageBubbleProps {
     roomKey?: CryptoKey;
 }
 
-/**
- * Пузырь сообщения в чате.
- */
 export function MessageBubble({
     content,
     isOwn,
@@ -71,6 +70,13 @@ export function MessageBubble({
     const imageAttachments =
         attachments?.filter((a) => a.type === ATTACHMENT_TYPES.IMAGE) || [];
 
+    // Проверяем, состоит ли сообщение ИСКЛЮЧИТЕЛЬНО из ОДНОЙ картинки
+    const isImageOnly =
+        !content &&
+        attachments?.length === 1 &&
+        imageAttachments.length === 1 &&
+        !isDeleted;
+
     const timeString = new Date(timestamp).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -87,18 +93,30 @@ export function MessageBubble({
     const bubble = clsx(styles.bubble, {
         [styles.bubbleOwn]: isOwn,
         [styles.bubblePeer]: !isOwn,
+        [styles.bubbleImageOnly]: isImageOnly,
     });
+
+    // Обработка длительного нажатия (Long Press) для выделения сообщения
+    const longPressEventHandlers = useLongPress(
+        () => {
+            if (!isEditing) {
+                onToggleSelection?.();
+            }
+        },
+        () => {
+            // На десктопе полезен обычный клик по баблу для выделения
+            if (!isEditing) {
+                onToggleSelection?.();
+            }
+        },
+        { delay: 400 },
+    );
 
     return (
         <Flex
             className={wrapper}
             data-group-position={groupPosition}
-            onClick={() => {
-                if (isEditing) {
-                    return;
-                }
-                onToggleSelection?.();
-            }}
+            {...longPressEventHandlers}
         >
             {!isOwn && (
                 <Box className={styles.avatarContainer}>
@@ -152,7 +170,12 @@ export function MessageBubble({
                         <Text className={styles.content}>{content}</Text>
                     ) : null}
 
-                    <Box className={styles.metadata}>
+                    <Box
+                        className={clsx(
+                            styles.metadata,
+                            isImageOnly && styles.metadataOverlay,
+                        )}
+                    >
                         {isStarred && (
                             <Star size={ICON_SIZE.xs} className={styles.star} />
                         )}
@@ -176,8 +199,11 @@ export function MessageBubble({
                     open={lightboxIndex >= 0}
                     close={() => setLightboxIndex(-1)}
                     index={lightboxIndex}
-                    slides={imageAttachments.map((img) => ({ src: img.url }))}
-                    plugins={[Zoom]}
+                    slides={imageAttachments.map((img) => ({
+                        src: img.url,
+                        download: img.file_name,
+                    }))}
+                    plugins={[Zoom, DownloadPlugin]}
                     carousel={{ finite: imageAttachments.length === 1 }}
                     render={{
                         buttonPrev:
@@ -188,6 +214,34 @@ export function MessageBubble({
                             imageAttachments.length <= 1
                                 ? () => null
                                 : undefined,
+                    }}
+                    toolbar={{
+                        buttons: [
+                            <button
+                                key="star"
+                                type="button"
+                                className="yarl__button"
+                                onClick={() => {
+                                    console.log("Star clicked for UI test");
+                                }}
+                                title={t("chat.star", "В избранное")}
+                            >
+                                <Star size={24} />
+                            </button>,
+                            <button
+                                key="forward"
+                                type="button"
+                                className="yarl__button"
+                                onClick={() => {
+                                    console.log("Forward clicked for UI test");
+                                }}
+                                title={t("chat.forward", "Переслать")}
+                            >
+                                <Forward size={24} />
+                            </button>,
+                            "download",
+                            "close",
+                        ],
                     }}
                 />
             )}

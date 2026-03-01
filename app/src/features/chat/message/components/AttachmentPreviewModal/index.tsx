@@ -5,6 +5,7 @@ import {
     Smile,
     X,
 } from "lucide-react";
+import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
@@ -12,6 +13,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { IconButton } from "@/components/ui/IconButton";
 import { Text } from "@/components/ui/Text";
 import { TextArea } from "@/components/ui/TextArea";
+import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./attachment-preview-modal.module.css";
 
@@ -33,6 +35,91 @@ interface AttachmentPreviewModalProps {
     /** Флаг отправки (чтобы блокировать UI) */
     isSending?: boolean;
 }
+
+/**
+ * Превью одного файла.
+ * Мемоизировано, чтобы ввод в caption не пересоздавал blob-URL при каждом символе.
+ * Blob-URL создаётся один раз и освобождается при размонтировании (revokeObjectURL).
+ */
+const FilePreview = memo(function FilePreview({
+    file,
+    index,
+    canRemove,
+    onRemove,
+    isSending,
+}: {
+    file: File;
+    index: number;
+    canRemove: boolean;
+    onRemove: (index: number) => void;
+    isSending: boolean;
+}) {
+    const { t } = useTranslation();
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    /**
+     * Создаём blob-URL один раз при маунте/смене файла.
+     * revokeObjectURL вызывается при cleanup для предотвращения утечки памяти.
+     */
+    const [objectUrl, setObjectUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isImage || isVideo) {
+            const url = URL.createObjectURL(file);
+            setObjectUrl(url);
+            return () => {
+                URL.revokeObjectURL(url);
+            };
+        }
+    }, [file, isImage, isVideo]);
+
+    const uniqueKey = `${file.name}-${file.size}-${index}`;
+
+    return (
+        <Box key={uniqueKey} className={styles.mediaItem}>
+            {isImage && objectUrl ? (
+                <img
+                    src={objectUrl}
+                    alt={file.name}
+                    className={styles.mediaPreview}
+                />
+            ) : isVideo && objectUrl ? (
+                <video src={objectUrl} className={styles.mediaPreview} controls>
+                    <track kind="captions" />
+                </video>
+            ) : (
+                <Flex
+                    direction="column"
+                    align="center"
+                    justify="center"
+                    gap="2"
+                    className={styles.docPreview}
+                >
+                    <FileText size={ICON_SIZE.xl} className={styles.docIcon} />
+                    <Text size="sm" className={styles.docName}>
+                        {file.name}
+                    </Text>
+                </Flex>
+            )}
+
+            {canRemove && (
+                <IconButton
+                    variant="solid"
+                    intent="danger"
+                    shape="round"
+                    size="xs"
+                    className={styles.removeButton}
+                    onClick={() => onRemove(index)}
+                    disabled={isSending}
+                    aria-label={t("chat.removeAttachment", "Удалить")}
+                >
+                    <X size={ICON_SIZE.xs} />
+                </IconButton>
+            )}
+        </Box>
+    );
+});
 
 /**
  * Модальное окно предпросмотра выбранных медиафайлов перед отправкой.
@@ -57,7 +144,18 @@ export function AttachmentPreviewModal({
 
     return (
         <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <Dialog.Content className={styles.content} hideCloseButton>
+            <Dialog.Content
+                className={styles.content}
+                hideCloseButton
+                aria-describedby={undefined}
+            >
+                {/* Скрытый заголовок для accessibility (screen readers) */}
+                <VisuallyHidden>
+                    <Dialog.Title>
+                        {t("chat.attachmentPreview", "Предпросмотр вложений")}
+                    </Dialog.Title>
+                </VisuallyHidden>
+
                 <Flex
                     justify="between"
                     align="center"
@@ -90,7 +188,7 @@ export function AttachmentPreviewModal({
                     </IconButton>
                 </Flex>
 
-                {/* Превью медиа */}
+                {/* Превью медиа — каждый файл мемоизирован отдельно */}
                 <Flex
                     align="center"
                     justify="center"
@@ -98,64 +196,16 @@ export function AttachmentPreviewModal({
                 >
                     {attachments.map((file, idx) => {
                         const uniqueKey = `${file.name}-${file.size}-${idx}`;
-                        const isImage = file.type.startsWith("image/");
-                        const isVideo = file.type.startsWith("video/");
 
                         return (
-                            <Box key={uniqueKey} className={styles.mediaItem}>
-                                {isImage ? (
-                                    <img
-                                        src={URL.createObjectURL(file)}
-                                        alt={file.name}
-                                        className={styles.mediaPreview}
-                                    />
-                                ) : isVideo ? (
-                                    <video
-                                        src={URL.createObjectURL(file)}
-                                        className={styles.mediaPreview}
-                                        controls
-                                    >
-                                        <track kind="captions" />
-                                    </video>
-                                ) : (
-                                    <Flex
-                                        direction="column"
-                                        align="center"
-                                        justify="center"
-                                        gap="2"
-                                        className={styles.docPreview}
-                                    >
-                                        <FileText
-                                            size={ICON_SIZE.xl}
-                                            className={styles.docIcon}
-                                        />
-                                        <Text
-                                            size="sm"
-                                            className={styles.docName}
-                                        >
-                                            {file.name}
-                                        </Text>
-                                    </Flex>
-                                )}
-
-                                {attachments.length > 1 && (
-                                    <IconButton
-                                        variant="solid"
-                                        intent="danger"
-                                        shape="round"
-                                        size="xs"
-                                        className={styles.removeButton}
-                                        onClick={() => onRemoveAttachment(idx)}
-                                        disabled={isSending}
-                                        aria-label={t(
-                                            "chat.removeAttachment",
-                                            "Удалить",
-                                        )}
-                                    >
-                                        <X size={ICON_SIZE.xs} />
-                                    </IconButton>
-                                )}
-                            </Box>
+                            <FilePreview
+                                key={uniqueKey}
+                                file={file}
+                                index={idx}
+                                canRemove={attachments.length > 1}
+                                onRemove={onRemoveAttachment}
+                                isSending={isSending}
+                            />
                         );
                     })}
                 </Flex>
