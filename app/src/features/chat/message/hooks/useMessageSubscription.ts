@@ -124,6 +124,7 @@ export function useMessageSubscription({
                                     ...m,
                                     ...newMsgRaw,
                                     content: filteredContent,
+                                    attachments: newMsgRaw.attachments,
                                     profiles: m.profiles,
                                 };
                             }

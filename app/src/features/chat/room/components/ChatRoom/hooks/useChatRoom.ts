@@ -15,6 +15,8 @@ import { ClipboardService } from "@/lib/services/clipboard";
 import { useAuthStore } from "@/stores/auth";
 import { useChatRoomStore } from "../store";
 
+// TODO: подумать над упрощением и возможной декомпозицией
+
 /**
  * Агрегирующий хук для всей логики комнаты чата.
  * Содержит работу с данными, действия и управление состоянием.
@@ -78,13 +80,17 @@ export function useChatRoom(roomId: string) {
     }, [markAsRead]);
 
     // Обработчики
-    const handleSend = async (text: string) => {
+    const handleSend = async (
+        text: string,
+        files?: File[],
+        audioBlob?: Blob,
+    ) => {
         try {
             if (editingId) {
                 await updateMessage(editingId, text);
                 cancelEdit();
             } else {
-                await sendMessage(text);
+                await sendMessage(text, files, audioBlob);
                 markAsRead();
             }
             setTyping(false);

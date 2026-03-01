@@ -296,5 +296,23 @@ export const createClient = (): SupabaseClient => {
 		...mockClient,
 		// biome-ignore lint/suspicious/noExplicitAny: Mocking internal client
 		from: mockFrom as any,
+		storage: {
+			from: (bucket: string) => ({
+				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal client
+				upload: async (path: string, _file: any, _options: any) => {
+					return { data: { path }, error: null };
+				},
+				getPublicUrl: (path: string) => {
+					// Возвращаем фейковый URL
+					const base =
+						typeof window !== "undefined"
+							? window.location.origin
+							: "http://localhost:3000";
+					return {
+						data: { publicUrl: `${base}/mock-storage/${bucket}/${path}` },
+					};
+				},
+			}),
+		},
 	} as unknown as SupabaseClient;
 };

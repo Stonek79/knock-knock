@@ -16,6 +16,7 @@ import {
     useContext,
     useState,
 } from "react";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./toast.module.css";
 
 /** Варианты отображения тоста */
@@ -110,7 +111,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                         >
                             {/* Иконка варианта */}
                             <Icon
-                                size="var(--size-icon-sm)"
+                                size={ICON_SIZE.sm}
                                 className={`${styles.icon} ${styles[variant]}`}
                             />
 
@@ -130,7 +131,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
                             {/* Кнопка закрытия */}
                             <ToastPrimitive.Close className={styles.close}>
-                                <X size="var(--size-icon-sm)" />
+                                <X size={ICON_SIZE.sm} />
                             </ToastPrimitive.Close>
                         </ToastPrimitive.Root>
                     );

@@ -1,11 +1,15 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import type { z } from "zod";
 import { DB_TABLES } from "@/lib/constants";
 import { ERROR_CODES } from "@/lib/constants/errors";
 import { encryptMessage } from "@/lib/crypto/messages";
 import { logger } from "@/lib/logger";
+import type { messageAttachmentSchema } from "@/lib/schemas/message";
 import { supabase } from "@/lib/supabase";
 import type { AppError, Result } from "@/lib/types/result";
 import { appError, err, ok } from "@/lib/utils/result";
+
+export type Attachment = z.infer<typeof messageAttachmentSchema>;
 
 export type MessageError =
     | AppError<typeof ERROR_CODES.DB_ERROR, PostgrestError>
@@ -24,6 +28,7 @@ export const MessageService = {
         senderId: string,
         content: string,
         roomKey: CryptoKey,
+        attachments?: Attachment[],
     ): Promise<Result<string, MessageError>> {
         let ciphertext: string = content;
         let iv: string = "mock-iv";
@@ -53,6 +58,7 @@ export const MessageService = {
                 sender_id: senderId,
                 content: ciphertext,
                 iv: iv,
+                attachments: attachments || null,
             })
             .select("id")
             .single();

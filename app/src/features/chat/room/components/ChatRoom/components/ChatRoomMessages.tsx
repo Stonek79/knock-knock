@@ -47,9 +47,10 @@ export function ChatRoomMessages({
                     toggleSelection(id, messages, userId)
                 }
                 editingId={editingId}
-                scrollRef={scrollRef}
                 firstUnreadId={firstUnreadId}
                 isFavoritesView={isFavoritesView}
+                roomKey={roomKey}
+                scrollRef={scrollRef}
             />
         </Box>
     );

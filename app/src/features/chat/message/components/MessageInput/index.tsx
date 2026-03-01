@@ -3,20 +3,25 @@
  * Оптимизирован для мобильных устройств и десктопа.
  */
 
+import clsx from "clsx";
 import { Mic, Paperclip, SendHorizontal, Smile, X } from "lucide-react";
-import { type ChangeEvent, useRef } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
+import { Slider } from "@/components/ui/Slider";
 import { Text } from "@/components/ui/Text";
 import { TextArea } from "@/components/ui/TextArea";
 import { useToast } from "@/components/ui/Toast";
-import { MIME_PREFIXES } from "@/lib/constants";
+import { RECORDING_LIMITS } from "@/lib/constants/storage";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { useFileAttachments } from "../../hooks/useFileAttachments";
 import { useMessageInput } from "../../hooks/useMessageInput";
 import { AttachmentPreviewModal } from "./../AttachmentPreviewModal";
 import styles from "./message-input.module.css";
+
+// TODO: большой и сложный компонент, надо подумать над декомпозицией и вынесением логики в отдельные хуки и утилиты.
 
 interface MessageInputProps {
     /** Коллбэк отправки сообщения */
@@ -35,7 +40,6 @@ interface MessageInputProps {
 
 /**
  * Компонент ввода сообщения.
- * Использует наши кастомные IconButton и TextArea вместо Radix.
  * Иконки через ICON_SIZE — числовые значения, корректно работают в SVG.
  */
 export function MessageInput({
@@ -53,20 +57,18 @@ export function MessageInput({
         message,
         setMessage,
         sending,
+        setSending,
         textareaRef,
         hasText,
         handleSend,
-        handleSendAttachments,
         handleKeyDown,
-        attachments,
-        setAttachments,
-        attachmentCaption,
-        setAttachmentCaption,
         isRecording,
         recordingTime,
         startRecording,
         stopRecording,
-        stopAndSendRecording,
+        stopAndFinishRecording,
+        recordedAudio,
+        setRecordedAudio,
     } = useMessageInput({
         onSend,
         onCancel,
@@ -76,69 +78,29 @@ export function MessageInput({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            const selectedFiles = Array.from(e.target.files);
+    const {
+        attachments,
+        attachmentCaption,
+        setAttachmentCaption,
+        handleFileChange,
+        removeAttachment,
+        resetAttachments,
+    } = useFileAttachments({ toast, t });
 
-            // Пользователь запросил: выбор только 1 видео.
-            const videoFiles = selectedFiles.filter((f) =>
-                f.type.startsWith(MIME_PREFIXES.VIDEO),
-            );
-            const nonVideoFiles = selectedFiles.filter(
-                (f) => !f.type.startsWith(MIME_PREFIXES.VIDEO),
-            );
-
-            let finalFiles = [...attachments];
-
-            if (videoFiles.length > 0) {
-                // Если уже есть прикрепленное видео или пытаются добавить больше одного
-                const existingVideoCount = attachments.filter((f) =>
-                    f.type.startsWith(MIME_PREFIXES.VIDEO),
-                ).length;
-
-                if (existingVideoCount > 0 || videoFiles.length > 1) {
-                    toast({
-                        title: t(
-                            "chat.onlyOneVideoAllowed",
-                            "Можно прикрепить только одно видео.",
-                        ),
-                        variant: "error",
-                    });
-                }
-
-                // Берем только первое видео, если еще нет видео
-                if (existingVideoCount === 0) {
-                    finalFiles = [
-                        ...finalFiles,
-                        ...nonVideoFiles,
-                        videoFiles[0],
-                    ];
-                } else {
-                    finalFiles = [...finalFiles, ...nonVideoFiles];
-                }
-            } else {
-                finalFiles = [...finalFiles, ...nonVideoFiles];
-            }
-
-            // Ограничение по общему количеству (максимум 10)
-            if (finalFiles.length > 10) {
-                toast({
-                    title: t(
-                        "chat.maxFilesReached",
-                        "Можно прикрепить не более 10 файлов.",
-                    ),
-                    variant: "error",
-                });
-                finalFiles = finalFiles.slice(0, 10);
-            }
-
-            setAttachments(finalFiles);
-            e.target.value = ""; // Сбрасываем input, чтобы можно было загрузить те же файлы еще раз
+    const handleSendAttachments = async () => {
+        if (attachments.length === 0 || sending || disabled) {
+            return;
         }
-    };
-
-    const removeAttachment = (index: number) => {
-        setAttachments((prev) => prev.filter((_, i) => i !== index));
+        setSending(true);
+        try {
+            await onSend(attachmentCaption.trim(), attachments);
+            resetAttachments();
+        } finally {
+            setSending(false);
+            setTimeout(() => {
+                textareaRef.current?.focus();
+            }, 10);
+        }
     };
 
     return (
@@ -149,10 +111,7 @@ export function MessageInput({
                 attachments={attachments}
                 caption={attachmentCaption}
                 onCaptionChange={setAttachmentCaption}
-                onClose={() => {
-                    setAttachments([]);
-                    setAttachmentCaption("");
-                }}
+                onClose={resetAttachments}
                 onRemoveAttachment={removeAttachment}
                 onSend={handleSendAttachments}
                 isSending={sending}
@@ -198,27 +157,43 @@ export function MessageInput({
                 {/* Поле ввода — наш кастомный TextArea */}
                 <Box className={styles.textAreaContainer}>
                     {isRecording ? (
-                        <Flex
-                            align="center"
-                            gap="2"
-                            className={styles.recordingState}
-                        >
-                            <Box className={styles.recordingPulse} />
-                            <Text className={styles.recordingTime}>
-                                {recordingTime}s
-                            </Text>
-                            <IconButton
-                                variant="outline"
-                                size="sm"
-                                shape="round"
-                                intent="danger"
-                                className={styles.cancelRecordingBtn}
-                                onClick={stopRecording}
-                            >
-                                <X size={ICON_SIZE.xs} />{" "}
-                                {t("chat.cancel", "Отмена")}
-                            </IconButton>
-                        </Flex>
+                        (() => {
+                            const remainingTime =
+                                RECORDING_LIMITS.MAX_DURATION_SECONDS -
+                                recordingTime;
+                            const isWarning = remainingTime <= 5;
+                            const formattedTime = `00:${remainingTime.toString().padStart(2, "0")}`;
+                            return (
+                                <Flex
+                                    align="center"
+                                    gap="2"
+                                    className={styles.recordingState}
+                                >
+                                    <Box className={styles.recordingPulse} />
+                                    <Text
+                                        className={clsx(
+                                            styles.recordingTime,
+                                            isWarning &&
+                                                styles.recordingBtnActive,
+                                        )}
+                                    >
+                                        {formattedTime}
+                                    </Text>
+                                    <Slider
+                                        disabled
+                                        value={[recordingTime]}
+                                        max={
+                                            RECORDING_LIMITS.MAX_DURATION_SECONDS
+                                        }
+                                        className={clsx(
+                                            styles.recordingSlider,
+                                            isWarning &&
+                                                styles.recordingWarning,
+                                        )}
+                                    />
+                                </Flex>
+                            );
+                        })()
                     ) : (
                         <TextArea
                             ref={textareaRef}
@@ -236,15 +211,46 @@ export function MessageInput({
                     )}
                 </Box>
 
-                {/* Кнопка отправки / микрофон */}
-                {hasText || attachments.length > 0 ? (
+                {/* Кнопка удаления аудио + Отправки */}
+                {recordedAudio ? (
+                    <Flex align="center" gap="1">
+                        <IconButton
+                            size="md"
+                            shape="round"
+                            variant="ghost"
+                            onClick={() => {
+                                setRecordedAudio(null);
+                                setMessage("");
+                            }}
+                            disabled={disabled || sending}
+                            className={styles.actionButton}
+                            aria-label={t("chat.removeAudio", "Удалить аудио")}
+                        >
+                            <X size={ICON_SIZE.sm} />
+                        </IconButton>
+                        <IconButton
+                            size="md"
+                            shape="round"
+                            variant="ghost"
+                            onClick={handleSend}
+                            disabled={disabled || sending}
+                            className={clsx(
+                                styles.actionButton,
+                                styles.sendButton,
+                            )}
+                            aria-label={t("chat.send", "Отправить")}
+                        >
+                            <SendHorizontal size={ICON_SIZE.sm} />
+                        </IconButton>
+                    </Flex>
+                ) : hasText || attachments.length > 0 ? (
                     <IconButton
                         size="md"
                         shape="round"
                         variant="ghost"
                         onClick={handleSend}
                         disabled={disabled || sending}
-                        className={`${styles.actionButton} ${styles.sendButton}`}
+                        className={clsx(styles.actionButton, styles.sendButton)}
                         aria-label={t("chat.send", "Отправить")}
                     >
                         <SendHorizontal size={ICON_SIZE.sm} />
@@ -256,15 +262,27 @@ export function MessageInput({
                         shape="round"
                         disabled={disabled || sending}
                         type="button"
-                        className={`${styles.actionButton} ${isRecording ? styles.recordingBtnActive : ""}`}
+                        className={clsx(
+                            styles.actionButton,
+                            isRecording && styles.recordingBtnActive,
+                        )}
                         aria-label={t(
                             "chat.voiceMessage",
                             "Голосовое сообщение",
                         )}
-                        onMouseDown={startRecording}
-                        onMouseUp={stopAndSendRecording}
-                        onTouchStart={startRecording}
-                        onTouchEnd={stopAndSendRecording}
+                        onPointerDown={(e) => {
+                            e.currentTarget.setPointerCapture(e.pointerId);
+                            // Игнорируем promise
+                            void startRecording();
+                        }}
+                        onPointerUp={(e) => {
+                            e.currentTarget.releasePointerCapture(e.pointerId);
+                            stopAndFinishRecording();
+                        }}
+                        onPointerCancel={(e) => {
+                            e.currentTarget.releasePointerCapture(e.pointerId);
+                            stopRecording();
+                        }}
                     >
                         <Mic size={ICON_SIZE.md} />
                     </IconButton>

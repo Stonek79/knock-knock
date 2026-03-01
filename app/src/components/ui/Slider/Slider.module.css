@@ -1,0 +1,45 @@
+.root {
+    position: relative;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    touch-action: none;
+    width: 100%;
+    height: var(--space-5);
+}
+
+.track {
+    background-color: var(--glass-border);
+    position: relative;
+    flex-grow: 1;
+    border-radius: var(--kk-radius-full);
+    height: var(--space-1);
+}
+
+.range {
+    position: absolute;
+    background-color: var(--accent-primary);
+    border-radius: var(--kk-radius-full);
+    height: 100%;
+}
+
+.thumb {
+    display: block;
+    width: var(--space-3);
+    height: var(--space-3);
+    background-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--bg-app);
+    border-radius: var(--kk-radius-full);
+    transition: transform var(--transition-fast);
+}
+
+.thumb:hover {
+    transform: scale(1.2);
+}
+
+.thumb:focus {
+    outline: none;
+    box-shadow:
+        0 0 0 2px var(--bg-app),
+        0 0 0 4px var(--accent-primary);
+}

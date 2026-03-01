@@ -1,0 +1,130 @@
+.container {
+    width: 100%;
+    min-width: var(--min-w-audio-player);
+    padding: var(--space-1) 0;
+    box-sizing: border-box;
+}
+
+.playButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--audio-play-btn-size, 44px);
+    height: var(--audio-play-btn-size, 44px);
+    border-radius: var(--kk-radius-full);
+    border: none;
+    cursor: pointer;
+    transition:
+        transform var(--transition-fast),
+        background-color var(--transition-base);
+    flex-shrink: 0;
+}
+
+.playButtonOwn {
+    background: var(--bubble-out-fg);
+    color: var(--accent-primary);
+}
+
+.playButtonPeer {
+    background: var(--accent-primary);
+    color: var(--bg-app);
+}
+
+.playButton:hover {
+    transform: scale(1.05);
+}
+
+.playButton:active {
+    transform: scale(0.95);
+}
+
+.progressContainer {
+    flex-grow: 1;
+    min-width: 0;
+    gap: var(--space-1);
+    justify-content: center;
+}
+
+.sliderRoot {
+    position: relative;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    touch-action: none;
+    width: 100%;
+    height: var(--space-4);
+    cursor: pointer;
+}
+
+.audioTrack {
+    position: relative;
+    flex-grow: 1;
+    height: var(--audio-dot-track-h, 10px);
+    background-image: radial-gradient(
+        circle,
+        currentColor var(--audio-dot-radius, 2px),
+        transparent var(--audio-dot-radius, 2px)
+    );
+    background-size: var(--audio-dot-spacing, 6px)
+        var(--audio-dot-track-h, 10px);
+    background-position: left center;
+    background-repeat: repeat-x;
+    opacity: 0.4;
+}
+
+.audioRange {
+    position: absolute;
+    height: 100%;
+    background-image: radial-gradient(
+        circle,
+        currentColor var(--audio-dot-radius, 2px),
+        transparent var(--audio-dot-radius, 2px)
+    );
+    background-size: var(--audio-dot-spacing, 6px)
+        var(--audio-dot-track-h, 10px);
+    background-position: left center;
+    background-repeat: repeat-x;
+}
+
+.audioThumb {
+    display: block;
+    width: var(--audio-thumb-size, 12px);
+    height: var(--audio-thumb-size, 12px);
+    background-color: currentColor;
+    border-radius: var(--kk-radius-full);
+    transition: transform var(--transition-fast);
+}
+
+.audioThumb:hover {
+    transform: scale(1.2);
+}
+
+.audioThumb:focus {
+    outline: none;
+    box-shadow: 0 0 0 var(--border-width-focus) var(--glass-border);
+}
+
+.timeText {
+    opacity: 0.8;
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-medium);
+}
+
+/* Строка с таймером и кнопкой транскрипции */
+.timerRow {
+    margin-top: calc(var(--space-1) * -1);
+}
+
+/* Кнопка переключения видимости транскрипции */
+.transcriptToggle {
+    background: transparent;
+    border: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-1);
+    cursor: pointer;
+    opacity: 0.8;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-xs);
+}

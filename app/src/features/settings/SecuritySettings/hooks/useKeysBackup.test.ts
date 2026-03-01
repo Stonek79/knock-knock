@@ -129,7 +129,7 @@ describe("useKeysBackup", () => {
             await act(async () => {
                 result.current.handleRestoreBackup(mockEvent);
                 // FileReader асинхронен, даем ему время
-                await new Promise((resolve) => setTimeout(resolve, 0));
+                await new Promise((resolve) => setTimeout(resolve, 50));
             });
 
             expect(mockRestoreKeys).toHaveBeenCalledWith(

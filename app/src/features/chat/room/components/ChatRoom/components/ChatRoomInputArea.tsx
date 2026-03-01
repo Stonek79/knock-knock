@@ -2,7 +2,7 @@ import { MessageInput } from "@/features/chat/message";
 import { useChatRoomStore } from "../store";
 
 interface ChatRoomInputAreaProps {
-    onSend: (text: string) => Promise<void>;
+    onSend: (text: string, files?: File[], audioBlob?: Blob) => Promise<void>;
     disabled: boolean;
     onTyping: (isTyping: boolean) => void;
 }

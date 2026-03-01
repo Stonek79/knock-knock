@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { DB_TABLES } from "@/lib/constants/db";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
 import { useKeystore } from "./useKeystore";
@@ -39,7 +40,7 @@ export function useKeySync() {
 
                 // Сначала проверяем, нужно ли обновление
                 const { data: profile, error: fetchError } = await supabase
-                    .from("profiles")
+                    .from(DB_TABLES.PROFILES)
                     .select("public_key_x25519, public_key_signing")
                     .eq("id", user.id)
                     .single();
@@ -58,7 +59,7 @@ export function useKeySync() {
                     profile.public_key_signing !== publicKeyEd25519
                 ) {
                     const { error: updateError } = await supabase
-                        .from("profiles")
+                        .from(DB_TABLES.PROFILES)
                         .update({
                             public_key_x25519: publicKeyX25519,
                             public_key_signing: publicKeyEd25519,

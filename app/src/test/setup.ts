@@ -17,3 +17,14 @@ Object.defineProperty(window, "matchMedia", {
         dispatchEvent: () => false,
     }),
 });
+
+/**
+ * Mock для ResizeObserver, так как JSDOM его не поддерживает
+ */
+class ResizeObserverMock {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+}
+
+global.ResizeObserver = ResizeObserverMock;

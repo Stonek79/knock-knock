@@ -7,7 +7,7 @@ import {
 } from "@/lib/constants";
 import { encryptBlob } from "@/lib/crypto/messages";
 import type { messageAttachmentSchema } from "@/lib/schemas/message";
-import { supabase } from "@/lib/supabase";
+import { isMock, supabase } from "@/lib/supabase";
 
 export type Attachment = z.infer<typeof messageAttachmentSchema>;
 
@@ -95,10 +95,29 @@ export async function uploadAudio(
     roomId: string,
     roomKey: CryptoKey,
 ): Promise<Attachment> {
-    // Шифруем данные E2E ключом
+    const uniqueId = crypto.randomUUID();
+
+    // В mock-режиме шифрование не используется, конвертируем в data: URL
+    // для сохранения в localStorage (blob: URL не переживает перезагрузку)
+    if (isMock) {
+        const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+        });
+        return {
+            id: uniqueId,
+            file_name: VOICE_MESSAGE_LABEL,
+            file_size: blob.size,
+            content_type: blob.type || DEFAULT_MIME_TYPES.WEBM_AUDIO,
+            url: dataUrl,
+            type: ATTACHMENT_TYPES.AUDIO,
+        };
+    }
+
+    // Продакшн: шифруем данные E2E ключом и загружаем в Storage
     const encryptedBlob = await encryptBlob(blob, roomKey);
 
-    const uniqueId = crypto.randomUUID();
     const fileName = `${uniqueId}.enc`;
     const filePath = `${roomId}/${fileName}`;
 
@@ -122,7 +141,7 @@ export async function uploadAudio(
     return {
         id: uniqueId,
         file_name: VOICE_MESSAGE_LABEL,
-        file_size: blob.size, // Сохраняем оригинальный размер для UI
+        file_size: blob.size,
         content_type: blob.type || DEFAULT_MIME_TYPES.WEBM_AUDIO,
         url: publicUrl,
         type: ATTACHMENT_TYPES.AUDIO,

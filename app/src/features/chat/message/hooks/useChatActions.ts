@@ -5,6 +5,11 @@ import { logger } from "@/lib/logger";
 import { MessageService } from "@/lib/services/message";
 import { RoomService } from "@/lib/services/room";
 import type { RoomWithMembers } from "@/lib/types/room";
+import {
+    type Attachment,
+    uploadAudio,
+    uploadMedia,
+} from "../services/uploadMedia";
 
 interface UseChatActionsProps {
     roomId?: string;
@@ -30,10 +35,38 @@ export function useChatActions({
     /**
      * Отправка зашифрованного сообщения.
      */
-    const sendMessage = async (text: string) => {
+    const sendMessage = async (
+        text: string,
+        files?: File[],
+        audioBlob?: Blob,
+    ) => {
         if (!roomKey || !user || !roomId) {
             logger.warn("Cannot send message: missing keys or room ID");
             return;
+        }
+
+        const attachments: Attachment[] = [];
+
+        try {
+            if (audioBlob) {
+                const audioAttachment = await uploadAudio(
+                    audioBlob,
+                    roomId,
+                    roomKey,
+                );
+                attachments.push(audioAttachment);
+            }
+
+            if (files && files.length > 0) {
+                const filePromises = files.map((file) =>
+                    uploadMedia(file, roomId),
+                );
+                const uploadedFiles = await Promise.all(filePromises);
+                attachments.push(...uploadedFiles);
+            }
+        } catch (uploadError) {
+            logger.error("Failed to upload media", uploadError);
+            throw uploadError;
         }
 
         const result = await MessageService.sendMessage(
@@ -41,6 +74,7 @@ export function useChatActions({
             user.id,
             text,
             roomKey,
+            attachments.length > 0 ? attachments : undefined,
         );
         if (result.isErr()) {
             logger.error("Failed to send message", result.error);

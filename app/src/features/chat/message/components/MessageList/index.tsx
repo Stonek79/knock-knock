@@ -32,6 +32,7 @@ interface MessageListProps {
     firstUnreadId?: string | null;
     /** Состояние Избранного (фильтрация только звезд) */
     isFavoritesView?: boolean;
+    roomKey?: CryptoKey;
 }
 
 export function MessageList({
@@ -43,6 +44,7 @@ export function MessageList({
     scrollRef,
     firstUnreadId,
     isFavoritesView,
+    roomKey,
 }: MessageListProps) {
     const { t } = useTranslation();
     const { user } = useAuthStore();
@@ -150,6 +152,8 @@ export function MessageList({
                                         }
                                         isEditing={isEditing}
                                         groupPosition={groupPosition}
+                                        attachments={msg.attachments}
+                                        roomKey={roomKey}
                                     />
                                 </Box>
                             );

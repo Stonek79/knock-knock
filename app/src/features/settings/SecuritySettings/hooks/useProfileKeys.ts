@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { DB_TABLES } from "@/lib/constants/db";
 import { supabase } from "@/lib/supabase";
 
 export interface ProfileKeys {
@@ -24,7 +25,7 @@ export function useProfileKeys(userId: string | undefined) {
                 return null;
             }
             const { data, error } = await supabase
-                .from("profiles")
+                .from(DB_TABLES.PROFILES)
                 .select("public_key_x25519, public_key_signing")
                 .eq("id", userId)
                 .single();

@@ -6,6 +6,7 @@ import { uploadAudio, uploadMedia } from "./uploadMedia";
 
 // Мокаем Supabase клиент
 vi.mock("@/lib/supabase", () => ({
+    isMock: false,
     supabase: {
         storage: {
             from: vi.fn(() => ({
