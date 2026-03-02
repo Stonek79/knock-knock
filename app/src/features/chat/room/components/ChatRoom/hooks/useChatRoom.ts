@@ -36,6 +36,7 @@ export function useChatRoom(roomId: string) {
     const [showEndSessionDialog, setShowEndSessionDialog] = useState(false);
     const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] =
         useState(false);
+    const [showGroupInfoPanel, setShowGroupInfoPanel] = useState(false);
 
     // Ref для скролла
     const scrollRef = useRef<{ scrollToBottom: () => void } | null>(null);
@@ -166,6 +167,8 @@ export function useChatRoom(roomId: string) {
         setShowEndSessionDialog,
         showDeleteConfirmDialog,
         setShowDeleteConfirmDialog,
+        showGroupInfoPanel,
+        setShowGroupInfoPanel,
         // Handlers
         handleSend,
         handleDeleteSelected,

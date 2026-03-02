@@ -23,11 +23,11 @@ export function ChatRoomLayout({
 }: ChatRoomLayoutProps) {
     return (
         <Flex direction="column" className={styles.roomWrapper}>
-            {dialogs}
             {header}
             {banner}
             {messages}
             <div className={styles.inputArea}>{input}</div>
+            {dialogs}
         </Flex>
     );
 }

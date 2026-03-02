@@ -32,6 +32,8 @@ interface RoomHeaderProps {
     onEditSelected?: () => void;
     /** Список печатающих пользователей */
     typingUsers?: string[];
+    /** Обработчик клика по заголовку (инфо) */
+    onInfoClick?: () => void;
 }
 
 /**
@@ -53,6 +55,7 @@ export function RoomHeader({
     onForwardSelected,
     onEditSelected,
     typingUsers,
+    onInfoClick,
 }: RoomHeaderProps) {
     const router = useRouter();
 
@@ -84,6 +87,7 @@ export function RoomHeader({
             ending={ending}
             onBack={handleBack}
             typingUsers={typingUsers}
+            onInfoClick={onInfoClick}
         />
     );
 }

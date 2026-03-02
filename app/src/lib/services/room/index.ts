@@ -1,4 +1,11 @@
-import { createRoom, deleteRoom } from "./mutations";
+import {
+    addMembersToGroup,
+    createRoom,
+    deleteRoom,
+    leaveGroup,
+    removeMemberFromGroup,
+    updateMemberRole,
+} from "./mutations";
 import { findOrCreateDM } from "./queries";
 
 /**
@@ -9,4 +16,8 @@ export const RoomService = {
     createRoom,
     deleteRoom,
     findOrCreateDM,
+    addMembersToGroup,
+    removeMemberFromGroup,
+    updateMemberRole,
+    leaveGroup,
 };

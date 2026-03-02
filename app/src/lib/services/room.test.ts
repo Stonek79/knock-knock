@@ -36,6 +36,15 @@ describe("RoomService", () => {
         vi.clearAllMocks();
         // Принудительно отключаем mock-режим для честного unit-тестирования логики
         vi.stubEnv("VITE_USE_MOCK", "false");
+
+        // Мокаем импорт ключа, чтобы тесты не падали на валидации ECDH ключей
+        if (!window.crypto) {
+            // biome-ignore lint/suspicious/noExplicitAny: mock
+            (window as any).crypto = { subtle: {} };
+        }
+        window.crypto.subtle.importKey = vi
+            .fn()
+            .mockResolvedValue({} as CryptoKey);
     });
 
     describe("createRoom", () => {
@@ -162,6 +171,115 @@ describe("RoomService", () => {
             if (result.isOk()) {
                 expect(result.value).toBe("existing-room");
             }
+        });
+    });
+
+    describe("addMembersToGroup", () => {
+        it("должен добавить новых участников и зашифровать для них ключи", async () => {
+            // Корректный base64 ключ для мока ECDH, чтобы base64ToArrayBuffer не падал
+            const validBase64Key = btoa("mock1234mock1234mock1234mock1234");
+
+            const mockSelect = vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue({
+                    data: [
+                        { id: "new-user-1", public_key_x25519: validBase64Key },
+                    ],
+                    error: null,
+                }),
+            });
+
+            const fromMock = vi.fn((table) => {
+                if (table === "profiles") {
+                    return { select: mockSelect };
+                }
+                if (table === "room_members" || table === "room_keys") {
+                    return {
+                        insert: vi.fn().mockResolvedValue({ error: null }),
+                    };
+                }
+                return { select: vi.fn() };
+            });
+            // biome-ignore lint/suspicious/noExplicitAny: mock
+            (supabase.from as any) = fromMock;
+
+            const roomKeyStr = "mock-key";
+            const mockRoomKey = roomKeyStr as unknown as CryptoKey;
+
+            const result = await RoomService.addMembersToGroup(
+                "room-1",
+                ["new-user-1"],
+                mockRoomKey,
+                "my-id",
+            );
+
+            expect(result.isOk()).toBe(true);
+        });
+
+        it("должен вернуть MISSING_KEYS если профили не найдены", async () => {
+            const mockSelect = vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue({
+                    data: [], // Никого не нашли
+                    error: null,
+                }),
+            });
+
+            // biome-ignore lint/suspicious/noExplicitAny: mock
+            (supabase.from as any).mockReturnValue({ select: mockSelect });
+
+            const mockRoomKey = "mock-key" as unknown as CryptoKey;
+
+            const result = await RoomService.addMembersToGroup(
+                "room-1",
+                ["missing-user"],
+                mockRoomKey,
+                "my-id",
+            );
+
+            expect(result.isErr()).toBe(true);
+            if (result.isErr()) {
+                expect(result.error.kind).toBe(ERROR_CODES.MISSING_KEYS);
+            }
+        });
+    });
+
+    describe("removeMemberFromGroup", () => {
+        it("должен удалить участника из room_members и room_keys", async () => {
+            const deleteMock = vi.fn().mockReturnValue({
+                eq: vi.fn(() => ({
+                    eq: vi.fn().mockResolvedValue({ error: null }),
+                })),
+            });
+
+            // biome-ignore lint/suspicious/noExplicitAny: mock
+            (supabase.from as any).mockReturnValue({ delete: deleteMock });
+
+            const result = await RoomService.removeMemberFromGroup(
+                "room-1",
+                "user-1",
+            );
+
+            expect(result.isOk()).toBe(true);
+        });
+    });
+
+    describe("updateMemberRole", () => {
+        it("должен обновить роль участника", async () => {
+            const updateMock = vi.fn().mockReturnValue({
+                eq: vi.fn(() => ({
+                    eq: vi.fn().mockResolvedValue({ error: null }),
+                })),
+            });
+
+            // biome-ignore lint/suspicious/noExplicitAny: mock
+            (supabase.from as any).mockReturnValue({ update: updateMock });
+
+            const result = await RoomService.updateMemberRole(
+                "room-1",
+                "user-1",
+                "admin",
+            );
+
+            expect(result.isOk()).toBe(true);
         });
     });
 });

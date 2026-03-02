@@ -10,4 +10,5 @@ export * from "./storage";
 export * from "./supabase";
 export * from "./theme";
 export * from "./ui";
+export * from "./user";
 export * from "./validation";

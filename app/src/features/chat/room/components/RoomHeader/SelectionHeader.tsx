@@ -35,7 +35,7 @@ export function SelectionHeader({
 
     return (
         <header className={styles.roomHeader}>
-            <Flex align="center" gap="3" className={styles.leftSection}>
+            <Flex align="center" gap="2" className={styles.leftSection}>
                 <IconButton
                     variant="ghost"
                     size="md"

@@ -1,6 +1,6 @@
 import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
-import { RoomHeader as BaseRoomHeader } from "../../RoomHeader";
+import { RoomHeader } from "../../RoomHeader";
 import { useChatRoomStore } from "../store";
 
 interface ChatRoomHeaderProps {
@@ -16,6 +16,7 @@ interface ChatRoomHeaderProps {
     messages: DecryptedMessageWithProfile[];
     userId?: string;
     typingUsers: string[];
+    onInfoClick?: () => void;
 }
 
 /**
@@ -34,6 +35,7 @@ export function ChatRoomHeader({
     messages,
     userId,
     typingUsers,
+    onInfoClick,
 }: ChatRoomHeaderProps) {
     const selectedCount = useChatRoomStore((s) => s.selectedMessageIds.size);
     const canEditSelected = useChatRoomStore((s) => s.canEditSelected);
@@ -41,7 +43,7 @@ export function ChatRoomHeader({
     const setEditingSelected = useChatRoomStore((s) => s.setEditingSelected);
 
     return (
-        <BaseRoomHeader
+        <RoomHeader
             room={room}
             roomId={roomId}
             peerUser={peerUser}
@@ -56,6 +58,7 @@ export function ChatRoomHeader({
             onEditSelected={() => setEditingSelected(messages, userId)}
             canEditSelected={canEditSelected}
             typingUsers={typingUsers}
+            onInfoClick={onInfoClick}
         />
     );
 }

@@ -1,0 +1,78 @@
+/* ============================================================
+   GroupInfoPanel — основные стили контейнера
+   Стили подкомпонентов живут в components/<Name>/...module.css
+   ============================================================ */
+
+/* Оверлей внутри ChatRoom */
+.panelContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-modal); /* Должно перекрывать шапку с --z-dropdown (100) */
+    background-color: var(
+        --bg-primary,
+        var(--bg-app)
+    ); /* Гарантированный плотный фон */
+
+    display: flex;
+    flex-direction: column;
+
+    transform: translateX(100%);
+    transition:
+        transform var(--transition-base) ease-in-out,
+        visibility var(--transition-base);
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.panelContainer.isOpen {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Заголовок панели */
+.title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Шапка с заголовком и кнопкой закрытия */
+.header {
+    height: var(--header-height);
+    min-height: var(--header-height);
+    padding: 0 var(--space-4);
+    border-bottom: var(--border-width-base) solid var(--glass-border);
+    background: var(--bg-primary, var(--bg-app)); /* Плотный фон шапки */
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-panel);
+}
+
+/* Прокручиваемая область */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-4);
+    background-color: var(--bg-app);
+}
+
+/* Блок действий (кнопка "Выйти") */
+.actions {
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: var(--space-4);
+    background: var(--bg-primary, var(--bg-app));
+}
+
+.leaveButton {
+    width: 100%;
+    max-width: var(--space-48);
+    display: flex;
+    gap: var(--space-2);
+}

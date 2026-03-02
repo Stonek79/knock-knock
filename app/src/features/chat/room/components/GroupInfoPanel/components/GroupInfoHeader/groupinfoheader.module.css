@@ -1,0 +1,11 @@
+.groupInfo {
+    margin-bottom: var(--space-6);
+}
+
+.groupName {
+    margin-top: var(--space-4);
+}
+
+.groupMeta {
+    margin-top: var(--space-1);
+}

@@ -1,0 +1,32 @@
+.memberItem {
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--kk-radius-md);
+    transition: background-color var(--transition-fast);
+}
+
+.memberItem:hover {
+    background-color: var(--glass-hover-bg);
+}
+
+.memberInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.memberName {
+    max-width: 15rem;
+}
+
+.memberStatus {
+    display: block;
+    margin-top: calc(var(--space-1) * -0.5);
+}
+
+.memberActions {
+    flex-shrink: 0;
+}
+
+.roleBadge {
+    font-size: var(--text-xs);
+    border-radius: var(--kk-radius-sm);
+}

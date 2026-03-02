@@ -1,0 +1,10 @@
+.sectionTitle {
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    margin-bottom: var(--space-3);
+    padding: 0 var(--space-1);
+}
+
+.memberList {
+    gap: var(--space-1);
+}

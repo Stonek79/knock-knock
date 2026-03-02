@@ -118,6 +118,7 @@
     /* =========================================== */
     /* Container Max Widths (Static) */
     /* =========================================== */
+    --max-h-picker: 250px;
     --max-w-auth: 450px;
     --max-w-dialog: 450px;
     --max-w-content: 600px;
@@ -149,6 +150,7 @@
     /* Z-Index Scale */
     /* =========================================== */
     --z-base: 0;
+    --z-panel: 10;
     --z-dropdown: 100;
     --z-sticky: 200;
     --z-modal: 300;

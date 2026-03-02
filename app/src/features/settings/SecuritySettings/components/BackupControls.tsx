@@ -4,7 +4,7 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { TextField } from "@/components/ui/TextField";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { COMPONENT_INTENT } from "@/lib/constants/ui";
 import type { StatusMessage } from "../hooks/useKeysBackup";
 import styles from "../security.module.css";
@@ -52,18 +52,22 @@ export function BackupControls({
             )}
 
             <Flex direction="column" gap="2">
-                <label htmlFor="backupPassword" className={styles.fieldLabel}>
-                    {t("profile.backupPassword")}
-                </label>
-                <TextField
-                    id="backupPassword"
-                    type="password"
-                    placeholder={t("profile.backupPasswordPlaceholder")}
-                    value={backupPassword}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setBackupPassword(e.target.value)
-                    }
-                />
+                <form>
+                    <label
+                        htmlFor="backupPassword"
+                        className={styles.fieldLabel}
+                    >
+                        {t("profile.backupPassword")}
+                    </label>
+                    <PasswordInput
+                        id="backupPassword"
+                        placeholder={t("profile.backupPasswordPlaceholder")}
+                        value={backupPassword}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setBackupPassword(e.target.value)
+                        }
+                    />
+                </form>
             </Flex>
 
             <Flex gap="3" wrap="wrap">

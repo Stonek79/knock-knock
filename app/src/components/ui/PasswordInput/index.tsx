@@ -12,7 +12,7 @@ export const INPUT_TYPE = {
 
 /**
  * Пропсы компонента PasswordInput.
- * Наследует все пропсы нашего кастомного TextField.
+ * Наследует все пропсы кастомного TextField.
  */
 type PasswordInputProps = Omit<
     ComponentPropsWithoutRef<typeof TextField>,

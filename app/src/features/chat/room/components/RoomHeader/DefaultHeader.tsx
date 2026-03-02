@@ -4,6 +4,7 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
 import { useToast } from "@/components/ui/Toast";
+import { useGroupPresence } from "@/features/presence/hooks/useGroupPresence";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
 import { RoomHeaderActions } from "./components/RoomHeaderActions";
@@ -26,6 +27,8 @@ interface DefaultHeaderProps {
     onBack: () => void;
     /** Список печатающих пользователей */
     typingUsers?: string[];
+    /** Обработчик клика по заголовку (инфо) */
+    onInfoClick?: () => void;
 }
 
 /**
@@ -40,18 +43,23 @@ export function DefaultHeader({
     ending,
     onBack,
     typingUsers = [],
+    onInfoClick,
 }: DefaultHeaderProps) {
     const { t } = useTranslation();
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
     // Используем хук для вычисления всей информации о комнате
-    const { isDM, resolvedPeer, displayName, avatarUrl, memberNames } =
+    const { isDM, resolvedPeer, displayName, avatarUrl, isGroup } =
         useRoomHeaderInfo({ room, peerUser });
+
+    // Получаем данные о присутствии для групп
+    const memberIds = room?.room_members?.map((m) => m.user_id) ?? [];
+    const presence = useGroupPresence(isGroup ? memberIds : []);
 
     const toast = useToast();
 
     const handleInfoClick = () => {
-        if (resolvedPeer?.id) {
+        if (isDM && resolvedPeer?.id) {
             toast({
                 title: t(
                     "profile.notImplemented",
@@ -59,6 +67,8 @@ export function DefaultHeader({
                 ),
                 variant: "info",
             });
+        } else if (!isDM) {
+            onInfoClick?.();
         }
     };
 
@@ -96,7 +106,13 @@ export function DefaultHeader({
                     </Box>
                 )}
 
-                <Flex align="center" gap="3" className={styles.titleArea}>
+                <Flex
+                    align="center"
+                    gap="2"
+                    className={styles.titleWrapper}
+                    onClick={handleInfoClick}
+                    style={{ cursor: "pointer" }}
+                >
                     <Avatar size="sm" src={avatarUrl} name={displayName} />
 
                     <RoomHeaderTitle
@@ -104,7 +120,10 @@ export function DefaultHeader({
                         isEphemeral={room?.is_ephemeral}
                         isDM={isDM}
                         peer={resolvedPeer}
-                        memberNames={memberNames}
+                        membersCount={
+                            isGroup ? room?.room_members?.length : undefined
+                        }
+                        onlineCount={isGroup ? presence.onlineCount : undefined}
                         onClick={handleInfoClick}
                         typingText={typingText}
                     />
@@ -115,6 +134,7 @@ export function DefaultHeader({
                 isEphemeral={room?.is_ephemeral}
                 onEndSession={onEndSession}
                 ending={ending}
+                onInfoClick={isGroup ? handleInfoClick : undefined}
             />
         </header>
     );

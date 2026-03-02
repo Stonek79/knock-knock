@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { usePresence } from "@/features/presence";
-import { USER_WEB_STATUS } from "@/lib/constants/user";
+import { USER_WEB_STATUS } from "@/lib/constants";
 import type { PeerUser } from "@/lib/types/room";
 import styles from "../roomheader.module.css";
 
@@ -14,8 +14,10 @@ interface RoomHeaderTitleProps {
     isDM: boolean;
     /** Данные собеседника */
     peer?: PeerUser | null;
-    /** Список имен участников (для групп) */
-    memberNames?: string;
+    /** Количество участников (для групп) */
+    membersCount?: number;
+    /** Количество участников онлайн (для групп) */
+    onlineCount?: number;
     /** Текст индикатора печати */
     typingText?: string | null;
     /** Обработчик клика по заголовку */
@@ -30,7 +32,8 @@ export function RoomHeaderTitle({
     isEphemeral,
     isDM,
     peer,
-    memberNames,
+    membersCount,
+    onlineCount,
     typingText,
     onClick,
 }: RoomHeaderTitleProps) {
@@ -65,10 +68,16 @@ export function RoomHeaderTitle({
             );
         }
 
-        if (memberNames) {
+        if (!isDM && membersCount !== undefined) {
+            const onlineText =
+                onlineCount !== undefined && onlineCount > 0
+                    ? `, ${onlineCount} ${t("chat.online", "в сети")}`
+                    : "";
+
             return (
-                <span className={`${styles.subtitle} ${styles.membersList}`}>
-                    {memberNames}
+                <span className={styles.subtitle}>
+                    {membersCount} {t("chat.group.membersCount", "участников")}
+                    {onlineText}
                 </span>
             );
         }

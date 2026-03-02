@@ -1,4 +1,4 @@
-import { Phone, Trash2, Video } from "lucide-react";
+import { Info, Phone, Trash2, Video } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +13,8 @@ interface RoomHeaderActionsProps {
     onEndSession?: () => void;
     /** Флаг загрузки при завершении */
     ending?: boolean;
+    /** Обработчик открытия инфо-панели */
+    onInfoClick?: () => void;
 }
 
 /**
@@ -23,6 +25,7 @@ export function RoomHeaderActions({
     isEphemeral,
     onEndSession,
     ending,
+    onInfoClick,
 }: RoomHeaderActionsProps) {
     const { t } = useTranslation();
 
@@ -58,6 +61,19 @@ export function RoomHeaderActions({
                     <Trash2 size={ICON_SIZE.sm} />
                     {t("chat.endSession")}
                 </Button>
+            )}
+
+            {onInfoClick && (
+                <IconButton
+                    variant="ghost"
+                    size="md"
+                    shape="round"
+                    onClick={onInfoClick}
+                    className={styles.actionButton}
+                    aria-label={t("chat.group.info", "Информация")}
+                >
+                    <Info size={ICON_SIZE.sm} />
+                </IconButton>
             )}
         </Flex>
     );

@@ -1,10 +1,14 @@
+import { useNavigate } from "@tanstack/react-router";
 import { Container } from "@/components/layout/Container";
 import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { GroupInfoPanel } from "../GroupInfoPanel";
 import styles from "./chatroom.module.css";
 import { ChatRoomDialogs } from "./components/ChatRoomDialogs";
+import { ChatRoomHeader } from "./components/ChatRoomHeader";
 import { ChatRoomInputArea } from "./components/ChatRoomInputArea";
 import { ChatRoomLayout } from "./components/ChatRoomLayout";
+import { ChatRoomMessages } from "./components/ChatRoomMessages";
 import { PrivacyBanner } from "./components/PrivacyBanner";
 import { useChatRoom } from "./hooks/useChatRoom";
 import { ChatRoomProvider } from "./store";
@@ -29,6 +33,8 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
  * Внутренний контент комнаты, имеющий доступ к ChatRoomStore.
  */
 function ChatRoomInternal({ roomId }: { roomId: string }) {
+    const navigate = useNavigate();
+
     const {
         t,
         user,
@@ -53,6 +59,8 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
         handleDeleteSelected,
         handleCopySelected,
         confirmEndSession,
+        showGroupInfoPanel,
+        setShowGroupInfoPanel,
     } = useChatRoom(roomId);
 
     if (isLoading) {
@@ -81,14 +89,26 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
     return (
         <ChatRoomLayout
             dialogs={
-                <ChatRoomDialogs
-                    showEndSession={showEndSessionDialog}
-                    onEndSessionChange={setShowEndSessionDialog}
-                    onEndSessionConfirm={confirmEndSession}
-                    showDeleteConfirm={showDeleteConfirmDialog}
-                    onDeleteConfirmChange={setShowDeleteConfirmDialog}
-                    onDeleteConfirm={handleDeleteSelected}
-                />
+                <>
+                    <ChatRoomDialogs
+                        showEndSession={showEndSessionDialog}
+                        onEndSessionChange={setShowEndSessionDialog}
+                        onEndSessionConfirm={confirmEndSession}
+                        showDeleteConfirm={showDeleteConfirmDialog}
+                        onDeleteConfirmChange={setShowDeleteConfirmDialog}
+                        onDeleteConfirm={handleDeleteSelected}
+                    />
+                    <GroupInfoPanel
+                        isOpen={showGroupInfoPanel}
+                        onOpenChange={setShowGroupInfoPanel}
+                        room={room}
+                        roomKey={roomKey}
+                        myUserId={user?.id}
+                        onLeaveGroupSuccess={() => {
+                            navigate({ to: "/" });
+                        }}
+                    />
+                </>
             }
             header={
                 <ChatRoomHeader
@@ -104,6 +124,7 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
                     messages={messages}
                     userId={user?.id}
                     typingUsers={typingUsers}
+                    onInfoClick={() => setShowGroupInfoPanel(true)}
                 />
             }
             banner={room?.is_ephemeral ? <PrivacyBanner /> : null}

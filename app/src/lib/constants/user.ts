@@ -8,3 +8,8 @@ export const USER_WEB_STATUS = {
     OFFLINE: "offline",
     TYPING: "typing",
 } as const;
+
+export const USER_GROUP_ROLE = {
+    ADMIN: "admin",
+    MEMBER: "member",
+} as const;
