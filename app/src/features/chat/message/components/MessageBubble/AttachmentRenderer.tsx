@@ -1,5 +1,5 @@
-import { Paperclip } from "lucide-react";
-import { type Dispatch, type SetStateAction, useMemo } from "react";
+import { ImageOff, Paperclip } from "lucide-react";
+import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import { Flex } from "@/components/layout/Flex";
 import { Text } from "@/components/ui/Text";
 import { ATTACHMENT_TYPES } from "@/lib/constants/storage";
@@ -35,6 +35,8 @@ export function AttachmentRenderer({
         [attachments],
     );
 
+    const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
     if (!attachments || attachments.length === 0) {
         return null;
     }
@@ -53,15 +55,36 @@ export function AttachmentRenderer({
                             className={styles.imageButton}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setLightboxIndex(imageIndex);
+                                if (!imageErrors[att.id]) {
+                                    setLightboxIndex(imageIndex);
+                                }
                             }}
                         >
-                            <img
-                                src={att.url}
-                                alt={att.file_name}
-                                className={styles.attachmentImage}
-                                loading="lazy"
-                            />
+                            {imageErrors[att.id] ? (
+                                <Flex
+                                    align="center"
+                                    justify="center"
+                                    className={styles.imagePlaceholder}
+                                >
+                                    <ImageOff
+                                        size={ICON_SIZE.xl}
+                                        className={styles.placeholderIcon}
+                                    />
+                                </Flex>
+                            ) : (
+                                <img
+                                    src={att.url}
+                                    alt={att.file_name}
+                                    className={styles.attachmentImage}
+                                    loading="lazy"
+                                    onError={() =>
+                                        setImageErrors((prev) => ({
+                                            ...prev,
+                                            [att.id]: true,
+                                        }))
+                                    }
+                                />
+                            )}
                         </button>
                     );
                 }

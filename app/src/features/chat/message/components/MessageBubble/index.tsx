@@ -163,7 +163,7 @@ export function MessageBubble({
                             {senderName}
                         </span>
                     )}
-                <Flex gap="1">
+                <Flex direction="column" gap="1">
                     <AttachmentRenderer
                         attachments={attachments || []}
                         setLightboxIndex={setLightboxIndex}

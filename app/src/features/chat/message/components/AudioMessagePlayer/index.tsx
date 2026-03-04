@@ -1,6 +1,7 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { ChevronUp, Pause, Play } from "lucide-react";
 import type { MouseEvent } from "react";
+import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
@@ -73,9 +74,6 @@ export function AudioMessagePlayer({
             // Останавливаем onPointerDown в capture phase ДО MessageBubble
             // Это предотвращает срабатывание useLongPress (выделение сообщения)
             onPointerDownCapture={(e) => {
-                // if (e.target !== e.currentTarget) {
-                //     return;
-                // }
                 e.stopPropagation();
             }}
             onClick={(e) => e.stopPropagation()}
@@ -100,12 +98,8 @@ export function AudioMessagePlayer({
                 )}
             </Button>
 
-            <Flex
-                direction="column"
-                justify="center"
-                className={styles.progressContainer}
-            >
-                {/* Слайдер прогресса */}
+            <Box className={styles.progressContainer}>
+                {/* Слайдер прогресса  */}
                 <SliderPrimitive.Root
                     value={[currentTime]}
                     max={duration || AUDIO_PLAYER.FALLBACK_DURATION}
@@ -159,7 +153,7 @@ export function AudioMessagePlayer({
                         </Button>
                     )}
                 </Flex>
-            </Flex>
+            </Box>
         </Flex>
     );
 }
