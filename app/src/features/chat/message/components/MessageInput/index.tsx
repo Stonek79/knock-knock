@@ -16,6 +16,7 @@ import { TextArea } from "@/components/ui/TextArea";
 import { useToast } from "@/components/ui/Toast";
 import { RECORDING_LIMITS } from "@/lib/constants/storage";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { useAudioRecording } from "../../hooks/useAudioRecording";
 import { useFileAttachments } from "../../hooks/useFileAttachments";
 import { useMessageInput } from "../../hooks/useMessageInput";
 import { AttachmentPreviewModal } from "./../AttachmentPreviewModal";
@@ -77,6 +78,19 @@ export function MessageInput({
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Хук для записи аудио по долгому нажатию (Long Press)
+    const { onPointerDown, onPointerUp, onPointerLeave } = useAudioRecording({
+        onStartRecording: () => {
+            void startRecording();
+        },
+        onStopAndFinish: () => {
+            stopAndFinishRecording();
+        },
+        onCancelRecording: () => {
+            stopRecording();
+        },
+    });
 
     const {
         attachments,
@@ -260,7 +274,7 @@ export function MessageInput({
                         variant="ghost"
                         size="md"
                         shape="round"
-                        disabled={disabled || sending}
+                        disabled={disabled || sending || isRecording}
                         type="button"
                         className={clsx(
                             styles.actionButton,
@@ -270,19 +284,16 @@ export function MessageInput({
                             "chat.voiceMessage",
                             "Голосовое сообщение",
                         )}
+                        // Long Press для записи — запись начнётся только если держать >400мс
                         onPointerDown={(e) => {
                             e.currentTarget.setPointerCapture(e.pointerId);
-                            // Игнорируем promise
-                            void startRecording();
+                            onPointerDown(e);
                         }}
                         onPointerUp={(e) => {
                             e.currentTarget.releasePointerCapture(e.pointerId);
-                            stopAndFinishRecording();
+                            onPointerUp();
                         }}
-                        onPointerCancel={(e) => {
-                            e.currentTarget.releasePointerCapture(e.pointerId);
-                            stopRecording();
-                        }}
+                        onPointerLeave={onPointerLeave}
                     >
                         <Mic size={ICON_SIZE.md} />
                     </IconButton>

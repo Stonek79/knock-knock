@@ -9,12 +9,13 @@ interface TranscriptBlockProps {
 /**
  * Блок отображения транскрипции голосового сообщения.
  * Управление видимостью осуществляется из MessageBubble.
+ * Текст автоматически переносится с сохранением абзацев.
  */
 export function TranscriptBlock({ content }: TranscriptBlockProps) {
     return (
         <Box className={styles.transcriptContainer}>
             <Box className={styles.transcriptContent}>
-                <Text className={styles.content}>{content}</Text>
+                <Text className={styles.transcriptText}>{content}</Text>
             </Box>
         </Box>
     );

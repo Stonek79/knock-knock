@@ -29,6 +29,7 @@
     /* =========================================== */
     /* Typography System (Static for now, scalable later if needed) */
     /* =========================================== */
+    --text-xxs: 10px;
     --text-xs: 12px;
     --text-sm: 14px;
     --text-base: 16px;
@@ -131,6 +132,7 @@
     --max-h-attachment-img: 250px;
     --min-w-audio-player: 250px;
     --max-h-textarea: 160px;
+    --audio-play-btn-size: 40px;
 
     /* Viewport Proportions */
     --vw-dialog: 90vw;
@@ -155,6 +157,7 @@
     --z-sticky: 200;
     --z-modal: 300;
     --z-toast: 400;
+    --z-highlight: 450;
     --z-tooltip: 500;
     --z-overlay: 9999;
 

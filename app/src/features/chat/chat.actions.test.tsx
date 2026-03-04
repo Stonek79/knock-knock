@@ -155,9 +155,10 @@ describe("Действия с сообщениями в чате", () => {
 
         const myMsg = screen.getByText("My Message");
 
-        // Клик может вызывать обновление состояния выделения
         await act(async () => {
-            fireEvent.mouseUp(myMsg);
+            fireEvent.pointerDown(myMsg);
+            await new Promise((r) => setTimeout(r, 500));
+            fireEvent.pointerUp(myMsg);
         });
 
         const copyBtn = screen.getByRole("button", { name: /копировать/i });
@@ -173,15 +174,17 @@ describe("Действия с сообщениями в чате", () => {
 
         const myMsg = screen.getByText("My Message");
         await act(async () => {
-            fireEvent.mouseUp(myMsg);
+            fireEvent.pointerDown(myMsg);
+            await new Promise((r) => setTimeout(r, 500));
+            fireEvent.pointerUp(myMsg);
         });
 
-        const deleteBtn = screen.getByRole("button", { name: /удалить/i });
+        const deleteBtn = screen.getByRole("button", { name: /^Удалить$/i });
         await act(async () => {
             fireEvent.click(deleteBtn);
         });
 
-        const confirmBtn = screen.getByRole("button", { name: /удалить/i });
+        const confirmBtn = screen.getByRole("button", { name: /^Удалить$/i });
         await act(async () => {
             fireEvent.click(confirmBtn);
         });
@@ -196,7 +199,9 @@ describe("Действия с сообщениями в чате", () => {
 
         const myMsg = screen.getByText("My Message");
         await act(async () => {
-            fireEvent.mouseUp(myMsg);
+            fireEvent.pointerDown(myMsg);
+            await new Promise((r) => setTimeout(r, 500));
+            fireEvent.pointerUp(myMsg);
         });
 
         const editBtn = screen.getByRole("button", { name: /редактировать/i });
@@ -231,7 +236,9 @@ describe("Действия с сообщениями в чате", () => {
 
         const otherMsg = screen.getByText("Other Message");
         await act(async () => {
-            fireEvent.mouseUp(otherMsg);
+            fireEvent.pointerDown(otherMsg);
+            await new Promise((r) => setTimeout(r, 500));
+            fireEvent.pointerUp(otherMsg);
         });
 
         const editBtn = screen.queryByRole("button", {
@@ -245,7 +252,9 @@ describe("Действия с сообщениями в чате", () => {
 
         const myMsg = screen.getByText("My Message");
         await act(async () => {
-            fireEvent.mouseUp(myMsg);
+            fireEvent.pointerDown(myMsg);
+            await new Promise((r) => setTimeout(r, 500));
+            fireEvent.pointerUp(myMsg);
         });
 
         const editBtn = screen.getByRole("button", { name: /редактировать/i });

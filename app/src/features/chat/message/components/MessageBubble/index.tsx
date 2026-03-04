@@ -11,6 +11,7 @@ import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
 import { Text } from "@/components/ui/Text";
 import { useLongPress } from "@/hooks/useLongPress";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { MESSAGE_POSITION, MESSAGE_STATUS } from "@/lib/constants";
 import { ATTACHMENT_TYPES } from "@/lib/constants/storage";
 import type { MessagePosition, MessageStatus } from "@/lib/types/message";
@@ -84,6 +85,19 @@ export function MessageBubble({
 
     const userColor = senderName ? getUserColor(senderName) : undefined;
 
+    // Определяем мобильное устройство
+    const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
+
+    // Long Press для выделения сообщения (мобилка)
+    const { onPointerDown, onPointerUp, onPointerLeave } = useLongPress(
+        () => {
+            if (!isEditing) {
+                onToggleSelection?.();
+            }
+        },
+        { delay: 400 },
+    );
+
     const wrapper = clsx(styles.bubbleWrapper, {
         [styles.own]: isOwn,
         [styles.peer]: !isOwn,
@@ -96,27 +110,31 @@ export function MessageBubble({
         [styles.bubbleImageOnly]: isImageOnly,
     });
 
-    // Обработка длительного нажатия (Long Press) для выделения сообщения
-    const longPressEventHandlers = useLongPress(
-        () => {
-            if (!isEditing) {
-                onToggleSelection?.();
-            }
-        },
-        () => {
-            // На десктопе полезен обычный клик по баблу для выделения
-            if (!isEditing) {
-                onToggleSelection?.();
-            }
-        },
-        { delay: 400 },
-    );
-
     return (
         <Flex
             className={wrapper}
             data-group-position={groupPosition}
-            {...longPressEventHandlers}
+            // Гибридный подход: мобилка = Long Press, десктоп = клик
+            onPointerDown={(e) => {
+                // Игнорируем если клик по интерактивному элементу
+                const target = e.target as HTMLElement;
+                if (
+                    target.closest(
+                        "button, a, img, [data-interactive], .imageButton, .transcriptToggle",
+                    )
+                ) {
+                    return;
+                }
+                onPointerDown(e);
+            }}
+            onPointerUp={onPointerUp}
+            onPointerLeave={onPointerLeave}
+            onClick={() => {
+                // На десктопе — выделение кликом
+                if (!isMobile && !isEditing && onToggleSelection) {
+                    onToggleSelection();
+                }
+            }}
         >
             {!isOwn && (
                 <Box className={styles.avatarContainer}>
@@ -145,7 +163,7 @@ export function MessageBubble({
                             {senderName}
                         </span>
                     )}
-                <Flex direction="column" gap="1">
+                <Flex gap="1">
                     <AttachmentRenderer
                         attachments={attachments || []}
                         setLightboxIndex={setLightboxIndex}

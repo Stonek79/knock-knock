@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
 import { ROUTES } from "@/lib/constants";
 import styles from "./chatlist.module.css";
@@ -68,24 +69,22 @@ export function ChatListItem({
  */
 function ChatListItemContent({ chat }: { chat: ChatItem }) {
     return (
-        <div className={styles.itemContainer}>
+        <Flex width="100%" minWidth={0} gap="3">
             <Avatar
                 size="md"
                 src={chat.avatar}
                 name={chat.name.replace(/🔒\s*/, "")}
             />
-            <div className={styles.chatInfo}>
+            <Box className={styles.chatInfo}>
                 <div className={styles.name}>
                     <span className={styles.chatName}>{chat.name}</span>
                     <span className={styles.chatTime}>{chat.time}</span>
                 </div>
-                <span className={clsx(styles.lastMessage, styles.truncate)}>
-                    {chat.lastMessage}
-                </span>
-            </div>
+                <span className={styles.lastMessage}>{chat.lastMessage}</span>
+            </Box>
             {chat?.unread && chat.unread > 0 ? (
                 <Box className={styles.unreadBadge}>{chat?.unread}</Box>
             ) : null}
-        </div>
+        </Flex>
     );
 }

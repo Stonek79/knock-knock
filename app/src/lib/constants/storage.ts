@@ -58,3 +58,15 @@ export const AUDIO_PLAYER = {
     /** Значение для Chrome WebM duration workaround */
     SEEK_TO_END_VALUE: 1e10,
 } as const;
+
+/** Константы для магических строк и значений в аудиоплеере */
+export const AUDIO_PLAYER_CONSTANTS = {
+    /** Префикс для blob: URL (незашифрованные данные) */
+    BLOB_PREFIX: "blob:",
+    /** Префикс для data: URL (inline данные) */
+    DATA_PREFIX: "data:",
+    /** Значение по умолчанию для времени при ошибке/NaN */
+    DEFAULT_TIME: "0:00",
+    /** Разделитель для отображения времени (текущее / общее) */
+    TIME_SEPARATOR: " / ",
+} as const;

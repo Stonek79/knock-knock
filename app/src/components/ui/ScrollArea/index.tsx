@@ -33,9 +33,9 @@ export const ScrollArea = forwardRef<
             className={clsx(styles.root, className)}
             {...props}
         >
-            <ScrollAreaPrimitive.Viewport className={styles.viewport}>
-                {children}
-            </ScrollAreaPrimitive.Viewport>
+            {/* <ScrollAreaPrimitive.Viewport className={styles.viewport}> */}
+            {children}
+            {/* </ScrollAreaPrimitive.Viewport> */}
 
             {scrollbars !== "horizontal" && (
                 <ScrollAreaPrimitive.Scrollbar

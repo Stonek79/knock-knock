@@ -1,39 +1,48 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import clsx from "clsx";
 import { ChevronUp, Pause, Play } from "lucide-react";
-import { type MouseEvent, useEffect, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 import { Flex } from "@/components/layout/Flex";
+import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
-import { AUDIO_PLAYER, DEFAULT_MIME_TYPES } from "@/lib/constants/storage";
-import { decryptBlob } from "@/lib/crypto/messages";
+import { AUDIO_PLAYER, AUDIO_PLAYER_CONSTANTS } from "@/lib/constants/storage";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { formatTime } from "@/lib/utils/time";
+import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 import styles from "./AudioMessagePlayer.module.css";
 
-// TODO: большой и сложный компонент, явно требует декомпозиции, надо подумать над вынесением логики в отдельные хуки и утилиты.
-// убрать магические строки в константы, например: "blob:", "data:", "0:00", "0.00"
-
-interface AudioMessagePlayerProps {
+/**
+ * Пропсы компонента AudioMessagePlayer.
+ */
+export interface AudioMessagePlayerProps {
+    /** URL аудиофайла (зашифрованный или blob:/data:) */
     src: string;
+    /** Своё ли сообщение (влияет на стиль кнопки) */
     isOwn: boolean;
+    /** Есть ли транскрипция у сообщения */
     hasTranscript?: boolean;
+    /** Развёрнута ли транскрипция */
     isTranscriptExpanded?: boolean;
+    /** Обработчик переключения видимости транскрипции */
     onToggleTranscript?: () => void;
+    /** Ключ комнаты для расшифровки */
     roomKey?: CryptoKey;
+    /** MIME тип аудио (по умолчанию audio/webm) */
     mimeType?: string;
 }
-
-const formatTime = (time: number) => {
-    if (!time || Number.isNaN(time)) {
-        return "0:00";
-    }
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-};
 
 /**
  * Компонент для проигрывания голосовых и аудио сообщений в чате.
  * Premium Telegram-like дизайн с точечным прогрессом.
+ *
+ * @example
+ * ```tsx
+ * <AudioMessagePlayer
+ *   src={message.audioUrl}
+ *   isOwn={false}
+ *   roomKey={roomKey}
+ *   hasTranscript
+ * />
+ * ```
  */
 export function AudioMessagePlayer({
     src,
@@ -44,152 +53,43 @@ export function AudioMessagePlayer({
     roomKey,
     mimeType,
 }: AudioMessagePlayerProps) {
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-    const [decryptedSrc, setDecryptedSrc] = useState<string | undefined>(
-        undefined,
-    );
-
-    useEffect(() => {
-        let isMounted = true;
-        let objectUrl = "";
-
-        const loadAndDecrypt = async () => {
-            if (!src) {
-                return;
-            }
-
-            // blob: и data: URL уже содержат незашифрованные данные (mock-режим)
-            if (
-                !roomKey ||
-                src.startsWith("blob:") ||
-                src.startsWith("data:")
-            ) {
-                if (isMounted) {
-                    setDecryptedSrc(src);
-                }
-                return;
-            }
-
-            try {
-                const response = await fetch(src);
-                const encryptedBlob = await response.blob();
-                const decryptedBlob = await decryptBlob(
-                    encryptedBlob,
-                    roomKey,
-                    mimeType || DEFAULT_MIME_TYPES.WEBM_AUDIO,
-                );
-
-                if (isMounted) {
-                    objectUrl = URL.createObjectURL(decryptedBlob);
-                    setDecryptedSrc(objectUrl);
-                }
-            } catch (e) {
-                console.error("Failed to decrypt audio blob", e);
-                if (isMounted) {
-                    setDecryptedSrc(src);
-                }
-            }
-        };
-
-        loadAndDecrypt();
-
-        return () => {
-            isMounted = false;
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-            }
-        };
-    }, [src, roomKey, mimeType]);
-
-    useEffect(() => {
-        const audio = audioRef.current;
-        if (!audio) {
-            return;
-        }
-
-        const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-        const onLoadedMetadata = () => {
-            // Chrome WebM баг: MediaRecorder blobs не содержат длительность в метаданных,
-            // audio.duration возвращает Infinity. Обходной путь: seek к концу файла.
-            if (!Number.isFinite(audio.duration) || audio.duration === 0) {
-                audio.currentTime = AUDIO_PLAYER.SEEK_TO_END_VALUE;
-                audio.addEventListener(
-                    "seeked",
-                    () => {
-                        setDuration(audio.duration);
-                        audio.currentTime = 0; // Возвращаемся к началу
-                    },
-                    { once: true },
-                );
-            } else {
-                setDuration(audio.duration);
-            }
-        };
-        const onError = () => {
-            console.error("[AudioPlayer] audio error:", audio.error);
-        };
-        const onEnded = () => {
-            setIsPlaying(false);
-            setCurrentTime(0);
-        };
-
-        audio.addEventListener("timeupdate", onTimeUpdate);
-        audio.addEventListener("loadedmetadata", onLoadedMetadata);
-        audio.addEventListener("ended", onEnded);
-        audio.addEventListener("error", onError);
-
-        return () => {
-            audio.removeEventListener("timeupdate", onTimeUpdate);
-            audio.removeEventListener("loadedmetadata", onLoadedMetadata);
-            audio.removeEventListener("ended", onEnded);
-            audio.removeEventListener("error", onError);
-        };
-    }, []);
-
-    const togglePlay = (e: MouseEvent) => {
-        e.stopPropagation();
-        if (!audioRef.current) {
-            return;
-        }
-
-        if (isPlaying) {
-            audioRef.current.pause();
-        } else {
-            audioRef.current.play();
-        }
-        setIsPlaying(!isPlaying);
-    };
-
-    const handleSeek = (value: number[]) => {
-        if (!audioRef.current || value.length === 0) {
-            return;
-        }
-        audioRef.current.currentTime = value[0];
-        setCurrentTime(value[0]);
-    };
-
-    const buttonClass = clsx(styles.playButton, {
-        [styles.playButtonOwn]: isOwn,
-        [styles.playButtonPeer]: !isOwn,
+    const { state, controls, audioRef } = useAudioPlayer({
+        src,
+        roomKey,
+        mimeType,
     });
+
+    const { currentTime, duration, isPlaying, decryptedSrc } = state;
+    const { togglePlay, handleSeek } = controls;
+
+    const buttonVariant = isOwn ? "soft" : "solid";
+    const buttonIntent = isOwn ? "primary" : "neutral";
 
     return (
         <Flex
             className={styles.container}
             align="center"
             gap="3"
+            // Останавливаем onPointerDown в capture phase ДО MessageBubble
+            // Это предотвращает срабатывание useLongPress (выделение сообщения)
+            onPointerDownCapture={(e) => {
+                // if (e.target !== e.currentTarget) {
+                //     return;
+                // }
+                e.stopPropagation();
+            }}
             onClick={(e) => e.stopPropagation()}
         >
             <audio ref={audioRef} src={decryptedSrc} preload="metadata">
                 <track kind="captions" />
             </audio>
 
-            <button
-                type="button"
-                className={buttonClass}
+            {/* Кнопка Play/Pause */}
+            <Button
+                variant={buttonVariant}
+                intent={buttonIntent}
+                size="sm"
+                className={styles.playButton}
                 onClick={togglePlay}
                 aria-label={isPlaying ? "Pause" : "Play"}
             >
@@ -198,13 +98,14 @@ export function AudioMessagePlayer({
                 ) : (
                     <Play size={ICON_SIZE.sm} />
                 )}
-            </button>
+            </Button>
 
             <Flex
                 direction="column"
                 justify="center"
                 className={styles.progressContainer}
             >
+                {/* Слайдер прогресса */}
                 <SliderPrimitive.Root
                     value={[currentTime]}
                     max={duration || AUDIO_PLAYER.FALLBACK_DURATION}
@@ -224,27 +125,38 @@ export function AudioMessagePlayer({
                     justify="between"
                     align="center"
                     className={styles.timerRow}
+                    gap="2"
                 >
                     <Text size="xs" className={styles.timeText}>
                         {isPlaying || currentTime > 0
-                            ? `${formatTime(currentTime)} / ${formatTime(duration)}`
+                            ? `${formatTime(currentTime)}${AUDIO_PLAYER_CONSTANTS.TIME_SEPARATOR}${formatTime(duration)}`
                             : formatTime(duration)}
                     </Text>
+
                     {hasTranscript && onToggleTranscript && (
-                        <button
-                            type="button"
+                        <Button
+                            variant="ghost"
+                            intent="neutral"
+                            size="xs"
                             className={styles.transcriptToggle}
-                            onClick={(e) => {
+                            onClick={(e: MouseEvent) => {
                                 e.stopPropagation();
                                 onToggleTranscript();
                             }}
+                            aria-label={
+                                isTranscriptExpanded
+                                    ? "Свернуть транскрипцию"
+                                    : "Развернуть транскрипцию"
+                            }
                         >
                             {isTranscriptExpanded ? (
                                 <ChevronUp size={ICON_SIZE.xs} />
                             ) : (
-                                "→A"
+                                <Text size="xs" weight="bold">
+                                    →A
+                                </Text>
                             )}
-                        </button>
+                        </Button>
                     )}
                 </Flex>
             </Flex>

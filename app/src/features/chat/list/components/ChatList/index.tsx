@@ -112,17 +112,15 @@ export function ChatList() {
             ) : (
                 // Список чатов
                 <ScrollArea type="hover" className={styles.chatList}>
-                    <div>
-                        {filteredChats.map((chat) => (
-                            <ChatListItem
-                                key={chat.id}
-                                chat={{
-                                    ...chat,
-                                    unread: getCount(chat.id),
-                                }}
-                            />
-                        ))}
-                    </div>
+                    {filteredChats.map((chat) => (
+                        <ChatListItem
+                            key={chat.id}
+                            chat={{
+                                ...chat,
+                                unread: getCount(chat.id),
+                            }}
+                        />
+                    ))}
                 </ScrollArea>
             )}
 

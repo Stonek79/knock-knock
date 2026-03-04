@@ -3,31 +3,19 @@
     min-width: var(--min-w-audio-player);
     padding: var(--space-1) 0;
     box-sizing: border-box;
+    /* Предотвращаем выделение текста при кликах */
+    user-select: none;
+    -webkit-user-select: none;
 }
 
+/* Кнопка Play/Pause — переопределение стилей Button */
 .playButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--audio-play-btn-size, 44px);
-    height: var(--audio-play-btn-size, 44px);
+    width: var(--audio-play-btn-size, 40px);
+    height: var(--audio-play-btn-size, 40px);
     border-radius: var(--kk-radius-full);
-    border: none;
-    cursor: pointer;
-    transition:
-        transform var(--transition-fast),
-        background-color var(--transition-base);
+    padding: 0;
     flex-shrink: 0;
-}
-
-.playButtonOwn {
-    background: var(--bubble-out-fg);
-    color: var(--accent-primary);
-}
-
-.playButtonPeer {
-    background: var(--accent-primary);
-    color: var(--bg-app);
+    z-index: var(--z-highlight);
 }
 
 .playButton:hover {
@@ -54,6 +42,7 @@
     width: 100%;
     height: var(--space-4);
     cursor: pointer;
+    z-index: var(--z-highlight);
 }
 
 .audioTrack {
@@ -115,16 +104,14 @@
     margin-top: calc(var(--space-1) * -1);
 }
 
-/* Кнопка переключения видимости транскрипции */
+/* Кнопка переключения видимости транскрипции — переопределение стилей Button */
 .transcriptToggle {
-    background: transparent;
-    border: none;
-    color: inherit;
-    display: flex;
-    align-items: center;
-    padding: var(--space-1) var(--space-1);
-    cursor: pointer;
+    min-width: auto;
+    padding: var(--space-1);
     opacity: 0.8;
-    font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-xs);
+    z-index: var(--z-highlight);
+}
+
+.transcriptToggle:hover {
+    opacity: 1;
 }
