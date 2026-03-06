@@ -1,0 +1,19 @@
+.container {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    height: 100%;
+    flex: 1;
+    overflow: hidden;
+}
+
+.chatList {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-2) 0;
+}
+
+.muted {
+    color: var(--muted);
+}

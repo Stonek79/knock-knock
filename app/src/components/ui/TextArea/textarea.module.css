@@ -12,7 +12,7 @@
     font-family: var(--font-family);
     font-size: var(--text-base);
     padding: var(--space-1);
-    resize: vertical;
+    resize: none;
     transition:
         border-color var(--transition-fast),
         box-shadow var(--transition-fast);

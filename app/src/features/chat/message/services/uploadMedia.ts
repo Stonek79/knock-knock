@@ -1,4 +1,3 @@
-import type { z } from "zod";
 import {
     ATTACHMENT_TYPES,
     DEFAULT_MIME_TYPES,
@@ -6,10 +5,8 @@ import {
     STORAGE_BUCKETS,
 } from "@/lib/constants";
 import { encryptBlob } from "@/lib/crypto/messages";
-import type { messageAttachmentSchema } from "@/lib/schemas/message";
 import { isMock, supabase } from "@/lib/supabase";
-
-export type Attachment = z.infer<typeof messageAttachmentSchema>;
+import type { Attachment } from "@/lib/types/message";
 
 /** Метка для голосовых сообщений в метаданных */
 const VOICE_MESSAGE_LABEL = "Voice Message";

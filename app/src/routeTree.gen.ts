@@ -24,6 +24,7 @@ import { Route as AuthSettingsIndexRouteImport } from './routes/_auth/settings/i
 import { Route as AuthPrivateIndexRouteImport } from './routes/_auth/private/index'
 import { Route as AuthChatIndexRouteImport } from './routes/_auth/chat/index'
 import { Route as AuthAdminIndexRouteImport } from './routes/_auth/admin/index'
+import { Route as AuthSettingsStorageRouteImport } from './routes/_auth/settings/storage'
 import { Route as AuthSettingsSecurityRouteImport } from './routes/_auth/settings/security'
 import { Route as AuthSettingsPrivacyRouteImport } from './routes/_auth/settings/privacy'
 import { Route as AuthSettingsNotificationsRouteImport } from './routes/_auth/settings/notifications'
@@ -108,6 +109,11 @@ const AuthAdminIndexRoute = AuthAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthAdminRoute,
 } as any)
+const AuthSettingsStorageRoute = AuthSettingsStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => AuthSettingsRoute,
+} as any)
 const AuthSettingsSecurityRoute = AuthSettingsSecurityRouteImport.update({
   id: '/security',
   path: '/security',
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/settings/privacy': typeof AuthSettingsPrivacyRoute
   '/settings/security': typeof AuthSettingsSecurityRoute
+  '/settings/storage': typeof AuthSettingsStorageRoute
   '/admin/': typeof AuthAdminIndexRoute
   '/chat/': typeof AuthChatIndexRoute
   '/private/': typeof AuthPrivateIndexRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/settings/privacy': typeof AuthSettingsPrivacyRoute
   '/settings/security': typeof AuthSettingsSecurityRoute
+  '/settings/storage': typeof AuthSettingsStorageRoute
   '/admin': typeof AuthAdminIndexRoute
   '/chat': typeof AuthChatIndexRoute
   '/private': typeof AuthPrivateIndexRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/_auth/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/_auth/settings/privacy': typeof AuthSettingsPrivacyRoute
   '/_auth/settings/security': typeof AuthSettingsSecurityRoute
+  '/_auth/settings/storage': typeof AuthSettingsStorageRoute
   '/_auth/admin/': typeof AuthAdminIndexRoute
   '/_auth/chat/': typeof AuthChatIndexRoute
   '/_auth/private/': typeof AuthPrivateIndexRoute
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/privacy'
     | '/settings/security'
+    | '/settings/storage'
     | '/admin/'
     | '/chat/'
     | '/private/'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/privacy'
     | '/settings/security'
+    | '/settings/storage'
     | '/admin'
     | '/chat'
     | '/private'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/_auth/settings/notifications'
     | '/_auth/settings/privacy'
     | '/_auth/settings/security'
+    | '/_auth/settings/storage'
     | '/_auth/admin/'
     | '/_auth/chat/'
     | '/_auth/private/'
@@ -415,6 +427,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthAdminIndexRouteImport
       parentRoute: typeof AuthAdminRoute
+    }
+    '/_auth/settings/storage': {
+      id: '/_auth/settings/storage'
+      path: '/storage'
+      fullPath: '/settings/storage'
+      preLoaderRoute: typeof AuthSettingsStorageRouteImport
+      parentRoute: typeof AuthSettingsRoute
     }
     '/_auth/settings/security': {
       id: '/_auth/settings/security'
@@ -540,6 +559,7 @@ interface AuthSettingsRouteChildren {
   AuthSettingsNotificationsRoute: typeof AuthSettingsNotificationsRoute
   AuthSettingsPrivacyRoute: typeof AuthSettingsPrivacyRoute
   AuthSettingsSecurityRoute: typeof AuthSettingsSecurityRoute
+  AuthSettingsStorageRoute: typeof AuthSettingsStorageRoute
   AuthSettingsIndexRoute: typeof AuthSettingsIndexRoute
 }
 
@@ -549,6 +569,7 @@ const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
   AuthSettingsNotificationsRoute: AuthSettingsNotificationsRoute,
   AuthSettingsPrivacyRoute: AuthSettingsPrivacyRoute,
   AuthSettingsSecurityRoute: AuthSettingsSecurityRoute,
+  AuthSettingsStorageRoute: AuthSettingsStorageRoute,
   AuthSettingsIndexRoute: AuthSettingsIndexRoute,
 }
 

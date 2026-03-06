@@ -9,7 +9,7 @@ export interface TextAreaProps
 }
 
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
-    ({ size = "md", className, ...props }, ref) => {
+    ({ size = "sm", className, ...props }, ref) => {
         const classes = clsx(styles.textArea, styles[size], className);
 
         return <textarea ref={ref} className={classes} {...props} />;

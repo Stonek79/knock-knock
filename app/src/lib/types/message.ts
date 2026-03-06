@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type {
+    messageAttachmentSchema,
     messagePositionSchema,
     messageSchema,
 } from "@/lib/schemas/message";
@@ -40,3 +41,8 @@ export interface DecryptedMessageWithProfile extends DecryptedMessage {
         avatar_url: string | null;
     } | null;
 }
+
+/**
+ * Структура вложения сообщения
+ */
+export type Attachment = z.infer<typeof messageAttachmentSchema>;

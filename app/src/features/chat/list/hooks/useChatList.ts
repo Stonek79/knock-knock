@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import type { RoomType } from "@/lib/types/room";
 import { formatChatTime } from "@/lib/utils/date";
 import { useAuthStore } from "@/stores/auth";
-import type { ChatItem } from "../components/ChatList/ChatListItem";
+import type { ChatItem } from "../ChatList/ChatListItem";
 
 /**
  * Тип результата запроса комнат из БД.
@@ -46,6 +46,7 @@ export function useChatList() {
                 return [];
             }
 
+            // TODO: правильно ли офрмлена работа с базой, может можно есть другой подход?
             const { data, error } = await supabase
                 .from(DB_TABLES.ROOM_MEMBERS)
                 .select(`

@@ -1,7 +1,7 @@
 import { useRouter } from "@tanstack/react-router";
 import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
-import { DefaultHeader } from "./DefaultHeader";
-import { SelectionHeader } from "./SelectionHeader";
+import { DefaultHeader } from "./components/DefaultHeader";
+import { SelectionHeader } from "./components/SelectionHeader";
 
 interface RoomHeaderProps {
     /** Данные комнаты */

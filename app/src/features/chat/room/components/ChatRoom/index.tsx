@@ -1,16 +1,15 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Container } from "@/components/layout/Container";
 import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
-import { GroupInfoPanel } from "../GroupInfoPanel";
-import styles from "./chatroom.module.css";
+import { useChatRoomData } from "@/features/chat/room/hooks/useChatRoomData";
 import { ChatRoomDialogs } from "./components/ChatRoomDialogs";
+import { ChatRoomGroupInfo } from "./components/ChatRoomGroupInfo";
 import { ChatRoomHeader } from "./components/ChatRoomHeader";
 import { ChatRoomInputArea } from "./components/ChatRoomInputArea";
 import { ChatRoomLayout } from "./components/ChatRoomLayout";
 import { ChatRoomMessages } from "./components/ChatRoomMessages";
 import { PrivacyBanner } from "./components/PrivacyBanner";
-import { useChatRoom } from "./hooks/useChatRoom";
 import { ChatRoomProvider } from "./store";
 
 interface ChatRoomProps {
@@ -30,45 +29,19 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 }
 
 /**
- * Внутренний контент комнаты, имеющий доступ к ChatRoomStore.
+ * Внутренний контент комнаты — тонкий оркестратор.
+ *
+ * Отвечает только за: загрузку room (для guard и Privacy Banner), error/loading стейты и Layout.
  */
 function ChatRoomInternal({ roomId }: { roomId: string }) {
-    const navigate = useNavigate();
-
-    const {
-        t,
-        user,
-        room,
-        roomKey,
-        peerUser,
-        messages,
-        messagesLoading,
-        isLoading,
-        isFavoritesView,
-        error,
-        typingUsers,
-        setTyping,
-        ending,
-        firstUnreadId,
-        scrollRef,
-        showEndSessionDialog,
-        setShowEndSessionDialog,
-        showDeleteConfirmDialog,
-        setShowDeleteConfirmDialog,
-        handleSend,
-        handleDeleteSelected,
-        handleCopySelected,
-        confirmEndSession,
-        showGroupInfoPanel,
-        setShowGroupInfoPanel,
-    } = useChatRoom(roomId);
+    const { t } = useTranslation();
+    const { data: roomInfo, isLoading, error } = useChatRoomData(roomId);
+    const room = roomInfo?.room;
 
     if (isLoading) {
         return (
             <Flex justify="center" align="center" height="100%">
-                <span className={styles.loadingText}>
-                    {t("common.loading", "Загрузка чата...")}
-                </span>
+                <span>{t("common.loading", "Загрузка чата...")}</span>
             </Flex>
         );
     }
@@ -80,72 +53,31 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
                     <AlertTitle>
                         {t("common.error", "Ошибка доступа")}
                     </AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>
+                        {error instanceof Error
+                            ? error.message
+                            : t("common.unknownError")}
+                    </AlertDescription>
                 </Alert>
             </Container>
         );
     }
 
+    if (!room) {
+        return null;
+    }
+
     return (
         <ChatRoomLayout
+            header={<ChatRoomHeader roomId={roomId} />}
+            banner={room.is_ephemeral ? <PrivacyBanner /> : undefined}
+            messages={<ChatRoomMessages roomId={roomId} />}
+            input={<ChatRoomInputArea roomId={roomId} />}
             dialogs={
                 <>
-                    <ChatRoomDialogs
-                        showEndSession={showEndSessionDialog}
-                        onEndSessionChange={setShowEndSessionDialog}
-                        onEndSessionConfirm={confirmEndSession}
-                        showDeleteConfirm={showDeleteConfirmDialog}
-                        onDeleteConfirmChange={setShowDeleteConfirmDialog}
-                        onDeleteConfirm={handleDeleteSelected}
-                    />
-                    <GroupInfoPanel
-                        isOpen={showGroupInfoPanel}
-                        onOpenChange={setShowGroupInfoPanel}
-                        room={room}
-                        roomKey={roomKey}
-                        myUserId={user?.id}
-                        onLeaveGroupSuccess={() => {
-                            navigate({ to: "/" });
-                        }}
-                    />
+                    <ChatRoomDialogs roomId={roomId} />
+                    <ChatRoomGroupInfo roomId={roomId} />
                 </>
-            }
-            header={
-                <ChatRoomHeader
-                    room={room}
-                    roomId={roomId}
-                    peerUser={peerUser}
-                    onEndSession={() => setShowEndSessionDialog(true)}
-                    ending={ending}
-                    onDeleteSelected={() => setShowDeleteConfirmDialog(true)}
-                    onCopySelected={handleCopySelected}
-                    onReplySelected={() => console.log("Reply")}
-                    onForwardSelected={() => console.log("Forward")}
-                    messages={messages}
-                    userId={user?.id}
-                    typingUsers={typingUsers}
-                    onInfoClick={() => setShowGroupInfoPanel(true)}
-                />
-            }
-            banner={room?.is_ephemeral ? <PrivacyBanner /> : null}
-            messages={
-                <ChatRoomMessages
-                    messages={messages}
-                    isLoading={messagesLoading}
-                    roomId={roomId}
-                    roomKey={roomKey}
-                    scrollRef={scrollRef}
-                    firstUnreadId={firstUnreadId}
-                    userId={user?.id}
-                    isFavoritesView={isFavoritesView}
-                />
-            }
-            input={
-                <ChatRoomInputArea
-                    onSend={handleSend}
-                    disabled={!roomKey}
-                    onTyping={setTyping}
-                />
             }
         />
     );

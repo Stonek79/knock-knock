@@ -1,0 +1,100 @@
+.chatListItem {
+    display: flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-2);
+    margin: var(--space-1);
+    border-radius: var(--kk-radius-md);
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-base);
+    border: var(--border-width-base) solid var(--glass-border);
+}
+
+.chatListItem:hover:not(.chatListItemActive) {
+    box-shadow: 0 var(--space-1) var(--space-2) var(--glass-border);
+    border: var(--border-width-base) solid var(--glass-border);
+    opacity: 0.7;
+}
+
+.chatListItemActive {
+    background: var(--glass-bg);
+    border-color: var(--accent-primary);
+    box-shadow:
+        0 0 var(--space-4) var(--glow-soft),
+        0 0 var(--space-6) var(--glow-soft),
+        inset 0 0 var(--space-5) var(--glow-soft);
+}
+
+.activeAvatar {
+    box-shadow:
+        0 0 0 var(--border-width-focus) var(--accent-primary),
+        var(--shadow-glow) var(--glow-soft);
+}
+
+.chatInfo {
+    flex: 1;
+    min-width: 0;
+    margin-left: var(--space-3);
+    width: 100%;
+    overflow: hidden;
+}
+
+.chatName {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lastMessage {
+    font-size: var(--text-sm);
+    color: var(--muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: block;
+}
+
+.meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-1);
+}
+
+.time {
+    font-size: var(--text-xs);
+    color: var(--muted);
+}
+
+.name {
+    display: flex;
+    justify-content: space-between;
+}
+
+.chatTime {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.unreadBadge {
+    background: var(--accent-primary);
+    color: var(--bubble-out-fg);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-extrabold);
+    padding: 0 var(--space-2);
+    min-width: var(--size-badge);
+    height: var(--size-badge);
+    border-radius: var(--size-badge-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

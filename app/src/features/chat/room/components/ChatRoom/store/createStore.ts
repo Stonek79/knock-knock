@@ -12,6 +12,11 @@ export const createChatRoomStore = () => {
         canEditSelected: false,
         editingContent: null,
 
+        // --- Начальные значения UI-состояний диалогов ---
+        showEndSessionDialog: false,
+        showDeleteConfirmDialog: false,
+        showGroupInfoPanel: false,
+
         toggleSelection: (id, messages, userId) => {
             const { editingId, selectedMessageIds } = get();
             if (editingId) {
@@ -69,5 +74,11 @@ export const createChatRoomStore = () => {
 
             set({ canEditSelected: !!canEdit });
         },
+
+        // --- Сеттеры диалогов ---
+        setShowEndSessionDialog: (open) => set({ showEndSessionDialog: open }),
+        setShowDeleteConfirmDialog: (open) =>
+            set({ showDeleteConfirmDialog: open }),
+        setShowGroupInfoPanel: (open) => set({ showGroupInfoPanel: open }),
     }));
 };

@@ -1,0 +1,33 @@
+.container {
+    height: 100%;
+    width: 100%;
+}
+
+.content {
+    padding: var(--space-4);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.icon {
+    color: var(--accent-11);
+}
+
+.infoRow {
+    padding: var(--space-3);
+    background: var(--accent-2);
+    border-radius: var(--radius-3);
+}
+
+.clearButton {
+    width: fit-content;
+    background: var(--red-9);
+}
+
+.destructiveButton {
+    background: var(--red-9);
+}
+
+.dialogActions {
+    margin-top: var(--space-md);
+}

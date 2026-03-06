@@ -5,8 +5,9 @@ import { supabase } from "@/lib/supabase";
 import type { RoomType } from "@/lib/types/room";
 import { formatChatTime } from "@/lib/utils/date";
 import { useAuthStore } from "@/stores/auth";
-import type { ChatItem } from "../components/ChatList/ChatListItem";
+import type { ChatItem } from "../ChatList/ChatListItem";
 
+// TODO: не нравится мне тут что то. ChatItem как общий тип в папке с типами?
 interface RoomQueryResult {
     room_id: string;
     rooms: {
@@ -162,8 +163,6 @@ export function useFavoritesChatList() {
                     }
 
                     // 1. Чат с самим собой (Saved Messages)
-                    // Проверяем: либо это Direct с 1 участником (собой), либо это Direct где current==target
-                    // OR if it matches our deterministic ID (virtual or real)
                     const isSelf =
                         (room.type === ROOM_TYPE.DIRECT &&
                             room.room_members.some(
@@ -173,7 +172,7 @@ export function useFavoritesChatList() {
                                 room.room_members.every(
                                     (m) => m.user_id === user.id,
                                 ))) ||
-                        false; // The deterministic check effectively covered by the structure above for virtual
+                        false;
 
                     // 2. Чаты с избранными сообщениями
                     const hasStarred = (room.starred_messages?.length || 0) > 0;

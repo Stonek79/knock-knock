@@ -7,7 +7,7 @@ import {
 } from "react";
 import { useAudioRecorder } from "./useAudioRecorder";
 
-// TODO: сложный хук, подумать над декомпозицией и упрощением
+// TODO: сложный хук, выглядит как костыль, подумать над декомпозицией и упрощением
 
 interface UseMessageInputProps {
     onSend: (text: string, files?: File[], audioBlob?: Blob) => Promise<void>;
@@ -56,22 +56,34 @@ export function useMessageInput({
             setRecordedAudio(audioBlob);
             setTimeout(() => {
                 textareaRef.current?.focus();
+                adjustHeight();
             }, 10);
         },
     });
 
     const hasText = message.trim().length > 0;
-    const canSend = hasText || recordedAudio !== null;
+    const canSend = hasText && recordedAudio !== null;
 
     const adjustHeight = useCallback(() => {
         const textarea = textareaRef.current;
-        if (textarea) {
-            textarea.style.height = `${TEXTAREA_MIN_HEIGHT}px`;
-            if (message.trim()) {
-                const scrollHeight = textarea.scrollHeight;
-                textarea.style.height = `${Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
-            }
+
+        if (!textarea) {
+            return;
         }
+
+        // Если текста нет — просто ставим минимальную высоту
+        if (!message?.trim()) {
+            textarea.style.height = `${TEXTAREA_MIN_HEIGHT}px`;
+            return;
+        }
+
+        // 3. Если текст есть — вычисляем на основе scrollHeight
+        const scrollHeight = textarea.scrollHeight;
+        const newHeight = Math.max(
+            TEXTAREA_MIN_HEIGHT,
+            Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT),
+        );
+        textarea.style.height = `${newHeight}px`;
     }, [message]);
 
     useEffect(() => {
@@ -86,6 +98,7 @@ export function useMessageInput({
                 focusTimer = setTimeout(() => textareaRef.current?.focus(), 50);
             }
         }
+
         return () => {
             if (focusTimer) {
                 clearTimeout(focusTimer);

@@ -1,4 +1,4 @@
-import { Bell, Lock, Moon, Shield, User } from "lucide-react";
+import { Bell, Database, Lock, Moon, Shield, User } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 
 export const SETTINGS_ITEMS = [
@@ -41,5 +41,13 @@ export const SETTINGS_ITEMS = [
         defaultLabel: "Безопасность",
         path: ROUTES.SETTINGS_SECURITY,
         color: "red",
+    },
+    {
+        key: "storage",
+        icon: Database,
+        labelKey: "settings.storage",
+        defaultLabel: "Хранилище и данные",
+        path: ROUTES.SETTINGS_STORAGE,
+        color: "indigo",
     },
 ];

@@ -14,17 +14,13 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { MESSAGE_POSITION, MESSAGE_STATUS } from "@/lib/constants";
 import { ATTACHMENT_TYPES } from "@/lib/constants/storage";
-import type { MessagePosition, MessageStatus } from "@/lib/types/message";
+import type { Attachment, MessagePosition, MessageStatus } from "@/lib/types";
 import { getUserColor } from "@/lib/utils/colors";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
-import type { Attachment } from "../../services/uploadMedia";
-import { AttachmentRenderer } from "./AttachmentRenderer";
+import { AttachmentRenderer } from "./components/AttachmentRenderer";
+import { StatusIcon } from "./components/StatusIcon";
+import { TranscriptBlock } from "./components/TranscriptBlock";
 import styles from "./message-bubble.module.css";
-import { StatusIcon } from "./StatusIcon";
-import { TranscriptBlock } from "./TranscriptBlock";
-
-// TODO: большой и сложный компонент, разбить на мелкие, импортируемые компоненты разбить по подпапкам с собственными модулями стилей
-// так как сейчас модуль общий, большой и сложный, в нем много стилей, которые не используются в других местах
 
 interface MessageBubbleProps {
     content: string | null;
@@ -44,6 +40,10 @@ interface MessageBubbleProps {
     roomKey?: CryptoKey;
 }
 
+/**
+ * Основной компонент пузыря сообщения.
+ * Декомпозирован: AttachmentRenderer, StatusIcon, TranscriptBlock вынесены в подпапки.
+ */
 export function MessageBubble({
     content,
     isOwn,
@@ -83,6 +83,7 @@ export function MessageBubble({
         minute: "2-digit",
     });
 
+    // Отмечаем цветом разных пользователей
     const userColor = senderName ? getUserColor(senderName) : undefined;
 
     // Определяем мобильное устройство
@@ -109,6 +110,24 @@ export function MessageBubble({
         [styles.bubblePeer]: !isOwn,
         [styles.bubbleImageOnly]: isImageOnly,
     });
+
+    const metadataContent = (
+        <>
+            {isStarred && <Star size={ICON_SIZE.xs} className={styles.star} />}
+            <span className={styles.time}>
+                {timeString}
+                {isEdited && !isDeleted && ` • ${t("chat.edited", "изм.")}`}
+            </span>
+            <StatusIcon
+                status={status}
+                isOwn={isOwn}
+                isDeleted={isDeleted}
+                iconClassName={styles.iconSmall}
+                sentClassName={styles.statusIconSent}
+                readClassName={styles.statusIconRead}
+            />
+        </>
+    );
 
     return (
         <Flex
@@ -151,7 +170,7 @@ export function MessageBubble({
                 </Box>
             )}
 
-            <Flex justify="between" className={bubble}>
+            <Box className={bubble}>
                 {!isOwn &&
                     senderName &&
                     (groupPosition === MESSAGE_POSITION.SINGLE ||
@@ -163,54 +182,46 @@ export function MessageBubble({
                             {senderName}
                         </span>
                     )}
-                <Flex direction="column" gap="1">
-                    <AttachmentRenderer
-                        attachments={attachments || []}
-                        setLightboxIndex={setLightboxIndex}
-                        isOwn={isOwn}
-                        hasTranscript={!!content && hasAudioAttachment}
-                        isTranscriptExpanded={isTranscriptExpanded}
-                        onToggleTranscript={() =>
-                            setIsTranscriptExpanded((prev) => !prev)
-                        }
-                        roomKey={roomKey}
-                    />
-
-                    {isDeleted ? (
-                        <Text className={styles.deletedContent}>
-                            {t("chat.messageDeleted", "Сообщение удалено")}
-                        </Text>
-                    ) : content && hasAudioAttachment ? (
-                        isTranscriptExpanded ? (
-                            <TranscriptBlock content={content} />
-                        ) : null
-                    ) : content ? (
-                        <Text className={styles.content}>{content}</Text>
-                    ) : null}
-
-                    <Box
-                        className={clsx(
-                            styles.metadata,
-                            isImageOnly && styles.metadataOverlay,
-                        )}
-                    >
-                        {isStarred && (
-                            <Star size={ICON_SIZE.xs} className={styles.star} />
-                        )}
-                        <span className={styles.time}>
-                            {timeString}
-                            {isEdited &&
-                                !isDeleted &&
-                                ` • ${t("chat.edited", "изм.")}`}
-                        </span>
-                        <StatusIcon
-                            status={status}
+                <Flex>
+                    <Box>
+                        <AttachmentRenderer
+                            attachments={attachments || []}
+                            setLightboxIndex={setLightboxIndex}
                             isOwn={isOwn}
-                            isDeleted={isDeleted}
+                            hasTranscript={!!content && hasAudioAttachment}
+                            isTranscriptExpanded={isTranscriptExpanded}
+                            onToggleTranscript={() =>
+                                setIsTranscriptExpanded((prev) => !prev)
+                            }
+                            roomKey={roomKey}
                         />
+                        {isDeleted ? (
+                            <Text className={styles.deletedContent}>
+                                {t("chat.messageDeleted", "Сообщение удалено")}
+                            </Text>
+                        ) : content && hasAudioAttachment ? (
+                            isTranscriptExpanded ? (
+                                <TranscriptBlock content={content} />
+                            ) : null
+                        ) : content ? (
+                            <Text className={styles.content}>{content}</Text>
+                        ) : null}
                     </Box>
+
+                    {isImageOnly ? (
+                        <Box
+                            className={clsx(
+                                styles.metadata,
+                                styles.metadataOverlay,
+                            )}
+                        >
+                            {metadataContent}
+                        </Box>
+                    ) : (
+                        <Box className={styles.metadata}>{metadataContent}</Box>
+                    )}
                 </Flex>
-            </Flex>
+            </Box>
 
             {imageAttachments.length > 0 && (
                 <Lightbox

@@ -1,0 +1,64 @@
+.transcriptContainer {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--space-1);
+    background: var(--glass-hover-bg);
+    border-radius: var(--kk-radius-sm);
+    padding: var(--space-1) var(--space-2);
+}
+
+.transcriptToggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    background: transparent;
+    border: none;
+    color: currentColor;
+    opacity: 0.8;
+    padding: 0;
+    cursor: pointer;
+    font-size: var(--text-xs);
+    justify-content: flex-start;
+}
+
+.transcriptToggle:hover {
+    opacity: 1;
+}
+
+.transcriptContent {
+    position: relative;
+    margin-top: var(--space-1);
+    padding-right: var(--space-4);
+    border-top: 1px solid var(--glass-border);
+    padding-top: var(--space-1);
+}
+
+.transcriptText {
+    display: block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.copyButton {
+    position: absolute;
+    top: var(--space-1);
+    right: 0;
+    background: transparent;
+    border: none;
+    color: currentColor;
+    opacity: 0.5;
+    cursor: pointer;
+    padding: var(--space-05);
+    border-radius: var(--kk-radius-sm);
+    transition:
+        opacity var(--transition-fast),
+        background-color var(--transition-fast);
+}
+
+.copyButton:hover {
+    opacity: 1;
+    background: var(--glass-hover-bg);
+}

@@ -1,0 +1,12 @@
+.privacyBanner {
+    background: var(--amber-3);
+    color: var(--amber-11);
+    padding: var(--space-1) var(--space-3);
+    text-align: center;
+    border-bottom: 1px solid var(--amber-5);
+    font-size: var(--text-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}

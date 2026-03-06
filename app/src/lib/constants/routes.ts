@@ -12,6 +12,7 @@ export const ROUTES = {
     SETTINGS_PRIVACY: "/settings/privacy",
     SETTINGS_NOTIFICATIONS: "/settings/notifications",
     SETTINGS_SECURITY: "/settings/security",
+    SETTINGS_STORAGE: "/settings/storage",
     FAVORITES: "/favorites",
     CALLS: "/calls",
     ADMIN: "/admin",

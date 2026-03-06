@@ -2,7 +2,8 @@ import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 
 /**
  * Состояние комнаты чата (локальное).
- * Управляет выделением сообщений, режимом редактирования и другими UI-состояниями комнаты.
+ * Управляет выделением сообщений, режимом редактирования,
+ * UI-состоянием диалогов и других клиентских состояний комнаты.
  */
 export interface ChatRoomState {
     /** Список ID выделенных сообщений */
@@ -13,6 +14,14 @@ export interface ChatRoomState {
     canEditSelected: boolean;
     /** Контент редактируемого сообщения */
     editingContent: string | null;
+
+    // --- UI-состояние диалогов ---
+    /** Открыт ли диалог завершения сессии */
+    showEndSessionDialog: boolean;
+    /** Открыт ли диалог подтверждения удаления */
+    showDeleteConfirmDialog: boolean;
+    /** Открыта ли панель информации о группе */
+    showGroupInfoPanel: boolean;
 
     // Действия
     /** Переключить выделение сообщения */
@@ -35,6 +44,14 @@ export interface ChatRoomState {
         messages: DecryptedMessageWithProfile[],
         userId?: string,
     ) => void;
+
+    // --- Сеттеры диалогов ---
+    /** Установить видимость диалога завершения сессии */
+    setShowEndSessionDialog: (open: boolean) => void;
+    /** Установить видимость диалога подтверждения удаления */
+    setShowDeleteConfirmDialog: (open: boolean) => void;
+    /** Установить видимость панели информации о группе */
+    setShowGroupInfoPanel: (open: boolean) => void;
 }
 
 export type ChatRoomStore = ChatRoomState;
