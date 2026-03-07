@@ -5,12 +5,8 @@ import { ROUTES } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { MessageService } from "@/lib/services/message";
 import { RoomService } from "@/lib/services/room";
-import type { RoomWithMembers } from "@/lib/types/room";
-import {
-    type Attachment,
-    uploadAudio,
-    uploadMedia,
-} from "../services/uploadMedia";
+import type { Attachment, RoomWithMembers } from "@/lib/types";
+import { uploadAudio, uploadMedia } from "../services/uploadMedia";
 
 interface UseChatActionsProps {
     roomId?: string;
