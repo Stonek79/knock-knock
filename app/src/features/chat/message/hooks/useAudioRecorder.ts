@@ -13,7 +13,11 @@ const RECORDER_STATE = {
 interface UseAudioRecorderProps {
     disabled?: boolean;
     sending?: boolean;
-    onRecordingComplete: (transcript: string, audioBlob: Blob) => void;
+    onRecordingComplete: (
+        transcript: string,
+        audioBlob: Blob,
+        transcriptSuccess: boolean,
+    ) => void;
 }
 
 /**
@@ -62,7 +66,25 @@ export function useAudioRecorder({
 
             if (audioBlob.size > 0) {
                 const finalTranscript = getTranscript().trim();
-                onRecordingComplete(finalTranscript, audioBlob);
+
+                // Если транскрипция пустая — не сохраняем аудио, предлагаем записать заново
+                if (!finalTranscript) {
+                    toast({
+                        title: t(
+                            "chat.transcriptionFailed",
+                            "Не удалось распознать речь",
+                        ),
+                        description: t(
+                            "chat.transcriptionFailedDescription",
+                            "Попробуйте записать сообщение ещё раз",
+                        ),
+                        variant: "error",
+                    });
+                    audioChunksRef.current = [];
+                    return;
+                }
+
+                onRecordingComplete(finalTranscript, audioBlob, true);
             }
             audioChunksRef.current = [];
         };
@@ -82,7 +104,14 @@ export function useAudioRecorder({
             setIsRecording(false);
             setRecordingTime(0);
         }, RECORDING_LIMITS.STOP_DELAY_MS);
-    }, [isRecording, onRecordingComplete, getTranscript, stopRecognition]);
+    }, [
+        isRecording,
+        onRecordingComplete,
+        getTranscript,
+        stopRecognition,
+        t,
+        toast,
+    ]);
 
     const startRecording = async () => {
         if (disabled || sending) {

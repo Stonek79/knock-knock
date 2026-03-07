@@ -81,6 +81,7 @@ export const handleMessagesQuery: QueryHandler<Message> = async (
 				is_edited: !!val.is_edited,
 				is_starred: !!val.is_starred,
 				deleted_by: (val.deleted_by as string[]) || [],
+				attachments: (val.attachments as Message["attachments"]) || null,
 			} as unknown as Message;
 
 			// Type check happens at runtime via Zod in real app, here we assume it's valid

@@ -66,8 +66,13 @@ export async function createRoom(
     }
 
     // 2. Шифруем RoomKey для каждого участника
+    const validProfiles = (profiles || []).map((p) => ({
+        id: p.id,
+        public_key_x25519: p.public_key_x25519 as string,
+    }));
+
     const cryptoResult = await encryptRoomKeysForMembers(
-        profiles,
+        validProfiles,
         roomKey,
         roomId,
         myUserId,
@@ -227,8 +232,13 @@ export async function addMembersToGroup(
     }
 
     // 2. Шифруем ключ комнаты для новых участников
+    const validProfiles = (profiles || []).map((p) => ({
+        id: p.id,
+        public_key_x25519: p.public_key_x25519 as string,
+    }));
+
     const cryptoResult = await encryptRoomKeysForMembers(
-        profiles,
+        validProfiles,
         roomKey,
         roomId,
         myUserId, // Здесь myUserId используется как инициатор и все добавляемые делаются обычными MEMBER

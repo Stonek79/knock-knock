@@ -142,11 +142,16 @@ export function useCachedMedia(url?: string | null) {
             setIsError(false);
 
             try {
-                // 1. Проверяем кэш
-                let blob = await getMediaBlob(url);
+                // Для mock-storage: URL используем ключ напрямую (без префикса)
+                const cacheKey = url.startsWith("mock-storage:")
+                    ? url.replace("mock-storage:", "")
+                    : url;
 
-                // 2. Если нет в кэше — качаем из сети (работает для Prod)
-                if (!blob) {
+                // 1. Проверяем кэш
+                let blob = await getMediaBlob(cacheKey);
+
+                // 2. Если нет в кэше — качаем из сети (только для production URL)
+                if (!blob && !url.startsWith("mock-storage:")) {
                     logger.debug(
                         `${CACHE_CONSTANTS.LOG_PREFIX} Cache MISS for ${url}, fetching...`,
                     );
@@ -159,12 +164,21 @@ export function useCachedMedia(url?: string | null) {
                     blob = await response.blob();
 
                     // 3. Сохраняем в кэш
-                    await saveMediaBlob(url, blob);
+                    await saveMediaBlob(cacheKey, blob);
                 }
 
                 if (isMounted && blob) {
                     activeObjectUrl = URL.createObjectURL(blob);
                     setObjectUrl(activeObjectUrl);
+                } else if (!blob && url.startsWith("mock-storage:")) {
+                    // Файл не найден в IndexedDB (после перезагрузки в mock-режиме)
+                    logger.warn(
+                        `${CACHE_CONSTANTS.LOG_PREFIX} Mock file not found in cache: ${cacheKey}`,
+                    );
+                    if (isMounted) {
+                        setIsError(true);
+                        setObjectUrl(undefined);
+                    }
                 }
             } catch (e) {
                 logger.error(
@@ -186,9 +200,12 @@ export function useCachedMedia(url?: string | null) {
 
         return () => {
             isMounted = false;
-            if (activeObjectUrl) {
-                URL.revokeObjectURL(activeObjectUrl);
-            }
+            // НЕ отзываем objectUrl сразу при размонтировании!
+            // Это вызывает проблемы при переходе между чатами.
+            // URL будет отозван только при изменении url или при полной очистке кэша.
+            // if (activeObjectUrl) {
+            //     URL.revokeObjectURL(activeObjectUrl);
+            // }
         };
     }, [url]);
 

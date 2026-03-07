@@ -74,8 +74,10 @@ export type Database = {
             };
             messages: {
                 Row: {
+                    attachments: Json | null;
                     content: string;
                     created_at: string | null;
+                    deleted_by: string[] | null;
                     id: string;
                     is_deleted: boolean | null;
                     is_edited: boolean | null;
@@ -83,12 +85,16 @@ export type Database = {
                     iv: string;
                     room_id: string | null;
                     sender_id: string | null;
-                    status: string | null;
+                    status:
+                        | Database["public"]["Enums"]["message_status"]
+                        | null;
                     updated_at: string | null;
                 };
                 Insert: {
+                    attachments?: Json | null;
                     content: string;
                     created_at?: string | null;
+                    deleted_by?: string[] | null;
                     id?: string;
                     is_deleted?: boolean | null;
                     is_edited?: boolean | null;
@@ -96,12 +102,16 @@ export type Database = {
                     iv: string;
                     room_id?: string | null;
                     sender_id?: string | null;
-                    status?: string | null;
+                    status?:
+                        | Database["public"]["Enums"]["message_status"]
+                        | null;
                     updated_at?: string | null;
                 };
                 Update: {
+                    attachments?: Json | null;
                     content?: string;
                     created_at?: string | null;
+                    deleted_by?: string[] | null;
                     id?: string;
                     is_deleted?: boolean | null;
                     is_edited?: boolean | null;
@@ -109,7 +119,9 @@ export type Database = {
                     iv?: string;
                     room_id?: string | null;
                     sender_id?: string | null;
-                    status?: string | null;
+                    status?:
+                        | Database["public"]["Enums"]["message_status"]
+                        | null;
                     updated_at?: string | null;
                 };
                 Relationships: [
@@ -354,6 +366,7 @@ export type Database = {
         Enums: {
             app_role: "user" | "admin";
             member_role: "admin" | "member";
+            message_status: "sent" | "delivered" | "read";
             room_type: "direct" | "group";
         };
         CompositeTypes: {
@@ -490,6 +503,7 @@ export const Constants = {
         Enums: {
             app_role: ["user", "admin"],
             member_role: ["admin", "member"],
+            message_status: ["sent", "delivered", "read"],
             room_type: ["direct", "group"],
         },
     },

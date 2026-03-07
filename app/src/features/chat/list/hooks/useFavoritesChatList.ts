@@ -1,35 +1,49 @@
+import type { QueryData } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { DB_TABLES, ROOM_TYPE } from "@/lib/constants";
+import { DB_TABLES, QUERY_KEYS, ROOM_TYPE } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
-import type { RoomType } from "@/lib/types/room";
 import { formatChatTime } from "@/lib/utils/date";
 import { useAuthStore } from "@/stores/auth";
 import type { ChatItem } from "../ChatList/ChatListItem";
 
-// TODO: не нравится мне тут что то. ChatItem как общий тип в папке с типами?
-interface RoomQueryResult {
+const getFavoritesQuery = (userId: string) =>
+    supabase
+        .from(DB_TABLES.ROOM_MEMBERS)
+        .select(`
+		room_id,
+		rooms (
+			id,
+			name,
+			type,
+			is_ephemeral,
+			last_message: messages!last_message_id (
+				content,
+				created_at,
+				sender_id
+			),
+			room_members (
+				user_id,
+				profiles (
+					display_name,
+					avatar_url
+				)
+			)
+		)
+	`)
+        .eq("user_id", userId);
+
+type BaseRoom = NonNullable<
+    QueryData<ReturnType<typeof getFavoritesQuery>>[number]["rooms"]
+>;
+type RoomWithStarred = (BaseRoom extends object[] ? BaseRoom[0] : BaseRoom) & {
+    starred_messages?: { id: string }[];
+};
+
+type FavoritesQueryResult = {
     room_id: string;
-    rooms: {
-        id: string;
-        name: string | null;
-        type: RoomType;
-        is_ephemeral: boolean;
-        last_message: {
-            content: string;
-            created_at: string;
-            sender_id: string;
-        } | null;
-        room_members: {
-            user_id: string;
-            profiles: {
-                display_name: string;
-                avatar_url: string | null;
-            } | null;
-        }[];
-        starred_messages?: { id: string }[];
-    } | null;
-}
+    rooms: RoomWithStarred | null;
+};
 
 /**
  * Хук для получения списка "Избранных" чатов.
@@ -42,8 +56,8 @@ export function useFavoritesChatList() {
     const { user, profile } = useAuthStore();
 
     return useQuery({
-        queryKey: ["rooms", "favorites", user?.id],
-        queryFn: async (): Promise<RoomQueryResult[]> => {
+        queryKey: QUERY_KEYS.favorites(user?.id),
+        queryFn: async (): Promise<FavoritesQueryResult[]> => {
             if (!user) {
                 return [];
             }
@@ -62,53 +76,38 @@ export function useFavoritesChatList() {
             );
 
             // 2. Получаем все комнаты пользователя
-            const { data: allRooms, error: allErr } = await supabase
-                .from(DB_TABLES.ROOM_MEMBERS)
-                .select(`
-					room_id,
-					rooms (
-						id,
-						name,
-						type,
-						is_ephemeral,
-						last_message: messages!last_message_id (
-							content,
-							created_at,
-							sender_id
-						),
-						room_members (
-							user_id,
-							profiles (
-								display_name,
-								avatar_url
-							)
-						)
-					)
-				`)
-                .eq("user_id", user.id);
+            const { data: allRooms, error: allErr } = await getFavoritesQuery(
+                user.id,
+            );
 
             if (allErr) {
                 console.error("Failed to fetch favorites", allErr);
                 throw allErr;
             }
 
-            let results =
-                (allRooms?.map((item) => {
-                    const room = item.rooms;
-                    return {
+            let results: FavoritesQueryResult[] =
+                allRooms?.map((item) => {
+                    const roomData = Array.isArray(item.rooms)
+                        ? item.rooms[0]
+                        : item.rooms;
+                    const mapped = {
                         ...item,
-                        rooms: room
+                        room_id: item.room_id || "",
+                        rooms: roomData
                             ? {
-                                  ...room,
+                                  ...roomData,
                                   starred_messages: starredRoomIds.has(
-                                      item.room_id,
+                                      item.room_id || "",
                                   )
                                       ? [{ id: "dummy" }]
                                       : [],
                               }
                             : null,
                     };
-                }) as RoomQueryResult[]) || [];
+                    // Explicitly satisfy the type without casting
+                    const typedItem: FavoritesQueryResult = mapped;
+                    return typedItem;
+                }) || [];
 
             // 3. GUARANTEE SELF-CHAT (Saved Messages) existence
             // Even if it's not in DB yet, we show it. clicking it will create it via findOrCreateDM logic in ChatRoom
@@ -122,7 +121,7 @@ export function useFavoritesChatList() {
 
             if (!hasSelfChat) {
                 // Add virtual self-chat
-                const virtualRoom: RoomQueryResult = {
+                const virtualRoom = {
                     room_id: deterministicId,
                     rooms: {
                         id: deterministicId,
@@ -137,7 +136,7 @@ export function useFavoritesChatList() {
                                     display_name:
                                         profile?.display_name ||
                                         user.email ||
-                                        "Me",
+                                        t("chat.me", "Me"),
                                     avatar_url: profile?.avatar_url || null,
                                 },
                             },
@@ -145,12 +144,13 @@ export function useFavoritesChatList() {
                         starred_messages: [],
                     },
                 };
-                results = [virtualRoom, ...results];
+                const typedVirtualRoom: FavoritesQueryResult = virtualRoom;
+                results = [typedVirtualRoom, ...results];
             }
 
             return results;
         },
-        select: (data: RoomQueryResult[]): ChatItem[] => {
+        select: (data: FavoritesQueryResult[]): ChatItem[] => {
             if (!user) {
                 return [];
             }

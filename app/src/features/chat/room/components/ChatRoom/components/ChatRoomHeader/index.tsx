@@ -30,7 +30,7 @@ export function ChatRoomHeader({ roomId }: ChatRoomHeaderProps) {
     // --- View-данные (для индикатора печати нужен displayName) ---
     const { typingUsers } = useTypingIndicator({
         roomId,
-        displayName: peerUser?.display_name,
+        displayName: peerUser?.display_name || undefined,
     });
 
     // --- Данные для отображения сообщений (нужны для onCopySelected и onEditSelected) ---

@@ -47,13 +47,15 @@ export function useMessageInput({
     } = useAudioRecorder({
         disabled,
         sending,
-        onRecordingComplete: (transcript, audioBlob) => {
-            if (transcript) {
+        onRecordingComplete: (transcript, audioBlob, transcriptSuccess) => {
+            // Если транскрипция не удалась — audioBlob уже очищен в useAudioRecorder
+            // transcriptSuccess = false означает, что аудио не сохранено
+            if (transcriptSuccess && transcript) {
                 setMessage((prev) =>
                     (prev ? `${prev} ${transcript}` : transcript).trim(),
                 );
+                setRecordedAudio(audioBlob);
             }
-            setRecordedAudio(audioBlob);
             setTimeout(() => {
                 textareaRef.current?.focus();
                 adjustHeight();
@@ -62,7 +64,7 @@ export function useMessageInput({
     });
 
     const hasText = message.trim().length > 0;
-    const canSend = hasText && recordedAudio !== null;
+    const canSend = hasText || recordedAudio !== null;
 
     const adjustHeight = useCallback(() => {
         const textarea = textareaRef.current;

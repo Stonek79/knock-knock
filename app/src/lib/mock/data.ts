@@ -29,6 +29,14 @@ export interface MockMessage {
 	is_edited?: boolean;
 	is_deleted?: boolean;
 	is_starred?: boolean;
+	attachments?: Array<{
+		id: string;
+		file_name: string;
+		file_size: number;
+		content_type: string;
+		url: string;
+		type: "image" | "video" | "audio" | "document";
+	}> | null;
 }
 
 /** Вспомогательная функция для генерации времени N минут назад */

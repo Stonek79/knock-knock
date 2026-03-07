@@ -1,6 +1,6 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import type { z } from "zod";
-import { DB_TABLES } from "@/lib/constants";
+import { DB_TABLES, MESSAGE_STATUS } from "@/lib/constants";
 import { ERROR_CODES } from "@/lib/constants/errors";
 import { encryptMessage } from "@/lib/crypto/messages";
 import { logger } from "@/lib/logger";
@@ -139,8 +139,8 @@ export const MessageService = {
             const { error } = await supabase
                 .from(DB_TABLES.MESSAGES)
                 .update({
-                    content: null,
-                    iv: null,
+                    content: "",
+                    iv: "",
                     is_deleted: true,
                     updated_at: new Date().toISOString(),
                 })
@@ -225,10 +225,10 @@ export const MessageService = {
     ): Promise<Result<void, MessageError>> {
         const { error } = await supabase
             .from(DB_TABLES.MESSAGES)
-            .update({ status: "read" })
+            .update({ status: MESSAGE_STATUS.READ })
             .eq("room_id", roomId)
             .neq("sender_id", currentUserId)
-            .neq("status", "read"); // Opt: only unread
+            .neq("status", MESSAGE_STATUS.READ); // Opt: only unread
 
         if (error) {
             return err(
@@ -251,9 +251,9 @@ export const MessageService = {
     ): Promise<Result<void, MessageError>> {
         const { error } = await supabase
             .from(DB_TABLES.MESSAGES)
-            .update({ status: "delivered" })
+            .update({ status: MESSAGE_STATUS.DELIVERED })
             .eq("id", messageId)
-            .eq("status", "sent");
+            .eq("status", MESSAGE_STATUS.SENT);
 
         if (error) {
             return err(

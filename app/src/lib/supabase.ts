@@ -3,6 +3,7 @@ import {
     type SupabaseClient,
 } from "@supabase/supabase-js";
 import { createClient as createMockClient } from "./mock/client";
+import type { Database } from "./types/database.types";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -16,7 +17,7 @@ export const isMock = useMock;
 export const isSupabaseConfigured = !!supabaseUrl && !!supabaseAnonKey;
 
 // Создаем инстанс клиента
-export const supabase: SupabaseClient =
+export const supabase: SupabaseClient<Database> =
     useMock || !isSupabaseConfigured
         ? createMockClient()
-        : createSupabaseClient(supabaseUrl, supabaseAnonKey);
+        : createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);

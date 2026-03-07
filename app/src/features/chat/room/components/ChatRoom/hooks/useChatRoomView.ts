@@ -2,7 +2,7 @@ import { useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef } from "react";
 import { useMessages, useUnreadTracking } from "@/features/chat/message";
 import { useChatRoomData } from "@/features/chat/room/hooks/useChatRoomData";
-import { ROUTES } from "@/lib/constants";
+import { ROOM_TYPE, ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 
 /**
@@ -54,7 +54,7 @@ export function useChatRoomView(roomId: string) {
      * В self-chat показываем ВСЕ сообщения, а не только starred.
      */
     const isSelfChat =
-        room?.type === "direct" &&
+        room?.type === ROOM_TYPE.DIRECT &&
         room.room_members?.length === 1 &&
         room.room_members[0].user_id === user?.id;
 

@@ -1,4 +1,4 @@
-import { DB_TABLES, ERROR_CODES } from "@/lib/constants";
+import { DB_TABLES, ERROR_CODES, ROOM_TYPE } from "@/lib/constants";
 import { generateDeterministicRoomId } from "@/lib/crypto/rooms";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
@@ -37,7 +37,7 @@ export async function findOrCreateDM(
         });
         const createResult = await createRoom(
             null,
-            "direct",
+            ROOM_TYPE.DIRECT,
             currentUserId,
             [targetUserId], // Это тот же самый юзер
             false,
@@ -75,12 +75,12 @@ export async function findOrCreateDM(
     if (myMemberships && myMemberships.length > 0) {
         const myRoomIds = myMemberships.map((m) => m.room_id);
 
-        // 2. Ищем среди них прямые чаты (type='direct')
+        // 2. Ищем среди них прямые чаты (type=ROOM_TYPE.DIRECT)
         const { data: candidateRooms, error: roomError } = await supabase
             .from(DB_TABLES.ROOMS)
             .select("id")
             .in("id", myRoomIds)
-            .eq("type", "direct")
+            .eq("type", ROOM_TYPE.DIRECT)
             .eq("is_ephemeral", isEphemeral);
 
         if (roomError) {
@@ -146,7 +146,7 @@ export async function findOrCreateDM(
 
     const createResult = await createRoom(
         null, // DM не имеет названия при создании
-        "direct",
+        ROOM_TYPE.DIRECT,
         currentUserId,
         [targetUserId],
         isEphemeral,

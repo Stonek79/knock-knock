@@ -104,7 +104,8 @@ export function ProfileForm() {
                     <form.Field
                         name="username"
                         validators={{
-                            onChange: profileSchema.shape.username,
+                            onChange: (value) =>
+                                profileSchema.shape.username.parse(value),
                         }}
                     >
                         {(field) => (

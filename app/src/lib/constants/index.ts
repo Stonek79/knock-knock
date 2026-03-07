@@ -6,6 +6,7 @@ export * from "./common";
 export * from "./db";
 export * from "./errors";
 export * from "./ghost";
+export * from "./queries";
 export * from "./routes";
 export * from "./storage";
 export * from "./supabase";

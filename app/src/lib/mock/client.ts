@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { saveMediaBlob } from "../cache/media";
+import type { Database } from "../types/database.types";
 import { MOCK_USERS, type MockUser } from "./data";
 import { handleRoomKeysQuery } from "./queries/keys";
 import { handleMessagesQuery } from "./queries/messages";
@@ -60,7 +62,7 @@ const saveSession = (session: MockSession | null) => {
  * Создает моковый клиент Supabase.
  * Реализует только необходимые методы для работы UI.
  */
-export const createMockClient = (): SupabaseClient => {
+export const createMockClient = (): SupabaseClient<Database> => {
 	return {
 		auth: {
 			getSession: () =>
@@ -190,7 +192,7 @@ export const createMockClient = (): SupabaseClient => {
 			);
 			return Promise.resolve({ data, error });
 		},
-	} as unknown as SupabaseClient;
+	} as unknown as SupabaseClient<Database>;
 };
 
 // Более точная реализация `from` для поддержки цепочек и await
@@ -291,13 +293,13 @@ const mockFrom = (table: string) => {
 
 /**
  * In-memory хранилище для mock-режима.
- * Сохраняет blob-URL загруженных файлов, чтобы картинки/видео отображались в dev-сессии.
- * При перезагрузке страницы blob-URLs теряются — это ожидаемое поведение для мока.
+ * Ключ → URL мапа для быстрого доступа в текущей сессии.
+ * Blob данные сохраняются в IndexedDB для персистентности.
  */
 const mockFileStore = new Map<string, string>();
 
 // Патчим createMockClient чтобы использовать mockFrom
-export const createClient = (): SupabaseClient => {
+export const createClient = (): SupabaseClient<Database> => {
 	const mockClient = createMockClient();
 	return {
 		...mockClient,
@@ -307,11 +309,14 @@ export const createClient = (): SupabaseClient => {
 			from: (bucket: string) => ({
 				// biome-ignore lint/suspicious/noExplicitAny: Mocking internal client
 				upload: async (path: string, file: any, _options: any) => {
-					// Сохраняем файл как blob-URL для отображения в dev-режиме
+					// Сохраняем файл в IndexedDB для персистентности
 					if (file instanceof Blob || file instanceof File) {
 						const storeKey = `${bucket}/${path}`;
 						const blobUrl = URL.createObjectURL(file);
 						mockFileStore.set(storeKey, blobUrl);
+						
+						// Сохраняем blob в IndexedDB через тот же механизм, что и production
+						await saveMediaBlob(storeKey, file);
 					}
 					return { data: { path }, error: null };
 				},
@@ -326,16 +331,13 @@ export const createClient = (): SupabaseClient => {
 						};
 					}
 
-					// Фолбэк: фейковый URL (файл не найден или сессия перезагружена)
-					const base =
-						typeof window !== "undefined"
-							? window.location.origin
-							: "http://localhost:3000";
+					// Фолбэк: возвращаем ключ для загрузки из IndexedDB
+					// useCachedMedia загрузит blob из IndexedDB по этому ключу
 					return {
-						data: { publicUrl: `${base}/mock-storage/${bucket}/${path}` },
+						data: { publicUrl: `mock-storage:${storeKey}` },
 					};
 				},
 			}),
 		},
-	} as unknown as SupabaseClient;
+	} as unknown as SupabaseClient<Database>;
 };

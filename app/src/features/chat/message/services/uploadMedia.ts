@@ -1,3 +1,4 @@
+import { saveMediaBlob } from "@/lib/cache/media";
 import {
     ATTACHMENT_TYPES,
     DEFAULT_MIME_TYPES,
@@ -67,6 +68,9 @@ export async function uploadMedia(
     } = supabase.storage
         .from(STORAGE_BUCKETS.CHAT_MEDIA)
         .getPublicUrl(filePath);
+
+    // Сохраняем blob в IndexedDB для кэширования
+    await saveMediaBlob(publicUrl, file);
 
     return {
         id: uniqueId,

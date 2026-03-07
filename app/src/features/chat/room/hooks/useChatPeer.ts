@@ -12,7 +12,9 @@ export function useChatPeer(
 ) {
     return useQuery({
         queryKey: ["user", otherUserId],
-        queryFn: async () => {
+        queryFn: async (): Promise<
+            import("@/lib/types/room").PeerUser | null
+        > => {
             if (!otherUserId) {
                 return null;
             }
@@ -20,7 +22,18 @@ export function useChatPeer(
             // Mock режим: ищем в MOCK_USERS
             if (import.meta.env.VITE_USE_MOCK === "true") {
                 const { MOCK_USERS } = await import("@/lib/mock/data");
-                return MOCK_USERS.find((u) => u.id === otherUserId) || null;
+                const u = MOCK_USERS.find((u) => u.id === otherUserId);
+
+                if (!u) {
+                    return null;
+                }
+
+                return {
+                    id: u.id,
+                    display_name: u.display_name,
+                    username: u.username,
+                    avatar_url: u.avatar_url,
+                };
             }
 
             // Production: загружаем из Supabase
@@ -30,10 +43,15 @@ export function useChatPeer(
                 .eq("id", otherUserId)
                 .single();
 
-            if (profileError || !data) {
+            if (profileError || !data || !data.display_name) {
                 return null;
             }
-            return data;
+            return {
+                id: data.id,
+                display_name: data.display_name,
+                username: data.username || undefined,
+                avatar_url: data.avatar_url || undefined,
+            };
         },
         enabled: !!otherUserId && roomType === ROOM_TYPE.DIRECT,
     });
