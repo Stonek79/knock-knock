@@ -182,6 +182,8 @@ export const RADIX_THEME = {
 ### 2. Типы (`lib/types/`)
 Интерфейсы, алиасы и типы, выведенные из констант.
 
+**Важно:** Для типизации ответов от БД используется файл `database.types.ts`, который генерируется автоматически с удалённого сервера через утилиту `supabase/cli` (скрипт `gen-types.sh`). *Запрещено* ручное приведение типов (`as unknown as Role`). Вместо этого для сложных Join-запросов используется нативный `QueryData` из библиотеки `@supabase/supabase-js`.
+
 ```typescript
 // lib/types/chat.ts
 import { CHAT_TYPE } from '@/lib/constants';

@@ -74,10 +74,22 @@ sudo apt update && sudo apt install -y wireguard docker.io docker-compose-plugin
    sudo systemctl enable wg-quick@wg0
    sudo systemctl start wg-quick@wg0
    ```
-4. Проверьте пинг до VPS: `ping 10.0.0.1`.
+7. Проверьте пинг до VPS: `ping 10.50.0.1`.
 
 ### 2.3. Запуск Supabase
 Следуйте инструкции в файле `infra/home/README_SUPABASE.md`.
+
+### 2.4. Генерация типов TypeScript (Database Types)
+Если вы меняете структуру базы данных (добавляете таблицы или поля), вам необходимо обновлять типы TypeScript на вашем локальном компьютере-разработчика. Так как порт 5432 на домашнем сервере работает через пулер (Supavisor), прямое подключение требует указания Tenant ID.
+
+Для генерации типов используйте скрипт, находящийся в папке `app/supabase/gen-types.sh`. 
+В файле `app/.env` должны быть заданы переменные `SUPABASE_CLI_PASSWORD` (пароль от пользователя postgres) и `SUPABASE_HOME_IP_ADDRESS` (IP сервера изнутри VPN, например `10.50.0.2` или локальный `192.168.x.x`).
+
+```bash
+cd app
+bash supabase/gen-types.sh
+```
+*Замечание: При подключении внутри скрипта используется логин вида `postgres.your-tenant-id`, что позволяет обойти ограничение балансировщика без установки Docker на машину разработчика.*
 
 ---
 
