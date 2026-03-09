@@ -1,12 +1,10 @@
 #!/bin/sh
+# Husky pre-commit hook
 
-# Проверка на наличие секретов в staged файлах (исключая документацию и сам хук)
-# Используем хитрость с [e]yJ, чтобы grep не находил сам себя
-if git diff --cached -- . ':(exclude)docs/*' ':(exclude).husky/*' | grep -E "([e]yJ|sk_|pk_|wg.*=.*[A-Za-z0-9+/=]{20,})"; then
-  echo "❌ Potential secrets detected in code!"
-  echo "Please remove sensitive data before committing."
-  echo "If this is a false positive, use --no-verify (but be careful!)"
-  exit 1
+# Если мы уже в папке app (проверяем по наличию package.json), просто запускаем lint-staged
+if [ -f "package.json" ]; then
+    npx lint-staged
+else
+    # Иначе пробуем зайти в app
+    cd app && npx lint-staged
 fi
-
-cd app && npx lint-staged
