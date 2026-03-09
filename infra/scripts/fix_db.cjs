@@ -36,19 +36,21 @@ async function main() {
 			console.log(`⚡ Выполняем ${file}...`);
 			const sql = fs.readFileSync(path.join(SQL_DIR, file), "utf8");
 
-			execSync(
+			const output = execSync(
 				`ssh alex@${SERVER_IP} "docker exec -i ${containerName} psql -U postgres"`,
 				{
 					input: sql,
 					encoding: "utf8",
 				},
 			);
+
+			if (output) {
+				console.log(output);
+			}
 		}
 
-		console.log("\n--- Результат выполнения ---");
-		console.log(output);
-		console.log("----------------------------");
-		console.log("\n💎 Поздравляю! Теперь проверьте профиль на сайте.");
+		console.log("\n✅ Миграции выполнены успешно!");
+		console.log("\n💎 Теперь проверьте профиль на сайте.");
 	} catch (err) {
 		console.error("\n❌ Ошибка при выполнении миграции:");
 		console.error(err.message);

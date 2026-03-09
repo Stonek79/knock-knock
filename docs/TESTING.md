@@ -829,7 +829,219 @@ vitest run --config=vitest.integration.config.ts
 
 ---
 
-### 5. Фикстуры и хелперы
+### 4. Автоматический запуск сервера (WebServer)
+
+**Статус:** ✅ Реализовано
+
+**Конфигурация в `playwright.config.ts`:**
+
+```typescript
+export default defineConfig({
+  // ... остальные настройки
+  
+  // WebServer для автоматического запуска приложения перед тестами
+  webServer: {
+    // Команда запуска сервера
+    command: process.env.CI 
+      ? "npm run build && npm run preview"  // CI: production сборка
+      : "npm run dev",                       // Local: dev сервер
+    
+    // Порт приложения
+    url: "http://localhost:5173",
+    
+    // Переиспользовать существующий сервер (не в CI)
+    reuseExistingServer: !process.env.CI,
+    
+    // Таймаут запуска (2 минуты для dev, 5 для build)
+    timeout: process.env.CI 
+      ? 5 * 60 * 1000 
+      : 2 * 60 * 1000,
+    
+    // stdout/stderr для отладки
+    stdout: "pipe",
+    stderr: "pipe",
+    
+    // Переменные окружения для сервера
+    env: {
+      // В CI использовать mock, если не задано иное
+      VITE_USE_MOCK: process.env.VITE_USE_MOCK || "true",
+    },
+  },
+});
+```
+
+**Преимущества:**
+- ✅ Сервер запускается автоматически перед тестами
+- ✅ Не нужно вручную запускать `npm run dev`
+- ✅ В CI используется production сборка для точности
+- ✅ Local используется dev сервер для скорости
+
+**Запуск тестов:**
+```bash
+# Просто запустить тесты (сервер поднимется автоматически)
+npx playwright test
+
+# Запустить с UI (сервер тоже поднимется автоматически)
+npx playwright test --ui
+```
+
+---
+
+### 5. Очистка базы данных (Идемпотентность тестов)
+
+**Статус:** ✅ Документировано
+
+**Важно:** E2E тесты должны быть **идемпотентными** — повторный запуск не должен ломать тесты.
+
+#### 5.1: Утилиты для очистки БД
+
+Создать файл `e2e/utils/db-helpers.ts`:
+
+```typescript
+// e2e/utils/db-helpers.ts
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!  // Требуется service role key
+);
+
+const TEST_PREFIX = 'test-';
+
+/**
+ * Очистка тестовых данных из БД
+ * Используется в beforeAll/afterAll хуках
+ */
+export async function cleanupTestData() {
+  try {
+    // Удаляем тестовые сообщения
+    await supabase
+      .from('messages')
+      .delete()
+      .like('id', `${TEST_PREFIX}%`);
+
+    // Удаляем тестовые комнаты
+    await supabase
+      .from('rooms')
+      .delete()
+      .like('id', `${TEST_PREFIX}%`);
+
+    // Удаляем тестовых пользователей
+    const { data: users } = await supabase
+      .from('profiles')
+      .select('id')
+      .like('username', `${TEST_PREFIX}%`);
+
+    for (const user of users || []) {
+      await supabase.auth.admin.deleteUser(user.id);
+    }
+    
+    console.log('✅ Test data cleaned up');
+  } catch (error) {
+    console.error('❌ Cleanup failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Очистка конкретной таблицы
+ */
+export async function cleanupTable(table: string, idColumn: string = 'id') {
+  await supabase
+    .from(table)
+    .delete()
+    .like(idColumn, `${TEST_PREFIX}%`);
+}
+
+/**
+ * Получить список всех тестовых записей
+ */
+export async function getTestRecords(table: string) {
+  const { data } = await supabase
+    .from(table)
+    .select('*')
+    .like('id', `${TEST_PREFIX}%`);
+  
+  return data || [];
+}
+```
+
+#### 5.2: Использование в тестах
+
+**Вариант A: Очистка перед каждым тестом (рекомендуется)**
+
+```typescript
+// e2e/specs/chat.spec.ts
+import { test, expect } from '@playwright/test';
+import { cleanupTestData } from '../utils/db-helpers';
+
+test.beforeEach(async () => {
+  // Очистка перед каждым тестом
+  await cleanupTestData();
+});
+
+test('should create a new chat', async ({ page }) => {
+  // Тест чисто изолирован
+});
+```
+
+**Вариант B: Очистка в начале/конце файла тестов**
+
+```typescript
+// e2e/specs/auth.spec.ts
+import { test, expect } from '@playwright/test';
+import { cleanupTestData } from '../utils/db-helpers';
+
+test.beforeAll(async () => {
+  // Очистка перед всеми тестами в файле
+  await cleanupTestData();
+});
+
+test.afterAll(async () => {
+  // Финальная очистка
+  await cleanupTestData();
+});
+
+test('should register a new user', async ({ page }) => {
+  // Тесты
+});
+```
+
+**Вариант C: Глобальная очистка (fixtures)**
+
+```typescript
+// e2e/fixtures/cleanup.ts
+import { test as base } from '@playwright/test';
+import { cleanupTestData } from '../utils/db-helpers';
+
+export const test = base.extend<{ cleanup: void }>({
+  cleanup: [
+    async ({}, use) => {
+      // Перед использованием
+      await cleanupTestData();
+      await use();
+      // После использования
+      await cleanupTestData();
+    },
+    { auto: true }  // Автоматически для всех тестов
+  ],
+});
+```
+
+#### 5.3: Best Practices
+
+| Практика | Описание |
+|----------|----------|
+| **Префикс тестовых данных** | Все тестовые записи должны иметь префикс `test-` |
+| **Очистка перед тестом** | `beforeEach` для полной изоляции |
+| **Очистка после теста** | `afterEach` если тест создаёт много данных |
+| **Глобальная очистка** | `beforeAll`/`afterAll` для группы тестов |
+| **Логирование** | Выводить в консоль что очищено |
+| **Обработка ошибок** | Не падать если данных нет |
+
+---
+
+### 6. Фикстуры и хелперы
 
 **Статус:** ❌ Не реализовано  
 **Приоритет:** 🟡 Высокий

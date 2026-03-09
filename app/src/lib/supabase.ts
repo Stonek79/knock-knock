@@ -2,14 +2,15 @@ import {
     createClient as createSupabaseClient,
     type SupabaseClient,
 } from "@supabase/supabase-js";
+import { env } from "./env";
 import { createClient as createMockClient } from "./mock/client";
 import type { Database } from "./types/database.types";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = env.VITE_SUPABASE_URL;
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY;
 
 // Определяем режим работы: настоящий или мок
-const useMock = import.meta.env.VITE_USE_MOCK === "true";
+const useMock = env.VITE_USE_MOCK === "true";
 
 // Экспортируем флаг для использования в других частях приложения (например, для отключения криптографии)
 export const isMock = useMock;

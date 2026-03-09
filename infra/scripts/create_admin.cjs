@@ -1,12 +1,18 @@
 const { createClient } = require("@supabase/supabase-js");
+const path = require("path");
+require("dotenv").config({
+	path: process.env.ENV_FILE_PATH || path.join(__dirname, "../../app/.env"),
+});
 
-const SERVER_IP = "192.168.1.142";
-const SUPABASE_URL = `http://${SERVER_IP}:8000`;
-const SERVICE_KEY =
-	process.env.SUPABASE_SERVICE_ROLE_KEY ||
-	"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3Njg4NTIwMzcsImV4cCI6MjA4NDIxMjAzN30.ZRle5HN12hrhRVLnDCrOEYVCLfBWpRWL5Oafh3I3KBo";
-const EMAIL = "admin@example.com";
-const PASSWORD = "admin_password_123";
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const EMAIL = process.env.ADMIN_EMAIL || "admin@example.com";
+const PASSWORD = process.env.ADMIN_PASSWORD || "admin_password_123";
+
+if (!SUPABASE_URL || !SERVICE_KEY) {
+	console.error("❌ VITE_SUPABASE_URL или SUPABASE_SERVICE_ROLE_KEY не найдены");
+	process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -44,25 +50,47 @@ async function main() {
 			return console.error("❌ Create Error:", createError.message);
 	}
 
+	// 2. Получаем ID пользователя
+	const user = existingUser || (await supabase.auth.admin.createUser({
+		email: EMAIL,
+		password: PASSWORD,
+		email_confirm: true,
+	})).data.user;
+
+	if (!user) {
+		return console.error("❌ Не удалось получить или создать пользователя");
+	}
+
+	const userId = user.id;
+	console.log(`\n🔨 Setting role 'admin' for user ${userId}...`);
+
+	// 3. Устанавливаем роль в таблице profiles
+	const { error: roleError } = await supabase
+		.from("profiles")
+		.update({ role: "admin" })
+		.eq("id", userId);
+
+	if (roleError) {
+		console.error("❌ Role Update Error:", roleError.message);
+		console.log("💡 Возможно, профиль еще не создан триггером. Пробую вставить...");
+		
+		const { error: insertError } = await supabase
+			.from("profiles")
+			.upsert({ id: userId, role: "admin" });
+			
+		if (insertError) {
+			console.error("❌ Upsert Error:", insertError.message);
+		} else {
+			console.log("✅ Admin profile created successfully via upsert.");
+		}
+	} else {
+		console.log("✅ Role 'admin' set successfully.");
+	}
+
 	console.log(`\n🎉 DONE!`);
 	console.log(`Email: ${EMAIL}`);
 	console.log(`Password: ${PASSWORD}`);
-	console.log(`\nТеперь вы можете войти, просто введя эти данные.`);
-
-	console.log(
-		`\n🔨 Trying to generate a Magic Link anyway (wait 10s if it hangs)...`,
-	);
-	const { data, error: linkError } = await supabase.auth.admin.generateLink({
-		type: "magiclink",
-		email: EMAIL,
-		options: { redirectTo: "https://knok-knok.ru:8443/profile" },
-	});
-
-	if (linkError) {
-		console.log("⚠️ Magic Link generation failed, but password is set!");
-	} else {
-		console.log("👇 OR USE THIS LINK:\n", data.properties.action_link);
-	}
+	console.log(`\nТеперь вы можете войти с правами администратора.`);
 }
 
 main();

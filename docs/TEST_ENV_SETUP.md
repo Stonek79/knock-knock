@@ -15,13 +15,13 @@
 │                  Тестовое окружение                      │
 ├─────────────────────────────────────────────────────────┤
 │                                                          │
-│  Ваш Mac (разработка)                                    │
+│  Клиент (Internet/Home)                                  │
+│         ↓                                                │
+│  VPS: nginx.staging.conf (staging-api.knok-knok.ru)      │
 │         ↓ (через WireGuard VPN)                         │
-│  Домашний сервер (192.168.1.142 или 10.0.0.X)           │
+│  Домашний сервер (10.0.0.2:8001)                         │
 │         ↓                                                │
-│  Docker: Supabase Test (порт 8001)                       │
-│         ↓                                                │
-│  PostgreSQL: тестовая БД (isolated)                      │
+│  Docker: Supabase Staging (Isolated)                     │
 │                                                          │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -68,7 +68,7 @@ cd /path/to/knock-knock/app
 
 # Подключитесь к тестовой БД
 npx supabase db push \
-  --db-url "postgresql://postgres:YOUR_PASSWORD@192.168.1.142:54322/postgres"
+  --db-url "postgresql://postgres:YOUR_PASSWORD@192.168.1.ХХХ:54322/postgres"
 ```
 
 ### 1.4. Получите ключи доступа
@@ -99,10 +99,11 @@ cp .env.example .env.test
 ```bash
 # app/.env.test
 
-# URL тестового Supabase (IP домашнего сервера через VPN)
-VITE_SUPABASE_URL=http://192.168.1.142:8001
-# ИЛИ через WireGuard (рекомендуется):
-# VITE_SUPABASE_URL=http://10.0.0.2:8001
+# URL тестового Supabase (Публичный поддомен через VPS)
+VITE_SUPABASE_URL=https://staging-api.knok-knok.ru:8443
+
+# ИЛИ локально (если вы в домашней сети без VPN):
+# VITE_SUPABASE_URL=http://192.168.1.ХХХ:8001
 
 # Anon key (получили на шаге 1.4)
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -137,7 +138,7 @@ JWT_SECRET=your-jwt-secret-at-least-32-chars-long
 # С вашего Mac
 ping 10.0.0.2
 # ИЛИ
-ping 192.168.1.142
+ping 192.168.1.ХХХ
 ```
 
 Если пинг не проходит — проверьте WireGuard:
@@ -152,7 +153,7 @@ sudo wg show
 ### 3.2. Проверьте доступ к Supabase
 
 ```bash
-curl http://192.168.1.142:8001/rest/v1/ \
+curl http://192.168.1.ХХХ:8001/rest/v1/ \
   -H "apikey: $VITE_SUPABASE_ANON_KEY" \
   -H "Authorization: Bearer $VITE_SUPABASE_ANON_KEY"
 ```
@@ -195,7 +196,7 @@ node seed_data.cjs
 ### 4.2. Проверьте данные в БД
 
 ```bash
-# Через Supabase Studio (http://192.168.1.142:8001)
+# Через Supabase Studio (http://192.168.1.ХХХ :8001)
 # Или через SQL:
 
 SELECT COUNT(*) FROM profiles;

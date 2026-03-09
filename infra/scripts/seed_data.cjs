@@ -1,19 +1,24 @@
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../../app/.env") });
+require("dotenv").config({
+	path: process.env.ENV_FILE_PATH || path.join(__dirname, "../../app/.env"),
+});
 const { createClient } = require("@supabase/supabase-js");
 const { faker } = require("@faker-js/faker/locale/ru");
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-// Для сидинга нужен SERVICE_ROLE key, чтобы создавать пользователей и обходить RLS
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// Валидация окружения
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 	console.error(
-		"❌ Ошибка: Не найдены VITE_SUPABASE_URL или SUPABASE_SERVICE_ROLE_KEY в app/.env",
+		"❌ Ошибка: Не найдены VITE_SUPABASE_URL или SUPABASE_SERVICE_ROLE_KEY",
 	);
-	console.log(
-		"💡 Убедитесь, что у вас есть SUPABASE_SERVICE_ROLE_KEY (не anon key!)",
-	);
+	console.error("");
+	console.error("💡 Убедитесь, что переменные окружения заданы:");
+	console.error("   export VITE_SUPABASE_URL=http://your-server:8000");
+	console.error("   export SUPABASE_SERVICE_ROLE_KEY=your-key");
+	console.error("");
+	console.error("Или используйте файл .env в папке scripts/");
 	process.exit(1);
 }
 
@@ -33,10 +38,15 @@ async function seed() {
 	// 1. Создаем пользователей
 	const users = [];
 	for (let i = 0; i < USERS_COUNT; i++) {
-		const email = faker.internet.email();
-		const password = "password123";
-		const fullName = faker.person.fullName();
-		const username = faker.internet.username();
+		const isAdmin = i === 0;
+		const email = isAdmin
+			? process.env.ADMIN_EMAIL || "admin@example.com"
+			: faker.internet.email();
+		const password = isAdmin
+			? process.env.ADMIN_PASSWORD || "admin_password_123"
+			: "password123";
+		const fullName = isAdmin ? "Administrator" : faker.person.fullName();
+		const username = isAdmin ? "admin" : faker.internet.username();
 
 		// Создаем Auth User
 		const { data: authData, error: authError } =
@@ -44,28 +54,43 @@ async function seed() {
 				email,
 				password,
 				email_confirm: true,
-				user_metadata: { full_name: fullName },
+				user_metadata: { full_name: fullName, username },
 			});
 
 		if (authError) {
 			console.error(`Ошибка создания юзера ${email}:`, authError.message);
+			// Если юзер уже есть — пробуем найти его ID
+			const { data: list } = await supabase.auth.admin.listUsers();
+			const existing = list.users.find((u) => u.email === email);
+			if (existing) {
+				console.log(`ℹ️ Пользователь уже существует, используем его ID: ${existing.id}`);
+				users.push({ id: existing.id, email });
+				
+				// Обновляем роль на всякий случай
+				await supabase.from("profiles").upsert({ 
+					id: existing.id, 
+					role: isAdmin ? "admin" : "user",
+					username,
+					display_name: fullName
+				});
+			}
 			continue;
 		}
 
 		const userId = authData.user.id;
-		console.log(`✅ Создан пользователь: ${email} (${userId})`);
+		console.log(`✅ Создан пользователь: ${email} (${userId}) ${isAdmin ? "[ADMIN]" : ""}`);
 
-		// Создаем профиль (если триггер не сработал или нужно обновить)
-		// Обычно триггер on_auth_user_created создает профиль, но обновим поля
+		// Обновляем профиль (роль и данные)
 		const { error: profileError } = await supabase
 			.from("profiles")
-			.update({
+			.upsert({
+				id: userId,
 				username,
 				display_name: fullName,
 				avatar_url: faker.image.avatar(),
+				role: isAdmin ? "admin" : "user",
 				updated_at: new Date(),
-			})
-			.eq("id", userId);
+			});
 
 		if (profileError) {
 			console.error(

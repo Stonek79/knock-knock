@@ -64,6 +64,11 @@
             "includes": ["src/lib/mock/**"],
             "linter": { "enabled": false },
             "formatter": { "enabled": false }
+        },
+        {
+            "includes": ["**/*.md", "**/*.mdx"],
+            "linter": { "enabled": false },
+            "formatter": { "enabled": false }
         }
     ]
 }

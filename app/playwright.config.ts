@@ -97,11 +97,26 @@ export default defineConfig({
         },
     ],
 
-    // WebServer (опционально, для запуска приложения перед тестами)
-    // webServer: {
-    //   command: 'npm run dev',
-    //   url: 'http://localhost:5173',
-    //   reuseExistingServer: !process.env.CI,
-    //   timeout: 120 * 1000,
-    // },
+    // WebServer для автоматического запуска приложения перед тестами
+    webServer: {
+        // Команда запуска сервера
+        command: process.env.CI
+            ? "npm run build && npm run preview"
+            : "npm run dev",
+        // Порт приложения
+        url: "http://localhost:5173",
+        // Переиспользовать существующий сервер (не в CI)
+        reuseExistingServer: !process.env.CI,
+        // Таймаут запуска (2 минуты для dev, 5 для build)
+        timeout: process.env.CI ? 5 * 60 * 1000 : 2 * 60 * 1000,
+        // stdout для отладки
+        stdout: "pipe",
+        // stderr для отладки
+        stderr: "pipe",
+        // Переменные окружения для сервера
+        env: {
+            // В CI использовать mock, если не задано иное
+            VITE_USE_MOCK: process.env.VITE_USE_MOCK || "true",
+        },
+    },
 });

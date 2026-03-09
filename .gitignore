@@ -4,12 +4,17 @@ node_modules/
 .idea
 .vscode
 *.log
+
+# Environment files (ALL .env* files except .env.example)
+*.env*
+!*.env.example
 .env
 .env.local
 .env.test
 .env.production
 .env.development
 .env.supabase
+
 .wireguard_keys
 dist/
 build/
