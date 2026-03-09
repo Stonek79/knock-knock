@@ -9,6 +9,9 @@
 - [x] Настройка линтера Biome и Husky (pre-commit hooks).
 - [x] Настройка Vite + TypeScript + React 19.
 - [x] Подключение Radix UI и тем.
+- [x] **Staging Environment**: Настройка изолированного окружения на домашнем сервере (VPN + VPS).
+- [x] **Production Ready**: Очистка боевой базы и создание защищенного аккаунта администратора.
+- [x] **QA Infrastructure**: Интеграция сид-скриптов и механики переключения .env файлов.
 
 ### 2. Базовой Функционал
 - [x] **Роутинг**: TanStack Router (File-based routing).
