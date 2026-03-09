@@ -62,9 +62,6 @@ export default defineConfig({
             testMatch: /.*\.spec\.ts/,
             use: {
                 ...devices["Desktop Chrome"],
-                env: {
-                    VITE_USE_MOCK: "true",
-                },
             },
         },
 
@@ -73,12 +70,6 @@ export default defineConfig({
             testMatch: /.*\.spec\.ts/,
             use: {
                 ...devices["iPhone 14"],
-                env: {
-                    VITE_USE_MOCK: "false",
-                    // Все переменные должны быть заданы через .env.test файл
-                    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
-                    VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY,
-                },
             },
         },
 
@@ -87,12 +78,6 @@ export default defineConfig({
             testMatch: /.*\.manual\.spec\.ts/,
             use: {
                 ...devices["Desktop Chrome"],
-                env: {
-                    VITE_USE_MOCK: "false",
-                    // Все переменные должны быть заданы через .env.production файл
-                    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
-                    VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY,
-                },
             },
         },
     ],
