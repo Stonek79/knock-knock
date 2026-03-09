@@ -12,16 +12,19 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  Тестовое окружение                      │
+│                  Тестовое окружение (Staging)           │
 ├─────────────────────────────────────────────────────────┤
 │                                                          │
-│  Клиент (Internet/Home)                                  │
+│  Mac (Разработка)                                        │
 │         ↓                                                │
-│  VPS: nginx.staging.conf (staging-api.knok-knok.ru)      │
-│         ↓ (через WireGuard VPN)                         │
-│  Домашний сервер (10.0.0.2:8001)                         │
-│         ↓                                                │
-│  Docker: Supabase Staging (Isolated)                     │
+│  VPS (api.knok-knok.ru) -> Nginx Proxy                   │
+│         ↓ (WireGuard VPN: 10.50.0.1 <-> 10.50.0.2)       │
+│  Домашний сервер (10.50.0.2)                             │
+│         ↓ (Docker Project: staging)                      │
+│  Services:                                               │
+│    - API (Kong): 8445 (через VPS)                        │
+│    - Studio: 8446 (через VPS)                            │
+│    - DB: 54323 (на сервере)                              │
 │                                                          │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -30,36 +33,21 @@
 
 ## 🔧 Шаг 1: Настройка домашнего сервера
 
-### 1.1. Поднимите тестовый Supabase
+### 1.1. Запуск Docker-контейнеров
 
-На домашнем сервере (Ubuntu/Manjaro):
-
-```bash
-# Перейдите в директорию с Supabase
-cd ~/supabase/docker
-
-# Скопируйте конфиг для тестового окружения
-cp docker-compose.yml docker-compose.test.yml
-```
-
-Отредактируйте `docker-compose.test.yml`:
-```yaml
-services:
-  kong:
-    ports:
-      - "8001:8000"  # Порт 8001 для тестов (не 8000!)
-  # ... остальные сервисы
-```
-
-### 1.2. Запустите тестовый Supabase
+На домашнем сервере перейдите в `~/supabase-staging` и используйте отдельный конфиг:
 
 ```bash
-# Остановите production (если работает на порту 8000)
-docker compose down
+cd ~/supabase-staging
 
-# Запустите тестовый на порту 8001
-docker compose -f docker-compose.test.yml up -d
+# Запуск (всегда используйте проектное имя staging)
+docker compose -p staging up -d
 ```
+
+Сервисы стейджинга изолированы (префикс `staging-`) и настроены на порты:
+- **Kong**: `8001` (локально) -> `8445` (через VPS)
+- **Studio**: `3002` (локально) -> `8446` (через VPS)
+- **Database**: `54323` (доступна в локальной сети)
 
 ### 1.3. Примените миграции
 
@@ -99,29 +87,24 @@ cp .env.example .env.test
 ```bash
 # app/.env.test
 
-# URL тестового Supabase (Публичный поддомен через VPS)
-VITE_SUPABASE_URL=https://staging-api.knok-knok.ru:8443
+# URL тестового Supabase (через VPS)
+VITE_SUPABASE_URL=https://staging-api.knok-knok.ru:8445
 
-# ИЛИ локально (если вы в домашней сети без VPN):
-# VITE_SUPABASE_URL=http://192.168.1.ХХХ:8001
-
-# Anon key (получили на шаге 1.4)
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+# Anon key (из ~/supabase-staging/.env на сервере)
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR...
 
 # Отключаем mock для реальной БД
 VITE_USE_MOCK=false
 
-# Service role key (для seed-скриптов)
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+# Service role key (ДЛЯ СКРИПТОВ!)
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR...
 
-# Пароль postgres (из конфига Supabase)
-SUPABASE_CLI_PASSWORD=your-postgres-password
+# IP домашнего сервера внутри VPN
+SUPABASE_HOME_IP_ADDRESS=10.50.0.2
 
-# IP домашнего сервера (внутри VPN)
-SUPABASE_HOME_IP_ADDRESS=10.0.0.2
-
-# JWT Secret (из конфига Supabase)
-JWT_SECRET=your-jwt-secret-at-least-32-chars-long
+# Данные администратора для тестов
+ADMIN_EMAIL=admin-test@example.com
+ADMIN_PASSWORD=your_password
 ```
 
 ⚠️ **Важно:**
@@ -183,8 +166,8 @@ npm run dev
 ### 4.1. Создайте тестовых пользователей
 
 ```bash
-cd /path/to/knock-knock/infra/scripts
-node seed_data.cjs
+# Из корня проекта на Маке
+NODE_PATH=app/node_modules ENV_FILE_PATH=app/.env.test node infra/scripts/create_admin.cjs
 ```
 
 Это создаст:

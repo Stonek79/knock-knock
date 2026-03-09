@@ -28,6 +28,8 @@ async function main() {
 
 	const existingUser = users.find((u) => u.email === EMAIL);
 
+	let user = existingUser;
+
 	if (existingUser) {
 		console.log("✅ User exists! Updating password and confirming email...");
 		const { error: updateError } = await supabase.auth.admin.updateUserById(
@@ -41,21 +43,15 @@ async function main() {
 			return console.error("❌ Update Error:", updateError.message);
 	} else {
 		console.log("🔨 Creating new user...");
-		const { error: createError } = await supabase.auth.admin.createUser({
+		const { data: createData, error: createError } = await supabase.auth.admin.createUser({
 			email: EMAIL,
 			password: PASSWORD,
 			email_confirm: true,
 		});
 		if (createError)
 			return console.error("❌ Create Error:", createError.message);
+		user = createData.user;
 	}
-
-	// 2. Получаем ID пользователя
-	const user = existingUser || (await supabase.auth.admin.createUser({
-		email: EMAIL,
-		password: PASSWORD,
-		email_confirm: true,
-	})).data.user;
 
 	if (!user) {
 		return console.error("❌ Не удалось получить или создать пользователя");
