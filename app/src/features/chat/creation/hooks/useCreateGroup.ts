@@ -1,7 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
-import { CHAT_TYPE, ROUTES } from "@/lib/constants";
+import { useToast } from "@/components/ui/Toast";
+import { CHAT_TYPE, QUERY_KEYS, ROUTES } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 import { MOCK_GROUP_AVATARS } from "@/lib/mock/data";
 import { RoomService } from "@/lib/services/room";
 import { useAuthStore } from "@/stores/auth";
@@ -12,12 +14,13 @@ interface UseCreateGroupProps {
 
 /**
  * Хук логики создания группы.
- * Управляет состоянием формы, выбором участников и отправкой API запроса.
+ * Управляет состоянием формы, выбором участников и отправкой запроса через RoomService.
  */
 export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { user } = useAuthStore();
+    const toast = useToast();
+    const { profile: user } = useAuthStore();
 
     const [groupName, setGroupName] = useState("");
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -34,7 +37,7 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
     }, []);
 
     /**
-     * Симуляция выбора аватара
+     * Симуляция выбора аватара (заглушка для dev-режима, заменить на загрузку файла)
      */
     const handleAvatarClick = useCallback(() => {
         const random =
@@ -45,7 +48,7 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
     }, []);
 
     /**
-     * Создание группы
+     * Создание группы через RoomService
      */
     const handleCreateGroup = useCallback(async () => {
         if (selectedIds.length < 2 || !groupName.trim() || !user) {
@@ -54,24 +57,29 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
 
         setIsCreating(true);
         try {
-            const res = await RoomService.createRoom(
-                groupName.trim(),
-                CHAT_TYPE.GROUP,
-                user.id,
-                selectedIds,
-                false, // Групповые чаты обычно не эфемерные
+            const res = await RoomService.createRoom({
+                name: groupName.trim(),
+                type: CHAT_TYPE.GROUP,
+                myUserId: user.id,
+                peerIds: selectedIds,
                 avatarUrl,
-            );
+            });
 
             if (res.isErr()) {
-                throw new Error(res.error.message);
+                logger.error("Ошибка создания группы", res.error);
+                toast({
+                    title: "Не удалось создать группу",
+                    description: res.error.message,
+                    variant: "error",
+                });
+                return;
             }
+
             const { roomId } = res.value;
 
-            // Инвалидируем кеш списка комнат
+            // Инвалидируем кэш списка комнат
             await queryClient.invalidateQueries({
-                queryKey: ["rooms"],
-                refetchType: "all",
+                queryKey: QUERY_KEYS.rooms(user.id),
             });
 
             // Закрываем диалог и переходим в чат
@@ -83,7 +91,11 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
                 params: { roomId },
             });
         } catch (error) {
-            console.error("Failed to create group:", error);
+            logger.error("Непредвиденная ошибка при создании группы", error);
+            toast({
+                title: "Ошибка создания группы",
+                variant: "error",
+            });
         } finally {
             setIsCreating(false);
         }
@@ -96,17 +108,18 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
         navigate,
         avatarUrl,
         resetState,
+        toast,
     ]);
 
     /**
-     * Удаление участника
+     * Удаление участника из списка выбранных
      */
     const removeParticipant = useCallback((id: string) => {
         setSelectedIds((prev) => prev.filter((pid) => pid !== id));
     }, []);
 
     /**
-     * Обёртка для onOpenChange с сбросом состояния
+     * Обёртка для onOpenChange с сбросом состояния при закрытии
      */
     const handleOpenChange = useCallback(
         (newOpen: boolean) => {

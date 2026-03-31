@@ -3,7 +3,7 @@ import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import { Flex } from "@/components/layout/Flex";
 import { Text } from "@/components/ui/Text";
 import { useCachedMedia } from "@/lib/cache/media";
-import { ATTACHMENT_TYPES } from "@/lib/constants/storage";
+import { ATTACHMENT_TYPES } from "@/lib/constants";
 import type { Attachment } from "@/lib/types";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { AudioMessagePlayer } from "../../../AudioMessagePlayer";

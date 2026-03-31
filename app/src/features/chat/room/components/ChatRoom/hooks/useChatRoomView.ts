@@ -19,7 +19,7 @@ import { useAuthStore } from "@/stores/auth";
  * @param roomId - ID комнаты чата
  */
 export function useChatRoomView(roomId: string) {
-    const { user } = useAuthStore();
+    const { profile: user } = useAuthStore();
     const { pathname } = useLocation();
 
     // --- Данные комнаты (для определения типа и участников) ---
@@ -34,14 +34,31 @@ export function useChatRoomView(roomId: string) {
     );
 
     // --- Отслеживание непрочитанных ---
-    const { firstUnreadId, markAsRead } = useUnreadTracking(roomId, messages);
+    const lastReadAt = useMemo(() => {
+        return room?.room_members?.find((m) => m.user_id === user?.id)
+            ?.last_read_at;
+    }, [room?.room_members, user?.id]);
 
-    // Помечаем сообщения прочитанными при unmount (выходе из комнаты)
+    const { firstUnreadId, markAsRead } = useUnreadTracking(
+        roomId,
+        messages,
+        lastReadAt,
+    );
+
+    // Помечаем сообщения прочитанными при входе и выходе из комнаты
+    // Используем ref, чтобы избежать срабатывания эффекта при каждом изменении функции markAsRead
+    const markAsReadRef = useRef(markAsRead);
+    markAsReadRef.current = markAsRead;
+
     useEffect(() => {
+        // При входе помечаем прочитанным
+        markAsReadRef.current();
+
         return () => {
-            markAsRead();
+            // При выходе тоже (на случай если были новые сообщения пока чат был открыт)
+            markAsReadRef.current();
         };
-    }, [markAsRead]);
+    }, []);
 
     // --- Ref для управления скроллом (передаётся в MessageList) ---
     const scrollRef = useRef<{ scrollToBottom: () => void } | null>(null);
@@ -62,12 +79,30 @@ export function useChatRoomView(roomId: string) {
      * В «Избранном» (кроме self-chat) фильтруем только сообщения со звёздочкой.
      * В обычном режиме — показываем все.
      */
+    /**
+     * Фильтрация сообщений:
+     * 1. Исключаем сообщения, удаленные отправителем (мягкое удаление для всех, но отправитель их не видит).
+     * 2. Исключаем сообщения, которые пользователь скрыл лично для себя (deleted_by).
+     * 3. В режиме «Избранного» оставляем только сообщения со звездочкой.
+     */
     const filteredMessages = useMemo(() => {
+        const result = messages.filter((m) => {
+            // Если я сам удалил свое сообщение — оно исчезает для меня
+            if (m.is_deleted && m.sender_id === user?.id) {
+                return false;
+            }
+            // Если я скрыл сообщение (любое) только для себя
+            if (m.metadata?.deleted_by?.includes(user?.id || "")) {
+                return false;
+            }
+            return true;
+        });
+
         if (isFavoritesView && !isSelfChat) {
-            return messages.filter((m) => m.is_starred);
+            return result.filter((m) => m.is_starred);
         }
-        return messages;
-    }, [messages, isFavoritesView, isSelfChat]);
+        return result;
+    }, [messages, isFavoritesView, isSelfChat, user?.id]);
 
     return {
         messages: filteredMessages,

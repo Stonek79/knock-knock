@@ -4,6 +4,7 @@
  * Поддерживает режим выделения (Selection Mode) и редактирования.
  */
 
+import clsx from "clsx";
 import { ArrowDown } from "lucide-react";
 import { type RefObject, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,6 +16,7 @@ import { UnreadDivider } from "@/features/chat/message/components/UnreadDivider"
 import { useChatScroll } from "@/features/chat/room/hooks/useChatScroll";
 import { useUserActivity } from "@/hooks/useUserActivity";
 import type { DecryptedMessageWithProfile } from "@/lib/types/message";
+import type { RoomType } from "@/lib/types/room";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { getMessageGroupPosition } from "@/lib/utils/messageGrouping";
 import { useAuthStore } from "@/stores/auth";
@@ -33,6 +35,7 @@ interface MessageListProps {
     /** Состояние Избранного (фильтрация только звезд) */
     isFavoritesView?: boolean;
     roomKey?: CryptoKey;
+    roomType?: RoomType;
 }
 
 export function MessageList({
@@ -45,9 +48,10 @@ export function MessageList({
     firstUnreadId,
     isFavoritesView,
     roomKey,
+    roomType,
 }: MessageListProps) {
     const { t } = useTranslation();
-    const { user } = useAuthStore();
+    const { pbUser, profile: user } = useAuthStore();
 
     const {
         viewportRef,
@@ -112,7 +116,7 @@ export function MessageList({
                 <Flex direction="column" gap="3">
                     {messages?.map(
                         (msg: DecryptedMessageWithProfile, index) => {
-                            const isOwn = user?.id === msg.sender_id;
+                            const isOwn = pbUser?.id === msg.sender_id;
                             const isEditing = editingId === msg.id && isOwn;
                             const isFirstUnread = msg.id === firstUnreadId;
 
@@ -134,7 +138,12 @@ export function MessageList({
                                     <MessageBubble
                                         content={msg.content}
                                         isOwn={isOwn}
-                                        timestamp={msg.created_at}
+                                        timestamp={
+                                            (msg.is_deleted
+                                                ? msg.updated_at
+                                                : msg.created_at) ||
+                                            msg.created_at
+                                        }
                                         senderName={msg.profiles?.display_name}
                                         senderAvatar={
                                             msg.profiles?.avatar_url ??
@@ -154,6 +163,7 @@ export function MessageList({
                                         groupPosition={groupPosition}
                                         attachments={msg.attachments}
                                         roomKey={roomKey}
+                                        roomType={roomType}
                                     />
                                 </Box>
                             );
@@ -168,7 +178,10 @@ export function MessageList({
                         shape="round"
                         variant="solid"
                         onClick={() => scrollToBottom()}
-                        className={`${styles.scrollButton} ${!isUserActive ? styles.scrollButtonHidden : ""}`}
+                        className={clsx(
+                            styles.scrollButton,
+                            !isUserActive && styles.scrollButtonHidden,
+                        )}
                     >
                         <ArrowDown size={ICON_SIZE.sm} />
                     </IconButton>

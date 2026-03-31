@@ -72,12 +72,20 @@ export const Avatar = forwardRef<
     ) => {
         // Генерируем инициалы
         const getInitials = (fullName: string) => {
-            const parts = fullName.trim().split(/\s+/);
-            if (parts.length === 1) {
-                return parts[0].substring(0, 2).toUpperCase();
+            const rawParts = fullName.trim().split(/\s+/);
+
+            // Фильтруем части имени: игнорируем слова с точками (префиксы),
+            // но только если после фильтрации останется хотя бы одно слово.
+            const parts = rawParts.filter((word) => !word.includes("."));
+            const finalParts = parts.length > 0 ? parts : rawParts;
+
+            if (finalParts.length === 1) {
+                return finalParts[0].substring(0, 2).toUpperCase();
             }
-            if (parts.length >= 2) {
-                return (parts[0][0] + parts[1][0]).toUpperCase();
+            if (finalParts.length >= 2) {
+                return (
+                    finalParts[0][0] + (finalParts[1]?.[0] || "")
+                ).toUpperCase();
             }
             return "?";
         };

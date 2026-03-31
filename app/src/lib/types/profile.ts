@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { USER_WEB_STATUS } from "@/lib/constants";
 import type { profileModelSchema, profileSchema } from "@/lib/schemas/profile";
 
 /**
@@ -15,5 +16,5 @@ export type ProfileSchema = z.infer<typeof profileSchema>;
  * Профиль с статусом (онлайн/офлайн)
  */
 export type ProfileWithStatus = Profile & {
-    status: "online" | "offline";
+    status: typeof USER_WEB_STATUS.ONLINE | typeof USER_WEB_STATUS.OFFLINE;
 };

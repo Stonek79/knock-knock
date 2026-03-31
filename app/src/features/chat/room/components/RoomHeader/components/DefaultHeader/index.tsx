@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { useToast } from "@/components/ui/Toast";
 import { useGroupPresence } from "@/features/presence/hooks/useGroupPresence";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { ROOM_TYPE } from "@/lib/constants";
 import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
 import { useRoomHeaderInfo } from "../../hooks/useRoomHeaderInfo";
 import rootStyles from "../../roomheader.module.css";
@@ -112,7 +113,7 @@ export function DefaultHeader({
 
                     <RoomHeaderTitle
                         displayName={displayName}
-                        isEphemeral={room?.is_ephemeral}
+                        isEphemeral={room?.type === ROOM_TYPE.EPHEMERAL}
                         isDM={isDM}
                         peer={resolvedPeer}
                         membersCount={
@@ -126,7 +127,7 @@ export function DefaultHeader({
             </Flex>
 
             <RoomHeaderActions
-                isEphemeral={room?.is_ephemeral}
+                isEphemeral={room?.type === ROOM_TYPE.EPHEMERAL}
                 onEndSession={onEndSession}
                 ending={ending}
                 onInfoClick={isGroup ? handleInfoClick : undefined}

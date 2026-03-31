@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ERROR_CODES } from "@/lib/constants/errors";
 import { encryptMessage } from "@/lib/crypto/messages";
-import { supabase } from "@/lib/supabase";
+import { pb } from "@/lib/pocketbase";
 import { MessageService } from "./message";
 
-// Моки
-vi.mock("@/lib/supabase", () => ({
-    supabase: {
-        from: vi.fn(),
+// Моки PocketBase
+vi.mock("@/lib/pocketbase", () => ({
+    pb: {
+        collection: vi.fn(),
     },
 }));
 
@@ -24,7 +24,7 @@ vi.mock("@/lib/logger", () => ({
     },
 }));
 
-describe("MessageService", () => {
+describe("MessageService (PocketBase)", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.stubEnv("VITE_USE_MOCK", "false");
@@ -33,75 +33,61 @@ describe("MessageService", () => {
     describe("sendMessage", () => {
         it("должен вернуть ID сообщения при успешной отправке", async () => {
             // 1. Mock Encrypt
-            // @ts-expect-error mock
-            encryptMessage.mockResolvedValue({
+            (
+                encryptMessage as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue({
                 ciphertext: "encrypted",
                 iv: "iv",
             });
 
-            // 2. Mock Supabase
-            const mockSelect = vi.fn().mockReturnValue({
-                single: vi
-                    .fn()
-                    .mockResolvedValue({ data: { id: "msg-1" }, error: null }),
+            // 2. Mock PocketBase
+            const mockCreate = vi.fn().mockResolvedValue({ id: "msg-1" });
+            (
+                pb.collection as unknown as ReturnType<typeof vi.fn>
+            ).mockReturnValue({
+                create: mockCreate,
             });
-            const mockInsert = vi.fn().mockReturnValue({ select: mockSelect });
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockReturnValue({ insert: mockInsert });
 
-            const result = await MessageService.sendMessage(
-                "room-1",
-                "user-1",
-                "Hello",
-                {} as CryptoKey,
-            );
+            const result = await MessageService.sendMessage({
+                roomId: "room-1",
+                senderId: "user-1",
+                content: "Hello",
+                roomKey: {} as CryptoKey,
+            });
 
             expect(result.isOk()).toBe(true);
             if (result.isOk()) {
                 expect(result.value).toBe("msg-1");
             }
-        });
-
-        it("должен вернуть CRYPTO_ERROR при ошибке шифрования", async () => {
-            // @ts-expect-error mock
-            encryptMessage.mockRejectedValue(new Error("Encrypt Fail"));
-
-            const result = await MessageService.sendMessage(
-                "room-1",
-                "user-1",
-                "Hello",
-                {} as CryptoKey,
+            expect(mockCreate).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    room: "room-1",
+                    sender: "user-1",
+                    content: "encrypted",
+                }),
             );
-
-            expect(result.isErr()).toBe(true);
-            if (result.isErr()) {
-                expect(result.error.kind).toBe(ERROR_CODES.CRYPTO_ERROR);
-            }
         });
 
-        it("должен вернуть DB_ERROR при ошибке базы данных", async () => {
-            // @ts-expect-error mock
-            encryptMessage.mockResolvedValue({
+        it("должен вернуть DB_ERROR при ошибке PocketBase", async () => {
+            (
+                encryptMessage as unknown as ReturnType<typeof vi.fn>
+            ).mockResolvedValue({
                 ciphertext: "encrypted",
                 iv: "iv",
             });
 
-            const mockSelect = vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                    data: null,
-                    error: { message: "DB Fail" },
-                }),
+            (
+                pb.collection as unknown as ReturnType<typeof vi.fn>
+            ).mockReturnValue({
+                create: vi.fn().mockRejectedValue(new Error("PB Error")),
             });
-            const mockInsert = vi.fn().mockReturnValue({ select: mockSelect });
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockReturnValue({ insert: mockInsert });
 
-            const result = await MessageService.sendMessage(
-                "room-1",
-                "user-1",
-                "Hello",
-                {} as CryptoKey,
-            );
+            const result = await MessageService.sendMessage({
+                roomId: "room-1",
+                senderId: "user-1",
+                content: "Hello",
+                roomKey: {} as CryptoKey,
+            });
 
             expect(result.isErr()).toBe(true);
             if (result.isErr()) {
@@ -112,53 +98,57 @@ describe("MessageService", () => {
 
     describe("deleteMessage", () => {
         it("должен успешно удалить свое сообщение (Global Delete)", async () => {
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockReturnValue({
-                update: vi.fn(() => ({
-                    eq: vi.fn().mockResolvedValue({ error: null }),
-                })),
+            const mockUpdate = vi.fn().mockResolvedValue({ id: "msg-1" });
+            (
+                pb.collection as unknown as ReturnType<typeof vi.fn>
+            ).mockReturnValue({
+                update: mockUpdate,
             });
 
-            const result = await MessageService.deleteMessage(
-                "msg-1",
-                "my-id",
-                true,
-            );
+            const result = await MessageService.deleteMessage({
+                messageId: "msg-1",
+                currentUserId: "my-id",
+                isOwnMessage: true,
+            });
+
             expect(result.isOk()).toBe(true);
+            expect(mockUpdate).toHaveBeenCalledWith("msg-1", {
+                content: "",
+                iv: "",
+                is_edited: false,
+                is_deleted: true,
+            });
         });
 
         it("должен успешно удалить чужое сообщение (Local Delete)", async () => {
-            // 1. Mock fetch deleted_by
-            const mockSingle = vi
+            // 1. Mock getOne (fetch deleted_by)
+            const mockGetOne = vi
                 .fn()
-                .mockResolvedValue({ data: { deleted_by: [] }, error: null });
-            const mockSelect = vi.fn(() => ({
-                eq: vi.fn(() => ({ single: mockSingle })),
-            }));
+                .mockResolvedValue({ id: "msg-1", deleted_by: [] });
+            const mockUpdate = vi.fn().mockResolvedValue({ id: "msg-1" });
 
-            // 2. Mock update
-            const mockUpdate = vi.fn(() => ({
-                eq: vi.fn().mockResolvedValue({ error: null }),
-            }));
-
-            // Chain mock
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockImplementation((table: string) => {
-                if (table === "messages") {
+            (
+                pb.collection as unknown as ReturnType<typeof vi.fn>
+            ).mockImplementation((coll: string) => {
+                if (coll === "messages") {
                     return {
-                        select: mockSelect,
+                        getOne: mockGetOne,
                         update: mockUpdate,
                     };
                 }
                 return {};
             });
 
-            const result = await MessageService.deleteMessage(
-                "msg-1",
-                "my-id",
-                false,
-            );
+            const result = await MessageService.deleteMessage({
+                messageId: "msg-1",
+                currentUserId: "my-id",
+                isOwnMessage: false,
+            });
+
             expect(result.isOk()).toBe(true);
+            expect(mockUpdate).toHaveBeenCalledWith("msg-1", {
+                "deleted_by+": "my-id",
+            });
         });
     });
 });

@@ -10,7 +10,6 @@ import { CreateChatDialog, CreateGroupDialog } from "@/features/chat/creation";
 import { CHAT_TYPE } from "@/lib/constants";
 import type { ChatType } from "@/lib/types";
 import { useChatList } from "../hooks/useChatList";
-import { useChatListSubscription } from "../hooks/useChatListSubscription";
 import { useUnreadCounts } from "../hooks/useUnreadCounts";
 import { ChatListHeader } from "./ChatListHeader";
 import { ChatListItem } from "./ChatListItem";
@@ -40,9 +39,6 @@ export function ChatList() {
     const filteredChats = chats.filter((chat) =>
         chat.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-
-    // Realtime-подписка на новые сообщения и комнаты
-    useChatListSubscription();
 
     return (
         <div className={styles.container}>

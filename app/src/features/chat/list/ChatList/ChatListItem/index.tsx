@@ -69,7 +69,7 @@ export function ChatListItem({
  */
 function ChatListItemContent({ chat }: { chat: ChatItem }) {
     return (
-        <Flex width="100%" minWidth={0} gap="3">
+        <Flex width="100%" minWidth={0} gap="3" data-testid="chat-item">
             <Avatar
                 size="md"
                 src={chat.avatar}
@@ -77,7 +77,12 @@ function ChatListItemContent({ chat }: { chat: ChatItem }) {
             />
             <Box className={styles.chatInfo}>
                 <div className={styles.name}>
-                    <span className={styles.chatName}>{chat.name}</span>
+                    <span
+                        className={styles.chatName}
+                        data-testid="chat-item-name"
+                    >
+                        {chat.name}
+                    </span>
                     <span className={styles.chatTime}>{chat.time}</span>
                 </div>
                 <span className={styles.lastMessage}>{chat.lastMessage}</span>

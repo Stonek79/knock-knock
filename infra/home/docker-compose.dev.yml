@@ -1,0 +1,19 @@
+version: '3'
+services:
+  pb-dev:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: knok-knok-pb-dev
+    restart: always
+    command: 
+      - serve 
+      - --http=0.0.0.0:8090 
+      - --dir=/pb/pb_data 
+      - --hooksDir=/pb/pb_hooks
+    ports:
+      - "9090:8090"
+    volumes:
+      - ./pb_data:/pb/pb_data
+      - ./pb_hooks:/pb/pb_hooks
+      - ./pb_schema.json:/pb/pb_schema.json
+    environment:
+      - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY_DEV}

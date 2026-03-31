@@ -74,7 +74,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/stores/auth", () => ({
-    useAuthStore: () => ({ user: MOCK_USER }),
+    useAuthStore: () => ({ pbUser: MOCK_USER, profile: MOCK_USER }),
 }));
 
 vi.mock("@/features/chat/message", async (importOriginal) => {

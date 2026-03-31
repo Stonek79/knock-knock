@@ -12,7 +12,7 @@ import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
 import { usePresence } from "@/features/presence";
-import { USER_CONTACTS_MODES, USER_WEB_STATUS } from "@/lib/constants/user";
+import { USER_CONTACTS_MODES, USER_WEB_STATUS } from "@/lib/constants";
 import type { Profile } from "@/lib/types/profile";
 import styles from "./contactlist.module.css";
 
@@ -59,8 +59,8 @@ export function ContactList({
         const query = deferredSearchQuery.toLowerCase();
         return contacts.filter(
             (contact) =>
-                contact.display_name.toLowerCase().includes(query) ||
-                contact.username.toLowerCase().includes(query),
+                contact.display_name?.toLowerCase().includes(query) ||
+                contact.username?.toLowerCase().includes(query),
         );
     }, [contacts, deferredSearchQuery]);
 
@@ -126,7 +126,7 @@ export function ContactList({
                             <Box className={styles.avatarContainer}>
                                 <Avatar
                                     size="md"
-                                    fallback={contact.display_name[0]}
+                                    fallback={contact.display_name?.[0] || "?"}
                                     radius="full"
                                     src={contact.avatar_url ?? undefined}
                                 />
@@ -141,10 +141,11 @@ export function ContactList({
                             </Box>
                             <Flex direction="column" className={styles.info}>
                                 <Text className={styles.name}>
-                                    {contact.display_name}
+                                    {contact.display_name ||
+                                        t("contacts.unknown", "Unknown")}
                                 </Text>
                                 <Text className={styles.statusText}>
-                                    @{contact.username}
+                                    @{contact.username || "user"}
                                     {isOnline && (
                                         <Text
                                             intent="success"

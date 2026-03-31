@@ -11,7 +11,7 @@ export interface MockRoom {
 	id: string;
 	name: string | null;
 	created_at: string;
-	type?: "group" | "direct";
+	type?: "group" | "direct" | "ephemeral";
 	is_ephemeral?: boolean;
 	avatar_url?: string | null;
 }

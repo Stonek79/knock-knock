@@ -3,6 +3,8 @@ import { Container } from "@/components/layout/Container";
 import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { useChatRoomData } from "@/features/chat/room/hooks/useChatRoomData";
+import { ROOM_TYPE } from "@/lib/constants";
+import { getErrorMessage } from "@/lib/utils/result";
 import { ChatRoomDialogs } from "./components/ChatRoomDialogs";
 import { ChatRoomGroupInfo } from "./components/ChatRoomGroupInfo";
 import { ChatRoomHeader } from "./components/ChatRoomHeader";
@@ -54,9 +56,7 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
                         {t("common.error", "Ошибка доступа")}
                     </AlertTitle>
                     <AlertDescription>
-                        {error instanceof Error
-                            ? error.message
-                            : t("common.unknownError")}
+                        {getErrorMessage(error) ?? t("common.unknownError")}
                     </AlertDescription>
                 </Alert>
             </Container>
@@ -70,7 +70,11 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
     return (
         <ChatRoomLayout
             header={<ChatRoomHeader roomId={roomId} />}
-            banner={room.is_ephemeral ? <PrivacyBanner /> : undefined}
+            banner={
+                room.type === ROOM_TYPE.EPHEMERAL ? (
+                    <PrivacyBanner />
+                ) : undefined
+            }
             messages={<ChatRoomMessages roomId={roomId} />}
             input={<ChatRoomInputArea roomId={roomId} />}
             dialogs={

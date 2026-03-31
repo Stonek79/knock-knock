@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { getAuthErrorMessage } from "@/features/auth/utils/auth-errors";
+import { getAuthErrorMessage } from "@/features/auth/utils/auth-error-mapping";
 import { FavoritesChatList } from "@/features/chat/list";
 import { ChatRoom } from "@/features/chat/room";
 import { useFavoritesRoom } from "@/features/favorites/hooks/useFavoritesRoom";
@@ -62,7 +62,7 @@ export function FavoritesPage() {
                 >
                     <span className={styles.errorText}>
                         {t("common.error", "Ошибка")}:{" "}
-                        {getAuthErrorMessage(error)}
+                        {t(getAuthErrorMessage(error))}
                     </span>
                 </Flex>
             ) : roomId ? (

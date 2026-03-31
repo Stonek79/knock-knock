@@ -1,33 +1,26 @@
 import { Navigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./login.module.css";
-import { SuccessView } from "./SuccessView";
 
 /**
  * Страница входа в приложение.
  * Отображает форму авторизации или заглушку успешного входа.
  */
 export function LoginPage() {
-    const { user } = useAuthStore();
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const { profile: user } = useAuthStore();
 
     // Если пользователь уже авторизован, редиректим
     if (user) {
         return <Navigate to={ROUTES.CHAT_LIST} />;
     }
 
-    if (isSubmitted) {
-        return <SuccessView onBack={() => setIsSubmitted(false)} />;
-    }
-
     return (
         <div className={styles.loginPage}>
             <Card className={styles.loginCard}>
-                <LoginForm onSuccess={() => setIsSubmitted(true)} />
+                <LoginForm onSuccess={() => {}} />
             </Card>
         </div>
     );

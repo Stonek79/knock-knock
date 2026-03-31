@@ -14,7 +14,7 @@ interface UseRoomHeaderInfoProps {
  */
 export function useRoomHeaderInfo({ room, peerUser }: UseRoomHeaderInfoProps) {
     const { t } = useTranslation();
-    const { user } = useAuthStore();
+    const { profile: user } = useAuthStore();
 
     const isDM = room?.type === ROOM_TYPE.DIRECT;
     const isGroup = room?.type === ROOM_TYPE.GROUP;
@@ -28,9 +28,11 @@ export function useRoomHeaderInfo({ room, peerUser }: UseRoomHeaderInfoProps) {
         if (otherMember?.profiles) {
             resolvedPeer = {
                 id: otherMember.user_id,
-                display_name: otherMember.profiles.display_name,
-                username: otherMember.profiles.username,
-                avatar_url: otherMember.profiles.avatar_url || undefined,
+                display_name:
+                    otherMember.profiles.display_name ??
+                    t("chat.defaultUserName", "Пользователь"),
+                username: otherMember.profiles.username ?? undefined,
+                avatar_url: otherMember.profiles.avatar_url ?? undefined,
             };
         }
     }

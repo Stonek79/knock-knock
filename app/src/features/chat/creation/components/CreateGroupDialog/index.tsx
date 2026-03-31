@@ -104,7 +104,7 @@ export function CreateGroupDialog({
                             >
                                 <Avatar
                                     size="xs"
-                                    fallback={contact.display_name[0]}
+                                    fallback={contact?.display_name?.[0]}
                                     name={contact.display_name}
                                 />
                                 <span className={styles.chipLabel}>

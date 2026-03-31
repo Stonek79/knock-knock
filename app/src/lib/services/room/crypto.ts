@@ -2,7 +2,12 @@ import { ERROR_CODES, MEMBER_ROLE } from "@/lib/constants";
 import { wrapRoomKey } from "@/lib/crypto/encryption";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "@/lib/crypto/keys";
 import { logger } from "@/lib/logger";
-import type { Result, RoomError, RoomKey, RoomMember } from "@/lib/types";
+import type {
+    Result,
+    RoomError,
+    RoomKeysRecord,
+    RoomMembersRecord,
+} from "@/lib/types";
 import { appError, err, ok } from "@/lib/utils/result";
 
 /**
@@ -17,44 +22,22 @@ export async function encryptRoomKeysForMembers(
 ): Promise<
     Result<
         {
-            encryptedKeys: Omit<RoomKey, "created_at">[];
-            roomMembers: Omit<RoomMember, "joined_at">[];
+            encryptedKeys: RoomKeysRecord[];
+            roomMembers: RoomMembersRecord[];
         },
         RoomError
     >
 > {
-    const encryptedKeys: Omit<RoomKey, "created_at">[] = [];
-    const roomMembers: Omit<RoomMember, "joined_at">[] = [];
+    const encryptedKeys: RoomKeysRecord[] = [];
+    const roomMembers: RoomMembersRecord[] = [];
 
     for (const profile of profiles) {
-        // Режим Mock: пропускаем реальное шифрование
-        if (import.meta.env.VITE_USE_MOCK === "true") {
-            roomMembers.push({
-                room_id: roomId,
-                user_id: profile.id,
-                role:
-                    profile.id === myUserId
-                        ? MEMBER_ROLE.ADMIN
-                        : MEMBER_ROLE.MEMBER,
-            });
-            encryptedKeys.push({
-                room_id: roomId,
-                user_id: profile.id,
-                encrypted_key: JSON.stringify({
-                    iv: "mock",
-                    ciphertext: "mock",
-                    ephemeralPublicKey: "mock",
-                }),
-            });
-            continue;
-        }
-
         if (!profile.public_key_x25519) {
-            logger.warn(`User ${profile.id} has no keys`);
+            logger.warn(`У пользователя ${profile.id} нет публичного ключа`);
             return err(
                 appError(
                     ERROR_CODES.MISSING_KEYS,
-                    `User ${profile.id} has no keys`,
+                    `У пользователя ${profile.id} нет публичного ключа`,
                     {
                         userIds: [profile.id],
                     },
@@ -63,16 +46,46 @@ export async function encryptRoomKeysForMembers(
         }
 
         try {
-            const recipientPubKey = await window.crypto.subtle.importKey(
-                "raw",
-                base64ToArrayBuffer(profile.public_key_x25519),
-                {
-                    name: "ECDH",
-                    namedCurve: "P-256",
-                },
-                true,
-                [],
+            const keyBuffer = base64ToArrayBuffer(profile.public_key_x25519);
+            const byteLength = keyBuffer.byteLength;
+
+            logger.debug(
+                `Импорт ключа для пользователя ${profile.id}, длина байтов: ${byteLength}`,
             );
+
+            let recipientPubKey: CryptoKey;
+
+            // Дифференцированный импорт в зависимости от длины байтов
+            if (byteLength === 32) {
+                // Скорее всего это X25519
+                try {
+                    recipientPubKey = await window.crypto.subtle.importKey(
+                        "raw",
+                        keyBuffer,
+                        "X25519",
+                        true,
+                        [],
+                    );
+                } catch (e) {
+                    logger.error(
+                        `Браузер не поддерживает X25519 для пользователя ${profile.id}`,
+                        e,
+                    );
+                    throw e;
+                }
+            } else {
+                // Ожидаем P-256 (65 байт uncompressed или 33 байта compressed)
+                recipientPubKey = await window.crypto.subtle.importKey(
+                    "raw",
+                    keyBuffer,
+                    {
+                        name: "ECDH",
+                        namedCurve: "P-256",
+                    },
+                    true,
+                    [],
+                );
+            }
 
             const wrapped = await wrapRoomKey(roomKey, recipientPubKey);
 
@@ -85,25 +98,26 @@ export async function encryptRoomKeysForMembers(
             });
 
             encryptedKeys.push({
-                room_id: roomId,
-                user_id: profile.id,
+                room: roomId,
+                user: profile.id,
                 encrypted_key: serializedKey,
             });
 
             roomMembers.push({
-                room_id: roomId,
-                user_id: profile.id,
+                room: roomId,
+                user: profile.id,
+                unread_count: 0,
                 role:
                     profile.id === myUserId
-                        ? MEMBER_ROLE.ADMIN
+                        ? MEMBER_ROLE.OWNER
                         : MEMBER_ROLE.MEMBER,
             });
         } catch (e) {
-            logger.error("Crypto error during createRoom", e);
+            logger.error("Ошибка шифрования ключа комнаты", e);
             return err(
                 appError(
                     ERROR_CODES.CRYPTO_ERROR,
-                    "Failed to encrypt room key",
+                    "Ошибка шифрования ключа комнаты",
                     e instanceof Error ? e : undefined,
                 ),
             );

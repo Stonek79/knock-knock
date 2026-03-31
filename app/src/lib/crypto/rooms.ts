@@ -7,17 +7,17 @@ const subtle = window.crypto.subtle;
 
 /**
  * Генерирует криптографически стойкий ID комнаты.
- * Используем UUID v4, так как это стандарт де-факто для ID.
+ * PocketBase по умолчанию использует 15-символьные алфавитно-цифровые строки.
  */
 export function generateRoomId(): string {
-    return crypto.randomUUID();
+    // Генерируем 10 байт (80 бит), что дает ~16 символов в hex или ~15 в custom base
+    const bytes = crypto.getRandomValues(new Uint8Array(10));
+    return Array.from(bytes)
+        .map((b) => b.toString(36))
+        .join("")
+        .slice(0, 15);
 }
 
-/**
- * Генерирует детерминированный ID комнаты на основе ID пользователя.
- * Используется для "Избранного" (Saved Messages), чтобы ID был предсказуемым.
- * Используем SHA-256 от userId и форматируем как UUID.
- */
 export async function generateDeterministicRoomId(
     userId: string,
 ): Promise<string> {
@@ -26,13 +26,11 @@ export async function generateDeterministicRoomId(
     const hash = await subtle.digest("SHA-256", data);
     const bytes = new Uint8Array(hash);
 
-    // Форматируем под UUID v4 (почти, главное структура)
-    // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    const hex = Array.from(bytes)
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
-    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+    // Используем base36 для компактности и попадания в 15 символов
+    return Array.from(bytes)
+        .map((b) => b.toString(36))
+        .join("")
+        .slice(0, 15);
 }
 
 /**
@@ -65,6 +63,23 @@ export async function importRoomKeyRaw(
     keyData: ArrayBuffer,
 ): Promise<CryptoKey> {
     return await subtle.importKey("raw", keyData, { name: "AES-GCM" }, true, [
+        "encrypt",
+        "decrypt",
+    ]);
+}
+/**
+ * Генерирует детерминированный ключ комнаты на основе roomId.
+ * Используется ТОЛЬКО в DEV-режиме для FALLBACK, когда реальные ключи отсутствуют.
+ * Гарантирует стабильность истории сообщений в процессе разработки.
+ */
+export async function generateDeterministicRoomKey(
+    roomId: string,
+): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`dev-room-key-v1:${roomId}`);
+    const hash = await subtle.digest("SHA-256", data);
+
+    return await subtle.importKey("raw", hash, { name: "AES-GCM" }, true, [
         "encrypt",
         "decrypt",
     ]);

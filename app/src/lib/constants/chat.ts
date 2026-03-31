@@ -2,28 +2,9 @@
  * Константы для чат-функционала.
  */
 
-/** Статусы сообщений */
-export const MESSAGE_STATUS = {
-    SENT: "sent",
-    DELIVERED: "delivered",
-    READ: "read",
-} as const;
-
 /** Ключи локального хранилища для чата */
 export const STORAGE_KEYS = {
     CHAT_LAST_VIEWED: "chat_last_viewed",
-} as const;
-
-/** Типы комнат */
-export const ROOM_TYPE = {
-    DIRECT: "direct",
-    GROUP: "group",
-} as const;
-
-/** Роли участников комнаты */
-export const MEMBER_ROLE = {
-    ADMIN: "admin",
-    MEMBER: "member",
 } as const;
 
 /** Позиция сообщения в группе */
@@ -45,4 +26,20 @@ export const REALTIME_EVENTS = {
 export const TYPING_CONFIG = {
     TIMEOUT_MS: 3000,
     CHANNEL_PREFIX: "typing:",
+} as const;
+
+/** Типы вложений */
+export const ATTACHMENT_TYPES = {
+    IMAGE: "image",
+    VIDEO: "video",
+    AUDIO: "audio",
+    DOCUMENT: "document",
+} as const;
+
+/** Дефолтные значения для медиафайлов */
+export const MEDIA_DEFAULTS = {
+    /** Метка голосового сообщения (ключ для i18n) */
+    VOICE_MESSAGE_LABEL: "voice_message",
+    /** Фоллбэк-имя файла, если имя не определено */
+    FALLBACK_FILE_NAME: "file",
 } as const;

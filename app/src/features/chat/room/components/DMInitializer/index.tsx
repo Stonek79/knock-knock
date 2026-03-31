@@ -5,6 +5,7 @@ import { Box } from "@/components/layout/Box";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { ROUTES } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 import { useAuthStore } from "@/stores/auth";
 import { useCreateDM } from "../../../creation/hooks/useCreateDM";
 import styles from "./dminitializer.module.css";
@@ -16,29 +17,33 @@ export function DMInitializer() {
     const { userId } = useParams({ from: ROUTES.AUTH_DM });
     const { isPrivate } = useSearch({ from: ROUTES.AUTH_DM });
     const navigate = useNavigate();
-    const { user } = useAuthStore();
+    const { profile: user } = useAuthStore();
     const { t } = useTranslation();
     const createDM = useCreateDM();
 
     const [error, setError] = useState<string | null>(null);
     const initializing = useRef(false);
 
+    // Эффект инициализации чата при монтировании
     useEffect(() => {
-        if (!user || !userId) {
+        // Проверяем наличие необходимых данных и отсутствие запущенного процесса
+        if (!user || !userId || initializing.current) {
             return;
         }
-        if (initializing.current) {
-            return;
-        }
+
         initializing.current = true;
 
         const initializeDM = async () => {
             try {
+                logger.info("Инициализация DM чата", { targetUserId: userId });
+
                 const roomId = await createDM.mutateAsync({
                     currentUserId: user.id,
                     targetUserId: userId,
                     isPrivate,
                 });
+
+                logger.info("Чат успешно инициализирован", { roomId });
 
                 navigate({
                     to: ROUTES.CHAT_ROOM,
@@ -46,7 +51,7 @@ export function DMInitializer() {
                     replace: true,
                 });
             } catch (err) {
-                console.error("Failed to initialize DM:", err);
+                logger.error("Ошибка при инициализации DM:", err);
                 setError(
                     err instanceof Error
                         ? err.message
@@ -55,6 +60,7 @@ export function DMInitializer() {
                               "Не удалось создать чат",
                           ),
                 );
+                initializing.current = false; // Позволяем повторную попытку при ошибке
             }
         };
 

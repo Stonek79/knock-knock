@@ -8,14 +8,13 @@ import { Dialog } from "@/components/ui/Dialog";
 import { IconButton } from "@/components/ui/IconButton";
 import { useGroupPresence } from "@/features/presence";
 import { MEMBER_ROLE } from "@/lib/constants";
-import type { RoomWithMembers } from "@/lib/types";
+import type { ExpandedRoomMember, RoomWithMembers } from "@/lib/types";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useGroupActions } from "../../hooks/useGroupActions";
 import { AddMemberDialog } from "./components/AddMemberDialog";
 import { GroupInfoHeader } from "./components/GroupInfoHeader";
 import { GroupMembersList } from "./components/GroupMembersList";
 import styles from "./groupinfopanel.module.css";
-import type { GroupMember } from "./types";
 
 interface GroupInfoPanelProps {
     /** Открыта ли панель */
@@ -69,17 +68,20 @@ export function GroupInfoPanel({
             },
         });
 
-    // Нормализуем room_members → GroupMember для передачи в подкомпоненты.
     const rawMembers = room?.room_members ?? [];
-    const members: GroupMember[] = rawMembers.map((rm) => {
-        const withRole = rm as typeof rm & { role: string };
+    const members: ExpandedRoomMember[] = rawMembers.map((rm) => {
+        const profile = rm.profiles
+            ? {
+                  ...rm.profiles,
+                  display_name:
+                      rm.profiles.display_name ||
+                      t("chat.defaultUserName", "Пользователь"),
+              }
+            : null;
+
         return {
-            user_id: rm.user_id,
-            role: withRole.role ?? MEMBER_ROLE.MEMBER,
-            profiles: rm.profiles ?? null,
-            joined_at:
-                (rm as typeof rm & { joined_at: string }).joined_at ||
-                new Date().toISOString(),
+            ...rm,
+            profiles: profile,
         };
     });
 
@@ -261,7 +263,7 @@ export function GroupInfoPanel({
                 <Box className={styles.scrollArea}>
                     <GroupInfoHeader
                         name={room.name}
-                        avatarUrl={room.avatar_url}
+                        avatarUrl={room.avatar_url ?? null}
                         membersCount={members.length}
                         onlineCount={presence.onlineCount}
                     />

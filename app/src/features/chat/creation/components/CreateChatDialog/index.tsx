@@ -34,7 +34,7 @@ export function CreateChatDialog({
 }: CreateChatDialogProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { user } = useAuthStore();
+    const { profile: user } = useAuthStore();
     const createDM = useCreateDM();
 
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -69,7 +69,7 @@ export function CreateChatDialog({
                 params: { roomId },
             });
         } catch (err) {
-            console.error("Failed to create chat:", err);
+            console.error("Ошибка при создании чата:", err);
             setError(err instanceof Error ? err.message : t("common.error"));
         }
     }, [selectedIds, user, onOpenChange, navigate, isPrivate, createDM, t]);
@@ -89,7 +89,7 @@ export function CreateChatDialog({
     const selectedName =
         selectedContacts.length === 1
             ? selectedContacts[0].display_name
-            : `${selectedContacts.length} контактов`;
+            : t("contacts.selected_count", { count: selectedContacts.length });
 
     return (
         <Dialog.Root open={open} onOpenChange={handleOpenChange}>
@@ -125,6 +125,7 @@ export function CreateChatDialog({
                     <Button
                         disabled={!canCreate || createDM.isPending}
                         onClick={handleCreateChat}
+                        data-testid="confirm-create-chat"
                     >
                         {createDM.isPending
                             ? t("common.processing")

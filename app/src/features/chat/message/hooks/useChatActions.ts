@@ -1,17 +1,19 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ROUTES } from "@/lib/constants";
+import { useToast } from "@/components/ui/Toast";
+import { QUERY_KEYS, ROOM_TYPE, ROUTES, USER_ROLE } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { MessageService } from "@/lib/services/message";
 import { RoomService } from "@/lib/services/room";
-import type { Attachment, RoomWithMembers } from "@/lib/types";
+import type { Attachment, Profile, RoomWithMembers } from "@/lib/types";
 import { uploadAudio, uploadMedia } from "../services/uploadMedia";
 
 interface UseChatActionsProps {
     roomId?: string;
     roomKey?: CryptoKey;
-    user?: { id: string } | null;
+    /** Профиль текущего пользователя */
+    user?: Profile | null;
     room?: RoomWithMembers;
 }
 
@@ -27,6 +29,7 @@ export function useChatActions({
 }: UseChatActionsProps) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const toast = useToast();
     const [ending, setEnding] = useState(false);
 
     /**
@@ -38,7 +41,9 @@ export function useChatActions({
         audioBlob?: Blob,
     ) => {
         if (!roomKey || !user || !roomId) {
-            logger.warn("Cannot send message: missing keys or room ID");
+            logger.warn(
+                "Невозможно отправить: отсутствуют ключи или ID комнаты",
+            );
             return;
         }
 
@@ -55,33 +60,41 @@ export function useChatActions({
             }
 
             if (files && files.length > 0) {
-                const filePromises = files.map((file) =>
-                    uploadMedia(file, roomId),
-                );
+                const filePromises = files.map((file) => uploadMedia(file));
                 const uploadedFiles = await Promise.all(filePromises);
                 attachments.push(...uploadedFiles);
             }
         } catch (uploadError) {
-            logger.error("Failed to upload media", uploadError);
+            logger.error("Ошибка загрузки медиафайла", uploadError);
+            toast({
+                title: "Ошибка при загрузке файла",
+                variant: "error",
+            });
             throw uploadError;
         }
 
-        const result = await MessageService.sendMessage(
+        const result = await MessageService.sendMessage({
             roomId,
-            user.id,
-            text,
+            senderId: user.id,
+            senderName: user.display_name,
+            senderAvatar: user.avatar_url || "",
+            content: text,
             roomKey,
-            attachments.length > 0 ? attachments : undefined,
-        );
+            attachments: attachments.length > 0 ? attachments : undefined,
+        });
+
         if (result.isErr()) {
-            logger.error("Failed to send message", result.error);
-            // Здесь можно добавить toast error notification
-            throw new Error(result.error.message); // Для совместимости с вызывающим кодом, если он ждет throw, или обработать тут
+            logger.error("Ошибка отправки сообщения", result.error);
+            toast({
+                title: "Не удалось отправить сообщение",
+                variant: "error",
+            });
+            return;
         }
 
         // Инвалидируем список чатов, чтобы обновился last_message и применилась сортировка
         await queryClient.invalidateQueries({
-            queryKey: ["rooms"],
+            queryKey: QUERY_KEYS.rooms(user.id),
         });
     };
 
@@ -98,28 +111,28 @@ export function useChatActions({
         try {
             const clearResult = await MessageService.clearRoom(roomId);
             if (clearResult.isErr()) {
-                logger.error("Failed to clear room", clearResult.error);
+                logger.error("Ошибка очистки комнаты", clearResult.error);
             }
 
             // Если чат эфемерный (временный), удаляем его полностью из базы
-            if (room?.is_ephemeral) {
-                logger.info(`Deleting ephemeral room: ${roomId}`);
+            if (room?.type === ROOM_TYPE.EPHEMERAL) {
+                logger.info(`Удаление эфемерной комнаты: ${roomId}`);
                 const deleteResult = await RoomService.deleteRoom(roomId);
                 if (deleteResult.isErr()) {
-                    logger.error("Failed to delete room", deleteResult.error);
+                    logger.error("Ошибка удаления комнаты", deleteResult.error);
                 } else {
                     // Обновляем список комнат в кэше
                     await queryClient.invalidateQueries({
-                        queryKey: ["rooms"],
+                        queryKey: QUERY_KEYS.rooms(user.id),
                         refetchType: "all",
                     });
-                    logger.info(`Room ${roomId} deleted, cache updated`);
+                    logger.info(`Комната ${roomId} удалена, кэш обновлён`);
                 }
             }
 
             navigate({ to: ROUTES.CHAT_LIST });
         } catch (e) {
-            logger.error("Error ending session", e);
+            logger.error("Ошибка завершения сессии", e);
         } finally {
             setEnding(false);
         }
@@ -132,16 +145,27 @@ export function useChatActions({
         if (!user) {
             return;
         }
-
-        const result = await MessageService.deleteMessage(
+        const result = await MessageService.deleteMessage({
             messageId,
-            user.id,
+            currentUserId: user.id,
             isOwnMessage,
-        );
-
-        if (result.isErr()) {
-            logger.error("Failed to delete message", result.error);
-            throw new Error(result.error.message);
+            isAdmin: user.role === USER_ROLE.ADMIN,
+        });
+        if (result.isOk()) {
+            if (roomId) {
+                queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.messages(roomId),
+                });
+            }
+            queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.rooms(user.id),
+            });
+        } else {
+            logger.error("Ошибка удаления сообщения", result.error);
+            toast({
+                title: "Не удалось удалить сообщение",
+                variant: "error",
+            });
         }
     };
 
@@ -151,19 +175,22 @@ export function useChatActions({
      */
     const updateMessage = async (messageId: string, newContent: string) => {
         if (!roomKey) {
-            logger.warn("Cannot update: missing encryption key");
+            logger.warn("Невозможно обновить: отсутствует ключ шифрования");
             return;
         }
 
-        const result = await MessageService.updateMessage(
+        const result = await MessageService.updateMessage({
             messageId,
             newContent,
             roomKey,
-        );
+        });
 
         if (result.isErr()) {
-            logger.error("Failed to update message", result.error);
-            throw new Error(result.error.message);
+            logger.error("Ошибка обновления сообщения", result.error);
+            toast({
+                title: "Не удалось обновить сообщение",
+                variant: "error",
+            });
         }
     };
 

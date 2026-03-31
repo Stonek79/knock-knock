@@ -3,14 +3,14 @@ import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Text } from "@/components/ui/Text";
+import type { ExpandedRoomMember } from "@/lib/types";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
-import type { GroupMember } from "../../types";
 import { GroupMemberItem } from "../GroupMemberItem";
 import styles from "./groupmemberslist.module.css";
 
 interface GroupMembersListProps {
     /** Список участников */
-    members: GroupMember[];
+    members: ExpandedRoomMember[];
     /** ID текущего авторизованного пользователя */
     myUserId: string | undefined;
     /** Является ли текущий пользователь администратором */

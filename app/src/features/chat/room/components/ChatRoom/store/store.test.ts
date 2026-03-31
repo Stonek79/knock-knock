@@ -17,18 +17,20 @@ const createMsg = (
     content = "text",
 ): DecryptedMessageWithProfile => ({
     id,
-    attachments: null,
+    room_id: "room-1",
     sender_id: senderId,
     content,
-    created_at: new Date().toISOString(),
-    is_edited: false,
-    profiles: { display_name: "User", avatar_url: null },
-    room_id: "room-1",
-    status: "sent",
     iv: "iv",
-    deleted_by: [],
+    metadata: { deleted_by: [] },
+    attachments: undefined,
+    reactions_summary: undefined,
+    created_at: new Date().toISOString(),
+    updated_at: undefined,
+    status: "sent",
+    is_edited: false,
     is_deleted: false,
     is_starred: false,
+    profiles: { display_name: "User", avatar_url: undefined },
 });
 
 describe("ChatRoomStore", () => {

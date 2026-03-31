@@ -5,8 +5,8 @@ PWA мессенджер с фокусом на безопасность, Ghost 
 ## Архитектура
 Проект построен по схеме **Self-Hosted Hybrid**:
 - **Frontend**: Vite + React 19 + TanStack (Router, Query, Form, Virtual).
-- **Backend**: Supabase (PostgreSQL, Realtime, Auth, Storage) на домашнем сервере.
-- **Infrasctructure**: VPS (Nginx + Coturn) <--> WireGuard <--> Home Server.
+- **Backend**: PocketBase (Auth, SQLite, Realtime, JS Hooks) на домашнем сервере.
+- **Infrastructure**: VPS (Nginx + Coturn) <--> WireGuard <--> Home Server.
 
 ## Стек технологий
 - **Язык**: TypeScript
@@ -19,9 +19,10 @@ PWA мессенджер с фокусом на безопасность, Ghost 
 ```
 /infra        # Конфигурационные файлы для деплоя
   /vps        # Конфиги для публичного сервера (Nginx, WireGuard, Coturn)
-  /home       # Конфиги для домашнего сервера (Supabase, WireGuard)
+  /home       # Конфиги для домашнего сервера (PocketBase, Hooks, Schema)
 /app          # Исходный код Frontend приложения (Vite)
 /docs         # Документация проекта
+/scripts      # Скрипты автоматизации и сидирования (seed.js)
 ```
 
 ## Установка и запуск (Разработка)

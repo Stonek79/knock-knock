@@ -11,4 +11,11 @@ export const ERROR_CODES = {
     DECRYPT_FAILED: "decrypt-failed",
     INVALID_BACKUP: "invalid-backup_format",
     UNAUTHORIZED: "unauthorized",
+    NETWORK_ERROR: "NetworkError",
+    NOT_FOUND_ERROR: "NotFoundError",
+    FORBIDDEN_ERROR: "ForbiddenError",
+    VALIDATION_ERROR: "ValidationError",
+    AUTHENTICATION_ERROR: "AuthenticationError",
+    UPLOAD_ERROR: "UploadError",
+    DOWNLOAD_ERROR: "DownloadError",
 } as const;

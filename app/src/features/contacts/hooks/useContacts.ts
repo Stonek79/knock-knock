@@ -1,36 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
-import { DB_TABLES } from "@/lib/constants";
-import { supabase } from "@/lib/supabase";
-import type { Profile } from "@/lib/types/profile";
+import { QUERY_KEYS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
+import { userRepository } from "@/lib/repositories/user.repository";
 
+/**
+ * Хук для получения списка контактов.
+ * Использует централизованный userRepository и QUERY_KEYS.
+ */
 export function useContacts() {
     return useQuery({
-        queryKey: ["contacts"],
-        queryFn: async (): Promise<Profile[]> => {
-            // 1. Mock Mode
-            if (import.meta.env.VITE_USE_MOCK === "true") {
-                const { MOCK_USERS } = await import("@/lib/mock/data");
-                // Приводим MockUser к Profile, предполагая совместимость или делаем маппинг
-                return MOCK_USERS.map((u) => ({
-                    id: u.id,
-                    username: u.username,
-                    display_name: u.display_name,
-                    email: u.email,
-                    avatar_url: u.avatar_url ?? null,
-                    updated_at: new Date().toISOString(), // Mock value
-                }));
+        queryKey: QUERY_KEYS.contacts(),
+        queryFn: async () => {
+            const result = await userRepository.getAllUsers();
+
+            if (result.isErr()) {
+                logger.error(
+                    "useContacts: Ошибка загрузки контактов",
+                    result.error,
+                );
+                throw result.error;
             }
 
-            // 2. Production Mode
-            const { data, error } = await supabase
-                .from(DB_TABLES.PROFILES)
-                .select("*")
-                .order("display_name", { ascending: true });
-
-            if (error) {
-                throw error;
-            }
-            return data as Profile[];
+            return result.value;
         },
         staleTime: 1000 * 60 * 5, // 5 минут
     });

@@ -30,15 +30,17 @@ vi.mock("@/features/chat/room", async (importOriginal) => {
 });
 
 // Мокаем зависимости
-vi.mock("@/lib/supabase", () => ({
-    supabase: {
-        from: () => ({ select: () => ({ data: [], error: null }) }),
-        channel: () => ({ on: () => ({ subscribe: () => {} }) }),
+vi.mock("@/lib/pocketbase", () => ({
+    pb: {
+        collection: vi.fn(() => ({
+            subscribe: vi.fn(),
+            unsubscribe: vi.fn(),
+        })),
     },
 }));
 
 vi.mock("@/stores/auth", () => ({
-    useAuthStore: () => ({ user: { id: "test-user" } }),
+    useAuthStore: () => ({ pbUser: { id: "test-user" } }),
 }));
 
 // Создаём QueryClient для тестов

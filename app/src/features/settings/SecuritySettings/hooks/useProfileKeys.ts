@@ -1,17 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { DB_TABLES } from "@/lib/constants/db";
-import { supabase } from "@/lib/supabase";
-
-export interface ProfileKeys {
-    public_key_x25519: string | null;
-    public_key_signing: string | null;
-}
+import { QUERY_KEYS, USER_FIELDS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
+import { userRepository } from "@/lib/repositories/user.repository";
+import type { UserSecurityKeys } from "@/lib/types";
 
 /**
- * Хук для получения публичных ключей пользователя.
- *
- * @param userId - ID пользователя
- * @returns { profileKeys, areKeysPublished, isLoading, error }
+ * Хук для получения публичных ключей безопасности пользователя.
  */
 export function useProfileKeys(userId: string | undefined) {
     const {
@@ -19,30 +13,32 @@ export function useProfileKeys(userId: string | undefined) {
         isLoading,
         error,
     } = useQuery({
-        queryKey: ["profile-keys", userId],
-        queryFn: async (): Promise<ProfileKeys | null> => {
+        queryKey: QUERY_KEYS.profileKeys(userId || ""),
+        queryFn: async (): Promise<UserSecurityKeys | null> => {
             if (!userId) {
                 return null;
             }
-            const { data, error } = await supabase
-                .from(DB_TABLES.PROFILES)
-                .select("public_key_x25519, public_key_signing")
-                .eq("id", userId)
-                .single();
 
-            if (error) {
-                console.error("Failed to fetch profile keys", error);
+            const result = await userRepository.getSecurityKeys(userId);
+
+            if (result.isErr()) {
+                logger.error(
+                    `Ошибка при получении ключей профиля через userRepository ${userId}:`,
+                    result.error,
+                );
                 return null;
             }
-            return data;
+
+            return result.value;
         },
         enabled: !!userId,
-        staleTime: 1000 * 60 * 5, // 5 минут
+        staleTime: 1000 * 60 * 5,
     });
 
-    // Проверяем, опубликованы ли уже ключи в профиле
+    // Проверяем наличие обоих ключей
     const areKeysPublished = !!(
-        profileKeys?.public_key_x25519 && profileKeys?.public_key_signing
+        profileKeys?.[USER_FIELDS.PUBLIC_KEY_X25519] &&
+        profileKeys?.[USER_FIELDS.PUBLIC_KEY_SIGNING]
     );
 
     return {

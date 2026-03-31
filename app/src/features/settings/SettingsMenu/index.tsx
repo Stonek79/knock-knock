@@ -7,8 +7,7 @@ import { Flex } from "@/components/layout/Flex";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/Text";
 import { SETTINGS_ITEMS } from "@/config/settings";
-import { ROUTES } from "@/lib/constants";
-import { USER_ROLE } from "@/lib/constants/auth";
+import { ROUTES, USER_ROLE } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./settingsmenu.module.css";
 

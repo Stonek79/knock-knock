@@ -1,5 +1,6 @@
+import type { KeyType } from "@/lib/crypto/keystore";
+
 export const AUTH_MODES = {
-    MAGIC_LINK: "magicLink",
     PASSWORD: "password",
 } as const;
 
@@ -8,7 +9,11 @@ export const AUTH_VIEW_MODES = {
     REGISTER: "register",
 } as const;
 
-export const USER_ROLE = {
-    USER: "user",
-    ADMIN: "admin",
-} as const;
+/**
+ * Типы ключей в Keystore (IndexedDB).
+ * Привязаны к типу KeyType для обеспечения типобезопасности.
+ */
+export const KEYSTORE_TYPES = {
+    IDENTITY: "identity",
+    PREKEY: "prekey",
+} as const satisfies Record<string, KeyType>;

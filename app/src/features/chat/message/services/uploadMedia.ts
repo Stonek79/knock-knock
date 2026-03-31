@@ -2,20 +2,19 @@ import { saveMediaBlob } from "@/lib/cache/media";
 import {
     ATTACHMENT_TYPES,
     DEFAULT_MIME_TYPES,
+    MEDIA_DEFAULTS,
+    MEDIA_FIELDS,
     MIME_PREFIXES,
-    STORAGE_BUCKETS,
 } from "@/lib/constants";
 import { encryptBlob } from "@/lib/crypto/messages";
-import { isMock, supabase } from "@/lib/supabase";
-import type { Attachment } from "@/lib/types/message";
-
-/** Метка для голосовых сообщений в метаданных */
-const VOICE_MESSAGE_LABEL = "Voice Message";
+import { mediaRepository } from "@/lib/repositories/media.repository";
+import type { Attachment, AttachmentType } from "@/lib/types/message";
 
 /**
- * Определяет внутренний тип вложения по MIME-типу файла
+ * Определяет внутренний тип вложения по MIME-типу файла.
+ * Возвращает строго типизированный AttachmentType.
  */
-function determineAttachmentType(mime: string): Attachment["type"] {
+function determineAttachmentType(mime: string): AttachmentType {
     if (mime.startsWith(MIME_PREFIXES.IMAGE)) {
         return ATTACHMENT_TYPES.IMAGE;
     }
@@ -32,48 +31,38 @@ function determineAttachmentType(mime: string): Attachment["type"] {
 }
 
 /**
- * Загружает публичный медиафайл (картинку/видео/документ) в Supabase Storage.
- * Доступ к файлу ограничен политиками RLS на стороне Supabase (только для участников комнаты).
- * Не использует клиентское шифрование, только HTTPS и RLS.
- *
- * @param file Исходный файл для загрузки
- * @param roomId ID комнаты для формирования пути
- * @returns Метаданные загруженного вложения (Attachment)
+ * Загружает медиафайл в PocketBase.
+ * В PocketBase файлы привязаны к записям коллекций.
+ * Мы используем коллекцию 'media' как временное/общее хранилище.
  */
 export async function uploadMedia(
     file: File | Blob,
-    roomId: string,
     fileNameOverride?: string,
 ): Promise<Attachment> {
     const originalName =
-        fileNameOverride || (file instanceof File ? file.name : "file");
-    const fileExt = originalName.split(".").pop();
-    const uniqueId = crypto.randomUUID();
-    const fileName = `${uniqueId}.${fileExt}`;
-    const filePath = `${roomId}/${fileName}`;
+        fileNameOverride ||
+        (file instanceof File ? file.name : MEDIA_DEFAULTS.FALLBACK_FILE_NAME);
 
-    const { error } = await supabase.storage
-        .from(STORAGE_BUCKETS.CHAT_MEDIA)
-        .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: false,
-        });
+    // Подготовка FormData для PocketBase (используем MEDIA_FIELDS.FILE для имени поля)
+    const formData = new FormData();
+    formData.append(MEDIA_FIELDS.FILE, file, originalName);
 
-    if (error) {
-        throw new Error(`Media upload failed: ${error.message}`);
+    const uploadResult = await mediaRepository.uploadMedia(formData);
+
+    if (uploadResult.isErr()) {
+        throw new Error(uploadResult.error.message);
     }
 
-    const {
-        data: { publicUrl },
-    } = supabase.storage
-        .from(STORAGE_BUCKETS.CHAT_MEDIA)
-        .getPublicUrl(filePath);
+    const record = uploadResult.value;
 
-    // Сохраняем blob в IndexedDB для кэширования
+    // Получаем публичный URL (record.file строго типизирован через PBMediaRecord)
+    const publicUrl = mediaRepository.getFileUrl(record, record.file);
+
+    // Сохраняем blob в IndexedDB для кэширования (ускоряет отображение своих файлов)
     await saveMediaBlob(publicUrl, file);
 
     return {
-        id: uniqueId,
+        id: record.id,
         file_name: originalName,
         file_size: file.size,
         content_type: file.type || DEFAULT_MIME_TYPES.OCTET_STREAM,
@@ -83,65 +72,36 @@ export async function uploadMedia(
 }
 
 /**
- * Загружает аудиосообщение в Supabase Storage.
- * Аудиосообщения E2E-шифруются симметричным ключом комнаты перед отправкой.
- *
- * @param blob Оригинальный блоб с аудио (например из MediaRecorder)
- * @param roomId ID комнаты для формирования пути
- * @param roomKey Симметричный CryptoKey комнаты для E2E шифрования
- * @returns Метаданные загруженного вложения (Attachment)
+ * Загружает аудиосообщение в PocketBase.
+ * Аудиосообщения E2E-шифруются симметричным ключом комнаты.
  */
 export async function uploadAudio(
     blob: Blob,
-    roomId: string,
+    _roomId: string,
     roomKey: CryptoKey,
 ): Promise<Attachment> {
-    const uniqueId = crypto.randomUUID();
-
-    // В mock-режиме шифрование не используется, конвертируем в data: URL
-    // для сохранения в localStorage (blob: URL не переживает перезагрузку)
-    if (isMock) {
-        const dataUrl = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-        });
-        return {
-            id: uniqueId,
-            file_name: VOICE_MESSAGE_LABEL,
-            file_size: blob.size,
-            content_type: blob.type || DEFAULT_MIME_TYPES.WEBM_AUDIO,
-            url: dataUrl,
-            type: ATTACHMENT_TYPES.AUDIO,
-        };
-    }
-
-    // Продакшн: шифруем данные E2E ключом и загружаем в Storage
+    // Шифруем данные E2E ключом
     const encryptedBlob = await encryptBlob(blob, roomKey);
 
-    const fileName = `${uniqueId}.enc`;
-    const filePath = `${roomId}/${fileName}`;
+    // В PocketBase загружаем как .enc файл
+    const fileName = `voice_${Date.now()}.enc`;
 
-    const { error } = await supabase.storage
-        .from(STORAGE_BUCKETS.CHAT_AUDIO)
-        .upload(filePath, encryptedBlob, {
-            cacheControl: "3600",
-            upsert: false,
-        });
+    // Подготовка FormData для PocketBase (используем MEDIA_FIELDS.FILE для имени поля)
+    const formData = new FormData();
+    formData.append(MEDIA_FIELDS.FILE, encryptedBlob, fileName);
 
-    if (error) {
-        throw new Error(`Audio upload failed: ${error.message}`);
+    const uploadResult = await mediaRepository.uploadMedia(formData);
+
+    if (uploadResult.isErr()) {
+        throw new Error(uploadResult.error.message);
     }
 
-    const {
-        data: { publicUrl },
-    } = supabase.storage
-        .from(STORAGE_BUCKETS.CHAT_AUDIO)
-        .getPublicUrl(filePath);
+    const record = uploadResult.value;
+    const publicUrl = mediaRepository.getFileUrl(record, record.file);
 
     return {
-        id: uniqueId,
-        file_name: VOICE_MESSAGE_LABEL,
+        id: record.id,
+        file_name: MEDIA_DEFAULTS.VOICE_MESSAGE_LABEL,
         file_size: blob.size,
         content_type: blob.type || DEFAULT_MIME_TYPES.WEBM_AUDIO,
         url: publicUrl,

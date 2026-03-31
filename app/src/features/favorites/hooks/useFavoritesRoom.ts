@@ -1,21 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ERROR_CODES } from "@/lib/constants";
+import { ERROR_CODES, QUERY_KEYS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 import { RoomService } from "@/lib/services/room";
 import { appError } from "@/lib/utils/result";
 import { useAuthStore } from "@/stores/auth";
 
 /**
- * Хук для получения или создания ID комнаты для "Saved Messages" (чат с самим собой).
+ * Хук для получения или создания ID комнаты для «Saved Messages» (чат с самим собой).
+ * Использует QUERY_KEYS.favoritesRoom и profile из authStore.
  */
 export function useFavoritesRoom() {
     const { t } = useTranslation();
-    const { user } = useAuthStore();
+    const { profile } = useAuthStore();
 
     return useQuery({
-        queryKey: ["favorites-room", user?.id],
+        queryKey: QUERY_KEYS.favoritesRoom(profile?.id),
         queryFn: async () => {
-            if (!user) {
+            if (!profile) {
                 throw appError(
                     ERROR_CODES.UNAUTHORIZED,
                     t(
@@ -26,16 +28,22 @@ export function useFavoritesRoom() {
             }
 
             // Находим или создаем чат с самим собой (targetUserId === currentUserId)
-            const res = await RoomService.findOrCreateDM(user.id, user.id);
+            const res = await RoomService.findOrCreateDM(
+                profile.id,
+                profile.id,
+            );
 
             if (res.isErr()) {
-                console.error("Failed to find/create self-DM:", res.error);
+                logger.error(
+                    "Не удалось найти или создать чат с самим собой",
+                    res.error,
+                );
                 throw res.error;
             }
 
             return res.value;
         },
-        enabled: !!user,
+        enabled: !!profile,
         retry: false,
         staleTime: 1000 * 60 * 60, // Кешируем на 1 час для стабильности
     });

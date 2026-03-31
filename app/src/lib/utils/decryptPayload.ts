@@ -3,7 +3,6 @@
  * Обрабатывает все edge-cases: удалённые сообщения, mock-режим, отсутствие IV.
  */
 import { decryptMessage } from "@/lib/crypto/messages";
-import { isMock } from "@/lib/supabase";
 import type { MessageRow } from "@/lib/types/message";
 
 /**
@@ -30,12 +29,12 @@ export async function decryptMessagePayload(
         return null;
     }
 
-    // В mock-режиме шифрование не используется
-    if (isMock) {
+    // Нет вектора инициализации — считаем это "сидом" (открытым сообщением)
+    if (!msg.iv && msg.content) {
         return msg.content;
     }
 
-    // Нет вектора инициализации — невозможно расшифровать
+    // Если всё ещё нет IV и сообщение не сид — невозможно расшифровать
     if (!msg.iv) {
         return null;
     }
@@ -46,5 +45,13 @@ export async function decryptMessagePayload(
     }
 
     // Выполняем расшифровку
-    return await decryptMessage(msg.content, msg.iv, roomKey);
+    try {
+        return await decryptMessage(msg.content, msg.iv, roomKey);
+    } catch {
+        if (import.meta.env.DEV) {
+            // В DEV-режиме возвращаем оригинал для отладки
+            return msg.content;
+        }
+        return "🔒 Ошибка расшифровки";
+    }
 }

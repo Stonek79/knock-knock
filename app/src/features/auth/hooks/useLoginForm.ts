@@ -1,21 +1,21 @@
 import { useForm } from "@tanstack/react-form";
 import { type MouseEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getAuthErrorMessage } from "@/features/auth/utils/auth-errors";
+import { getAuthErrorMessage } from "@/features/auth/utils/auth-error-mapping";
 import { useRateLimiter } from "@/hooks/useRateLimiter";
-import { AUTH_MODES, AUTH_VIEW_MODES } from "@/lib/constants";
+import { AUTH_VIEW_MODES } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { loginSchema } from "@/lib/schemas/auth";
-import { supabase } from "@/lib/supabase";
-import type { AuthMode, AuthViewMode } from "@/lib/types/auth";
+import { AuthService } from "@/lib/services/auth";
+import type { AuthViewMode } from "@/lib/types";
 
 /**
  * Хук для управления логикой формы входа/регистрации.
+ * Изолирован от PocketBase SDK через AuthService.
  */
 export function useLoginForm(onSuccess: () => void) {
     const { t } = useTranslation();
     const [submitError, setSubmitError] = useState<string | null>(null);
-    const [authMode, setAuthMode] = useState<AuthMode>(AUTH_MODES.MAGIC_LINK);
     const [viewMode, setViewMode] = useState<AuthViewMode>(
         AUTH_VIEW_MODES.LOGIN,
     );
@@ -42,70 +42,56 @@ export function useLoginForm(onSuccess: () => void) {
             }
 
             try {
-                if (authMode === AUTH_MODES.MAGIC_LINK) {
-                    logger.info("Attempting magic link login", {
-                        email: value.email,
-                        type: viewMode,
-                    });
-                    const { error } = await supabase.auth.signInWithOtp({
-                        email: value.email,
-                        options: {
-                            emailRedirectTo: window.location.origin,
-                        },
-                    });
+                const isRegister = viewMode === AUTH_VIEW_MODES.REGISTER;
 
-                    if (error) {
-                        throw error;
+                if (isRegister) {
+                    // Регистрация нового пользователя
+                    logger.info("Попытка регистрации", { email: value.email });
+                    const regResult = await AuthService.register(
+                        value.email,
+                        value.password,
+                    );
+                    if (regResult.isErr()) {
+                        throw regResult.error;
                     }
 
-                    logger.info("Magic link sent successfully");
+                    // После создания — сразу логиним
+                    const loginRes = await AuthService.loginWithPassword(
+                        value.email,
+                        value.password,
+                    );
+                    if (loginRes.isErr()) {
+                        throw loginRes.error;
+                    }
+
+                    logger.info("Регистрация успешна");
                     resetAttempts();
                     onSuccess();
                 } else {
-                    const isRegister = viewMode === AUTH_VIEW_MODES.REGISTER;
-
-                    if (isRegister) {
-                        const { error } = await supabase.auth.signUp({
-                            email: value.email,
-                            password: value.password || "",
-                        });
-                        if (error) {
-                            throw error;
-                        }
-                        logger.info("Password registration successful");
-                        // Обычно требует подтверждения почты, но пока считаем успехом
-                        resetAttempts();
-                        onSuccess();
-                    } else {
-                        const { error } =
-                            await supabase.auth.signInWithPassword({
-                                email: value.email,
-                                password: value.password || "",
-                            });
-                        if (error) {
-                            throw error;
-                        }
-                        logger.info("Password login successful");
-                        resetAttempts();
+                    // Вход по email + пароль
+                    logger.info("Попытка входа по паролю", {
+                        email: value.email,
+                    });
+                    const loginRes = await AuthService.loginWithPassword(
+                        value.email,
+                        value.password,
+                    );
+                    if (loginRes.isErr()) {
+                        throw loginRes.error;
                     }
+
+                    logger.info("Вход по паролю успешен");
+                    resetAttempts();
+                    onSuccess();
                 }
             } catch (err) {
-                logger.error("Login exception", err);
+                const errorMessage = getAuthErrorMessage(err);
+                logger.error("Ошибка при входе", err);
                 recordAttempt();
-                setSubmitError(getAuthErrorMessage(err));
+                setSubmitError(t(errorMessage));
             }
         },
     });
-
-    const toggleAuthMode = (e: MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        setAuthMode((prev) =>
-            prev === AUTH_MODES.MAGIC_LINK
-                ? AUTH_MODES.PASSWORD
-                : AUTH_MODES.MAGIC_LINK,
-        );
-        setSubmitError(null);
-    };
 
     const toggleViewMode = (e: MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -120,9 +106,7 @@ export function useLoginForm(onSuccess: () => void) {
     return {
         form,
         submitError,
-        authMode,
         viewMode,
-        toggleAuthMode,
         toggleViewMode,
         loginSchema,
     };

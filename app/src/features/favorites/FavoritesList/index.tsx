@@ -18,7 +18,7 @@ import styles from "./favoriteslist.module.css";
  */
 export function FavoritesList() {
     const { t } = useTranslation();
-    const { user } = useAuthStore();
+    const { profile: user } = useAuthStore();
     const navigate = useNavigate();
     const toast = useToast();
     const [loading, setLoading] = useState(true);

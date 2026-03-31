@@ -21,6 +21,8 @@ export const chat = {
     sessionEnded: "Session ended, history cleared",
     privacyWarning:
         "This is a private chat. Messages will be deleted when both participants leave.",
+    defaultUserName: "User",
+    defaultUserNickname: "user",
     errors: {
         accessDenied: "Access denied or room not found",
         keysMissing: "Encryption keys missing. Update them in settings.",

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
-import { USER_GROUP_ROLE } from "@/lib/constants";
+import { MEMBER_ROLE } from "@/lib/constants";
 import { RoomService } from "@/lib/services/room";
 
 interface UseGroupActionsProps {
@@ -91,9 +91,9 @@ export function useGroupActions({
         setIsLoading(true);
         try {
             const newRole =
-                currentRole === USER_GROUP_ROLE.ADMIN
-                    ? USER_GROUP_ROLE.MEMBER
-                    : USER_GROUP_ROLE.ADMIN;
+                currentRole === MEMBER_ROLE.ADMIN
+                    ? MEMBER_ROLE.MEMBER
+                    : MEMBER_ROLE.ADMIN;
             const result = await RoomService.updateMemberRole(
                 roomId,
                 targetUserId,

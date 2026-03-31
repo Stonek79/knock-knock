@@ -9,7 +9,7 @@ export * from "./ghost";
 export * from "./queries";
 export * from "./routes";
 export * from "./storage";
-export * from "./supabase";
+export * from "./theme";
 export * from "./theme";
 export * from "./ui";
 export * from "./user";

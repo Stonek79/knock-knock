@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { USER_WEB_STATUS } from "@/lib/constants";
 
 // Мокаем зависимости до импорта хука
 vi.mock("./usePresence", () => ({
@@ -14,10 +15,10 @@ describe("useGroupPresence", () => {
     it("должен корректно подсчитывать количество пользователей онлайн", () => {
         // Настраиваем мок usePresence
         vi.mocked(usePresence).mockReturnValue({
-            "user-1": "online",
-            "user-2": "offline",
-            "user-3": "online",
-            "user-4": "online",
+            "user-1": USER_WEB_STATUS.ONLINE,
+            "user-2": USER_WEB_STATUS.OFFLINE,
+            "user-3": USER_WEB_STATUS.ONLINE,
+            "user-4": USER_WEB_STATUS.ONLINE,
         });
 
         // Тестируемые ID (user-4 онлайн, но его нет в списке группы)
@@ -36,7 +37,7 @@ describe("useGroupPresence", () => {
 
     it("должен возвращать 0 онлайн, если список пуст", () => {
         vi.mocked(usePresence).mockReturnValue({
-            "user-1": "online",
+            "user-1": USER_WEB_STATUS.ONLINE,
         });
 
         const { result } = renderHook(() => useGroupPresence([]));

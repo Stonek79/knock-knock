@@ -6,7 +6,7 @@ import { AppLogo } from "@/components/ui/AppLogo";
 import { Button } from "@/components/ui/Button";
 import { EmailInput } from "@/components/ui/EmailInput";
 import { PasswordInput } from "@/components/ui/PasswordInput";
-import { AUTH_MODES, AUTH_VIEW_MODES } from "@/lib/constants";
+import { AUTH_VIEW_MODES } from "@/lib/constants";
 import { useLoginForm } from "../hooks/useLoginForm";
 import styles from "./loginForm.module.css";
 
@@ -20,15 +20,8 @@ interface LoginFormProps {
  */
 export function LoginForm({ onSuccess }: LoginFormProps) {
     const { t } = useTranslation();
-    const {
-        form,
-        submitError,
-        authMode,
-        viewMode,
-        toggleAuthMode,
-        toggleViewMode,
-        loginSchema,
-    } = useLoginForm(onSuccess);
+    const { form, submitError, viewMode, toggleViewMode, loginSchema } =
+        useLoginForm(onSuccess);
 
     return (
         <Flex direction="column" gap="5">
@@ -76,7 +69,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                     >
                         {(field) => (
                             <Flex direction="column" gap="2">
-                                {/* Нативный label вместо Radix Text as="label" */}
                                 <label
                                     htmlFor={field.name}
                                     className={styles.fieldLabel}
@@ -103,44 +95,40 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                         )}
                     </form.Field>
 
-                    {authMode === AUTH_MODES.PASSWORD && (
-                        <form.Field
-                            name="password"
-                            validators={{
-                                onChange: ({ value }) =>
-                                    !value ? t("common.required") : undefined,
-                            }}
-                        >
-                            {(field) => (
-                                <Flex direction="column" gap="2">
-                                    <label
-                                        htmlFor={field.name}
-                                        className={styles.fieldLabel}
-                                    >
-                                        {t("common.password")}
-                                    </label>
-                                    <PasswordInput
-                                        id={field.name}
-                                        name={field.name}
-                                        value={field.state.value}
-                                        onBlur={field.handleBlur}
-                                        onChange={(e) =>
-                                            field.handleChange(e.target.value)
-                                        }
-                                        placeholder={t(
-                                            "auth.passwordPlaceholder",
-                                        )}
-                                    />
-                                    {field.state.meta.isTouched &&
-                                    field.state.meta.errors.length ? (
-                                        <span className={styles.fieldError}>
-                                            {field.state.meta.errors.join(", ")}
-                                        </span>
-                                    ) : null}
-                                </Flex>
-                            )}
-                        </form.Field>
-                    )}
+                    <form.Field
+                        name="password"
+                        validators={{
+                            onChange: ({ value }) =>
+                                !value ? t("common.required") : undefined,
+                        }}
+                    >
+                        {(field) => (
+                            <Flex direction="column" gap="2">
+                                <label
+                                    htmlFor={field.name}
+                                    className={styles.fieldLabel}
+                                >
+                                    {t("common.password")}
+                                </label>
+                                <PasswordInput
+                                    id={field.name}
+                                    name={field.name}
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
+                                    placeholder={t("auth.passwordPlaceholder")}
+                                />
+                                {field.state.meta.isTouched &&
+                                field.state.meta.errors.length ? (
+                                    <span className={styles.fieldError}>
+                                        {field.state.meta.errors.join(", ")}
+                                    </span>
+                                ) : null}
+                            </Flex>
+                        )}
+                    </form.Field>
 
                     <Flex direction="column" gap="3" mt="2">
                         <form.Subscribe
@@ -165,18 +153,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                                 </Button>
                             )}
                         </form.Subscribe>
-
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={toggleAuthMode}
-                            className={styles.centerButton}
-                            type="button"
-                        >
-                            {authMode === AUTH_MODES.MAGIC_LINK
-                                ? t("auth.signInWithPassword")
-                                : t("auth.signInWithMagicLink")}
-                        </Button>
 
                         <Flex justify="center" align="center" gap="2" mt="2">
                             <span className={styles.toggleText}>

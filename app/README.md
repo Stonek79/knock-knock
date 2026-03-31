@@ -1,69 +1,63 @@
-# Knock-Knock: Secure PWA Messenger
+# Knock-Knock: Frontend App
 
-A privacy-focused PWA messenger with End-to-End Encryption (E2EE), built with React 19, Supabase, and Web Crypto API.
+Мессенджер с фокусом на приватность и сквозное шифрование (E2EE), построенный на React 19, PocketBase и Web Crypto API.
 
-## Core Features
-1.  **E2E Encryption**: Messages are encrypted on the device (Web Crypto API + X25519/AES-GCM). Keys never leave the browser.
-2.  **Privacy**: Zero-knowledge architecture. The server stores only encrypted blobs.
-3.  **PWA**: Installable on iOS/Android/Desktop. Offline-first architecture.
-4.  **Ghost Mode**: Ephemeral chats that disappear after closing.
+---
 
-## Technology Stack
--   **Frontend**: React 19, TypeScript, Vite.
--   **Routing**: TanStack Router.
--   **State**: Zustand + TanStack Query.
--   **Crypto**: Native Web Crypto API (SubtleCrypto).
--   **Backend**: Supabase (Auth, DB, Realtime).
+## 🚀 Технологический стек
 
-## Development Rules
+- **Core**: React 19 + TypeScript.
+- **Routing**: TanStack Router (File-based).
+- **State**: Zustand + TanStack Query.
+- **Backend**: PocketBase v0.23+.
+- **Crypto**: Web Crypto API (AES-GCM, ECDH).
+- **Styling**: Radix UI + Vanilla CSS.
+- **Testing**: Vitest, Playwright, Storybook.
 
-### 1. Mobile First
--   Development must follow the **Mobile First** principle.
--   Styles should target mobile screens by default.
--   Use `@media (min-width: 768px)` for tablet/desktop overrides.
--   Ensure touch targets are at least 44px.
+---
 
-### 2. File & Component Structure
--   **Component Folder Pattern**: Each component resides in its own folder with its styles.
-    ```
-    src/components/profile/
-    ├── ProfileForm/
-    │   ├── index.tsx
-    │   └── ProfileForm.module.css
-    ```
--   **Routes**: `src/routes` contains only layout/routing logic. Business logic should be in `src/components`.
+## 🛠 Быстрый старт
 
-### 3. Workflow & Git
--   **Git Push**: The User handles all commits and pushes manually. The AI agent does not run git commands.
--   **Communication**: Russian language is used for all collaboration.
-
-### 4. Architecture
--   **Structure**: Based on a Unified Layout principle.
--   **Desktop**: Uses Resizable Panels (chat list vs chat window). Left sidebar combines chat list and bottom navigation.
--   **Mobile**: Single column view with bottom navigation.
-
-### 5. Dev Mode (Mock Mode)
--   The project supports a fully functional **Mock Mode** without a backend connection.
--   **Features**:
-    -   **Realtime Simulation**: Uses `EventEmitter` to simulate `postgres_changes`.
-    -   **Full CRUD**: Supports creating and deleting chats and messages.
-    -   **Persistence**: Data persists in `sessionStorage` (cleared on tab close if not saved to code, but "Reset DB" available).
--   If `.env` is missing, the app initializes in this mode automatically.
-
-## Getting Started
-
-### Prerequisites
--   Node.js 20+
--   npm
-
-### Installation
+### 1. Установка зависимостей
 ```bash
 npm install
 ```
 
-### Development
+### 2. Настройка окружения
+Создайте файл `.env.local` на основе `.env.example`:
+```env
+VITE_PB_URL=https://dev-api.knok-knok.ru:8443
+VITE_TURNSTILE_SITE_KEY=...
+```
+
+### 3. Запуск в режиме разработки
 ```bash
 npm run dev
 ```
-For full functionality, copy `.env.example` to `.env` and fill in Supabase credentials.
-If no `.env` is provided, the app runs in **Mock Mode**.
+
+### 4. Генерация типов PocketBase
+Если схема БД обновилась, запустите:
+```bash
+npm run typegen:pb
+```
+
+---
+
+## 🧪 Тестирование
+
+- **Unit-тесты**: `npm run test`
+- **E2E**: `npx playwright test`
+- **Storybook**: `npm run storybook`
+
+Для полноценного тестирования требуется запущенный локальный инстанс PocketBase или доступ к Dev-API.
+
+---
+
+## 📂 Структура проекта
+
+Архитектура проекта следует принципам **Feature-Sliced Design (FSD)**:
+- `src/features`: Модульные блоки функционала (чат, аут, настройки).
+- `src/lib/repositories`: Слой доступа к данным (абстракция над SDK).
+- `src/lib/services`: Бизнес-логика и оркестрация репозиториев.
+- `src/hooks`: Переиспользуемые React-хуки.
+- `src/components`: Общие UI-компоненты.

@@ -6,10 +6,10 @@ import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
-import { DB_TABLES, VALIDATION } from "@/lib/constants";
+import { QUERY_KEYS, VALIDATION } from "@/lib/constants";
 import { COMPONENT_INTENT } from "@/lib/constants/ui";
+import { userRepository } from "@/lib/repositories/user.repository";
 import { profileSchema } from "@/lib/schemas/profile";
-import { supabase } from "@/lib/supabase";
 import type { ComponentIntent } from "@/lib/types/ui";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./profileform.module.css";
@@ -17,10 +17,11 @@ import styles from "./profileform.module.css";
 /**
  * Форма редактирования профиля пользователя.
  * Использует наш кастомный TextField вместо Radix TextField.
+ * Данные загружаются и обновляются через userRepository.
  */
 export function ProfileForm() {
     const { t } = useTranslation();
-    const { user } = useAuthStore();
+    const { pbUser } = useAuthStore();
     const queryClient = useQueryClient();
 
     const [statusMessage, setStatusMessage] = useState<{
@@ -29,23 +30,21 @@ export function ProfileForm() {
     } | null>(null);
 
     const { data: profile } = useQuery({
-        queryKey: ["profile", user?.id],
+        queryKey: QUERY_KEYS.profile(pbUser?.id),
         queryFn: async () => {
-            if (!user) {
+            if (!pbUser) {
                 return null;
             }
-            const { data, error } = await supabase
-                .from(DB_TABLES.PROFILES)
-                .select("*")
-                .eq("id", user.id)
-                .single();
 
-            if (error && error.code !== "PGRST116") {
-                throw error;
+            const result = await userRepository.getUserById(pbUser.id);
+
+            if (result.isErr()) {
+                return null;
             }
-            return data;
+
+            return result.value;
         },
-        enabled: !!user,
+        enabled: !!pbUser,
     });
 
     const form = useForm({
@@ -54,28 +53,28 @@ export function ProfileForm() {
             display_name: profile?.display_name || "",
         },
         onSubmit: async ({ value }) => {
-            if (!user) {
+            if (!pbUser) {
                 return;
             }
             setStatusMessage(null);
 
-            const { error } = await supabase.from(DB_TABLES.PROFILES).upsert({
-                id: user.id,
+            const result = await userRepository.updateProfile(pbUser.id, {
                 username: value.username,
                 display_name: value.display_name,
-                updated_at: new Date().toISOString(),
             });
 
-            if (error) {
-                setStatusMessage({
-                    type: COMPONENT_INTENT.DANGER,
-                    text: error.message,
+            if (result.isOk()) {
+                queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.profile(pbUser.id),
                 });
-            } else {
-                queryClient.invalidateQueries({ queryKey: ["profile"] });
                 setStatusMessage({
                     type: COMPONENT_INTENT.SUCCESS,
                     text: t("profile.profileUpdated"),
+                });
+            } else {
+                setStatusMessage({
+                    type: COMPONENT_INTENT.DANGER,
+                    text: result.error.message,
                 });
             }
         },

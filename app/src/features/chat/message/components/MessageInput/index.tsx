@@ -221,6 +221,7 @@ export function MessageInput({
                             onKeyDown={handleKeyDown}
                             disabled={disabled || sending}
                             className={styles.textArea}
+                            data-testid="message-textarea"
                         />
                     )}
                 </Box>
@@ -253,6 +254,7 @@ export function MessageInput({
                                 styles.sendButton,
                             )}
                             aria-label={t("chat.send", "Отправить")}
+                            data-testid="message-send-button"
                         >
                             <SendHorizontal size={ICON_SIZE.sm} />
                         </IconButton>
@@ -266,6 +268,7 @@ export function MessageInput({
                         disabled={disabled || sending}
                         className={clsx(styles.actionButton, styles.sendButton)}
                         aria-label={t("chat.send", "Отправить")}
+                        data-testid="message-send-button"
                     >
                         <SendHorizontal size={ICON_SIZE.sm} />
                     </IconButton>

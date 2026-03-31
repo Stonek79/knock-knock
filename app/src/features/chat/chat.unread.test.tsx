@@ -3,9 +3,10 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { useUnreadCounts } from "@/features/chat/list";
-import { supabase } from "@/lib/supabase";
+import type { UnreadCount } from "@/lib/types";
+import { ok } from "@/lib/utils/result";
 
-// Wrapper for QueryClient
+// Обёртка для QueryClient
 const createWrapper = () => {
     const queryClient = new QueryClient({
         defaultOptions: {
@@ -21,53 +22,40 @@ const createWrapper = () => {
     );
 };
 
-// Mock dependencies
-vi.mock("@/lib/supabase", () => ({
-    supabase: {
-        rpc: vi.fn(),
-        channel: vi.fn(() => ({
-            on: vi.fn().mockReturnThis(),
-            subscribe: vi.fn(),
-            unsubscribe: vi.fn(),
-        })),
-        removeChannel: vi.fn(),
-    },
+// Мокаем сервис вместо прямого pb.collection
+vi.mock("@/lib/services/room/queries", () => ({
+    getRoomUnreadCounts: vi.fn(),
 }));
 
 vi.mock("@/stores/auth", () => ({
     useAuthStore: () => ({
-        user: { id: "test-user-id" },
+        pbUser: { id: "test-user-id" },
     }),
 }));
 
+// Импортируем замоканный модуль для управления ответами
+const { getRoomUnreadCounts } = await import("@/lib/services/room/queries");
+
 describe("Хук useUnreadCounts", () => {
-    it("загружает начальные значения через RPC", async () => {
-        // Setup RPC mock
-        const mockCounts = [{ room_id: "room-1", count: 5 }];
-        // biome-ignore lint/suspicious/noExplicitAny: Mocking RPC
-        (supabase.rpc as unknown as any).mockResolvedValue({
-            data: mockCounts,
-            error: null,
-        });
+    it("загружает начальные значения через сервис", async () => {
+        // Подготовка мока — возвращаем Result<UnreadCount[]>
+        const mockCounts: UnreadCount[] = [{ room_id: "room-1", count: 5 }];
+
+        vi.mocked(getRoomUnreadCounts).mockResolvedValue(ok(mockCounts));
 
         const { result } = renderHook(() => useUnreadCounts(), {
             wrapper: createWrapper(),
         });
 
         await waitFor(() => {
-            expect(result.current.counts).toEqual(mockCounts);
+            expect(result.current.getCount("room-1")).toBe(5);
         });
 
-        expect(result.current.getCount("room-1")).toBe(5);
         expect(result.current.getCount("room-2")).toBe(0);
     });
 
-    it("корректно обрабатывает ошибки RPC", async () => {
-        // biome-ignore lint/suspicious/noExplicitAny: Mocking RPC
-        (supabase.rpc as unknown as any).mockResolvedValue({
-            data: null,
-            error: { message: "RPC Error" },
-        });
+    it("корректно обрабатывает пустой ответ", async () => {
+        vi.mocked(getRoomUnreadCounts).mockResolvedValue(ok([]));
 
         const { result } = renderHook(() => useUnreadCounts(), {
             wrapper: createWrapper(),

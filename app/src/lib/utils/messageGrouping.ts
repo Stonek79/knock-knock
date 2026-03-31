@@ -3,6 +3,7 @@ import type { MessagePosition } from "@/lib/types/message";
 
 interface MessageWithSender {
     sender_id: string | null;
+    is_deleted?: boolean;
 }
 
 /**
@@ -18,11 +19,24 @@ export function getMessageGroupPosition(
     prevMsg?: MessageWithSender,
     nextMsg?: MessageWithSender,
 ): MessagePosition {
+    // Удаленное сообщение всегда SINGLE и разрывает группу для соседей
+    if (currentMsg.is_deleted) {
+        return MESSAGE_POSITION.SINGLE;
+    }
+
     // Проверка: сообщение от того же отправителя, что и предыдущее?
-    const isTop = prevMsg && prevMsg.sender_id === currentMsg.sender_id;
+    // И оно НЕ удалено
+    const isTop =
+        prevMsg &&
+        !prevMsg.is_deleted &&
+        prevMsg.sender_id === currentMsg.sender_id;
 
     // Проверка: сообщение от того же отправителя, что и следующее?
-    const isBottom = nextMsg && nextMsg.sender_id === currentMsg.sender_id;
+    // И оно НЕ удалено
+    const isBottom =
+        nextMsg &&
+        !nextMsg.is_deleted &&
+        nextMsg.sender_id === currentMsg.sender_id;
 
     if (isTop && isBottom) {
         return MESSAGE_POSITION.MIDDLE;

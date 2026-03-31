@@ -53,6 +53,7 @@ export default defineConfig({
     server: {
         host: true,
         allowedHosts: ["knok-knok.ru", "www.knok-knok.ru", "api.knok-knok.ru"],
+        forwardConsole: true,
     },
     test: {
         globals: true,

@@ -3,12 +3,15 @@ import { z } from "zod";
 /**
  * Схема валидации переменных окружения приложения.
  * Гарантирует, что приложение не запустится без необходимых ключей или с неверным форматом URL.
+ *
+ * PocketBase требует только один URL — авторизация хранится в pb.authStore (localStorage).
  */
 const envSchema = z.object({
-    VITE_SUPABASE_URL: z.url("Некорректный URL Supabase"),
-    VITE_SUPABASE_ANON_KEY: z.string().min(20, "Anon key слишком короткий"),
-    VITE_USE_MOCK: z.enum(["true", "false"]).default("false"),
-    // Опциональные переменные для разработки/тестирования
+    /** URL инстанса PocketBase (например: https://api.knok-knok.ru) */
+    VITE_PB_URL: z.url("Некорректный URL PocketBase"),
+    /** Использовать ли моки вместо реального API */
+    VITE_USE_MOCK: z.enum(["true", "false"]).optional().default("false"),
+    /** Опциональные переменные для разработки */
     VITE_DEV_MODE: z.string().optional(),
 });
 
@@ -19,7 +22,10 @@ const envSchema = z.object({
 const _env = envSchema.safeParse(import.meta.env);
 
 if (!_env.success) {
-    console.error("❌ Ошибка в переменных окружения:", _env.error.format());
+    console.error(
+        "❌ Ошибка в переменных окружения:",
+        z.treeifyError(_env.error),
+    );
     throw new Error("Некорректная конфигурация окружения");
 }
 

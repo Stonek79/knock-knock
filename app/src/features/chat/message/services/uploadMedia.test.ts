@@ -1,19 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
-import { STORAGE_BUCKETS } from "@/lib/constants";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+    ATTACHMENT_TYPES,
+    MEDIA_DEFAULTS,
+    MEDIA_FIELDS,
+} from "@/lib/constants";
 import * as cryptoMessages from "@/lib/crypto/messages";
-import { supabase } from "@/lib/supabase";
+import type { PBRecord } from "@/lib/types";
+import { err, ok } from "@/lib/utils/result";
 import { uploadAudio, uploadMedia } from "./uploadMedia";
 
-// Мокаем Supabase клиент
-vi.mock("@/lib/supabase", () => ({
-    isMock: false,
-    supabase: {
-        storage: {
-            from: vi.fn(() => ({
-                upload: vi.fn(),
-                getPublicUrl: vi.fn(),
-            })),
-        },
+// Мокаем репозиторий вместо прямого pb.collection
+vi.mock("@/lib/repositories/media.repository", () => ({
+    mediaRepository: {
+        uploadMedia: vi.fn(),
+        getFileUrl: vi.fn(),
     },
 }));
 
@@ -21,6 +21,14 @@ vi.mock("@/lib/supabase", () => ({
 vi.mock("@/lib/crypto/messages", () => ({
     encryptBlob: vi.fn(),
 }));
+
+// Мокаем кэширование
+vi.mock("@/lib/cache/media", () => ({
+    saveMediaBlob: vi.fn(),
+}));
+
+// Импортируем замоканный модуль для управления ответами
+const { mediaRepository } = await import("@/lib/repositories/media.repository");
 
 describe("Сервис загрузки медиа", () => {
     const mockRoomId = "test-room-id";
@@ -30,81 +38,96 @@ describe("Сервис загрузки медиа", () => {
     const mockAudioBlob = new Blob(["audio data"], { type: "audio/webm" });
     const mockRoomKey = {} as CryptoKey; // заглушка
 
+    /** Создание типизированного мок-рекорда PBMediaRecord */
+    const createMockRecord = (
+        overrides: Partial<PBRecord> & { id: string; file: string },
+    ): PBRecord => ({
+        collectionId: "media",
+        collectionName: "media",
+        created: "2026-01-01",
+        updated: "2026-01-01",
+        owner: "",
+        ...overrides,
+    });
+
     beforeEach(() => {
         vi.clearAllMocks();
-        // Мокаем randomUUID чтобы ID предсказуемо работал в тестах
-        vi.spyOn(crypto, "randomUUID").mockReturnValue(
-            "uuid-1234" as `${string}-${string}-${string}-${string}-${string}`,
-        );
     });
 
     describe("uploadMedia", () => {
-        it("должен загружать файл в бакет CHAT_MEDIA и возвращать объект вложения", async () => {
-            const mockUpload = vi
-                .fn()
-                .mockResolvedValue({ data: { path: "..." }, error: null });
-            const mockGetPublicUrl = vi.fn().mockReturnValue({
-                data: { publicUrl: "https://example.com/media" },
+        it("должен загружать файл через mediaRepository и возвращать объект вложения", async () => {
+            const mockRecord = createMockRecord({
+                id: "rec-123",
+                file: "test-image.png",
             });
 
-            vi.mocked(supabase.storage.from).mockReturnValue({
-                upload: mockUpload,
-                getPublicUrl: mockGetPublicUrl,
-            } as unknown as ReturnType<typeof supabase.storage.from>);
-
-            const result = await uploadMedia(mockFile, mockRoomId);
-
-            expect(supabase.storage.from).toHaveBeenCalledWith(
-                STORAGE_BUCKETS.CHAT_MEDIA,
+            vi.mocked(mediaRepository.uploadMedia).mockResolvedValue(
+                ok(mockRecord),
             );
-            expect(mockUpload).toHaveBeenCalledWith(
-                `${mockRoomId}/uuid-1234.png`,
-                mockFile,
-                expect.any(Object),
+            vi.mocked(mediaRepository.getFileUrl).mockReturnValue(
+                "https://example.com/media",
+            );
+
+            const result = await uploadMedia(mockFile);
+
+            expect(mediaRepository.uploadMedia).toHaveBeenCalled();
+            const formDataArg = vi.mocked(mediaRepository.uploadMedia).mock
+                .calls[0][0];
+            expect(formDataArg.get(MEDIA_FIELDS.FILE)).toBeDefined();
+
+            expect(mediaRepository.getFileUrl).toHaveBeenCalledWith(
+                mockRecord,
+                "test-image.png",
             );
             expect(result).toEqual({
-                id: "uuid-1234",
+                id: "rec-123",
                 file_name: "test-image.png",
                 file_size: mockFile.size,
                 content_type: "image/png",
                 url: "https://example.com/media",
-                type: "image",
+                type: ATTACHMENT_TYPES.IMAGE,
             });
         });
 
-        it("должен выбрасывать ошибку, если загрузка не удалась", async () => {
-            const mockUpload = vi.fn().mockResolvedValue({
-                data: null,
-                error: { message: "Storage error" },
-            });
-            vi.mocked(supabase.storage.from).mockReturnValue({
-                upload: mockUpload,
-            } as unknown as ReturnType<typeof supabase.storage.from>);
-
-            await expect(uploadMedia(mockFile, mockRoomId)).rejects.toThrow(
-                "Media upload failed: Storage error",
+        it("должен корректно обрабатывать и пробрасывать ошибку репозитория", async () => {
+            const repoErrorMessage = "Storage quota exceeded";
+            // Используем kind: "UploadError" для соответствия типу MediaRepoError
+            const mockError = {
+                kind: "UploadError" as const,
+                message: repoErrorMessage,
+                details: { reason: "limit" },
+            };
+            vi.mocked(mediaRepository.uploadMedia).mockResolvedValue(
+                err(mockError),
             );
+
+            // Проверяем, что ошибка пробрасывается с корректным текстом
+            await expect(uploadMedia(mockFile)).rejects.toThrow(
+                repoErrorMessage,
+            );
+
+            // Также убедимся, что репозиторий вызывался один раз
+            expect(mediaRepository.uploadMedia).toHaveBeenCalledTimes(1);
         });
     });
 
     describe("uploadAudio", () => {
-        it("должен шифровать и загружать аудио в бакет CHAT_AUDIO", async () => {
+        it("должен шифровать и загружать аудио через mediaRepository", async () => {
             const mockEncryptedBlob = new Blob(["encrypted audio"]);
             vi.mocked(cryptoMessages.encryptBlob).mockResolvedValue(
                 mockEncryptedBlob,
             );
 
-            const mockUpload = vi
-                .fn()
-                .mockResolvedValue({ data: { path: "..." }, error: null });
-            const mockGetPublicUrl = vi.fn().mockReturnValue({
-                data: { publicUrl: "https://example.com/audio" },
+            const mockRecord = createMockRecord({
+                id: "rec-audio",
+                file: "voice.enc",
             });
-
-            vi.mocked(supabase.storage.from).mockReturnValue({
-                upload: mockUpload,
-                getPublicUrl: mockGetPublicUrl,
-            } as unknown as ReturnType<typeof supabase.storage.from>);
+            vi.mocked(mediaRepository.uploadMedia).mockResolvedValue(
+                ok(mockRecord),
+            );
+            vi.mocked(mediaRepository.getFileUrl).mockReturnValue(
+                "https://example.com/audio",
+            );
 
             const result = await uploadAudio(
                 mockAudioBlob,
@@ -116,19 +139,18 @@ describe("Сервис загрузки медиа", () => {
                 mockAudioBlob,
                 mockRoomKey,
             );
-            expect(supabase.storage.from).toHaveBeenCalledWith(
-                STORAGE_BUCKETS.CHAT_AUDIO,
-            );
-            expect(mockUpload).toHaveBeenCalledWith(
-                `${mockRoomId}/uuid-1234.enc`,
-                mockEncryptedBlob,
-                expect.any(Object),
-            );
+            expect(mediaRepository.uploadMedia).toHaveBeenCalled();
+
+            // Проверяем имя поля в FormData
+            const formDataArg = vi.mocked(mediaRepository.uploadMedia).mock
+                .calls[0][0];
+            expect(formDataArg.get(MEDIA_FIELDS.FILE)).toBeDefined();
+
             expect(result).toMatchObject({
-                id: "uuid-1234",
-                file_name: "Voice Message",
-                file_size: mockAudioBlob.size, // Should return original size
-                type: "audio",
+                id: "rec-audio",
+                file_name: MEDIA_DEFAULTS.VOICE_MESSAGE_LABEL,
+                file_size: mockAudioBlob.size,
+                type: ATTACHMENT_TYPES.AUDIO,
                 url: "https://example.com/audio",
             });
         });

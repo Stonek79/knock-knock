@@ -1,15 +1,7 @@
-/** Названия бакетов Supabase Storage */
-export const STORAGE_BUCKETS = {
-    CHAT_MEDIA: "chat_media",
-    CHAT_AUDIO: "chat_audio",
-} as const;
-
-/** Типы медиа-вложений */
-export const ATTACHMENT_TYPES = {
-    IMAGE: "image",
-    VIDEO: "video",
-    AUDIO: "audio",
-    DOCUMENT: "document",
+/** Настройки хранилища файлов */
+export const STORAGE_CONFIG = {
+    AVATARS_COLLECTION: "users",
+    MEDIA_COLLECTION: "media",
 } as const;
 
 /** Префиксы MIME-типов для определения категории файла */

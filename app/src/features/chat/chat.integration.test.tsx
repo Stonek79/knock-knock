@@ -58,12 +58,12 @@ describe("Интеграция чата", () => {
 
     it("отправка сообщения вызывает MessageService.sendMessage", async () => {
         const handleSend = async (text: string) => {
-            await MessageService.sendMessage(
-                "room-1",
-                "user-1",
-                text,
-                {} as CryptoKey,
-            );
+            await MessageService.sendMessage({
+                roomId: "room-1",
+                senderId: "user-1",
+                content: text,
+                roomKey: {} as CryptoKey,
+            });
         };
 
         render(
@@ -81,12 +81,12 @@ describe("Интеграция чата", () => {
         fireEvent.click(sendButton);
 
         await waitFor(() => {
-            expect(MessageService.sendMessage).toHaveBeenCalledWith(
-                "room-1",
-                "user-1",
-                "Hello World",
-                expect.any(Object),
-            );
+            expect(MessageService.sendMessage).toHaveBeenCalledWith({
+                roomId: "room-1",
+                senderId: "user-1",
+                content: "Hello World",
+                roomKey: expect.any(Object),
+            });
         });
     });
 
@@ -115,6 +115,6 @@ describe("Интеграция чата", () => {
     });
 
     // Note: Full integration testing with Realtime updates is hard to mock perfectly in JSDOM
-    // without spinning up a real Supabase instance or heavy mocking of the subscription hook.
+    // without spinning up a real PocketBase instance or heavy mocking of the subscription hook.
     // For now, we test the service calls which was the reported breakage point (actions not firing).
 });

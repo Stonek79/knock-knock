@@ -19,7 +19,7 @@ interface ChatRoomHeaderProps {
  * Принимает только `roomId` вместо ранее передаваемых 14 props.
  */
 export function ChatRoomHeader({ roomId }: ChatRoomHeaderProps) {
-    const { user } = useAuthStore();
+    const { profile: user } = useAuthStore();
 
     // --- Данные комнаты и собеседника ---
     const { data: roomInfo } = useChatRoomData(roomId);
@@ -27,11 +27,8 @@ export function ChatRoomHeader({ roomId }: ChatRoomHeaderProps) {
     const otherUserId = roomInfo?.otherUserId;
     const { data: peerUser } = useChatPeer(otherUserId, room?.type);
 
-    // --- View-данные (для индикатора печати нужен displayName) ---
-    const { typingUsers } = useTypingIndicator({
-        roomId,
-        displayName: peerUser?.display_name || undefined,
-    });
+    // --- View-данные (индикатор печати) ---
+    const { typingUsers } = useTypingIndicator({ roomId });
 
     // --- Данные для отображения сообщений (нужны для onCopySelected и onEditSelected) ---
     const { messages } = useChatRoomView(roomId);

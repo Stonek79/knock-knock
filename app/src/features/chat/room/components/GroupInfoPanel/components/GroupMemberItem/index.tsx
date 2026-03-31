@@ -7,13 +7,13 @@ import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Text } from "@/components/ui/Text";
 import { MEMBER_ROLE } from "@/lib/constants";
+import type { ExpandedRoomMember } from "@/lib/types";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
-import type { GroupMember } from "../../types";
 import styles from "./groupmemberitem.module.css";
 
 interface GroupMemberItemProps {
     /** Данные участника */
-    member: GroupMember;
+    member: ExpandedRoomMember;
     /** ID текущего авторизованного пользователя */
     myUserId: string | undefined;
     /** Является ли текущий пользователь администратором */

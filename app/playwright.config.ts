@@ -1,4 +1,13 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env.test for staging
+dotenv.config({ path: path.resolve(__dirname, ".env.test") });
 
 /**
  * Playwright конфигурация для Knock-Knock
@@ -70,9 +79,15 @@ export default defineConfig({
             testMatch: /.*\.spec\.ts/,
             use: {
                 ...devices["iPhone 14"],
+                // Это адрес вашего фронтенда (локально или удаленно)
+                baseURL: "http://localhost:5173",
+                // Данные для обхода окна авторизации на staging-api
+                httpCredentials: {
+                    username: "supabase",
+                    password: "this_password_is_insecure_and_should_be_updated",
+                },
             },
         },
-
         {
             name: "production",
             testMatch: /.*\.manual\.spec\.ts/,

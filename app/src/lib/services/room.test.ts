@@ -1,12 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ERROR_CODES } from "@/lib/constants/errors";
-import { supabase } from "@/lib/supabase";
-import { RoomService } from "./room";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import { DB_TABLES, ERROR_CODES } from "@/lib/constants";
+import { pb } from "@/lib/pocketbase";
+import { createRoom, findOrCreateDM } from "./room";
 
-// Моки
-vi.mock("@/lib/supabase", () => ({
-    supabase: {
-        from: vi.fn(),
+// Моки PocketBase
+vi.mock("@/lib/pocketbase", () => ({
+    pb: {
+        collection: vi.fn(),
     },
 }));
 
@@ -31,13 +31,11 @@ vi.mock("@/lib/crypto/encryption", async (importOriginal) => {
     };
 });
 
-describe("RoomService", () => {
+describe("RoomService (PocketBase)", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        // Принудительно отключаем mock-режим для честного unit-тестирования логики
         vi.stubEnv("VITE_USE_MOCK", "false");
 
-        // Мокаем импорт ключа, чтобы тесты не падали на валидации ECDH ключей
         if (!window.crypto) {
             // biome-ignore lint/suspicious/noExplicitAny: mock
             (window as any).crypto = { subtle: {} };
@@ -48,47 +46,22 @@ describe("RoomService", () => {
     });
 
     describe("createRoom", () => {
-        it("должен вернуть DB_ERROR при ошибке получения профилей", async () => {
-            // Мок ответа supabase (ошибка select)
-            const mockSelect = vi.fn().mockReturnValue({
-                in: vi.fn().mockResolvedValue({
-                    data: null,
-                    error: { message: "DB Error" },
-                }),
-            });
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockReturnValue({ select: mockSelect });
-
-            const result = await RoomService.createRoom(
-                "Test Room",
-                "group",
-                "my-id",
-                ["peer-id"],
-            );
-
-            expect(result.isErr()).toBe(true);
-            if (result.isErr()) {
-                expect(result.error.kind).toBe(ERROR_CODES.DB_ERROR);
-            }
-        });
-
         it("должен вернуть MISSING_KEYS если у пользователя нет ключей", async () => {
-            // Мок ответа supabase (один юзер найден, второй нет)
-            const mockSelect = vi.fn().mockReturnValue({
-                in: vi.fn().mockResolvedValue({
-                    data: [{ id: "my-id", public_key_x25519: "key" }], // peer-id отсутствует
-                    error: null,
-                }),
+            // Мок получения профилей (getFullList)
+            const mockGetFullList = vi.fn().mockResolvedValue([
+                { id: "my-id", public_key_x25519: "key" },
+                // peer-id отсутствует
+            ]);
+            (pb.collection as Mock).mockReturnValue({
+                getFullList: mockGetFullList,
             });
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockReturnValue({ select: mockSelect });
 
-            const result = await RoomService.createRoom(
-                "Test Room",
-                "group",
-                "my-id",
-                ["peer-id"],
-            );
+            const result = await createRoom({
+                name: "Test Room",
+                type: "group",
+                myUserId: "my-id",
+                peerIds: ["peer-id"],
+            });
 
             expect(result.isErr()).toBe(true);
             if (result.isErr()) {
@@ -96,190 +69,98 @@ describe("RoomService", () => {
                 expect(result.error.details).toEqual({ userIds: ["peer-id"] });
             }
         });
+
+        it("должен вернуть DB_ERROR при ошибке создания", async () => {
+            (pb.collection as Mock).mockReturnValue({
+                create: vi.fn().mockRejectedValue(new Error("PB Error")),
+            });
+            const result = await createRoom({
+                name: "Test Room",
+                type: "group",
+                myUserId: "my-id",
+                peerIds: ["peer-id"],
+            });
+
+            expect(result.isErr()).toBe(true);
+            if (result.isErr()) {
+                expect(result.error.kind).toBe(ERROR_CODES.DB_ERROR);
+            }
+        });
+
+        it("должен успешно создать комнату со всеми связями", async () => {
+            const validBase64Key = btoa("mock1234mock1234mock1234mock1234");
+
+            // 1. Мок профилей
+            const mockGetFullList = vi.fn().mockResolvedValue([
+                { id: "my-id", public_key_x25519: validBase64Key },
+                { id: "peer-id", public_key_x25519: validBase64Key },
+            ]);
+
+            // 2. Моки создания (create)
+            const mockCreateRoom = vi
+                .fn()
+                .mockResolvedValue({ id: "new-room-id" });
+            const mockCreateMember = vi.fn().mockResolvedValue({});
+            const mockCreateKey = vi.fn().mockResolvedValue({});
+
+            (pb.collection as Mock).mockImplementation((coll: string) => {
+                if (coll === DB_TABLES.USERS) {
+                    return { getFullList: mockGetFullList };
+                }
+                if (coll === DB_TABLES.ROOMS) {
+                    return { create: mockCreateRoom };
+                }
+                if (coll === DB_TABLES.ROOM_MEMBERS) {
+                    return { create: mockCreateMember };
+                }
+                if (coll === DB_TABLES.ROOM_KEYS) {
+                    return { create: mockCreateKey };
+                }
+                return {};
+            });
+
+            const result = await createRoom({
+                name: "Test Room",
+                type: "group",
+                myUserId: "my-id",
+                peerIds: ["peer-id"],
+            });
+
+            expect(result.isOk()).toBe(true);
+            expect(mockCreateRoom).toHaveBeenCalled();
+            expect(mockCreateMember).toHaveBeenCalledTimes(2); // Я + Собеседник
+            expect(mockCreateKey).toHaveBeenCalledTimes(2);
+        });
     });
 
     describe("findOrCreateDM", () => {
         it("должен вернуть ID существующей комнаты, если она найдена", async () => {
-            // 1. Мок членства в комнатах
-            const mockMemberships = {
-                data: [{ room_id: "existing-room" }],
-                error: null,
-            };
-            // 2. Мок деталей комнаты
-            const mockRooms = {
-                data: [{ id: "existing-room" }],
-                error: null,
-            };
-            // 3. Мок участников комнаты (совпадение с целевым юзером)
-            const mockMembers = {
-                data: [{ user_id: "my-id" }, { user_id: "target-id" }],
-                error: null,
-            };
-
-            // Цепочка моков для supabase.from().select()...
-            const fromMock = vi.fn((table) => {
-                if (table === "room_members") {
-                    return {
-                        select: vi.fn(() => ({
-                            eq: vi.fn((field, val) => {
-                                if (field === "user_id" && val === "my-id") {
-                                    return Promise.resolve(mockMemberships);
-                                }
-                                if (
-                                    field === "room_id" &&
-                                    val === "existing-room"
-                                ) {
-                                    return Promise.resolve(mockMembers);
-                                }
-                                return Promise.resolve({
-                                    data: [],
-                                    error: null,
-                                });
-                            }),
-                        })),
-                        insert: vi.fn().mockResolvedValue({ error: null }),
-                    };
-                }
-                if (table === "rooms") {
-                    return {
-                        select: vi.fn(() => ({
-                            in: vi.fn(() => ({
-                                eq: vi.fn(() => ({
-                                    eq: vi.fn().mockResolvedValue(mockRooms),
-                                })),
-                            })),
-                        })),
-                        insert: vi.fn().mockResolvedValue({ error: null }),
-                    };
-                }
-                if (table === "room_keys") {
-                    return {
-                        insert: vi.fn().mockResolvedValue({ error: null }),
-                    };
-                }
-                return { select: vi.fn() };
-            });
+            // Мок поиска (getFullList) через room_members
+            const mockGetFullList = vi.fn().mockResolvedValue([
+                {
+                    room: "existing-room",
+                    expand: {
+                        room: {
+                            type: "direct",
+                            room_members_via_room: [
+                                { user: "my-id" },
+                                { user: "target-id" },
+                            ],
+                        },
+                    },
+                },
+            ]);
             // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any) = fromMock;
+            (pb.collection as any).mockReturnValue({
+                getFullList: mockGetFullList,
+            });
 
-            const result = await RoomService.findOrCreateDM(
-                "my-id",
-                "target-id",
-            );
+            const result = await findOrCreateDM("my-id", "target-id");
 
             expect(result.isOk()).toBe(true);
             if (result.isOk()) {
                 expect(result.value).toBe("existing-room");
             }
-        });
-    });
-
-    describe("addMembersToGroup", () => {
-        it("должен добавить новых участников и зашифровать для них ключи", async () => {
-            // Корректный base64 ключ для мока ECDH, чтобы base64ToArrayBuffer не падал
-            const validBase64Key = btoa("mock1234mock1234mock1234mock1234");
-
-            const mockSelect = vi.fn().mockReturnValue({
-                in: vi.fn().mockResolvedValue({
-                    data: [
-                        { id: "new-user-1", public_key_x25519: validBase64Key },
-                    ],
-                    error: null,
-                }),
-            });
-
-            const fromMock = vi.fn((table) => {
-                if (table === "profiles") {
-                    return { select: mockSelect };
-                }
-                if (table === "room_members" || table === "room_keys") {
-                    return {
-                        insert: vi.fn().mockResolvedValue({ error: null }),
-                    };
-                }
-                return { select: vi.fn() };
-            });
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any) = fromMock;
-
-            const roomKeyStr = "mock-key";
-            const mockRoomKey = roomKeyStr as unknown as CryptoKey;
-
-            const result = await RoomService.addMembersToGroup(
-                "room-1",
-                ["new-user-1"],
-                mockRoomKey,
-                "my-id",
-            );
-
-            expect(result.isOk()).toBe(true);
-        });
-
-        it("должен вернуть MISSING_KEYS если профили не найдены", async () => {
-            const mockSelect = vi.fn().mockReturnValue({
-                in: vi.fn().mockResolvedValue({
-                    data: [], // Никого не нашли
-                    error: null,
-                }),
-            });
-
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockReturnValue({ select: mockSelect });
-
-            const mockRoomKey = "mock-key" as unknown as CryptoKey;
-
-            const result = await RoomService.addMembersToGroup(
-                "room-1",
-                ["missing-user"],
-                mockRoomKey,
-                "my-id",
-            );
-
-            expect(result.isErr()).toBe(true);
-            if (result.isErr()) {
-                expect(result.error.kind).toBe(ERROR_CODES.MISSING_KEYS);
-            }
-        });
-    });
-
-    describe("removeMemberFromGroup", () => {
-        it("должен удалить участника из room_members и room_keys", async () => {
-            const deleteMock = vi.fn().mockReturnValue({
-                eq: vi.fn(() => ({
-                    eq: vi.fn().mockResolvedValue({ error: null }),
-                })),
-            });
-
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockReturnValue({ delete: deleteMock });
-
-            const result = await RoomService.removeMemberFromGroup(
-                "room-1",
-                "user-1",
-            );
-
-            expect(result.isOk()).toBe(true);
-        });
-    });
-
-    describe("updateMemberRole", () => {
-        it("должен обновить роль участника", async () => {
-            const updateMock = vi.fn().mockReturnValue({
-                eq: vi.fn(() => ({
-                    eq: vi.fn().mockResolvedValue({ error: null }),
-                })),
-            });
-
-            // biome-ignore lint/suspicious/noExplicitAny: mock
-            (supabase.from as any).mockReturnValue({ update: updateMock });
-
-            const result = await RoomService.updateMemberRole(
-                "room-1",
-                "user-1",
-                "admin",
-            );
-
-            expect(result.isOk()).toBe(true);
         });
     });
 });

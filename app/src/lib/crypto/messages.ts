@@ -50,19 +50,28 @@ export async function decryptMessage(
     iv: string,
     key: CryptoKey,
 ): Promise<string> {
-    const encryptedBuffer = base64ToArrayBuffer(ciphertext);
-    const ivBuffer = base64ToArrayBuffer(iv);
+    try {
+        const encryptedBuffer = base64ToArrayBuffer(ciphertext);
+        const ivBuffer = base64ToArrayBuffer(iv);
 
-    const decryptedBuffer = await subtle.decrypt(
-        {
-            name: "AES-GCM",
-            iv: ivBuffer,
-        },
-        key,
-        encryptedBuffer,
-    );
+        const decryptedBuffer = await subtle.decrypt(
+            {
+                name: "AES-GCM",
+                iv: ivBuffer,
+            },
+            key,
+            encryptedBuffer,
+        );
 
-    return DECODER.decode(decryptedBuffer);
+        return DECODER.decode(decryptedBuffer);
+    } catch (err) {
+        // В режиме разработки разрешаем возврат оригинального текста, если дешифровка не удалась.
+        // Это необходимо для отображения сидированных (открытых) данных.
+        if (import.meta.env.DEV) {
+            return ciphertext;
+        }
+        throw err;
+    }
 }
 
 /**

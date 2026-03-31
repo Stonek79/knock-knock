@@ -1,98 +1,60 @@
-# Руководство по развертыванию (Deployment Guide)
+# Развертывание Knock-Knock
 
-Это руководство описывает процесс настройки инфраструктуры для проекта **PrivMessenger**.
-Архитектура: `Client (Internet) -> VPS (Nginx) -> WireGuard Tunnel -> Home Server (Supabase)`.
+Проект имеет гибридную инфраструктуру: публичный VPS и приватный Home Server, соединенные через WireGuard.
 
-## 1. Настройка VPS (публичный сервер)
+## 🏗 Архитектура
 
-**OS:** Ubuntu 22.04 LTS
-**Роль:** Reverse Proxy & TURN Server.
-
-### 1.1. Установка пакетов
-```bash
-sudo apt update && sudo apt install -y nginx wireguard coturn certbot python3-certbot-nginx
 ```
-
-### 1.2. Настройка WireGuard
-1. Сгенерируйте ключи:
-   ```bash
-   wg genkey | tee privatekey | wg pubkey > publickey
-   ```
-2. Создайте конфиг `/etc/wireguard/wg0.conf` на основе `infra/vps/wg0.conf.template`.
-   - Вставьте `PrivateKey` (содержимое файла `privatekey` с VPS).
-   - Вставьте `PublicKey` пира (домашнего сервера) в секцию `[Peer]`.
-
-3. Запустите интерфейс:
-   ```bash
-   sudo systemctl enable wg-quick@wg0
-   sudo systemctl start wg-quick@wg0
-   ```
-
-### 1.3. Настройка Nginx
-1. Скопируйте `infra/vps/nginx.conf` в `/etc/nginx/sites-available/knock-knock`.
-2. Замените `YOUR_DOMAIN.com` на ваш реальный домен.
-3. Активируйте сайт:
-   ```bash
-   sudo ln -s /etc/nginx/sites-available/knock-knock /etc/nginx/sites-enabled/
-   sudo rm /etc/nginx/sites-enabled/default
-   sudo nginx -t
-   sudo systemctl reload nginx
-   ```
-4. Получите SSL сертификат:
-   ```bash
-   sudo certbot --nginx -d yourdomain.com
-   ```
-
-### 1.4. Настройка Coturn (TURN server)
-1. Отредактируйте `/etc/turnserver.conf` согласно `infra/vps/turnserver.conf`.
-2. Сгенерируйте секрет и вставьте его.
-3. Перезапустите службу:
-   ```bash
-   sudo systemctl restart coturn
-   ```
+[User] -> [VPS: Nginx (8443)] -> [WireGuard] -> [Home Server: PocketBase (8090)]
+```
 
 ---
 
-## 2. Настройка Домашнего Сервера (Home Server)
+## 🛠 Предварительные требования
 
-**OS:** Ubuntu Server (Laptop)
-**Роль:** Database & Backend (Supabase).
+1. **Домен**: `knok-knok.ru` (настроен через Cloudflare или аналоги).
+2. **VPS**: Ubuntu 22.04+, Docker, Nginx.
+3. **Home Server**: Ubuntu/Debian, Docker, WireGuard.
+4. **SMTP**: Аккаунт в Brevo для отправки почты.
 
-### 2.1. Установка пакетов
+---
+
+## 🚀 Порядок развертывания
+
+### 1. Настройка VPN (WireGuard)
+Настройте туннель между VPS и Home Server.
+- VPS IP (внутри VPN): `10.0.0.1`
+- Home Server IP (внутри VPN): `10.0.0.2`
+
+### 2. Настройка бэкенда (Home Server)
+
 ```bash
-sudo apt update && sudo apt install -y wireguard docker.io docker-compose-plugin
+cd ~/knock-knock/infra/home
+# Отредактируйте .env (укажите PB_ENCRYPTION_KEY)
+docker compose -f docker-compose.pb.yml up -d
 ```
+Бэкенд доступен локально на порту `8090`.
 
-### 2.2. Настройка WireGuard
-1. Сгенерируйте ключи (аналогично VPS).
-2. Создайте `/etc/wireguard/wg0.conf` на основе `infra/home/wg0.conf.template`.
-   - `PrivateKey`: ключ домашнего сервера.
-   - `PublicKey`: публичный ключ VPS.
-   - `Endpoint`: IP-адрес вашего VPS.
-3. Запустите VPN:
-   ```bash
-   sudo systemctl enable wg-quick@wg0
-   sudo systemctl start wg-quick@wg0
-   ```
-7. Проверьте пинг до VPS: `ping 10.50.0.1`.
+### 3. Настройка Nginx (VPS)
+Файл конфигурации: `infra/vps/nginx.api.conf`.
+**Критично для Realtime:**
+- `proxy_buffering off;`
+- `proxy_read_timeout 24h;`
+- Поддержка `http2`.
 
-### 2.3. Запуск Supabase
-Следуйте инструкции в файле `infra/home/README_SUPABASE.md`.
-
-### 2.4. Генерация типов TypeScript (Database Types)
-Если вы меняете структуру базы данных (добавляете таблицы или поля), вам необходимо обновлять типы TypeScript на вашем локальном компьютере-разработчика. Так как порт 5432 на домашнем сервере работает через пулер (Supavisor), прямое подключение требует указания Tenant ID.
-
-Для генерации типов используйте скрипт, находящийся в папке `app/supabase/gen-types.sh`. 
-В файле `app/.env` должны быть заданы переменные `SUPABASE_CLI_PASSWORD` (пароль от пользователя postgres) и `SUPABASE_HOME_IP_ADDRESS` (IP сервера изнутри VPN, например `10.50.0.2` или локальный `192.168.x.x`).
+### 4. Развертывание фронтенда (Vite PWA)
+Фронтенд может хоститься на VPS (через Nginx) или любом статическом хостинге (Vercel/Netlify).
 
 ```bash
 cd app
-bash supabase/gen-types.sh
+npm install
+npm run build
 ```
-*Замечание: При подключении внутри скрипта используется логин вида `postgres.your-tenant-id`, что позволяет обойти ограничение балансировщика без установки Docker на машину разработчика.*
+Убедитесь, что `VITE_PB_URL` указывает на `https://api.knok-knok.ru:8443`.
 
 ---
 
-## 3. Проверка работоспособности
-1. Откройте в браузере `https://yourdomain.com/status` (должен ответить Supabase Kong, если настроен, или 404 от Nginx, но с заголовками Supabase).
-2. Попробуйте подключиться к БД через TablePlus/DataGrip, используя проброс портов или SSH туннель, чтобы убедиться, что база жива.
+## 🔐 Безопасность
+1. **API Rules**: Всегда проверяйте правила доступа в админке PocketBase.
+2. **Encryption**: `PB_ENCRYPTION_KEY` должен быть надежным и не меняться после запуска (иначе данные в БД станут нечитаемыми).
+3. **Admin**: После первого запуска создайте Superuser в админке `/_/`.

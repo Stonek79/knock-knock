@@ -1,6 +1,5 @@
 import { Box } from "@/components/layout/Box";
 import { MessageList } from "@/features/chat/message";
-import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 import { useAuthStore } from "@/stores/auth";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";
 import { useChatRoomView } from "../../hooks/useChatRoomView";
@@ -19,7 +18,7 @@ interface ChatRoomMessagesProps {
  * Принимает только `roomId` вместо ранее передаваемых 8 props.
  */
 export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
-    const { user } = useAuthStore();
+    const { profile: user } = useAuthStore();
 
     // --- Данные комнаты (нужен roomKey для guard) ---
     const { data: roomInfo } = useChatRoomData(roomId);
@@ -39,6 +38,8 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
     const editingId = useChatRoomStore((s) => s.editingId);
     const toggleSelection = useChatRoomStore((s) => s.toggleSelection);
 
+    const room = roomInfo?.room;
+
     if (!roomKey || !roomId) {
         return null;
     }
@@ -46,21 +47,18 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
     return (
         <Box className={styles.messageArea}>
             <MessageList
-                messages={messages as DecryptedMessageWithProfile[]}
+                messages={messages}
                 messagesLoading={messagesLoading}
                 selectedMessageIds={selectedMessageIds}
                 onToggleSelection={(id) =>
-                    toggleSelection(
-                        id,
-                        messages as DecryptedMessageWithProfile[],
-                        user?.id,
-                    )
+                    toggleSelection(id, messages, user?.id)
                 }
                 editingId={editingId}
                 firstUnreadId={firstUnreadId}
                 isFavoritesView={isFavoritesView}
                 roomKey={roomKey}
                 scrollRef={scrollRef}
+                roomType={room?.type}
             />
         </Box>
     );

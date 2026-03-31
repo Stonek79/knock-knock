@@ -14,7 +14,7 @@ const customStore = createStore(
  * Вызывается сразу после успешной загрузки файла на сервер (eager caching) или
  * после первого скачивания в компоненте, чтобы избежать повторных загрузок.
  *
- * @param url Стабильный URL загруженного файла (publicUrl от Supabase)
+ * @param url Стабильный URL загруженного файла (URL от PocketBase)
  * @param blob Непосредственно бинарные данные (для аудио - зашифрованный Blob)
  * @returns Промис, который резолвится после сохранения
  */
@@ -120,7 +120,7 @@ export async function getMediaCacheSize(): Promise<number> {
  * Сначала проверяет IndexedDB, и только если пусто - делает fetch запросом.
  * Автоматически управляет URL.createObjectURL и очисткой памяти (`revokeObjectURL`).
  *
- * @param url Оригинальный URL вложения (например, пуб. URL из Supabase)
+ * @param url Оригинальный URL вложения (например, URL из PocketBase)
  * @returns Объект состояний: `objectUrl` (локальная или кэш-ссылка), статус загрузки и ошибки
  */
 export function useCachedMedia(url?: string | null) {

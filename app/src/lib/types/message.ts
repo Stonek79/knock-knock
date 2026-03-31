@@ -1,9 +1,19 @@
 import type { z } from "zod";
+import type { ERROR_CODES, MESSAGE_STATUS } from "@/lib/constants";
 import type {
     messageAttachmentSchema,
     messagePositionSchema,
+    messageReactionSchema,
     messageSchema,
 } from "@/lib/schemas/message";
+import type { AppError } from "./result";
+
+/**
+ * Тип ошибки сервиса сообщений.
+ */
+export type MessageError =
+    | AppError<typeof ERROR_CODES.DB_ERROR, unknown>
+    | AppError<typeof ERROR_CODES.CRYPTO_ERROR, unknown>;
 
 /**
  * Структура таблицы messages (Сообщения)
@@ -23,26 +33,31 @@ export type MessageRow = Message;
 /**
  * Статус сообщения
  */
-export type MessageStatus = "sent" | "delivered" | "read";
+export type MessageStatus =
+    (typeof MESSAGE_STATUS)[keyof typeof MESSAGE_STATUS];
 
 /**
- * Тип расшифрованного сообщения (контент — строка или null если удалено)
+ * Расшифрованное сообщение.
+ * Теперь профиль отправителя уже "вшит" в само сообщение через денормализацию.
  */
-export interface DecryptedMessage extends Omit<Message, "content"> {
+export type DecryptedMessage = Omit<Message, "content"> & {
     content: string | null;
-}
+};
 
-/**
- * Расшифрованное сообщение с профилем отправителя
- */
-export interface DecryptedMessageWithProfile extends DecryptedMessage {
-    profiles: {
-        display_name: string;
-        avatar_url: string | null;
-    } | null;
-}
+/** Для обратной совместимости, если где-то еще нужен "WithProfile" */
+export type DecryptedMessageWithProfile = DecryptedMessage;
 
 /**
  * Структура вложения сообщения
  */
 export type Attachment = z.infer<typeof messageAttachmentSchema>;
+
+/**
+ * Тип вложения (image, video, audio, document)
+ */
+export type AttachmentType = Attachment["type"];
+
+/**
+ * Структура записи реакции (message_reactions)
+ */
+export type MessageReaction = z.infer<typeof messageReactionSchema>;

@@ -19,39 +19,43 @@ const subtle = window.crypto.subtle;
  */
 export async function wrapRoomKey(
     roomKey: CryptoKey,
-    recipientPublicKey: CryptoKey, // X25519 Public Key
+    recipientPublicKey: CryptoKey,
 ): Promise<{
     ephemeralPublicKey: ArrayBuffer;
     iv: ArrayBuffer;
     ciphertext: ArrayBuffer;
 }> {
-    // 1. Эфемерная пара
-    const ephemeralKeyPair = (await subtle.generateKey(
-        {
-            name: "ECDH",
-            namedCurve: "P-256",
-        },
-        true,
-        ["deriveKey", "deriveBits"],
-    )) as CryptoKeyPair;
+    // Определяем параметры алгоритма на основе ключа получателя
+    const isX25519 = recipientPublicKey.algorithm.name === "X25519";
+    const namedCurve =
+        (recipientPublicKey.algorithm as EcKeyAlgorithm).namedCurve || "P-256";
+    const genAlgorithm = isX25519
+        ? { name: "X25519" }
+        : { name: "ECDH", namedCurve };
+
+    const deriveAlgorithm = isX25519
+        ? { name: "X25519", public: recipientPublicKey }
+        : { name: "ECDH", public: recipientPublicKey };
+
+    // 1. Генерируем эфемерную пару ключей того же типа
+    const ephemeralKeyPair = (await subtle.generateKey(genAlgorithm, true, [
+        "deriveKey",
+        "deriveBits",
+    ])) as CryptoKeyPair;
 
     // 2. ECDH Shared Secret -> 3. Derive KEK (AES-GCM 256)
-    // В Web Crypto API derivedKey делается за один шаг через deriveKey
     const kek = await subtle.deriveKey(
-        {
-            name: "ECDH",
-            public: recipientPublicKey,
-        },
+        deriveAlgorithm,
         ephemeralKeyPair.privateKey,
         {
             name: "AES-GCM",
             length: 256,
         },
-        false, // KEK не нужно извлекать
+        false,
         ["encrypt"],
     );
 
-    // 4. Шифруем Room Key (сначала экспортируем его в raw bytes)
+    // 4. Шифруем Room Key
     const roomKeyBytes = await subtle.exportKey("raw", roomKey);
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
@@ -77,13 +81,6 @@ export async function wrapRoomKey(
 
 /**
  * Расшифровывает (разворачивает) ключ комнаты.
- *
- * Алгоритм:
- * 1. Импортируем публичный эфемерный ключ отправителя.
- * 2. Делаем ECDH с нашим приватным ключом -> получаем тот же общий секрет.
- * 3. Деривируем тот же KEK.
- * 4. Расшифровываем ciphertext -> получаем байты Room Key.
- * 5. Импортируем Room Key обратно в CryptoKey.
  */
 export async function unwrapRoomKey(
     encryptedData: {
@@ -91,16 +88,28 @@ export async function unwrapRoomKey(
         iv: ArrayBuffer;
         ciphertext: ArrayBuffer;
     },
-    myPrivateKey: CryptoKey, // My X25519 Private Key
+    myPrivateKey: CryptoKey,
 ): Promise<CryptoKey> {
+    // Определяем параметры алгоритма на основе нашего приватного ключа
+    const isX25519 = myPrivateKey.algorithm.name === "X25519";
+    const importAlgorithm = isX25519
+        ? { name: "X25519" }
+        : {
+              name: "ECDH",
+              namedCurve:
+                  (myPrivateKey.algorithm as EcKeyAlgorithm).namedCurve ||
+                  "P-256",
+          };
+
+    const deriveAlgorithm = isX25519
+        ? { name: "X25519" } // Публичный ключ добавится ниже
+        : { name: "ECDH" };
+
     // 1. Import Ephemeral Public Key
     const ephemeralPub = await subtle.importKey(
         "raw",
         encryptedData.ephemeralPublicKey,
-        {
-            name: "ECDH",
-            namedCurve: "P-256",
-        },
+        importAlgorithm,
         false,
         [],
     );
@@ -108,9 +117,9 @@ export async function unwrapRoomKey(
     // 2 & 3. ECDH -> Derive KEK
     const kek = await subtle.deriveKey(
         {
-            name: "ECDH",
+            ...deriveAlgorithm,
             public: ephemeralPub,
-        },
+        } as EcdhKeyDeriveParams,
         myPrivateKey,
         {
             name: "AES-GCM",
@@ -135,7 +144,7 @@ export async function unwrapRoomKey(
         "raw",
         roomKeyBytes,
         { name: "AES-GCM" },
-        true, // Room Key usually extractable to reuse/export? Let's say yes for now.
+        true,
         ["encrypt", "decrypt"],
     );
 }

@@ -1,12 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { DB_TABLES } from "@/lib/constants";
-import { supabase } from "@/lib/supabase";
-import type { Profile } from "@/lib/types/profile";
+import { QUERY_KEYS } from "@/lib/constants";
+import { userRepository } from "@/lib/repositories/user.repository";
+import type { Profile } from "@/lib/types";
 
 /**
- * Hook for managing users (Admin Panel).
- * Handles fetching, searching, banning, and unbanning.
+ * Хук для управления пользователями (Админ-панель).
+ * Позволяет искать, банить и разбанивать пользователей.
+ * Работает через userRepository.
  */
 export function useUserManagement() {
     const [search, setSearch] = useState("");
@@ -16,52 +17,40 @@ export function useUserManagement() {
         isLoading,
         refetch,
         error,
-    } = useQuery({
-        queryKey: ["admin", "users", search],
+    } = useQuery<Profile[]>({
+        queryKey: QUERY_KEYS.adminUsers(search),
         queryFn: async () => {
-            let query = supabase
-                .from(DB_TABLES.PROFILES)
-                .select("*")
-                .order("created_at", { ascending: false });
+            const result = await userRepository.searchUsers(search);
 
-            if (search) {
-                query = query.ilike("username", `%${search}%`);
+            if (result.isErr()) {
+                throw result.error;
             }
 
-            const { data, error } = await query;
-            if (error) {
-                throw error;
-            }
-            return data as Profile[];
+            return result.value;
         },
     });
 
-    const banUser = async (userId: string, durationDays = 7) => {
-        const until = new Date();
-        until.setDate(until.getDate() + durationDays);
+    /**
+     * Мутация для бана пользователя
+     */
+    const banMutation = useMutation({
+        mutationFn: ({
+            userId,
+            durationDays,
+        }: {
+            userId: string;
+            durationDays: number;
+        }) => userRepository.banUser(userId, durationDays),
+        onSuccess: () => refetch(),
+    });
 
-        const { error } = await supabase
-            .from(DB_TABLES.PROFILES)
-            .update({ banned_until: until.toISOString() })
-            .eq("id", userId);
-
-        if (error) {
-            throw error;
-        }
-        return refetch();
-    };
-
-    const unbanUser = async (userId: string) => {
-        const { error } = await supabase
-            .from(DB_TABLES.PROFILES)
-            .update({ banned_until: null })
-            .eq("id", userId);
-
-        if (error) {
-            throw error;
-        }
-        return refetch();
-    };
+    /**
+     * Мутация для разбана пользователя
+     */
+    const unbanMutation = useMutation({
+        mutationFn: (userId: string) => userRepository.unbanUser(userId),
+        onSuccess: () => refetch(),
+    });
 
     return {
         users,
@@ -69,8 +58,21 @@ export function useUserManagement() {
         error,
         search,
         setSearch,
-        banUser,
-        unbanUser,
+        banUser: async (userId: string, durationDays = 7) => {
+            const result = await banMutation.mutateAsync({
+                userId,
+                durationDays,
+            });
+            if (result.isErr()) {
+                throw result.error;
+            }
+        },
+        unbanUser: async (userId: string) => {
+            const result = await unbanMutation.mutateAsync(userId);
+            if (result.isErr()) {
+                throw result.error;
+            }
+        },
         refetch,
     };
 }

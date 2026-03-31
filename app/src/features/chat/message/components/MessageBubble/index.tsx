@@ -12,9 +12,14 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Text } from "@/components/ui/Text";
 import { useLongPress } from "@/hooks/useLongPress";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import { MESSAGE_POSITION, MESSAGE_STATUS } from "@/lib/constants";
-import { ATTACHMENT_TYPES } from "@/lib/constants/storage";
+import {
+    ATTACHMENT_TYPES,
+    MESSAGE_POSITION,
+    MESSAGE_STATUS,
+    ROOM_TYPE,
+} from "@/lib/constants";
 import type { Attachment, MessagePosition, MessageStatus } from "@/lib/types";
+import type { RoomType } from "@/lib/types/room";
 import { getUserColor } from "@/lib/utils/colors";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { AttachmentRenderer } from "./components/AttachmentRenderer";
@@ -38,6 +43,7 @@ interface MessageBubbleProps {
     groupPosition?: MessagePosition;
     attachments?: Attachment[] | null;
     roomKey?: CryptoKey;
+    roomType?: RoomType;
 }
 
 /**
@@ -60,6 +66,7 @@ export function MessageBubble({
     groupPosition = MESSAGE_POSITION.SINGLE,
     attachments = null,
     roomKey,
+    roomType,
 }: MessageBubbleProps) {
     const { t } = useTranslation();
     const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
@@ -133,6 +140,7 @@ export function MessageBubble({
         <Flex
             className={wrapper}
             data-group-position={groupPosition}
+            data-testid="message-bubble"
             // Гибридный подход: мобилка = Long Press, десктоп = клик
             onPointerDown={(e) => {
                 // Игнорируем если клик по интерактивному элементу
@@ -155,13 +163,12 @@ export function MessageBubble({
                 }
             }}
         >
-            {!isOwn && (
+            {!isOwn && roomType !== ROOM_TYPE.DIRECT && (
                 <Box className={styles.avatarContainer}>
                     {groupPosition === MESSAGE_POSITION.SINGLE ||
                     groupPosition === MESSAGE_POSITION.END ? (
                         <Avatar
-                            fallback={senderName?.[0] || "?"}
-                            src={senderAvatar}
+                            src={senderAvatar || undefined}
                             name={senderName}
                         />
                     ) : (
@@ -204,7 +211,12 @@ export function MessageBubble({
                                 <TranscriptBlock content={content} />
                             ) : null
                         ) : content ? (
-                            <Text className={styles.content}>{content}</Text>
+                            <Text
+                                className={styles.content}
+                                data-testid="message-text"
+                            >
+                                {content}
+                            </Text>
                         ) : null}
                     </Box>
 

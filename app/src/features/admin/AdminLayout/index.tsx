@@ -4,39 +4,41 @@ import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
-import { DB_TABLES, ROUTES, USER_ROLE } from "@/lib/constants";
-import { supabase } from "@/lib/supabase";
+import { QUERY_KEYS, ROUTES, USER_ROLE } from "@/lib/constants";
+import { userRepository } from "@/lib/repositories/user.repository";
 import type { Profile } from "@/lib/types/";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./admin-layout.module.css";
 
+/**
+ * Лейаут админ-панели.
+ * Проверяет роль пользователя через userRepository и QUERY_KEYS.
+ */
 export function AdminLayout() {
-    const { user, loading: authLoading } = useAuthStore();
+    const { pbUser, loading: authLoading } = useAuthStore();
     const { t } = useTranslation();
     const router = useRouter();
 
-    // Fetch Full Profile to check Role
+    // Загрузка профиля для проверки роли через репозиторий
     const { data: profile, isLoading: profileLoading } = useQuery({
-        queryKey: ["profile", user?.id],
-        queryFn: async () => {
-            if (!user) {
+        queryKey: QUERY_KEYS.profile(pbUser?.id),
+        queryFn: async (): Promise<Profile | null> => {
+            if (!pbUser) {
                 return null;
             }
-            const { data, error } = await supabase
-                .from(DB_TABLES.PROFILES)
-                .select("*")
-                .eq("id", user.id)
-                .single();
 
-            if (error) {
-                throw error;
+            const result = await userRepository.getUserById(pbUser.id);
+
+            if (result.isErr()) {
+                return null;
             }
-            return data as Profile;
+
+            return result.value;
         },
-        enabled: !!user,
+        enabled: !!pbUser,
     });
 
-    if (authLoading || (user && profileLoading)) {
+    if (authLoading || (pbUser && profileLoading)) {
         return (
             <Flex className={styles.centerContainer}>
                 <Text>{t("common.loading", "Загрузка...")}</Text>
@@ -44,12 +46,12 @@ export function AdminLayout() {
         );
     }
 
-    // Check if user is logged in
-    if (!user) {
+    // Проверка авторизации
+    if (!pbUser) {
         return <Navigate to={ROUTES.LOGIN} />;
     }
 
-    // Check if user is admin
+    // Проверка роли администратора
     if (profile && profile.role !== USER_ROLE.ADMIN) {
         return (
             <Flex className={styles.accessDeniedContainer}>
@@ -77,11 +79,11 @@ export function AdminLayout() {
         <div className={styles.adminContainer}>
             <header className={styles.adminHeader}>
                 <Text weight="bold" size="lg">
-                    Admin Panel
+                    Панель администратора
                 </Text>
                 <Flex gap="3" align="center">
                     <Text size="md" intent="secondary">
-                        Logged as: {profile.username} ({profile.role})
+                        Вы вошли как: {profile.username} ({profile.role})
                     </Text>
                 </Flex>
             </header>

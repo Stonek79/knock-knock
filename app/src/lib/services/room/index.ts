@@ -1,3 +1,4 @@
+import { encryptRoomKeysForMembers } from "./crypto";
 import {
     addMembersToGroup,
     createRoom,
@@ -6,18 +7,49 @@ import {
     removeMemberFromGroup,
     updateMemberRole,
 } from "./mutations";
-import { findOrCreateDM } from "./queries";
+import {
+    findOrCreateDM,
+    getChatRoomData,
+    getFavoriteRooms,
+    getRoomUnreadCounts,
+    getUserRooms,
+} from "./queries";
 
 /**
- * Сервис для управления комнатами (чатами).
- * Отвечает за создание комнат, добавление участников и управление ключами шифрования.
+ * Объект-фасад сервиса комнат.
  */
 export const RoomService = {
+    // Queries (получение данных)
+    findOrCreateDM,
+    getChatRoomData,
+    getFavoriteRooms,
+    getUserRooms,
+    getRoomUnreadCounts,
+
+    // Mutations (изменение данных)
     createRoom,
     deleteRoom,
-    findOrCreateDM,
     addMembersToGroup,
     removeMemberFromGroup,
     updateMemberRole,
     leaveGroup,
+
+    // Крипто-утилиты
+    encryptRoomKeysForMembers,
+} as const;
+
+// Реекспорт отдельных функций для прямого импорта (если нужно)
+export {
+    encryptRoomKeysForMembers,
+    addMembersToGroup,
+    createRoom,
+    deleteRoom,
+    leaveGroup,
+    removeMemberFromGroup,
+    updateMemberRole,
+    findOrCreateDM,
+    getChatRoomData,
+    getFavoriteRooms,
+    getRoomUnreadCounts,
+    getUserRooms,
 };

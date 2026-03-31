@@ -1,86 +1,47 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS, USER_WEB_STATUS } from "@/lib/constants";
+import { presenceRepository } from "@/lib/repositories/presence.repository";
 import { useAuthStore } from "@/stores/auth";
-
-type PresenceState = {
-    [key: string]: {
-        online_at: string;
-        user_id: string;
-    }[];
-};
 
 /**
  * Хук для отслеживания онлайн-статуса пользователей.
- * Подписывается на глобальный канал presence.
+ * Теперь это чистый потребитель кэша React Query.
+ * Heartbeat и подписки управляются глобально через ChatRealtimeService.
  */
 export function usePresence() {
-    // Map: userId -> 'online' | 'offline'
-    const [onlineUsers, setOnlineUsers] = useState<
-        Record<string, "online" | "offline">
-    >({});
-    const { user } = useAuthStore();
+    const { pbUser } = useAuthStore();
 
-    useEffect(() => {
-        if (!user) {
-            return;
-        }
+    const { data: onlineUsers = {} } = useQuery({
+        queryKey: QUERY_KEYS.presence(),
+        queryFn: async (): Promise<Record<string, string>> => {
+            if (!pbUser) {
+                return {};
+            }
 
-        // 1. Mock Mode
-        if (import.meta.env.VITE_USE_MOCK === "true") {
-            // В мок-режиме, сделаем вид, что некоторые юзеры онлайн
-            // (Можно брать из MOCK_USERS, но для простоты захардкодим логику)
-            setOnlineUsers({
-                "user-2": "online", // Elon
-                "user-3": "online", // Pavel
-                [user.id]: "online",
-            });
-            return;
-        }
+            const result = await presenceRepository.getAllPresence();
+            if (result.isErr()) {
+                return {};
+            }
 
-        // 2. Production Mode (Supabase Realtime)
-        const channel = supabase.channel("global_presence", {
-            config: {
-                presence: {
-                    key: user.id,
-                },
-            },
-        });
+            const initialMap: Record<string, string> = {};
+            const now = Date.now();
 
-        channel
-            .on("presence", { event: "sync" }, () => {
-                const state = channel.presenceState() as PresenceState;
-                const newOnlineMap: Record<string, "online" | "offline"> = {};
+            for (const r of result.value) {
+                // Если пинг был более 60 секунд назад — считаем оффлайн (защита от 'зависших' рекордов)
+                const lastPing = new Date(r.last_ping).getTime();
+                const isStale = now - lastPing > 60000;
 
-                Object.keys(state).forEach((userId) => {
-                    newOnlineMap[userId] = "online";
-                });
+                initialMap[r.user] =
+                    r.is_online && !isStale
+                        ? USER_WEB_STATUS.ONLINE
+                        : USER_WEB_STATUS.OFFLINE;
+            }
 
-                setOnlineUsers(newOnlineMap);
-            })
-            .on("presence", { event: "join" }, ({ key }) => {
-                setOnlineUsers((prev) => ({ ...prev, [key]: "online" }));
-            })
-            .on("presence", { event: "leave" }, ({ key }) => {
-                setOnlineUsers((prev) => {
-                    const next = { ...prev };
-                    delete next[key];
-                    return next;
-                });
-            })
-            .subscribe(async (status) => {
-                if (status === "SUBSCRIBED") {
-                    await channel.track({
-                        online_at: new Date().toISOString(),
-                        user_id: user.id,
-                    });
-                }
-            });
-
-        return () => {
-            // un-track handled gracefully by channel leave
-            supabase.removeChannel(channel);
-        };
-    }, [user]);
+            return initialMap;
+        },
+        enabled: !!pbUser,
+        staleTime: 1000 * 30, // Данные обновляются реалтаймом, кэш живет 30 сек
+    });
 
     return onlineUsers;
 }

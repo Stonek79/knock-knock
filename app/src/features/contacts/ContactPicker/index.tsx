@@ -47,7 +47,7 @@ export function ContactPicker({
 
     const { data: contacts = [], isLoading, isError } = useContacts();
 
-    const { user } = useAuthStore();
+    const { profile: user } = useAuthStore();
 
     const filteredContacts = useMemo(() => {
         let list = contacts;
@@ -133,6 +133,7 @@ export function ContactPicker({
                                 key={contact.id}
                                 className={`${styles.item} ${isSelected ? styles.itemSelected : ""}`}
                                 onClick={() => handleContactClick(contact)}
+                                data-testid="contact-item"
                             >
                                 {mode === CONTACT_PICKER_MODE.MULTI && (
                                     <Checkbox
@@ -153,7 +154,10 @@ export function ContactPicker({
                                     direction="column"
                                     className={styles.info}
                                 >
-                                    <span className={styles.name}>
+                                    <span
+                                        className={styles.name}
+                                        data-testid="contact-name"
+                                    >
                                         {contact.display_name}
                                     </span>
                                     <span className={styles.username}>

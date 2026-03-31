@@ -1,8 +1,9 @@
 /**
- * Хук для управления криптографическими ключами.
- * Адаптирован под Web Crypto API (все операции асинхронные).
+ * ХУК ДЛЯ УПРАВЛЕНИЯ КРИПТОГРАФИЧЕСКИМИ КЛЮЧАМИ (KEYSTORE)
+ * Адаптирован под Web Crypto API. Управляет жизненным циклом ключей в IndexedDB.
  */
 import { useCallback, useEffect, useState } from "react";
+import { ERROR_CODES, KEYSTORE_TYPES } from "@/lib/constants";
 import {
     arrayBufferToBase64,
     exportPublicKey,
@@ -15,13 +16,14 @@ import {
     hasKeys,
     saveKeyPair,
 } from "@/lib/crypto/keystore";
-import type { RecoveryError, RestoredKeys } from "@/lib/crypto/recovery";
 import {
     createBackup,
     type KeyBackup,
     restoreBackup,
 } from "@/lib/crypto/recovery";
-import type { Result } from "@/lib/types/result";
+import { logger } from "@/lib/logger";
+import type { AppError } from "@/lib/types";
+import { appError, err, ok, type Result } from "@/lib/utils/result";
 
 export interface KeystoreState {
     loading: boolean;
@@ -31,11 +33,16 @@ export interface KeystoreState {
 }
 
 export interface KeystoreActions {
-    regenerateKeys: () => Promise<void>;
-    initializeKeys: () => Promise<void>;
-    clearKeys: () => Promise<void>;
-    exportKeys: (password: string) => Promise<KeyBackup | null>;
-    restoreKeys: (backup: KeyBackup, password: string) => Promise<void>;
+    regenerateKeys: () => Promise<Result<void, AppError<string>>>;
+    initializeKeys: () => Promise<Result<void, AppError<string>>>;
+    clearKeys: () => Promise<Result<void, AppError<string>>>;
+    exportKeys: (
+        password: string,
+    ) => Promise<Result<KeyBackup, AppError<string>>>;
+    restoreKeys: (
+        backup: KeyBackup,
+        password: string,
+    ) => Promise<Result<void, AppError<string>>>;
 }
 
 export function useKeystore(): KeystoreState & KeystoreActions {
@@ -46,17 +53,23 @@ export function useKeystore(): KeystoreState & KeystoreActions {
         publicKeyX25519: null,
     });
 
-    const loadKeys = useCallback(async () => {
-        setState((prev) => ({ ...prev, loading: true }));
+    /**
+     * Загрузка публичных ключей из IndexedDB для отображения в UI.
+     */
+    const loadKeys = useCallback(async (): Promise<
+        Result<void, AppError<string>>
+    > => {
+        setState((prev) => {
+            return { ...prev, loading: true };
+        });
 
         try {
             const keysExist = await hasKeys();
 
             if (keysExist) {
-                const identity = await getKeyPair("identity");
-                const prekey = await getKeyPair("prekey");
+                const identity = await getKeyPair(KEYSTORE_TYPES.IDENTITY);
+                const prekey = await getKeyPair(KEYSTORE_TYPES.PREKEY);
 
-                // Экспортируем публичные ключи для отображения (Base64)
                 let pubEd25519Str = null;
                 let pubX25519Str = null;
 
@@ -64,6 +77,7 @@ export function useKeystore(): KeystoreState & KeystoreActions {
                     const raw = await exportPublicKey(identity.publicKey);
                     pubEd25519Str = arrayBufferToBase64(raw);
                 }
+
                 if (prekey) {
                     const raw = await exportPublicKey(prekey.publicKey);
                     pubX25519Str = arrayBufferToBase64(raw);
@@ -75,37 +89,58 @@ export function useKeystore(): KeystoreState & KeystoreActions {
                     publicKeyEd25519: pubEd25519Str,
                     publicKeyX25519: pubX25519Str,
                 });
-            } else {
-                setState({
-                    loading: false,
-                    initialized: false,
-                    publicKeyEd25519: null,
-                    publicKeyX25519: null,
-                });
+
+                return ok(undefined);
             }
+
+            setState({
+                loading: false,
+                initialized: false,
+                publicKeyEd25519: null,
+                publicKeyX25519: null,
+            });
+
+            return ok(undefined);
         } catch (error) {
-            console.error("Failed to load keys:", error);
-            setState((prev) => ({ ...prev, loading: false }));
+            logger.error("Ошибка при загрузке ключей из Keystore:", error);
+            setState((prev) => {
+                return { ...prev, loading: false };
+            });
+            return err(
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    "Не удалось загрузить ключи",
+                    error,
+                ),
+            );
         }
     }, []);
 
-    const regenerateKeys = useCallback(async () => {
-        setState((prev) => ({ ...prev, loading: true }));
+    /**
+     * Генерация новых ключей (Reset).
+     */
+    const regenerateKeys = useCallback(async (): Promise<
+        Result<void, AppError<string>>
+    > => {
+        setState((prev) => {
+            return { ...prev, loading: true };
+        });
 
         try {
-            // Генерируем CryptoKey пары
             const identity = await generateIdentityKeyPair();
             const prekey = await generatePreKeyPair();
 
-            // Сохраняем объекты CryptoKey
             await saveKeyPair(
-                "identity",
+                KEYSTORE_TYPES.IDENTITY,
                 identity.privateKey,
                 identity.publicKey,
             );
-            await saveKeyPair("prekey", prekey.privateKey, prekey.publicKey);
+            await saveKeyPair(
+                KEYSTORE_TYPES.PREKEY,
+                prekey.privateKey,
+                prekey.publicKey,
+            );
 
-            // Экспортируем для UI
             const rawIdentity = await exportPublicKey(identity.publicKey);
             const rawPrekey = await exportPublicKey(prekey.publicKey);
 
@@ -115,76 +150,145 @@ export function useKeystore(): KeystoreState & KeystoreActions {
                 publicKeyEd25519: arrayBufferToBase64(rawIdentity),
                 publicKeyX25519: arrayBufferToBase64(rawPrekey),
             });
+
+            return ok(undefined);
         } catch (error) {
-            console.error("Failed to generate keys:", error);
-            setState((prev) => ({ ...prev, loading: false }));
+            logger.error("Ошибка при генерации новых ключей:", error);
+            setState((prev) => {
+                return { ...prev, loading: false };
+            });
+            return err(
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    "Не удалось сгенерировать ключи",
+                    error,
+                ),
+            );
         }
     }, []);
 
-    const initializeKeys = useCallback(async () => {
+    /**
+     * Ленивая инициализация: создает ключи только если их нет.
+     */
+    const initializeKeys = useCallback(async (): Promise<
+        Result<void, AppError<string>>
+    > => {
         const keysExist = await hasKeys();
         if (!keysExist) {
-            await regenerateKeys();
-        } else {
-            // Если ключи есть, но стейт не обновлен (редкий кейс)
-            await loadKeys();
+            return await regenerateKeys();
         }
+        return await loadKeys();
     }, [regenerateKeys, loadKeys]);
 
-    const clearKeys = useCallback(async () => {
-        await clearAllKeys();
-        setState({
-            loading: false,
-            initialized: false,
-            publicKeyEd25519: null,
-            publicKeyX25519: null,
-        });
-    }, []);
-
-    const exportKeys = useCallback(async (password: string) => {
+    /**
+     * Очистка текущих ключей.
+     */
+    const clearKeys = useCallback(async (): Promise<
+        Result<void, AppError<string>>
+    > => {
         try {
-            const identity = await getKeyPair("identity");
-            const prekey = await getKeyPair("prekey");
-
-            if (!identity || !prekey) {
-                throw new Error("Keys not found");
-            }
-
-            return await createBackup(password, identity, prekey);
+            await clearAllKeys();
+            setState({
+                loading: false,
+                initialized: false,
+                publicKeyEd25519: null,
+                publicKeyX25519: null,
+            });
+            return ok(undefined);
         } catch (error) {
-            console.error("Export failed:", error);
-            return null;
+            logger.error("Ошибка при очистке ключей:", error);
+            return err(
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    "Не удалось очистить ключи",
+                    error,
+                ),
+            );
         }
     }, []);
 
-    const restoreKeys = useCallback(
-        async (backup: KeyBackup, password: string) => {
-            setState((prev) => ({ ...prev, loading: true }));
+    /**
+     * Экспорт ключей (Backup).
+     */
+    const exportKeys = useCallback(
+        async (
+            password: string,
+        ): Promise<Result<KeyBackup, AppError<string>>> => {
             try {
-                const result: Result<RestoredKeys, RecoveryError> =
-                    await restoreBackup(backup, password);
+                const identity = await getKeyPair(KEYSTORE_TYPES.IDENTITY);
+                const prekey = await getKeyPair(KEYSTORE_TYPES.PREKEY);
+
+                if (!identity || !prekey) {
+                    return err(
+                        appError(
+                            ERROR_CODES.NOT_FOUND_ERROR,
+                            "Ключи для экспорта не найдены",
+                        ),
+                    );
+                }
+
+                const backup = await createBackup(password, identity, prekey);
+                return ok(backup);
+            } catch (error) {
+                logger.error("Ошибка экспорта ключей:", error);
+                return err(
+                    appError(
+                        ERROR_CODES.CRYPTO_ERROR,
+                        "Не удалось создать бэкап",
+                        error,
+                    ),
+                );
+            }
+        },
+        [],
+    );
+
+    /**
+     * Восстановление из бэкапа.
+     */
+    const restoreKeys = useCallback(
+        async (
+            backup: KeyBackup,
+            password: string,
+        ): Promise<Result<void, AppError<string>>> => {
+            setState((prev) => {
+                return { ...prev, loading: true };
+            });
+
+            try {
+                const result = await restoreBackup(backup, password);
 
                 if (result.isErr()) {
-                    throw new Error(result.error.message);
+                    return err(result.error);
                 }
+
                 const restored = result.value;
 
                 await saveKeyPair(
-                    "identity",
+                    KEYSTORE_TYPES.IDENTITY,
                     restored.identity.privateKey,
                     restored.identity.publicKey,
                 );
                 await saveKeyPair(
-                    "prekey",
+                    KEYSTORE_TYPES.PREKEY,
                     restored.prekey.privateKey,
                     restored.prekey.publicKey,
                 );
 
                 await loadKeys();
+                return ok(undefined);
             } catch (error) {
-                console.error("Restore failed:", error);
-                setState((prev) => ({ ...prev, loading: false }));
-                throw error;
+                logger.error("Ошибка при восстановлении ключей:", error);
+                setState((prev) => {
+                    return { ...prev, loading: false };
+                });
+                return err(
+                    appError(
+                        ERROR_CODES.CRYPTO_ERROR,
+                        "Не удалось восстановить ключи",
+                        error,
+                    ),
+                );
             }
         },
         [loadKeys],

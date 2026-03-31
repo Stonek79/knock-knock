@@ -1,122 +1,140 @@
-import type { PostgrestError } from "@supabase/supabase-js";
-import type { z } from "zod";
-import { DB_TABLES, MESSAGE_STATUS } from "@/lib/constants";
-import { ERROR_CODES } from "@/lib/constants/errors";
+import { ERROR_CODES, MESSAGE_STATUS } from "@/lib/constants";
 import { encryptMessage } from "@/lib/crypto/messages";
 import { logger } from "@/lib/logger";
-import type { messageAttachmentSchema } from "@/lib/schemas/message";
-import { supabase } from "@/lib/supabase";
-import type { AppError, Result } from "@/lib/types/result";
+import type { Attachment, Result } from "@/lib/types";
+import type { MessageError } from "@/lib/types/message";
 import { appError, err, ok } from "@/lib/utils/result";
-
-export type Attachment = z.infer<typeof messageAttachmentSchema>;
-
-export type MessageError =
-    | AppError<typeof ERROR_CODES.DB_ERROR, PostgrestError>
-    | AppError<typeof ERROR_CODES.CRYPTO_ERROR, Error>;
+import { messageRepository } from "../repositories/message.repository";
 
 /**
- * Сервис для управления сообщениями.
- * Отвечает за шифрование и отправку/редактирование/удаление сообщений.
+ * Параметры для отправки сообщения
+ */
+export interface SendMessageOptions {
+    roomId: string;
+    senderId: string;
+    senderName?: string;
+    senderAvatar?: string;
+    content: string;
+    roomKey: CryptoKey;
+    attachments?: Attachment[];
+}
+
+/**
+ * Параметры для обновления сообщения
+ */
+export interface UpdateMessageOptions {
+    messageId: string;
+    newContent: string;
+    roomKey: CryptoKey;
+}
+
+/**
+ * Параметры для удаления сообщения
+ */
+export interface DeleteMessageOptions {
+    messageId: string;
+    currentUserId: string;
+    isOwnMessage: boolean;
+    isAdmin?: boolean;
+}
+
+/**
+ * Сервис для управления сообщениями в чате (V2+).
+ * Оркестрирует бизнес-логику (шифрование) и использует репозиторий для сохранения данных.
  */
 export const MessageService = {
     /**
      * Отправляет зашифрованное сообщение в комнату.
      */
-    async sendMessage(
-        roomId: string,
-        senderId: string,
-        content: string,
-        roomKey: CryptoKey,
-        attachments?: Attachment[],
-    ): Promise<Result<string, MessageError>> {
-        let ciphertext: string = content;
-        let iv: string = "mock-iv";
+    async sendMessage({
+        roomId,
+        senderId,
+        senderName,
+        senderAvatar,
+        content,
+        roomKey,
+        attachments,
+    }: SendMessageOptions): Promise<Result<string, MessageError>> {
+        let ciphertext = content;
+        let iv = "";
 
-        // Шифрование (если не мок)
-        if (import.meta.env.VITE_USE_MOCK !== "true") {
-            try {
-                const encrypted = await encryptMessage(content, roomKey);
-                ciphertext = encrypted.ciphertext;
-                iv = encrypted.iv;
-            } catch (e) {
-                logger.error("Failed to encrypt message", e);
-                return err(
-                    appError(
-                        ERROR_CODES.CRYPTO_ERROR,
-                        "Encryption failed",
-                        e instanceof Error ? e : undefined,
-                    ),
-                );
-            }
-        }
-
-        const { data, error } = await supabase
-            .from(DB_TABLES.MESSAGES)
-            .insert({
-                room_id: roomId,
-                sender_id: senderId,
-                content: ciphertext,
-                iv: iv,
-                attachments: attachments || null,
-            })
-            .select("id")
-            .single();
-
-        if (error) {
+        try {
+            const encrypted = await encryptMessage(content, roomKey);
+            ciphertext = encrypted.ciphertext;
+            iv = encrypted.iv;
+        } catch (e) {
+            logger.error("Ошибка при шифровании сообщения", e);
             return err(
-                appError(ERROR_CODES.DB_ERROR, "Failed to send message", error),
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    "Ошибка шифрования",
+                    e instanceof Error ? e : undefined,
+                ),
             );
         }
 
-        return ok(data.id);
+        const result = await messageRepository.sendMessage({
+            room_id: roomId,
+            sender_id: senderId,
+            sender_name: senderName || "",
+            sender_avatar: senderAvatar || "",
+            content: ciphertext,
+            iv,
+            attachments: attachments ?? null,
+            status: MESSAGE_STATUS.SENT,
+        });
+
+        if (result.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    "Не удалось отправить сообщение",
+                    result.error.details,
+                ),
+            );
+        }
+
+        return ok(result.value.id);
     },
 
     /**
      * Редактирует сообщение.
-     * Новое содержимое шифруется тем же ключом комнаты.
      */
-    async updateMessage(
-        messageId: string,
-        newContent: string,
-        roomKey: CryptoKey,
-    ): Promise<Result<void, MessageError>> {
+    async updateMessage({
+        messageId,
+        newContent,
+        roomKey,
+    }: UpdateMessageOptions): Promise<Result<void, MessageError>> {
         let ciphertext = newContent;
-        let iv = "mock-iv";
+        let iv = "";
 
-        if (import.meta.env.VITE_USE_MOCK !== "true") {
-            try {
-                const encrypted = await encryptMessage(newContent, roomKey);
-                ciphertext = encrypted.ciphertext;
-                iv = encrypted.iv;
-            } catch (e) {
-                logger.error("Failed to encrypt updated message", e);
-                return err(
-                    appError(
-                        ERROR_CODES.CRYPTO_ERROR,
-                        "Encryption failed",
-                        e instanceof Error ? e : undefined,
-                    ),
-                );
-            }
+        try {
+            const encrypted = await encryptMessage(newContent, roomKey);
+            ciphertext = encrypted.ciphertext;
+            iv = encrypted.iv;
+        } catch (e) {
+            logger.error("Ошибка при шифровании обновленного сообщения", e);
+            return err(
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    "Ошибка шифрования",
+                    e instanceof Error ? e : undefined,
+                ),
+            );
         }
 
-        const { error } = await supabase
-            .from(DB_TABLES.MESSAGES)
-            .update({
-                content: ciphertext,
-                iv: iv,
-                is_edited: true,
-                updated_at: new Date().toISOString(),
-            })
-            .eq("id", messageId);
+        const result = await messageRepository.editMessage(
+            messageId,
+            ciphertext,
+            iv,
+        );
 
-        if (error) {
+        if (result.isErr()) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    "Failed to update message",
-                    error,
+                    "Не удалось обновить сообщение",
+                    result.error.details,
                 ),
             );
         }
@@ -125,170 +143,154 @@ export const MessageService = {
     },
 
     /**
-     * Удаляет сообщение.
-     * - Если свое: Global Soft Delete (is_deleted=true).
-     * - Если чужое: Local Delete (deleted_by array).
+     * Удаляет сообщение (Soft Delete или Local Delete).
      */
-    async deleteMessage(
-        messageId: string,
-        currentUserId: string,
-        isOwnMessage: boolean,
-    ): Promise<Result<void, MessageError>> {
-        if (isOwnMessage) {
-            // Global Delete (как раньше)
-            const { error } = await supabase
-                .from(DB_TABLES.MESSAGES)
-                .update({
-                    content: "",
-                    iv: "",
-                    is_deleted: true,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq("id", messageId);
-
-            if (error) {
+    async deleteMessage({
+        messageId,
+        currentUserId,
+        isOwnMessage,
+        isAdmin,
+    }: DeleteMessageOptions): Promise<Result<void, MessageError>> {
+        // Если это своё сообщение ИЛИ мы админ — удаляем для всех (soft delete)
+        if (isOwnMessage || isAdmin) {
+            const result = await messageRepository.updateMessage(messageId, {
+                content: "",
+                iv: "",
+                is_edited: false,
+                is_deleted: true,
+                metadata: {
+                    deleted_by: [],
+                    moderation: isAdmin,
+                },
+            });
+            if (result.isErr()) {
                 return err(
                     appError(
                         ERROR_CODES.DB_ERROR,
-                        "Failed to delete message globally",
-                        error,
+                        "Не удалось удалить сообщение",
+                        result.error.details,
                     ),
                 );
             }
         } else {
-            // Local Delete (Delete for Me)
-            // 1. Получаем текущий массив deleted_by
-            const { data: msg, error: fetchError } = await supabase
-                .from(DB_TABLES.MESSAGES)
-                .select("deleted_by")
-                .eq("id", messageId)
-                .single();
-
-            if (fetchError) {
+            // Если чужое — скрываем только для себя через массив deleted_by в метаданных
+            const msgResult = await messageRepository.getMessageById(messageId);
+            if (msgResult.isErr()) {
                 return err(
                     appError(
                         ERROR_CODES.DB_ERROR,
-                        "Failed to fetch message for deletion",
-                        fetchError,
+                        "Не удалось получить сообщение для скрытия",
+                        msgResult.error.details,
                     ),
                 );
             }
 
-            const currentDeletedBy = msg?.deleted_by || [];
-            if (!currentDeletedBy.includes(currentUserId)) {
-                const { error } = await supabase
-                    .from(DB_TABLES.MESSAGES)
-                    .update({
-                        deleted_by: [...currentDeletedBy, currentUserId],
-                    })
-                    .eq("id", messageId);
+            const msg = msgResult.value;
+            const currentMetadata = msg.metadata;
+            const deletedBy = [...currentMetadata.deleted_by];
 
-                if (error) {
-                    return err(
-                        appError(
-                            ERROR_CODES.DB_ERROR,
-                            "Failed to delete message locally",
-                            error,
-                        ),
-                    );
-                }
+            if (!deletedBy.includes(currentUserId)) {
+                deletedBy.push(currentUserId);
+            }
+
+            const result = await messageRepository.updateMessage(messageId, {
+                metadata: {
+                    ...currentMetadata,
+                    deleted_by: deletedBy,
+                },
+            });
+
+            if (result.isErr()) {
+                return err(
+                    appError(
+                        ERROR_CODES.DB_ERROR,
+                        "Не удалось скрыть сообщение",
+                        result.error.details,
+                    ),
+                );
             }
         }
-
         return ok(undefined);
     },
 
     /**
-     * Удаляет все сообщения в комнате (админское действие или очистка эфемерных).
+     * Очистка комнаты — использует пакетное удаление в репозитории.
      */
     async clearRoom(roomId: string): Promise<Result<void, MessageError>> {
-        const { error } = await supabase
-            .from(DB_TABLES.MESSAGES)
-            .delete()
-            .eq("room_id", roomId);
-
-        if (error) {
+        const result = await messageRepository.clearRoom(roomId);
+        if (result.isErr()) {
             return err(
-                appError(ERROR_CODES.DB_ERROR, "Failed to clear room", error),
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    "Не удалось очистить комнату",
+                    result.error.details,
+                ),
             );
         }
-
         return ok(undefined);
     },
 
     /**
-     * Помечает все сообщения в комнате от собеседника как прочитанные.
+     * Помечает сообщения как прочитанные — делегирует в репозиторий.
      */
     async markMessagesAsRead(
         roomId: string,
         currentUserId: string,
     ): Promise<Result<void, MessageError>> {
-        const { error } = await supabase
-            .from(DB_TABLES.MESSAGES)
-            .update({ status: MESSAGE_STATUS.READ })
-            .eq("room_id", roomId)
-            .neq("sender_id", currentUserId)
-            .neq("status", MESSAGE_STATUS.READ); // Opt: only unread
-
-        if (error) {
+        const result = await messageRepository.markMessagesAsRead(
+            roomId,
+            currentUserId,
+        );
+        if (result.isErr()) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    "Failed to mark messages as read",
-                    error,
+                    "Не удалось пометить сообщения как прочитанные",
+                    result.error.details,
                 ),
             );
         }
-
         return ok(undefined);
     },
 
     /**
-     * Помечает сообщение как доставленное.
+     * Помечает доставку.
      */
     async markMessageAsDelivered(
         messageId: string,
     ): Promise<Result<void, MessageError>> {
-        const { error } = await supabase
-            .from(DB_TABLES.MESSAGES)
-            .update({ status: MESSAGE_STATUS.DELIVERED })
-            .eq("id", messageId)
-            .eq("status", MESSAGE_STATUS.SENT);
-
-        if (error) {
-            return err(
-                appError(
-                    ERROR_CODES.DB_ERROR,
-                    "Failed to mark message delivered",
-                    error,
-                ),
-            );
+        const msgResult = await messageRepository.getMessageById(messageId);
+        if (
+            msgResult.isOk() &&
+            msgResult.value.status === MESSAGE_STATUS.SENT
+        ) {
+            await messageRepository.updateMessage(messageId, {
+                status: MESSAGE_STATUS.DELIVERED,
+            });
         }
-
         return ok(undefined);
     },
+
     /**
-     * Помечает сообщение как избранное (звездочка).
+     * Переключает флаг избранного.
      */
     async toggleStar(
         messageId: string,
         isStarred: boolean,
     ): Promise<Result<void, MessageError>> {
-        const { error } = await supabase
-            .from(DB_TABLES.MESSAGES)
-            .update({ is_starred: isStarred })
-            .eq("id", messageId);
+        const result = await messageRepository.updateMessage(messageId, {
+            is_starred: isStarred,
+        });
 
-        if (error) {
+        if (result.isErr()) {
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,
-                    "Failed to toggle favorite status",
-                    error,
+                    "Не удалось изменить статус избранного",
+                    result.error.details,
                 ),
             );
         }
-
         return ok(undefined);
     },
 };

@@ -1,81 +1,96 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { supabase } from "@/lib/supabase";
+import { UserMapper } from "@/lib/repositories/mappers/userMapper";
+import { AuthService } from "@/lib/services/auth";
+import type { UserRecord as AuthUser } from "@/lib/types";
+import { appError, err, ok } from "@/lib/utils/result";
 import { useAuthStore } from ".";
 
-// Mock Supabase
-vi.mock("@/lib/supabase", () => ({
-    supabase: {
-        auth: {
-            getSession: vi.fn(),
-            onAuthStateChange: vi.fn(),
-            signOut: vi.fn(),
-        },
-        from: vi.fn(),
+// Mock AuthService
+vi.mock("@/lib/services/auth", () => ({
+    AuthService: {
+        isValid: vi.fn(),
+        getLocalRecord: vi.fn(),
+        onChange: vi.fn().mockReturnValue(() => {}),
+        refreshSession: vi.fn(),
+        logout: vi.fn(),
+        mapUserToProfile: vi.fn().mockImplementation((user) => ({
+            id: user.id,
+            username: user.username,
+            display_name: user.display_name,
+            avatar_url: null,
+            role: user.role || "user",
+            created_at: user.created || new Date().toISOString(),
+            status: user.status || "offline",
+            last_seen: user.last_seen || new Date().toISOString(),
+            is_agreed_to_rules: user.is_agreed_to_rules || false,
+            banned_until: user.banned_until || null,
+        })),
     },
 }));
 
-// Mock Constants/Utils if needed
-vi.mock("@/lib/mock/data", () => ({
-    MOCK_USERS: [
-        {
-            id: "mock-1",
-            username: "mockuser",
-            display_name: "Mock User",
-            role: "user",
-        },
-    ],
-}));
-
-describe("Хук useAuthStore", () => {
+describe("Хук useAuthStore (Refactored)", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         useAuthStore.setState({
-            session: null,
-            user: null,
+            pbUser: null,
             profile: null,
             loading: true,
         });
     });
 
-    it("должен инициализироваться сессией", async () => {
-        const mockSession = { user: { id: "user-1" } };
-        // biome-ignore lint/suspicious/noExplicitAny: Mocking internal data
-        (supabase.auth.getSession as any).mockResolvedValue({
-            data: { session: mockSession },
-        });
+    it("должен инициализироваться данными из AuthService, если они валидны", async () => {
+        const mockUser = {
+            id: "user-1",
+            username: "test",
+            display_name: "Test User",
+            avatar: "",
+            email: "test@example.com",
+            created: "2024-01-01",
+            updated: "2024-01-01",
+            collectionId: "users",
+            collectionName: "users",
+        } as unknown as AuthUser;
 
-        // Mock onAuthStateChange
-        // biome-ignore lint/suspicious/noExplicitAny: Mocking internal data
-        (supabase.auth.onAuthStateChange as any).mockImplementation(() => {
-            // cb('SIGNED_IN', mockSession);
-            return { data: { subscription: { unsubscribe: vi.fn() } } };
-        });
-
-        // Mock fetchProfile implementation in store or mock DB
-        // Since fetchProfile is internal, we mock the DB call
-        const mockProfile = { id: "user-1", display_name: "Test User" };
-        // biome-ignore lint/suspicious/noExplicitAny: Mocking internal data
-        (supabase.from as any).mockReturnValue({
-            select: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                    single: vi
-                        .fn()
-                        .mockResolvedValue({ data: mockProfile, error: null }),
-                }),
-            }),
-        });
+        vi.mocked(AuthService.isValid).mockReturnValue(true);
+        vi.mocked(AuthService.getLocalRecord).mockReturnValue(mockUser);
+        vi.mocked(AuthService.refreshSession).mockResolvedValue(ok(mockUser));
 
         await useAuthStore.getState().initialize();
 
-        expect(useAuthStore.getState().user).toEqual(mockSession.user);
-        expect(useAuthStore.getState().profile).toEqual(mockProfile);
+        expect(useAuthStore.getState().pbUser).toEqual(mockUser);
+        expect(UserMapper.toDomain).toHaveBeenCalledWith(
+            mockUser,
+            expect.any(Function),
+        );
+        expect(useAuthStore.getState().profile).not.toBeNull();
         expect(useAuthStore.getState().loading).toBe(false);
     });
 
-    it("должен обрабатывать выход (signOut)", async () => {
+    it("должен очищать состояние при выходе (signOut)", async () => {
+        useAuthStore.setState({
+            pbUser: { id: "user-1" } as unknown as AuthUser,
+        });
+
         await useAuthStore.getState().signOut();
-        expect(supabase.auth.signOut).toHaveBeenCalled();
-        expect(useAuthStore.getState().session).toBeNull();
-        expect(useAuthStore.getState().user).toBeNull();
+
+        expect(AuthService.logout).toHaveBeenCalled();
+        expect(useAuthStore.getState().pbUser).toBeNull();
+        expect(useAuthStore.getState().profile).toBeNull();
+    });
+
+    it("должен обрабатывать ошибки при инициализации", async () => {
+        vi.mocked(AuthService.isValid).mockReturnValue(true);
+        vi.mocked(AuthService.getLocalRecord).mockReturnValue({
+            id: "user-1",
+        } as unknown as AuthUser);
+        vi.mocked(AuthService.refreshSession).mockResolvedValue(
+            err(appError("NetworkError", "Network Error")),
+        );
+
+        await useAuthStore.getState().initialize();
+
+        expect(useAuthStore.getState().loading).toBe(false);
+        expect(useAuthStore.getState().pbUser).toBeNull();
+        expect(useAuthStore.getState().profile).toBeNull();
     });
 });

@@ -6,6 +6,17 @@ import {
 } from "@/lib/constants";
 
 /**
+ * Схема метаданных сообщения
+ */
+export const messageMetadataSchema = z
+    .object({
+        deleted_by: z.array(z.string()).default([]),
+        moderation: z.boolean().optional(),
+    })
+    .catchall(z.unknown())
+    .default({ deleted_by: [] });
+
+/**
  * Схема вложения сообщения (медиа или файл)
  */
 export const messageAttachmentSchema = z.object({
@@ -26,25 +37,28 @@ export const messageAttachmentSchema = z.object({
  * Схема сообщения (messages)
  */
 export const messageSchema = z.object({
-    id: z.uuid(),
-    room_id: z.uuid(),
-    sender_id: z.uuid().nullable(),
-    content: z.string().nullable(), // Nullable for deleted messages
+    id: z.string(),
+    room_id: z.string(),
+    sender_id: z.string().nullable(),
+    sender_name: z.string().optional(),
+    sender_avatar: z.string().optional(),
+    content: z.string().nullable(),
     iv: z.string().nullable(),
+    metadata: messageMetadataSchema,
+    attachments: z.array(messageAttachmentSchema).nullable().optional(),
+    reactions_summary: z.record(z.string(), z.number()).nullable().optional(),
     created_at: z.string(),
     updated_at: z.string().optional(),
-    status: z
-        .enum([
-            MESSAGE_STATUS.SENT,
-            MESSAGE_STATUS.DELIVERED,
-            MESSAGE_STATUS.READ,
-        ])
-        .default(MESSAGE_STATUS.SENT),
-    deleted_by: z.array(z.string()).default([]),
+    status: z.enum(MESSAGE_STATUS).default(MESSAGE_STATUS.SENT),
     is_edited: z.boolean().default(false),
     is_deleted: z.boolean().default(false),
     is_starred: z.boolean().default(false),
-    attachments: z.array(messageAttachmentSchema).nullable().default(null),
+    profiles: z
+        .object({
+            display_name: z.string().optional(),
+            avatar_url: z.string().optional(),
+        })
+        .optional(),
 });
 
 /**
@@ -56,3 +70,13 @@ export const messagePositionSchema = z.enum([
     MESSAGE_POSITION.MIDDLE,
     MESSAGE_POSITION.END,
 ]);
+
+/**
+ * Схема записи реакции (message_reactions)
+ */
+export const messageReactionSchema = z.object({
+    message_id: z.string(),
+    user_id: z.string(),
+    emoji: z.string(),
+    created_at: z.string(),
+});

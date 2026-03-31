@@ -51,11 +51,6 @@
     gap: var(--space-1);
     font-size: var(--text-xxs);
     opacity: 0.75;
-    /*
-     * float: right — ключевой трюк WhatsApp-стиля.
-     * metadata идёт первой в DOM, текст обтекает float справа.
-     * Для коротких сообщений — время на той же строке что и текст.
-     */
     float: right;
     clear: right;
     margin-left: var(--space-2);
@@ -65,10 +60,13 @@
 .avatarContainer {
     display: flex;
     align-items: flex-end;
+    width: var(--size-avatar-md);
+    flex-shrink: 0;
 }
 
 .avatarPlaceholder {
-    width: var(--size-avatar-sm);
+    width: var(--size-avatar-md);
+    flex-shrink: 0;
 }
 
 .iconSmall {
@@ -113,7 +111,7 @@
     display: flex;
     flex-direction: column;
     z-index: 1;
-    max-width: 95%;
+    max-width: 90%;
     padding: var(--space-1) var(--space-2);
     border-radius: var(--kk-radius-md);
     font-size: var(--text-base);

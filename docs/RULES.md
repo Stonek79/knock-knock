@@ -67,7 +67,7 @@ app/src/
 - **Frontend**: React (последняя версия), Vite.
 - **State Management**: TanStack Query (фетчинг и кеширование), Zustand (глобальный стейт).
 - **Routing**: TanStack Router.
-- **Backend/DB**: Supabase.
+- **Backend/DB**: PocketBase v0.23+. Выбран за легковесность, встроенный Realtime (SSE) и удобную систему Hooks.
 - **Криптография**: Web Crypto API (E2EE, P2P).
 
 ## ⚖️ Разделение ответственности: Компоненты vs Бизнес-логика

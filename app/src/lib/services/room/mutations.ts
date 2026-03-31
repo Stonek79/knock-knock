@@ -1,190 +1,197 @@
-import { DB_TABLES, ERROR_CODES, MEMBER_ROLE } from "@/lib/constants";
+import { ERROR_CODES } from "@/lib/constants";
 import { generateRoomId, generateRoomKey } from "@/lib/crypto/rooms";
 import { logger } from "@/lib/logger";
-import { supabase } from "@/lib/supabase";
-import type { Result, RoomError, RoomType } from "@/lib/types";
+import { roomRepository } from "@/lib/repositories/room.repository";
+import { userRepository } from "@/lib/repositories/user.repository";
+import type {
+    Result,
+    RoomError,
+    RoomMembersRoleOptions,
+    RoomType,
+} from "@/lib/types";
 import { appError, err, ok } from "@/lib/utils/result";
 import { encryptRoomKeysForMembers } from "./crypto";
+
+/**
+ * Параметры для создания комнаты
+ */
+export interface CreateRoomOptions {
+    name?: string | null;
+    type: RoomType;
+    myUserId: string;
+    peerIds: string[];
+    isEphemeral?: boolean;
+    avatarUrl?: string | null;
+    forcedRoomId?: string;
+}
 
 /**
  * Создает новую комнату.
  * 1. Генерирует AES ключ.
  * 2. Шифрует его для каждого участника (ECDH).
- * 3. Создает записи в БД (Room, Members, Keys) транзакционно.
+ * 3. Создает записи в БД (Room, Members, Keys).
  */
-export async function createRoom(
-    name: string | null,
-    type: RoomType,
-    myUserId: string,
-    peerIds: string[],
+export async function createRoom({
+    name = null,
+    type,
+    myUserId,
+    peerIds,
     isEphemeral = false,
-    avatarUrl: string | null = null,
-    forcedRoomId?: string, // Опциональный ID (для детерминированных чатов)
-): Promise<Result<{ roomId: string; roomKey: CryptoKey }, RoomError>> {
+    avatarUrl = null,
+    forcedRoomId,
+}: CreateRoomOptions): Promise<
+    Result<{ roomId: string; roomKey: CryptoKey }, RoomError>
+> {
     const allMemberIds = [...new Set([myUserId, ...peerIds])];
     const roomKey = await generateRoomKey();
     const roomId = forcedRoomId || generateRoomId();
 
-    // 1. Получаем публичные ключи участников
-    const { data: profiles, error: profilesError } = await supabase
-        .from(DB_TABLES.PROFILES)
-        .select("id, public_key_x25519")
-        .in("id", allMemberIds);
-
-    if (profilesError) {
-        return err(
-            appError(
-                ERROR_CODES.DB_ERROR,
-                "Failed to fetch profiles",
-                profilesError,
-            ),
-        );
-    }
-
-    if (!profiles || profiles.length !== allMemberIds.length) {
-        const foundIds = profiles?.map((p) => p.id) || [];
-        const missingIds = allMemberIds.filter((id) => !foundIds.includes(id));
-
-        // В режиме MOCK разрешаем создавать комнату даже если профилей нет в БД
-        if (import.meta.env.VITE_USE_MOCK === "true") {
-            logger.warn("Using mock profiles for missing users", {
-                missingIds,
-            });
-            for (const id of missingIds) {
-                profiles?.push({
-                    id,
-                    public_key_x25519: "mock_key",
-                });
-            }
-        } else {
+    try {
+        if (allMemberIds.length === 0) {
             return err(
-                appError(ERROR_CODES.MISSING_KEYS, "Some users not found", {
-                    userIds: missingIds,
-                }),
+                appError(
+                    ERROR_CODES.MISSING_KEYS,
+                    "Нет участников для создания комнаты",
+                    {
+                        userIds: [],
+                    },
+                ),
             );
         }
-    }
 
-    // 2. Шифруем RoomKey для каждого участника
-    const validProfiles = (profiles || []).map((p) => ({
-        id: p.id,
-        public_key_x25519: p.public_key_x25519 as string,
-    }));
+        // 1. Получаем публичные ключи участников
+        const profilesListResult =
+            await userRepository.getProfilesByIds(allMemberIds);
 
-    const cryptoResult = await encryptRoomKeysForMembers(
-        validProfiles,
-        roomKey,
-        roomId,
-        myUserId,
-    );
+        if (profilesListResult.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    profilesListResult.error.message,
+                    profilesListResult.error.details instanceof Error
+                        ? profilesListResult.error.details
+                        : undefined,
+                ),
+            );
+        }
 
-    if (cryptoResult.isErr()) {
-        return err(cryptoResult.error);
-    }
+        const profiles = profilesListResult.value;
 
-    const { encryptedKeys, roomMembers } = cryptoResult.value;
+        if (profiles.length !== allMemberIds.length) {
+            const foundIds = profiles.map((p) => p.id);
+            const missingIds = allMemberIds.filter(
+                (id) => !foundIds.includes(id),
+            );
 
-    // 3. Транзакция в БД
-    const { error: roomError } = await supabase.from(DB_TABLES.ROOMS).insert({
-        id: roomId,
-        type,
-        name,
-        avatar_url: avatarUrl,
-        is_ephemeral: isEphemeral,
-    });
+            return err(
+                appError(
+                    ERROR_CODES.MISSING_KEYS,
+                    "Некоторые пользователи не найдены",
+                    {
+                        userIds: missingIds,
+                    },
+                ),
+            );
+        }
 
-    if (roomError) {
+        const validProfiles = profiles.map((p) => ({
+            id: p.id,
+            public_key_x25519: p.public_key_x25519,
+        }));
+
+        const cryptoResult = await encryptRoomKeysForMembers(
+            validProfiles,
+            roomKey,
+            roomId,
+            myUserId,
+        );
+
+        if (cryptoResult.isErr()) {
+            return err(cryptoResult.error);
+        }
+
+        const { encryptedKeys, roomMembers } = cryptoResult.value;
+
+        const createResult = await roomRepository.createRoomWithMembersAndKeys(
+            {
+                id: roomId,
+                type,
+                name: name ?? undefined,
+                created_by: myUserId,
+                visibility: "private",
+            },
+            roomMembers,
+            encryptedKeys,
+        );
+
+        if (createResult.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    createResult.error.message,
+                    createResult.error.details instanceof Error
+                        ? createResult.error.details
+                        : undefined,
+                ),
+            );
+        }
+
+        logger.info("Комната успешно создана", {
+            roomId,
+            type,
+            isEphemeral,
+            avatarUrl,
+        });
+
+        return ok({ roomId, roomKey });
+    } catch (e) {
+        logger.error("Ошибка при создании комнаты", e);
         return err(
             appError(
                 ERROR_CODES.DB_ERROR,
-                "Failed to create room record",
-                roomError,
+                "Не удалось создать комнату в базе данных",
+                e instanceof Error ? e : undefined,
             ),
         );
     }
-
-    const { error: membersError } = await supabase
-        .from(DB_TABLES.ROOM_MEMBERS)
-        .insert(roomMembers);
-
-    if (membersError) {
-        return err(
-            appError(
-                ERROR_CODES.DB_ERROR,
-                "Failed to add members",
-                membersError,
-            ),
-        );
-    }
-
-    const { error: keysError } = await supabase
-        .from(DB_TABLES.ROOM_KEYS)
-        .insert(encryptedKeys);
-
-    if (keysError) {
-        return err(
-            appError(ERROR_CODES.DB_ERROR, "Failed to add keys", keysError),
-        );
-    }
-
-    return ok({ roomId, roomKey });
 }
 
 /**
- * Удаляет комнату и все связанные данные (ключи, участников).
+ * Удаляет комнату и все связанные данные.
  */
 export async function deleteRoom(
     roomId: string,
 ): Promise<Result<void, RoomError>> {
-    const { error: keysError } = await supabase
-        .from(DB_TABLES.ROOM_KEYS)
-        .delete()
-        .eq("room_id", roomId);
+    try {
+        const result =
+            await roomRepository.deleteRoomWithMembersAndKeys(roomId);
+        if (result.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    result.error.message,
+                    result.error.details instanceof Error
+                        ? result.error.details
+                        : undefined,
+                ),
+            );
+        }
 
-    if (keysError) {
-        return err(
-            appError(ERROR_CODES.DB_ERROR, "Failed to delete keys", keysError),
-        );
-    }
-
-    const { error: membersError } = await supabase
-        .from(DB_TABLES.ROOM_MEMBERS)
-        .delete()
-        .eq("room_id", roomId);
-
-    if (membersError) {
+        return ok(undefined);
+    } catch (e) {
+        logger.error("Ошибка при удалении комнаты", e);
         return err(
             appError(
                 ERROR_CODES.DB_ERROR,
-                "Failed to delete members",
-                membersError,
+                "Не удалось удалить комнату из базы данных",
+                e instanceof Error ? e : undefined,
             ),
         );
     }
-
-    const { error } = await supabase
-        .from(DB_TABLES.ROOMS)
-        .delete()
-        .eq("id", roomId);
-
-    if (error) {
-        logger.warn(
-            "Could not delete room record (possbily restricted)",
-            error,
-        );
-        return err(
-            appError(ERROR_CODES.DB_ERROR, "Failed to delete room", error),
-        );
-    }
-
-    return ok(undefined);
 }
 
 /**
  * Добавляет участников в существующую группу.
- * 1. Получает публичные ключи новых участников.
- * 2. Шифрует roomKey для них.
- * 3. Транзакционно добавляет в БД.
  */
 export async function addMembersToGroup(
     roomId: string,
@@ -192,140 +199,126 @@ export async function addMembersToGroup(
     roomKey: CryptoKey,
     myUserId: string,
 ): Promise<Result<void, RoomError>> {
-    // 1. Получаем профили новых участников
-    const { data: profiles, error: profilesError } = await supabase
-        .from(DB_TABLES.PROFILES)
-        .select("id, public_key_x25519")
-        .in("id", newMemberIds);
+    try {
+        if (newMemberIds.length === 0) {
+            return ok(undefined);
+        }
 
-    if (profilesError) {
-        return err(
-            appError(
-                ERROR_CODES.DB_ERROR,
-                "Failed to fetch profiles",
-                profilesError,
-            ),
-        );
-    }
+        const profilesResult =
+            await userRepository.getProfilesByIds(newMemberIds);
 
-    if (!profiles || profiles.length !== newMemberIds.length) {
-        const foundIds = profiles?.map((p) => p.id) || [];
-        const missingIds = newMemberIds.filter((id) => !foundIds.includes(id));
-
-        if (import.meta.env.VITE_USE_MOCK === "true") {
-            logger.warn("Using mock profiles for missing users in addMembers", {
-                missingIds,
-            });
-            for (const id of missingIds) {
-                profiles?.push({
-                    id,
-                    public_key_x25519: "mock_key",
-                });
-            }
-        } else {
+        if (profilesResult.isErr()) {
             return err(
-                appError(ERROR_CODES.MISSING_KEYS, "Some users not found", {
-                    userIds: missingIds,
-                }),
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    profilesResult.error.message,
+                    profilesResult.error.details instanceof Error
+                        ? profilesResult.error.details
+                        : undefined,
+                ),
             );
         }
-    }
 
-    // 2. Шифруем ключ комнаты для новых участников
-    const validProfiles = (profiles || []).map((p) => ({
-        id: p.id,
-        public_key_x25519: p.public_key_x25519 as string,
-    }));
+        const profiles = profilesResult.value;
 
-    const cryptoResult = await encryptRoomKeysForMembers(
-        validProfiles,
-        roomKey,
-        roomId,
-        myUserId, // Здесь myUserId используется как инициатор и все добавляемые делаются обычными MEMBER
-    );
+        if (profiles.length !== newMemberIds.length) {
+            const foundIds = profiles.map((p) => p.id);
+            const missingIds = newMemberIds.filter(
+                (id) => !foundIds.includes(id),
+            );
+            return err(
+                appError(
+                    ERROR_CODES.MISSING_KEYS,
+                    "Некоторые пользователи не найдены",
+                    {
+                        userIds: missingIds,
+                    },
+                ),
+            );
+        }
 
-    if (cryptoResult.isErr()) {
-        return err(cryptoResult.error);
-    }
+        const validProfiles = profiles.map((p) => ({
+            id: p.id,
+            public_key_x25519: p.public_key_x25519,
+        }));
 
-    const { encryptedKeys, roomMembers } = cryptoResult.value;
+        const cryptoResult = await encryptRoomKeysForMembers(
+            validProfiles,
+            roomKey,
+            roomId,
+            myUserId,
+        );
 
-    // Временно изменяем роль добавленных пользователей на MEMBER (в encryptRoomKeysForMembers добавляющий становится ADMIN)
-    const fixedRoomMembers = roomMembers.map((member) => ({
-        ...member,
-        role: MEMBER_ROLE.MEMBER,
-    }));
+        if (cryptoResult.isErr()) {
+            return err(cryptoResult.error);
+        }
 
-    // 3. Инсерт в БД
-    const { error: membersError } = await supabase
-        .from(DB_TABLES.ROOM_MEMBERS)
-        .insert(fixedRoomMembers);
+        const { encryptedKeys, roomMembers } = cryptoResult.value;
 
-    if (membersError) {
+        const result = await roomRepository.addMembersAndKeysToRoom(
+            roomMembers,
+            encryptedKeys,
+        );
+        if (result.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    result.error.message,
+                    result.error.details instanceof Error
+                        ? result.error.details
+                        : undefined,
+                ),
+            );
+        }
+
+        return ok(undefined);
+    } catch (e) {
+        logger.error("Ошибка при добавлении участников в группу", e);
         return err(
             appError(
                 ERROR_CODES.DB_ERROR,
-                "Failed to add new members",
-                membersError,
+                "Не удалось добавить участников в базу данных",
+                e instanceof Error ? e : undefined,
             ),
         );
     }
-
-    const { error: keysError } = await supabase
-        .from(DB_TABLES.ROOM_KEYS)
-        .insert(encryptedKeys);
-
-    if (keysError) {
-        return err(
-            appError(
-                ERROR_CODES.DB_ERROR,
-                "Failed to add keys for new members",
-                keysError,
-            ),
-        );
-    }
-
-    return ok(undefined);
 }
 
 /**
  * Удаляет участника из группы.
- * Удаляет его из room_members и room_keys.
  */
 export async function removeMemberFromGroup(
     roomId: string,
     userIdToRemove: string,
 ): Promise<Result<void, RoomError>> {
-    // Удаляем из members
-    const { error: membersError } = await supabase
-        .from(DB_TABLES.ROOM_MEMBERS)
-        .delete()
-        .eq("room_id", roomId)
-        .eq("user_id", userIdToRemove);
+    try {
+        const result = await roomRepository.removeMemberAndKeyFromRoom(
+            roomId,
+            userIdToRemove,
+        );
+        if (result.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    result.error.message,
+                    result.error.details instanceof Error
+                        ? result.error.details
+                        : undefined,
+                ),
+            );
+        }
 
-    if (membersError) {
+        return ok(undefined);
+    } catch (e) {
+        logger.error("Ошибка при удалении участника из группы", e);
         return err(
             appError(
                 ERROR_CODES.DB_ERROR,
-                "Failed to remove member",
-                membersError,
+                "Не удалось удалить участника из базы данных",
+                e instanceof Error ? e : undefined,
             ),
         );
     }
-
-    // Удаляем ключ
-    const { error: keysError } = await supabase
-        .from(DB_TABLES.ROOM_KEYS)
-        .delete()
-        .eq("room_id", roomId)
-        .eq("user_id", userIdToRemove);
-
-    if (keysError) {
-        logger.warn("Failed to delete room key for removed user", keysError);
-        // Не критично (он не увидит новые сообщения, т.к. нас больше нет в members, но лучше удалить)
-    }
-
-    return ok(undefined);
 }
 
 /**
@@ -334,25 +327,54 @@ export async function removeMemberFromGroup(
 export async function updateMemberRole(
     roomId: string,
     targetUserId: string,
-    newRole: (typeof MEMBER_ROLE)[keyof typeof MEMBER_ROLE],
+    newRole: RoomMembersRoleOptions,
 ): Promise<Result<void, RoomError>> {
-    const { error } = await supabase
-        .from(DB_TABLES.ROOM_MEMBERS)
-        .update({ role: newRole })
-        .eq("room_id", roomId)
-        .eq("user_id", targetUserId);
+    try {
+        const memberResult = await roomRepository.getMemberByRoomAndUser(
+            roomId,
+            targetUserId,
+        );
+        if (memberResult.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    memberResult.error.message,
+                    memberResult.error.details instanceof Error
+                        ? memberResult.error.details
+                        : undefined,
+                ),
+            );
+        }
 
-    if (error) {
+        const result = await roomRepository.updateMember(
+            memberResult.value.id,
+            {
+                role: newRole,
+            },
+        );
+        if (result.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    result.error.message,
+                    result.error.details instanceof Error
+                        ? result.error.details
+                        : undefined,
+                ),
+            );
+        }
+
+        return ok(undefined);
+    } catch (e) {
+        logger.error("Ошибка при обновлении роли участника", e);
         return err(
             appError(
                 ERROR_CODES.DB_ERROR,
-                "Failed to update member role",
-                error,
+                "Не удалось обновить роль участника в базе данных",
+                e instanceof Error ? e : undefined,
             ),
         );
     }
-
-    return ok(undefined);
 }
 
 /**

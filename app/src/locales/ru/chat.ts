@@ -24,6 +24,8 @@ export const chat = {
     unknownRoom: "Чат",
     privacyWarning:
         "Это приватный чат. Сообщения будут удалены при выходе обоих участников.",
+    defaultUserName: "Пользователь",
+    defaultUserNickname: "user",
     errors: {
         accessDenied: "Доступ запрещен или комната не найдена",
         keysMissing: "Ключи шифрования отсутствуют. Обновите их в настройках.",

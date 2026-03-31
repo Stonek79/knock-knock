@@ -15,6 +15,9 @@ import { useThemeStore } from "./stores/theme";
 /** Создаем новый экземпляр роутера с глобальными defaults */
 const router = createRouter({
     routeTree,
+    context: {
+        queryClient: undefined as unknown as QueryClient, // Будет инициализирован ниже
+    },
     defaultPendingComponent: SectionLoader,
     defaultErrorComponent: RouteErrorFallback,
     defaultPendingMs: 1000,
@@ -28,8 +31,24 @@ declare module "@tanstack/react-router" {
     }
 }
 
-/** Клиент для TanStack Query */
-const queryClient = new QueryClient();
+/** Клиент для TanStack Query с оптимизированными настройками кэширования */
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 1000 * 60 * 5, // Данные считаются свежими 5 минут
+            gcTime: 1000 * 60 * 30, // Храним в кэше 30 минут
+            refetchOnWindowFocus: false, // Не рефетчим при смене вкладки (у нас есть Realtime)
+            retry: 1, // Ограничиваем количество повторов при ошибке
+        },
+    },
+});
+
+// Обновляем контекст роутера актуальным клиентом
+router.update({
+    context: {
+        queryClient,
+    },
+});
 
 /**
  * Корневой компонент приложения.

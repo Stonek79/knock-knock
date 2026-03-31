@@ -26,11 +26,9 @@ export function useLongPress(
             if (e.button !== 0) {
                 return;
             }
-            console.log("[useLongPress] start - timer set for", delay, "ms");
             isLongPressTriggered.current = false;
             targetRef.current = e.target;
             timeoutRef.current = setTimeout(() => {
-                console.log("[useLongPress] LONG PRESS triggered!");
                 isLongPressTriggered.current = true;
                 onLongPress();
             }, delay);
@@ -39,14 +37,10 @@ export function useLongPress(
     );
 
     const clear = useCallback((_e?: ReactPointerEvent) => {
-        console.log(
-            "[useLongPress] clear - timeout:",
-            timeoutRef.current ? "cleared" : "none",
-        );
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
-        // onClick больше не вызывается — только long press
+
         isLongPressTriggered.current = false;
         targetRef.current = null;
     }, []);

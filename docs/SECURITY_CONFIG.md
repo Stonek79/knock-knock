@@ -34,32 +34,8 @@
 ### 🔒 .gitignore правило для .env файлов
 
 В корне проекта настроено строгое правило:
-
-```gitignore
-# Environment files (ALL .env* files except .env.example)
-*.env*
-!*.env.example
-```
-
-**Что это делает:**
-- `*.env*` — игнорирует **все** файлы содержащие `.env` (`.env`, `.env.test`, `.env.production.local` и т.д.)
-- `!*.env.example` — **исключение** для шаблонов (`.env.example`, `.env.test.example` и т.д.)
-
-**Преимущества:**
-- ✅ Полностью исключает человеческий фактор (`git add .env`)
-- ✅ Шаблоны остаются в git для документации
-- ✅ Не нужно перечислять каждый вариант вручную
-
-**Проверка:**
-```bash
-# Убедиться, что .env файлы игнорируются
-git status
-
-# Если .env попал в git, удалить из индекса:
-git rm --cached .env
-git rm --cached .env.test
-git rm --cached .env.production
-```
+- `*.env*` — игнорирует **все** файлы, содержащие `.env`.
+- `!*.env.example` — исключение для шаблонов.
 
 ---
 
@@ -67,106 +43,37 @@ git rm --cached .env.production
 
 ### Критические секреты (никогда не коммитить!)
 
-1. **Supabase Keys:**
-   - `VITE_SUPABASE_ANON_KEY` — публичный ключ, но уникален для среды
-   - `SUPABASE_SERVICE_ROLE_KEY` — **полный доступ к БД**, никогда не коммитить!
-   - `JWT_SECRET` — секрет для генерации токенов
+1. **PocketBase Keys:**
+   - `PB_ENCRYPTION_KEY` — ключ шифрования данных в БД (очень важно!).
+   - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — доступ к панели управления.
+   - `VITE_PB_URL` — публичный адрес API.
 
-2. **Пароли:**
-   - `SUPABASE_CLI_PASSWORD` — пароль postgres
-   - `POSTGRES_PASSWORD` — суперпользователь БД
-   - `DASHBOARD_PASSWORD` — пароль админ-панели
+2. **Сетевые данные:**
+   - Внутренние IP-адреса (`10.0.0.X`).
+   - Конфигурация WireGuard (приватные ключи).
+   - Порт контейнера: `8090` (Prod) / `9090` (Dev).
 
-3. **Сетевые данные:**
-   - Внутренние IP-адреса (`192.168.1.X`, `10.0.0.X`)
-   - Конфигурация WireGuard (приватные ключи)
-   - Порты сервисов (8000, 8001, 54322)
-
-4. **Персональные данные:**
-   - Email тестовых пользователей
-   - Реальные пользовательские данные из БД
+3. **E2EE Ключи:**
+   - Ключи пользователей генерируются на клиенте и хранятся в `IndexedDB` / `Keystore`.
+   - Никогда не логируйте приватные `x25519` записи.
 
 ---
 
 ## 🛡 Лучшие практики безопасности
 
-### 1. Разделение сред (Environment Isolation)
+### 1. Разделение сред
 
 **Правильно:**
-```bash
-# Разные ключи для каждой среды
-.env.test        → тестовые ключи (staging)
-.env.production  → production ключи
-.env.local       → локальная разработка (mock)
-```
+- `.env.test` → `knok-knok-pb-dev` (Dev-API).
+- `.env.production` → `knok-knok-pb` (Prod-API).
 
-**Неправильно:**
-```bash
-# Один файл для всего
-.env             → содержит и тестовые, и production ключи ❌
-```
+### 2. PocketBase API Rules
+Безопасность данных в PB строится на **API Rules**. 
+- Всегда используйте фильтр `@request.auth.id != ""` для приватных данных.
+- Для сообщений доступ должен быть разрешен только участникам комнаты.
 
-### 2. Валидация переменных окружения (Runtime Validation)
-
-Приложение использует **Zod** для проверки `import.meta.env` при запуске. Если обязательные переменные (например, `VITE_SUPABASE_URL`) отсутствуют или имеют неверный формат, приложение не запустится и выведет ошибку в консоль.
-
-**Файл:** [env.ts](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/lib/env.ts)
-
----
-
-### 3. Использование переменных окружения
-
-**Правильно (playwright.config.ts):**
-```typescript
-env: {
-  // Загружается из .env.test, не хардкодить!
-  VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
-  VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY,
-}
-```
-
-**Неправильно:**
-```typescript
-env: {
-  // Хардкод IP и ключей ❌
-  VITE_SUPABASE_URL: 'http://192.168.1.142:8001',
-  VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIs...',
-}
-```
-
-### 3. Доступ к домашнему серверу
-
-**Правильно:**
-```bash
-# Доступ только через VPN
-SUPABASE_HOME_IP_ADDRESS=10.0.0.2  # VPN IP
-VITE_SUPABASE_URL=http://10.0.0.2:8001
-```
-
-**Неправильно:**
-```bash
-# Прямой доступ из интернета ❌
-VITE_SUPABASE_URL=http://203.0.113.1:8001  # Публичный IP
-```
-
-### 4. Service Role Key
-
-**Правило:** Используйте `SUPABASE_SERVICE_ROLE_KEY` ТОЛЬКО в серверных скриптах!
-
-**Можно:**
-```bash
-# Seed-скрипты (выполняются локально)
-node infra/scripts/seed_data.cjs
-
-# Генерация типов
-bash supabase/gen-types.sh
-```
-
-**Нельзя:**
-```typescript
-// Frontend код ❌
-const supabase = createClient(URL, SERVICE_ROLE_KEY);
-```
+### 3. Доступ через VPN (WireGuard)
+PocketBase рекомендуется запускать внутри доверенной сети. VPS проксирует только HTTPS (8443) в туннель к домашнему серверу. Прямой доступ к порту 8090/9090 из интернета должен быть закрыт фаерволом (UFW).
 
 ---
 

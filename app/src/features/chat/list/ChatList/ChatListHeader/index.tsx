@@ -42,6 +42,7 @@ export function ChatListHeader({
                             shape="round"
                             className={styles.createButton}
                             aria-label={t("chat.create", "Создать")}
+                            data-testid="plus-button"
                         >
                             <Plus size={ICON_SIZE.sm} />
                         </IconButton>
@@ -49,6 +50,7 @@ export function ChatListHeader({
                     <DropdownMenu.Content>
                         <DropdownMenu.Item
                             onSelect={() => onOpenChatDialog(CHAT_TYPE.PUBLIC)}
+                            data-testid="menu-item-new-chat"
                         >
                             <Flex align="center" gap="2">
                                 <MessageSquarePlus size={ICON_SIZE.sm} />

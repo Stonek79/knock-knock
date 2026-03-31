@@ -4,7 +4,7 @@ import { LandingPage } from "@/pages/LandingPage";
 import { useAuthStore } from "@/stores/auth";
 
 export function IndexPage() {
-    const { user, loading } = useAuthStore();
+    const { profile: user, loading } = useAuthStore();
 
     // Если пользователь уже вошел, перенаправляем в список чатов
     if (!loading && user) {

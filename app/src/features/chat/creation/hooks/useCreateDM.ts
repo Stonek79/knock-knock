@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/constants";
 import { RoomService } from "@/lib/services/room";
 
 interface CreateDMParams {
@@ -7,6 +8,10 @@ interface CreateDMParams {
     isPrivate?: boolean;
 }
 
+/**
+ * Хук для создания прямого чата (DM).
+ * Инвалидирует список комнат при успехе.
+ */
 export function useCreateDM() {
     const queryClient = useQueryClient();
 
@@ -26,11 +31,10 @@ export function useCreateDM() {
             }
             return res.value;
         },
-        onSuccess: () => {
-            // Инвалидируем список комнат, чтобы новый чат появился в сайдбаре
-            queryClient.invalidateQueries({
-                queryKey: ["rooms"],
-                refetchType: "all",
+        onSuccess: async () => {
+            // Инвалидируем кэш списка комнат
+            await queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.rooms(),
             });
         },
     });
