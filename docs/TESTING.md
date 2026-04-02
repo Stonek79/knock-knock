@@ -1,7 +1,7 @@
 # Тестирование Knock-Knock
 
-> Последнее обновление: Март 2026  
-> Статус: 🏗 В процессе (PocketBase Migration)
+> Последнее обновление: Апрель 2026
+> Статус: 🏗 В процессе (рефакторинг + покрытие)
 
 ---
 
@@ -14,7 +14,7 @@
 | Среда | PocketBase URL | Контейнер | Назначение |
 |-------|----------------|-----------|------------|
 | **Development (Dev)** | `https://dev-api.knok-knok.ru:8443` | `knok-knok-pb-dev` | Разработка, Unit-тесты, ручное ломание |
-| **Production (Prod)** | `https://api.knok-knok.ru:8443` | `knok-knok-pb` | Реальные пользователи, высокая стабильность |
+| **Production (Prod)** | `https://api.knok-knok.ru:8443` | `knock-knock-pb` | Реальные пользователи, высокая стабильность |
 
 ---
 
@@ -52,7 +52,13 @@
   ```bash
   cd app
   npx playwright test
+  npx playwright test --ui  # С визуальным интерфейсом
   ```
+
+### 4. Линтинг и типы (Biome + tsc)
+- **Biome**: `npm run lint` — линтинг + форматирование.
+- **TypeScript**: `npx tsc --noEmit` — проверка типов без сборки.
+- **Подробнее**: `/run-tests` workflow в `.agent/workflows/run-tests.md`.
 
 ---
 
@@ -85,11 +91,11 @@ npm run seed
 
 ## 📝 Написание тестов: Лучшие практики (Repository Pattern)
 
-Согласно [плану обновления тестов](file:///Users/alexstone/.gemini/antigravity/brain/1025f2d0-3b22-48d1-97f8-579e3c5565b1/test_fixes_plan.md.resolved):
-
 1. **Unit-тесты (Сервисы)**: Мокаем репозитории через `vi.mock("@/lib/repositories/...")`. Фокусируемся на логике трансформации данных и бизнес-правилах.
 2. **Integration-тесты (Репозитории)**: Пишем в `.integration.test.ts`. Используем реальный SDK и БД. Обязательно выставляем `is_test: true`.
 3. **Используем Result-обертку**: Тесты должны учитывать, что методы возвращают `Result<T, AppError>`.
+4. **Storybook**: Компоненты документируются и тестируются визуально через Storybook (`npm run storybook`).
+5. **Biome перед коммитом**: `npm run lint` обязателен. Настроен pre-commit хук (Husky).
 
 **Пример разделения:**
 - `uploadMedia.test.ts` (Unit): Мокаем репозиторий, проверяем, что сервис вызывает шифрование перед загрузкой.

@@ -41,6 +41,7 @@
     border-radius: var(--kk-radius-md);
     border: 2px solid transparent;
     transition: all var(--transition-base);
+    max-width: var(--size-preview-max-width);
 }
 
 .themeCard:hover {
@@ -53,23 +54,28 @@
     box-shadow: 0 0 20px var(--glow-soft);
 }
 
-/* ============================================= */
-/* Theme Previews */
-/* Показывают фиксированные цвета каждой темы */
-/* ============================================= */
+.previewDefault {
+    height: var(--size-preview-height);
+    max-width: var(--size-preview-width);
+    border-radius: var(--kk-radius-sm);
+    background: var(--preview-default-gradient);
+    box-shadow: 0 var(--space-1) var(--space-3) var(--preview-default-glow);
+}
 
 .previewNeon {
-    height: 72px;
+    height: var(--size-preview-height);
+    max-width: var(--size-preview-width);
     border-radius: var(--kk-radius-sm);
     background: var(--preview-neon-gradient);
-    box-shadow: 0 var(--space-1) var(--space-4) var(--preview-neon-glow);
+    box-shadow: 0 var(--space-1) var(--space-3) var(--preview-neon-glow);
 }
 
 .previewEmerald {
-    height: 72px;
+    height: var(--size-preview-height);
+    max-width: var(--size-preview-width);
     border-radius: var(--kk-radius-sm);
     background: var(--preview-emerald-gradient);
-    box-shadow: 0 var(--space-1) var(--space-4) var(--preview-emerald-glow);
+    box-shadow: 0 var(--space-1) var(--space-3) var(--preview-emerald-glow);
 }
 
 .checkIcon {
@@ -77,7 +83,6 @@
     font-weight: bold;
 }
 
-/* Нативные элементы вместо Radix Text */
 .sectionTitle {
     font-size: var(--text-lg);
     font-weight: var(--font-weight-bold);
@@ -93,4 +98,12 @@
     font-size: var(--text-sm);
     font-weight: var(--font-weight-medium);
     color: var(--foreground);
+    text-wrap: nowrap;
+}
+
+@media (max-width: 450px) {
+    .themeName,
+    .checkIcon {
+        display: none;
+    }
 }

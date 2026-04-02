@@ -17,7 +17,7 @@ export interface NavItemConfig {
     defaultLabel: string;
 }
 
-/** Конфигурация элементов навигации в стиле WhatsApp */
+/** Конфигурация элементов навигации */
 export const NAVIGATION_ITEMS: NavItemConfig[] = [
     {
         key: "chats",

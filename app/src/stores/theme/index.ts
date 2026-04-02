@@ -21,13 +21,14 @@ interface ThemeState {
 }
 
 /**
- * Стор для управления темой (Neon/Emerald) и режимом (Light/Dark).
+ * Стор для управления темой (Default/Neon/Emerald) и режимом (Light/Dark).
+ * Дефолтная тема: default/light.
  */
 export const useThemeStore = create<ThemeState>()(
     persist(
         (set, get) => ({
-            theme: DESIGN_THEME.NEON,
-            mode: THEME_MODE.DARK,
+            theme: DESIGN_THEME.DEFAULT,
+            mode: THEME_MODE.LIGHT,
             setTheme: (theme) => {
                 set({ theme });
                 get().applyTheme();

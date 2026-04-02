@@ -6,9 +6,9 @@
     padding: 0 var(--space-5);
     backdrop-filter: var(--glass-blur);
     border-bottom: var(--border-width-base) solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
     flex-shrink: 0;
     transition: all var(--transition-slow);
-    box-shadow: var(--glass-shadow);
     z-index: var(--z-header);
     position: relative;
 }

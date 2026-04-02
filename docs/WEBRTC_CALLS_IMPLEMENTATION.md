@@ -1,8 +1,20 @@
-# Реализация звонков (WebRTC) в PrivMessenger
+# Реализация звонков (WebRTC) в Knock-Knock
 
-**Версия:** 1.0  
-**Дата:** Март 2026  
-**Статус:** План реализации
+**Версия:** 1.0
+**Дата:** Март 2026
+**Статус:** ⚠️ ЧАСТИЧНО УСТАРЕЛ — требует переработки под PocketBase
+
+> **ВАЖНО:** Этот документ написан в эпоху Supabase. Следующие части **требуют переработки** перед реализацией:
+> - **Схема архитектуры** — блок «Supabase» заменить на «PocketBase JS Hooks» (генерация токенов LiveKit через PB-хуки, а не Edge Functions)
+> - **Этап 1.2** — «Edge Function» (Supabase Deno) → PocketBase JS Hook (`pb_hooks/generate_livekit_token.pb.js`)
+> - **Компонент CallRoom** — `supabase.functions.invoke()` → `pb.send('/api/livekit-token', ...)`
+> - **Этап 2** — SQL-миграции для `call_logs` → PocketBase коллекция через Admin UI или `pb_schema.json`
+> - **RLS Policies** → **PocketBase API Rules** (`@request.auth.id != ""`)
+>
+> Остальное (LiveKit Server, Nginx, Coturn, iptables DNAT, firewall, Zustand store) — **актуально**.
+>
+> Полный переработанный план будет в `WEBRTC_CALLS_IMPLEMENTATION_v2.md`.
+
 
 ---
 

@@ -100,7 +100,12 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    background: var(--gradient-primary);
+    /* Вычисляем градиент через переменные темы */
+    background: linear-gradient(
+        135deg,
+        var(--accent-primary),
+        var(--accent-secondary)
+    );
     color: var(--bubble-out-fg);
     font-weight: var(--font-weight-bold);
 }

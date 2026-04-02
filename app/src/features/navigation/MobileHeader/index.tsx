@@ -13,10 +13,10 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
+import { useChatDialogs } from "@/hooks/chatDialogs";
 import { APP_NAME, CHAT_TYPE } from "@/lib/constants";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useAuthStore } from "@/stores/auth";
-import { useChatDialogs } from "@/stores/ui/chatDialogs";
 import styles from "./mobileheader.module.css";
 
 interface MobileHeaderProps {
@@ -31,7 +31,7 @@ interface MobileHeaderProps {
 }
 
 /**
- * Header для мобильной версии в стиле WhatsApp.
+ * Header для мобильной версии.
  * Отображает название приложения, иконки камеры, поиска и меню.
  * В суброутах отображает кнопку «Назад».
  */

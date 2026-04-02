@@ -1,12 +1,28 @@
-/* CSS Variables for Premium Design System */
+/* =====================================================
+ * Knock-Knock — Дизайн-система
+ * =====================================================
+ * СТРУКТУРА:
+ *   1. :root       — ТОЛЬКО статические токены (spacing, typography, sizes, z-index)
+ *                    + нейтральные цветовые фолбэки
+ *                    + Radix-совместимые алиасы (legacy)
+ *   2. [data-theme="default"] — WA-inspired тема (light + dark)
+ *   3. [data-theme="neon"]    — Cosmic Cyberpunk (dark + light)
+ *   4. [data-theme="emerald"] — Forest Gold Luxury (dark + light)
+ *   5. Глобальные стили (body, scrollbar, animations, etc.)
+ * =====================================================
+ */
+
+/* =====================================================
+ * 1. :root — Статические токены и нейтральные фолбэки
+ * ===================================================== */
 :root {
     /* =========================================== */
-    /* Scale Factor (Telegram-style) */
+    /* Scale Factor (Telegram-style)               */
     /* =========================================== */
     --scale-factor: 1;
 
     /* =========================================== */
-    /* Spacing System (Scalable) */
+    /* Spacing System (Scalable)                   */
     /* =========================================== */
     --space-05: calc(2px * var(--scale-factor));
     --space-1: calc(4px * var(--scale-factor));
@@ -15,6 +31,7 @@
     --space-4: calc(16px * var(--scale-factor));
     --space-5: calc(20px * var(--scale-factor));
     --space-6: calc(24px * var(--scale-factor));
+    --space-7: calc(28px * var(--scale-factor));
     --space-8: calc(32px * var(--scale-factor));
     --space-10: calc(40px * var(--scale-factor));
     --space-12: calc(48px * var(--scale-factor));
@@ -26,17 +43,26 @@
     --space-48: calc(256px * var(--scale-factor));
     --space-64: calc(512px * var(--scale-factor));
 
+    /* Семантические алиасы spacing */
+    --space-xs: var(--space-2); /* 8px  */
+    --space-sm: var(--space-3); /* 12px */
+    --space-md: var(--space-4); /* 16px */
+    --space-lg: var(--space-6); /* 24px */
+    --space-xl: var(--space-8); /* 32px */
+    --space-2xl: var(--space-12); /* 48px */
+
     /* =========================================== */
-    /* Typography System (Static for now, scalable later if needed) */
+    /* Typography System                           */
     /* =========================================== */
-    --text-xxs: 10px;
-    --text-xs: 12px;
-    --text-sm: 14px;
-    --text-base: 16px;
-    --text-lg: 18px;
-    --text-xl: 20px;
-    --text-2xl: 24px;
-    --text-3xl: 30px;
+    --text-xxs: calc(10px * var(--scale-factor));
+    --text-xs: calc(12px * var(--scale-factor));
+    --text-sm: calc(14px * var(--scale-factor));
+    --text-base: calc(16px * var(--scale-factor));
+    --text-lg: calc(18px * var(--scale-factor));
+    --text-xl: calc(20px * var(--scale-factor));
+    --text-2xl: calc(24px * var(--scale-factor));
+    --text-3xl: calc(30px * var(--scale-factor));
+    --text-4xl: calc(36px * var(--scale-factor));
 
     /* Шрифтовые начертания */
     --font-weight-normal: 400;
@@ -46,6 +72,7 @@
     --font-weight-extrabold: 800;
     --font-weight-black: 900;
 
+    /* Межстрочные интервалы */
     --line-height-none: 1;
     --line-height-tight: 1.25;
     --line-height-snug: 1.375;
@@ -53,7 +80,7 @@
     --line-height-relaxed: 1.625;
     --line-height-loose: 2;
 
-    /* Семейство шрифтов */
+    /* Семейство шрифтов (переопределяется в [data-theme]) */
     --font-family:
         "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
@@ -63,7 +90,7 @@
     --letter-spacing-wide: 0.04em;
 
     /* =========================================== */
-    /* Border Radius System */
+    /* Border Radius System                        */
     /* =========================================== */
     --kk-radius-sm: 4px;
     --kk-radius-md: 8px;
@@ -72,14 +99,20 @@
     --kk-radius-2xl: 20px;
     --kk-radius-full: 50%;
     --kk-radius-glass: 16px;
+    --radius-glass: var(--kk-radius-glass);
+    --radius-md: var(--kk-radius-md);
+    --radius-lg: var(--kk-radius-lg);
+    --radius-xl: var(--kk-radius-xl);
+    --radius-full: var(--kk-radius-full);
 
     /* =========================================== */
-    /* Component Sizes (Scalable) */
+    /* Component Sizes (Scalable)                  */
     /* =========================================== */
     --size-icon-xs: calc(14px * var(--scale-factor));
     --size-icon-sm: calc(18px * var(--scale-factor));
     --size-icon-md: calc(24px * var(--scale-factor));
     --size-icon-lg: calc(32px * var(--scale-factor));
+    --size-icon-xl: calc(40px * var(--scale-factor));
 
     --size-avatar-xs: calc(24px * var(--scale-factor));
     --size-avatar-sm: calc(32px * var(--scale-factor));
@@ -87,6 +120,7 @@
     --size-avatar-lg: calc(80px * var(--scale-factor));
     --size-avatar-xl: calc(120px * var(--scale-factor));
     --size-avatar-xxl: calc(160px * var(--scale-factor));
+    --size-avatar-xl-temp: var(--size-avatar-xl);
 
     --size-btn-h-1: calc(28px * var(--scale-factor));
     --size-btn-h-2: calc(32px * var(--scale-factor));
@@ -109,16 +143,19 @@
     --size-error-icon-sm: calc(32px * var(--scale-factor));
     --size-icon-box-lg: calc(80px * var(--scale-factor));
 
+    --size-preview-height: calc(64px * var(--scale-factor));
+    --size-preview-width: calc(240px * var(--scale-factor));
+    --size-preview-max-width: calc(240px * var(--scale-factor));
+    --size-preview-min-width: calc(240px * var(--scale-factor));
+
     /* =========================================== */
-    /* Layout Sizes (Scalable) */
+    /* Layout Sizes                                */
     /* =========================================== */
     --header-height: calc(72px * var(--scale-factor));
     --footer-height: calc(72px * var(--scale-factor));
-    --panel-width: 360px; /* Sidebar width usually static */
+    --panel-width: 360px; /* Статичная ширина сайдбара */
 
-    /* =========================================== */
-    /* Container Max Widths (Static) */
-    /* =========================================== */
+    /* Container Max Widths (статичные) */
     --max-h-picker: 250px;
     --max-w-auth: 450px;
     --max-w-dialog: 450px;
@@ -128,7 +165,6 @@
     --max-w-empty-state: 300px;
     --max-w-card: 320px;
     --max-w-media-modal: 480px;
-    /* Message Additions */
     --max-h-attachment-img: 250px;
     --min-w-audio-player: 250px;
     --max-h-textarea: 160px;
@@ -140,7 +176,7 @@
     --min-w-dropdown: 180px;
 
     /* =========================================== */
-    /* Opacity & Borders */
+    /* Opacity & Borders                           */
     /* =========================================== */
     --opacity-disabled: 0.5;
     --opacity-hover: 0.8;
@@ -149,7 +185,7 @@
     --border-width-focus: 2px;
 
     /* =========================================== */
-    /* Z-Index Scale */
+    /* Z-Index Scale                               */
     /* =========================================== */
     --z-base: 0;
     --z-panel: 10;
@@ -163,14 +199,14 @@
     --z-overlay: 9999;
 
     /* =========================================== */
-    /* Transitions */
+    /* Transitions                                 */
     /* =========================================== */
     --transition-fast: 0.15s ease;
     --transition-base: 0.2s ease;
     --transition-slow: 0.3s ease;
 
     /* =========================================== */
-    /* Shadows & Blurs */
+    /* Shadows & Blurs (статичные)                 */
     /* =========================================== */
     --glass-blur: blur(20px);
     --glass-blur-sm: blur(10px);
@@ -179,8 +215,15 @@
     --shadow-glow: 0 0 10px;
 
     /* =========================================== */
-    /* Theme Previews */
+    /* Theme Previews (статичные, не привязаны к теме) */
     /* =========================================== */
+    --preview-default-gradient: linear-gradient(
+        135deg,
+        #00ffff 0%,
+        #00a884 70%,
+        #008069 100%
+    );
+    --preview-default-glow: rgba(0, 168, 132, 0.2);
     --preview-neon-gradient: linear-gradient(135deg, #00f0ff 0%, #bc13fe 100%);
     --preview-neon-glow: rgba(0, 240, 255, 0.2);
     --preview-emerald-gradient: linear-gradient(
@@ -191,7 +234,7 @@
     --preview-emerald-glow: rgba(212, 175, 55, 0.2);
 
     /* =========================================== */
-    /* Status Colors with Alpha Variants */
+    /* Static Status Alpha Colors                  */
     /* =========================================== */
     --color-white: #ffffff;
     --color-black: #000000;
@@ -200,7 +243,7 @@
     --color-warning-alpha: rgba(245, 158, 11, 0.5);
 
     /* =========================================== */
-    /* Gradients */
+    /* Градиент (использует семантические токены)  */
     /* =========================================== */
     --gradient-primary: linear-gradient(
         135deg,
@@ -208,32 +251,141 @@
         var(--accent-secondary)
     );
 
-    /* Default Mode (Neon Dark as fallback) */
-    --bg-app: #020a12;
-    --foreground: #e0f7fa;
-    --muted: #708ca3;
-    --muted-foreground: #a4b8c6;
-    --accent-primary: #00f0ff;
-    --accent-secondary: #00a8e8;
+    /* =============================================
+     * НЕЙТРАЛЬНЫЕ ЦВЕТОВЫЕ ФОЛБЭКИ
+     * Используются если тема не применилась.
+     * Не привязаны к конкретной теме — нейтральный тёмный.
+     * ============================================= */
+    --bg-app: #111b21;
+    --surface: #202c33;
+    --surface-1: #2a3942;
+    --surface-2: #182229;
+    --color-background: #111b21;
+    --foreground: #e9edef;
+    --muted: #8696a0;
+    --muted-foreground: #667781;
+    --accent-primary: #00a884;
+    --accent-secondary: #008069;
+    --border: #2a3942;
+    --glass-bg: rgba(32, 44, 51, 0.92);
+    --glass-border: #2a3942;
+    --glass-hover-bg: rgba(0, 168, 132, 0.12);
+    --bubble-in: #202c33;
+    --bubble-in-fg: #e9edef;
+    --bubble-out: #005c4b;
+    --bubble-out-fg: #e9edef;
+    --color-error: #ea0038;
+    --color-success: #00a884;
+    --color-warning: #ffbc38;
+    --color-info: #009de2;
+    --title-glow: none;
+    --glass-shadow: none;
 
-    --glass-bg: rgba(11, 25, 38, 0.85);
-    --glass-border: rgba(0, 240, 255, 0.15);
-    --glass-hover-bg: rgba(255, 255, 255, 0.05);
-
-    --bubble-in: #1a2f45;
-    --bubble-in-fg: #e0f7fa;
-    --bubble-out: linear-gradient(135deg, #00f0ff, #00a8e8);
-    --bubble-out-fg: #000000;
-
-    /* Status Colors (Default) */
-    --color-error: #ef4444;
-    --color-success: #10b981;
-    --color-warning: #f59e0b;
+    /* =============================================
+     * RADIX-СОВМЕСТИМЫЕ АЛИАСЫ (Legacy Compat)
+     * ============================================= */
+    --gray-1: var(--bg-app);
+    --gray-3: var(--surface-1);
+    --gray-8: var(--muted-foreground);
+    --gray-10: var(--muted);
+    --gray-11: var(--muted);
+    --gray-12: var(--foreground);
+    --accent-9: var(--accent-primary);
+    --accent-10: var(--accent-secondary);
+    --accent-11: var(--foreground);
 }
 
-/* ============================================= */
-/* --- THEME: NEON --- */
-/* ============================================= */
+/* =====================================================
+ * 2. ТЕМА: DEFAULT
+ * Чистый, знакомый, практичный интерфейс.
+ * Дефолтный режим: light. Шрифт: Helvetica Neue.
+ * ===================================================== */
+[data-theme="default"] {
+    --font-family:
+        "Helvetica Neue", Helvetica, Arial, -apple-system, system-ui, sans-serif;
+
+    /* LIGHT MODE: Светлый и чистый (дефолтный) */
+    &[data-mode="light"] {
+        --bg-app: #f0f2f5; /* Характерный серо-белый WA фон */
+        --surface: #ffffff; /* Белые панели, sidebar, карточки */
+        --surface-1: #f0f2f5; /* Фон за элементами */
+        --surface-2: #e9edef; /* Заголовки, тулбары */
+        --color-background: #f0f2f5;
+        --foreground: #111b21; /* Основной текст — почти чёрный */
+        --muted: #667781; /* Вторичный текст (даты, подписи) */
+        --muted-foreground: #8696a0; /* Placeholder, hint */
+        --accent-primary: #00a884; /* WA зелёный (современный) */
+        --accent-secondary: #008069; /* WA тёмно-зелёный */
+        /* Бордеры заметно темнее фона #f0f2f5 */
+        --border: #d1d7db;
+
+        /* Glassmorphism для default/light: непрозрачный белый фон,
+           без blur — чтобы заголовки не давали артефактов */
+        --glass-bg: #ffffff;
+        --glass-border: #d1d7db; /* Видимый разделитель */
+        --glass-border-active: #00a884;
+        /* Default: без теней — чистый flat-дизайн */
+        --glass-shadow: none;
+        --glass-hover-bg: rgba(0, 168, 132, 0.08);
+        --glow-soft: rgba(0, 168, 132, 0.15);
+        /* Без свечения в заголовке — WA не использует glow на тексте */
+        --title-glow: none;
+
+        /* Пузыри сообщений */
+        --bubble-in: #ffffff; /* Входящие — белые */
+        --bubble-in-fg: #111b21;
+        --bubble-out: #d9fdd3; /* Исходящие — светло-зелёные */
+        --bubble-out-fg: #111b21;
+
+        /* Статусные цвета */
+        --color-error: #ea0038;
+        --color-success: #00a884;
+        --color-warning: #ffbc38;
+        --color-info: #009de2;
+    }
+
+    /* DARK MODE: Тёмный, уютный, узнаваемый */
+    &[data-mode="dark"] {
+        --bg-app: #111b21; /* Очень тёмный синевато-чёрный */
+        --surface: #202c33; /* Панели (чуть светлее) */
+        --surface-1: #2a3942; /* Вложенные поверхности */
+        --surface-2: #182229; /* Заголовки, navigation */
+        --color-background: #111b21;
+        --foreground: #e9edef; /* Основной текст */
+        --muted: #8696a0; /* Вторичный */
+        --muted-foreground: #667781; /* Приглушённый */
+        --accent-primary: #00a884; /* Тот же WA зелёный */
+        --accent-secondary: #008069;
+        --border: #2a3942; /* Разделители — тёмно-синие */
+
+        /* Glassmorphism для default dark */
+        --glass-bg: rgba(32, 44, 51, 0.92);
+        --glass-border: #2a3942;
+        --glass-border-active: #00a884;
+        /* Default dark: тоже без тени — чистый flat */
+        --glass-shadow: none;
+        --glass-hover-bg: rgba(0, 168, 132, 0.12);
+        --glow-soft: rgba(0, 168, 132, 0.2);
+        --title-glow: none;
+
+        /* Пузыри сообщений */
+        --bubble-in: #202c33; /* Тёмно-синий */
+        --bubble-in-fg: #e9edef;
+        --bubble-out: #005c4b; /* Тёмно-зелёный */
+        --bubble-out-fg: #e9edef;
+
+        /* Статусные цвета */
+        --color-error: #ea0038;
+        --color-success: #00a884;
+        --color-warning: #ffbc38;
+        --color-info: #009de2;
+    }
+}
+
+/* =====================================================
+ * 3. ТЕМА: NEON (Cosmic Cyberpunk)
+ * Glassmorphism, киберпанк-палитра.
+ * ===================================================== */
 [data-theme="neon"] {
     /* DARK MODE: Cosmic Cyberpunk с эффектом сверхновой */
     &[data-mode="dark"] {
@@ -270,16 +422,31 @@
                 transparent 60%
             ),
             linear-gradient(180deg, #010409 0%, #030810 100%);
+
+        --surface: rgba(8, 18, 30, 0.8);
+        --surface-1: rgba(15, 28, 44, 0.7);
+        --surface-2: rgba(5, 12, 22, 0.9);
+        --color-background: #010409;
         --foreground: #e0f7fa;
         --muted: #708ca3;
+        --muted-foreground: #a4b8c6;
         --accent-primary: #00f0ff; /* Electric Cyan */
         --accent-secondary: #00a8e8;
+        --border: rgba(0, 240, 255, 0.15);
+
         --glass-bg: rgba(8, 18, 30, 0.6);
         --glass-border: rgba(0, 240, 255, 0.15);
         --glass-border-active: rgba(0, 240, 255, 0.6);
-        --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
-        --glass-hover-bg: rgba(255, 255, 255, 0.08); /* Чуть ярче для Neon */
+        /* Тонкая синяя линия separator + свечение */
+        --glass-shadow:
+            0 1px 0 rgba(0, 240, 255, 0.2), 0 0 20px rgba(0, 240, 255, 0.05);
+        --glass-hover-bg: rgba(255, 255, 255, 0.08);
         --glow-soft: rgba(0, 240, 255, 0.1);
+        /* Неоновое cyan-свечение на названии канала/собеседника */
+        --title-glow:
+            0 0 4px #00f0ff, 0 0 12px rgba(0, 240, 255, 0.7),
+            0 0 30px rgba(0, 240, 255, 0.4);
+
         --bubble-in: #1a2f45;
         --bubble-in-fg: #e0f7fa;
         --bubble-out: linear-gradient(135deg, #00f0ff 0%, #00a8e8 100%);
@@ -289,27 +456,33 @@
         --color-error: #ff3366; /* Neon Red */
         --color-success: #00ff99; /* Neon Green */
         --color-warning: #ffd700; /* Neon Gold */
+        --color-info: #00b4ff; /* Neon Blue */
     }
 
     /* LIGHT MODE: Arctic Glass с неоновыми акцентами */
     &[data-mode="light"] {
         --bg-app: #e8ecef;
+        --surface: rgba(240, 244, 248, 0.8);
+        --surface-1: rgba(230, 236, 242, 0.9);
+        --surface-2: rgba(220, 228, 236, 1);
+        --color-background: #e8ecef;
         --foreground: #4a6572;
         --muted: #819ca9;
+        --muted-foreground: #a0b0ba;
         --accent-primary: #00d1c1; /* Teal */
         --accent-secondary: #00a8e8;
+        --border: rgba(0, 209, 193, 0.25);
+
         --glass-bg: rgba(240, 244, 248, 0.8);
         --glass-border: rgba(0, 209, 193, 0.3);
         --glass-border-active: #00d1c1;
-        --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        --glass-hover-bg: rgba(
-            0,
-            209,
-            193,
-            0.1
-        ); /* Цветной hover для светлой */
+        --glass-shadow: 0 1px 0 rgba(0, 209, 193, 0.2);
+        --glass-hover-bg: rgba(0, 209, 193, 0.1);
         --glow-soft: rgba(0, 209, 193, 0.25);
         --glow: 0 0 10px rgba(0, 209, 193, 0.4);
+        /* Лёгкое teal-свечение заголовков */
+        --title-glow: 0 0 4px rgba(0, 209, 193, 0.4);
+
         --bubble-in: #cde8e5;
         --bubble-in-fg: #4a6572;
         --bubble-out: linear-gradient(135deg, #00d1c1 0%, #00a8e8 100%);
@@ -319,25 +492,42 @@
         --color-error: #e11d48;
         --color-success: #059669;
         --color-warning: #d97706;
+        --color-info: #0284c7;
     }
 }
 
-/* ============================================= */
-/* --- THEME: EMERALD --- */
-/* ============================================= */
+/* =====================================================
+ * 4. ТЕМА: EMERALD (Forest Gold Luxury)
+ * VIP-стиль, золото и изумруд.
+ * ===================================================== */
 [data-theme="emerald"] {
     /* DARK MODE: Forest Gold Luxury */
     &[data-mode="dark"] {
         --bg-app: #091c15;
         --bg-void: #020e08;
+        --surface: rgba(21, 46, 37, 0.85);
+        --surface-1: rgba(30, 60, 48, 0.8);
+        --surface-2: rgba(12, 30, 22, 0.95);
+        --color-background: #091c15;
         --foreground: #f0f2f0;
         --muted: #a5b5ae;
+        --muted-foreground: #7a9088;
         --accent-primary: #d4af37; /* Классическое золото */
         --accent-secondary: #10b981; /* Изумрудный */
+        --border: rgba(212, 175, 55, 0.3);
+
         --glass-bg: rgba(21, 46, 37, 0.85);
         --glass-border: rgba(212, 175, 55, 0.5); /* Яркий золотой бордер */
-        --glass-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
+        /* Золотая линия separator — luxury стиль */
+        --glass-shadow:
+            0 1px 0 rgba(212, 175, 55, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+        --glass-hover-bg: rgba(212, 175, 55, 0.08);
         --glow-soft: rgba(212, 175, 55, 0.2);
+        /* Золотое свечение на названии канала/собеседника */
+        --title-glow:
+            0 0 4px #d4af37, 0 0 12px rgba(212, 175, 55, 0.7),
+            0 0 30px rgba(212, 175, 55, 0.4);
+
         --bubble-in: rgba(26, 54, 43, 0.8);
         --bubble-in-fg: #f0f2f0;
         --bubble-in-border: rgba(212, 175, 55, 0.5);
@@ -355,21 +545,33 @@
         --color-error: #f87171;
         --color-success: #34d399;
         --color-warning: #fbbf24;
+        --color-info: #38bdf8;
     }
 
-    /* LIGHT MODE: Mint Sage с бордерами */
+    /* LIGHT MODE: Mint Sage с золотыми бордерами */
     &[data-mode="light"] {
         --bg-app: rgba(240, 244, 248, 0.8);
+        --surface: #f5f9f6;
+        --surface-1: #eaf3ee;
+        --surface-2: #dfeee5;
+        --color-background: rgba(240, 244, 248, 0.8);
         --foreground: #164e38;
         --muted: #416254;
-        --accent-primary: #10b981; /* Изумрудный для активных */
+        --muted-foreground: #6a8c7a;
+        --accent-primary: #10b981; /* Изумрудный */
         --accent-secondary: #2c6e55;
         --accent-light: #4ade80; /* Светло-зелёный */
-        --glass-bg: rgba(0, 209, 193, 0.05); /* Активная карточка */
+        --border: #d1e3db;
+
+        --glass-bg: rgba(0, 209, 193, 0.05);
         --glass-border: #d1e3db;
         --glass-border-active: #10b981;
-        --glass-shadow: 0 8px 32px rgba(0, 40, 20, 0.12);
+        --glass-shadow: 0 1px 0 rgba(16, 185, 129, 0.15);
+        --glass-hover-bg: rgba(16, 185, 129, 0.07);
         --glow-soft: rgba(16, 185, 129, 0.15);
+        /* Лёгкое зелёное свечение заголовков */
+        --title-glow: 0 0 4px rgba(16, 185, 129, 0.4);
+
         --bubble-in: rgb(205, 232, 229);
         --bubble-in-fg: #164e38;
         --bubble-in-border: #cfa570; /* Золотистый */
@@ -385,8 +587,13 @@
         --color-error: #dc2626;
         --color-success: #059669;
         --color-warning: #d97706;
+        --color-info: #0284c7;
     }
 }
+
+/* =====================================================
+ * 5. ГЛОБАЛЬНЫЕ СТИЛИ
+ * ===================================================== */
 
 /* Global Reset & Body */
 body {
@@ -394,7 +601,7 @@ body {
     background: var(--bg-cosmos, var(--bg-app));
     background-attachment: fixed;
     color: var(--foreground);
-    font-family: "Inter", -apple-system, system-ui, sans-serif;
+    font-family: var(--font-family);
     -webkit-font-smoothing: antialiased;
     transition:
         background-color 0.5s ease,
@@ -409,7 +616,9 @@ body {
     --cursor-pointer: pointer;
 }
 
-/* Premium UI Components */
+/* =====================================================
+ * Utility Classes для кнопок и вариантов
+ * ===================================================== */
 .premium-button {
     position: relative;
     overflow: hidden;
@@ -453,7 +662,9 @@ body {
     color: var(--accent-primary);
 }
 
-/* Animations */
+/* =====================================================
+ * Animations
+ * ===================================================== */
 @keyframes pulse-glow {
     0% {
         box-shadow: 0 0 5px var(--accent-primary);
@@ -470,7 +681,9 @@ body {
     animation: pulse-glow 2s infinite;
 }
 
-/* Scrollbar Style */
+/* =====================================================
+ * Scrollbar Style
+ * ===================================================== */
 ::-webkit-scrollbar {
     width: 6px;
 }
@@ -485,9 +698,9 @@ body {
     background: var(--accent-primary);
 }
 
-/* =========================================== */
-/* Lightbox (yet-another-react-lightbox) Theme */
-/* =========================================== */
+/* =====================================================
+ * Lightbox (yet-another-react-lightbox) Theme
+ * ===================================================== */
 .yarl__root {
     --yarl__color_backdrop: var(--glass-bg);
     --yarl__color_button: var(--foreground);

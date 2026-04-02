@@ -49,8 +49,26 @@ export const ThemeSelector = () => {
                 </Flex>
             </Flex>
 
-            {/* Theme Grid */}
-            <Grid columns="2" gap="4">
+            {/* Theme Grid: Default | Neon | Emerald */}
+            <Grid columns="3" gap="3">
+                {/* Default Option */}
+                <Box
+                    className={clsx(
+                        styles.themeCard,
+                        theme === DESIGN_THEME.DEFAULT && styles.selected,
+                    )}
+                    onClick={() => setTheme(DESIGN_THEME.DEFAULT)}
+                >
+                    <Box className={styles.previewDefault} />
+                    <Flex justify="between" align="center" mt="2">
+                        <span className={styles.themeName}>
+                            {t("theme.defaultName", "Основная")}
+                        </span>
+                        {theme === DESIGN_THEME.DEFAULT && (
+                            <span className={styles.checkIcon}>✓</span>
+                        )}
+                    </Flex>
+                </Box>
                 {/* Neon Option */}
                 <Box
                     className={clsx(

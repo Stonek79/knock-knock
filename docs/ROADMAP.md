@@ -1,6 +1,6 @@
 # Roadmap проекта Knock-Knock
 
-Актуальный статус разработки на **Март 2026**.
+Актуальный статус разработки на **Апрель 2026**.
 
 ## 🟢 Выполнено (Done)
 
@@ -57,6 +57,18 @@
 
 ## 🟡 Актуальные задачи (In Progress / Next Steps)
 
+### 0. Дизайн-система — рефакторинг и тема `default`
+
+**Аудит выявил** 13 undeclared CSS-переменных, осиротевшие Radix-алиасы и отсутствие CSS-блока темы `default`.  
+Детальный план: `docs/DESIGN_SYSTEM_PLAN.md`
+
+- [ ] **0.1** Исправить `:root` — добавить 13 undeclared-переменных и нейтральные дефолты
+- [ ] **0.2** Добавить Radix-алиасы (`--gray-1..12`, `--accent-9..11`) в `:root`
+- [ ] **0.3** Создать CSS-блок `[data-theme="default"]` (WA-inspired, light + dark)
+- [ ] **0.4** Обновить `neon` / `emerald` — добавить новые переменные
+- [ ] **0.5** Theme Store + константы: сменить дефолт на `default` / `light`
+- [ ] **0.6** Обновить `DESIGN.md` и `SKILL.md` (добавить тему default, CSS v3 как Roadmap)
+
 ### 1. Групповые чаты
 - [ ] Создание групп (UI готов, требуется интеграция с PB).
 - [ ] E2E шифрование для групп (распределение Room Key через `room_keys`).
@@ -80,82 +92,48 @@
 
 ### 4. Регистрация и Онбординг
 
-**✅ Принятые решения:**
-- **Регистрация:** Гибридная (логин + пароль, email опционально) + Invite-Only (опционально)
-- **Почта:** Гибридная (Postfix для приёма + Brevo Relay для отправки)
-- **Защита:** Cloudflare Turnstile + Rate Limiting
+**✅ Принятые решения (PocketBase Era):**
+- **Регистрация:** Email + Password (4 поля: email, display_name, password, passwordConfirm)
+- **Верификация:** Через PocketBase + Brevo SMTP (без блокировки входа)
+- **Защита:** Honeypot + Time-check + Rate Limiter (без CAPTCHA)
+- **Сессия:** Persistent (JWT в localStorage, Silent Refresh каждые 30 мин)
+- Подробнее: **`docs/AUTH_STRATEGY.md`** и **`docs/IMPLEMENTATION_PLAN_v2.md` → Этап 1**
 
-- [ ] **Этап 0: Подготовка** (2-3 часа):
-  - [ ] Зарегистрировать домен
-  - [ ] Настроить DNS записи (MX, SPF, DKIM, DMARC)
-  - [ ] Создать аккаунт Brevo (бесплатно, 300 писем/день)
-  - [ ] Создать аккаунт Cloudflare Turnstile
-  - [ ] Обновить переменные окружения
-- [ ] **Этап 1: Настройка SMTP для Supabase** (2-3 часа):
-  - [ ] Обновить `supabase.env.template` (Brevo SMTP)
-  - [ ] Настроить шаблоны писем в Supabase Dashboard
-  - [ ] Включить подтверждение email
-  - [ ] Тестировать отправку
-- [ ] **Этап 2: Страница подтверждения email** (2-3 часа):
-  - [ ] Создать роут `/auth/verify`
-  - [ ] Обработка токенов из URL
-  - [ ] UI успешного/ошибочного состояния
-  - [ ] Обновить локализацию (RU/EN)
-- [ ] **Этап 3: Защита от ботов** (3-4 часа):
-  - [ ] Установить `react-turnstile`
-  - [ ] Добавить CAPTCHA в форму регистрации
-  - [ ] Создать Edge Function для валидации токена
-  - [ ] Настроить Rate Limiting в Nginx
-  - [ ] Добавить чекбокс принятия правил
-- [ ] **Этап 4: Ознакомление с правилами** (2-3 часа):
-  - [ ] Создать страницу `/terms`
-  - [ ] Добавить чекбокс в форму регистрации
-  - [ ] Обновить локализацию
-- [ ] **Этап 5: Форма обратной связи** (3-4 часа):
-  - [ ] Создать таблицу `feedback` в Supabase
-  - [ ] Создать Edge Function для отправки уведомлений
-  - [ ] Создать компонент `FeedbackForm`
-  - [ ] Интегрировать с настройками
-- [ ] **Этап 6: Invite-Only система** (опционально, 5-8 часов):
-  - [ ] Таблица `invite_codes` в Supabase
-  - [ ] Edge Function для генерации кодов
-  - [ ] Валидация кодов при регистрации
-  - [ ] Переключатель режима в админ-панели
-  - [ ] Управление инвайтами (генерация, отзыв, статистика)
+- [ ] **1.1** Исправить `viewRule: ""` → `"@request.auth.id != ''"` в схеме users (уязвимость!)
+- [ ] **1.2** Убрать `as unknown as AuthUser` в `auth.repository.ts:84` (Type Guard)
+- [ ] **1.3** Исправить `loginSchema` (убрать `optional()`), добавить `registerSchema`
+- [ ] **1.4** Создать `RegisterForm.tsx` + `useRegisterForm.ts` (display_name, Terms)
+- [ ] **1.5** Реализовать Silent Token Refresh в `useAuthStore`
+- [ ] **1.6** Создать маршрут `/auth/verify` + `VerificationBanner`
+- [ ] **1.7** Создать `/terms` + `OnboardingModal`
+- [ ] **2.x** Настроить SMTP (Brevo) + Mailpit для dev
 
 ---
 
 ## ⚪ Планируется (Backlog)
 
-### 1. Звонки (WebRTC) — 📋 Детальный план в `WEBRTC_CALLS_IMPLEMENTATION.md`
+### 1. Звонки (WebRTC) — 📋 `WEBRTC_CALLS_IMPLEMENTATION.md` + `IMPLEMENTATION_PLAN_v2.md → Этап 4`
 
-**✅ Принятые решения:**
+**✅ Принятые решения (PocketBase Era):**
 - **WebRTC решение:** LiveKit Server (Self-Hosted на домашнем сервере)
 - **Инфраструктура:** Docker Compose + Nginx (VPS) для проксирования
-- **Сигналинг:** Встроенный в LiveKit (WebSocket)
-- **Хранение истории:** Supabase (таблица `call_logs`)
+- **Генерация токенов:** PocketBase Hook `pb_hooks/calls.pb.js` (НЕ Supabase Edge Functions)
+- **Хранение истории:** коллекция `call_logs` в **PocketBase** (НЕ Supabase)
 
-- [ ] **Этап 0: Подготовка инфраструктуры** (2-3 часа):
-  - [ ] Развернуть LiveKit Server на домашнем сервере (`docker-compose.yml`)
-  - [ ] Настроить Nginx на VPS (проксирование WebSocket + TLS)
-  - [ ] Настроить фаервол (порты 7880, 7881, 443, 60000-60100/UDP)
-  - [ ] Обновить переменные окружения
-- [ ] **Этап 1: Интеграция LiveKit** (10-15 часов):
-  - [ ] Установить зависимости (`@livekit/components-react`, `livekit-client`)
-  - [ ] Создать Edge Function для генерации токенов
-  - [ ] Создать компонент `CallRoom` с LiveKit
-  - [ ] Интегрировать с существующим UI
-  - [ ] Добавить store для управления состоянием звонка
-- [ ] **Этап 2: История звонков** (3-5 часов):
-  - [ ] Создать таблицу `call_logs` в Supabase
-  - [ ] Компонент `CallHistory` для отображения истории
-  - [ ] Сервис логирования звонков
-- [ ] **Этап 3: Дополнительные функции** (Post-MVP):
-  - [ ] Screen Sharing (демонстрация экрана)
-  - [ ] Групповые звонки (3+ участников)
-  - [ ] Push-уведомления о звонках
-  - [ ] Recording звонков
-  - [ ] E2E шифрование медиапотока
+- [ ] **Этап 0: Инфраструктура** (2-3 часа):
+  - [ ] `infra/home/docker-compose.livekit.yml` — LiveKit Server
+  - [ ] `infra/vps/nginx.livekit.conf` — проксирование WebSocket + TLS
+  - [ ] Фаервол: порты 7880, 7881, 443, 60000-60100/UDP
+- [ ] **Этап 1: Backend** (3-4 часа):
+  - [ ] `infra/home/pb_hooks/calls.pb.js` — генерация LiveKit JWT токенов
+  - [ ] Коллекция `call_logs` в PocketBase
+- [ ] **Этап 2: Frontend** (6-8 часов):
+  - [ ] `npm install @livekit/components-react livekit-client`
+  - [ ] `features/calls/hooks/useCall.ts` + `useLiveKit.ts`
+  - [ ] `features/calls/components/CallRoom.tsx` + `CallIncoming.tsx`
+  - [ ] `stores/call/index.ts` — Zustand store
+- [ ] **Этап 3: Post-MVP**:
+  - [ ] Групповые звонки, Screen Sharing, Recording
 
 ### 2. PWA & Offline
 - [ ] Service Worker для кэширования
@@ -164,4 +142,11 @@
 ---
 
 ## Комментарий разработчика
-*Текущий статус (Март 2026):* Успешно завершена миграция с Supabase на PocketBase. Архитектура стабилизирована, внедрен слой репозиториев и серверные хуки. Главный приоритет — завершение системы Presence и покрытие тестами критических путей.
+*Текущий статус (Апрель 2026):* PocketBase-инфраструктура стабилизирована. Архитектура Repository → Service → Hook → UI выстроена. Фактический приоритет:
+1. Дизайн-система (рефакторинг index.css, тема `default`)
+2. Auth (регистрация с display_name, persistent session, email верификация)
+3. SMTP (Brevo), Push-уведомления, LiveKit Calls
+
+Подробный план реализации: `docs/IMPLEMENTATION_PLAN_v2.md`
+Дизайн-система: `docs/DESIGN_SYSTEM_PLAN.md`
+Стратегия авторизации: `docs/AUTH_STRATEGY.md`

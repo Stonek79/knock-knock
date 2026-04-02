@@ -20,24 +20,10 @@ export const THEME_ATTRIBUTES = {
     DATA_MODE: "data-mode",
 } as const;
 
-/**
- * Настройки Radix UI для каждой темы.
- */
-export const RADIX_THEME = {
-    [DESIGN_THEME.DEFAULT]: {
-        ACCENT: "blue",
-        GRAY: "slate",
-    },
-    [DESIGN_THEME.EMERALD]: {
-        ACCENT: "gold",
-        GRAY: "olive",
-    },
-    [DESIGN_THEME.NEON]: {
-        ACCENT: "teal",
-        GRAY: "slate",
-    },
-    DEFAULT_RADIUS: "medium",
-    DEFAULT_PANEL_BACKGROUND: "translucent",
+export const THEME_PREVIEW = {
+    [DESIGN_THEME.DEFAULT]: { label: "Default" },
+    [DESIGN_THEME.NEON]: { label: "Cosmic Neon" },
+    [DESIGN_THEME.EMERALD]: { label: "Emerald Luxury" },
 } as const;
 
 export const DESIGN_THEMES = [

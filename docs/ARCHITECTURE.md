@@ -23,12 +23,13 @@
 | **Routing** | TanStack Router (File-based routing) |
 | **State (Server)** | TanStack Query (v5) |
 | **State (Global)** | Zustand |
-| **UI Kit** | Radix UI Themes (Primitive-based) |
-| **Styling** | CSS Modules + Vanilla CSS (Variables) |
+| **UI Kit** | Radix UI Primitives (Headless) + наши обёртки |
+| **Styling** | CSS Modules + Vanilla CSS (Variables) + темы `default`/`neon`/`emerald` |
 | **Icons** | Lucide React |
-| **Backend** | PocketBase (Auth, SQLite, Realtime, JS Hooks) |
+| **Backend** | PocketBase v0.23+ (Auth, SQLite, Realtime SSE, JS Hooks) |
 | **Crypto** | Web Crypto API (SubtleCrypto: ECDH-ES, AES-GCM) |
-| **PocketBase** | клиент и хуки (infra/home/pb_hooks) |
+| **Линтинг** | Biome (lint + format) |
+| **Тесты** | Vitest (unit), Playwright (E2E), Storybook |
 | **Wrappers** | Capacitor (Mobile), Tauri (Desktop) — *Planned* |
 
 ---
@@ -67,10 +68,11 @@ app/src/
 │   └── ...
 │
 ├── lib/                # ⚫️ ЯДРО (Core)
-│   ├── constants/      # Константы (Runtime)
+│   ├── constants/      # Константы (Runtime: темы, роли, MIME-типы)
 │   ├── types/          # Типы (Compile-time)
-│   ├── crypto/         # Криптография
-│   └── supabase.ts     # Клиент БД
+│   ├── crypto/         # Криптография (Web Crypto API)
+│   ├── schemas/        # Zod-схемы валидации
+│   └── repositories/   # Слой доступа к PocketBase API
 │
 ├── hooks/              # Глобальные хуки (useMediaQuery, useTheme)
 ├── stores/             # Глобальные Zustand сторы (auth, theme)
@@ -166,31 +168,34 @@ routes/
 ### 1. Константы (`lib/constants/`)
 Только объекты `as const`. Файлы должны быть "лёгкими". **Избегайте "магических строк" (magic strings) и чисел напрямую в коде.** Обязательно выносите любые хардкод значения (имена бакетов, типы MIME, роли пользователей и т.д.) в константы.
 
+#### Пример константы темы (`lib/constants/theme.ts`)
+
 ```typescript
-// lib/constants/theme.ts
-export const RADIX_THEME = {
-    [DESIGN_THEME.EMERALD]: {
-        ACCENT: "gold",
-        GRAY: "olive",
-    },
-    [DESIGN_THEME.NEON]: {
-        ACCENT: "teal",
-        GRAY: "slate",
-    },
-    DEFAULT_RADIUS: "medium",
+// Утверждённые темы проекта
+export const DESIGN_THEME = {
+    DEFAULT:  'default',   // WA-inspired, по умолчанию
+    NEON:     'neon',      // Cyberpunk/Glassmorphism
+    EMERALD:  'emerald',   // VIP/Gold
 } as const;
+
+export type DesignTheme = typeof DESIGN_THEME[keyof typeof DESIGN_THEME];
 ```
 
 ### 2. Типы (`lib/types/`)
-Интерфейсы, алиасы и типы, выведенные из констант.
+Интерфейсы, алиасы и типы, выведенные из Zod-схем или констант.
 
-**Важно:** Для типизации ответов от БД используется файл `database.types.ts`, который генерируется автоматически с удалённого сервера через утилиту `supabase/cli` (скрипт `gen-types.sh`). *Запрещено* ручное приведение типов (`as unknown as Role`). Вместо этого для сложных Join-запросов используется нативный `QueryData` из библиотеки `@supabase/supabase-js`.
+**Важно:** Типы для сущностей БД выводятся из **Zod-схем** (`z.infer<typeof schema>`), расположенных в `src/lib/schemas/`. *Запрещено* ручное приведение типов (`as unknown as Role`). Вместо этого — Type Guards или `satisfies`.
 
 ```typescript
-// lib/types/chat.ts
-import { CHAT_TYPE } from '@/lib/constants';
+// lib/schemas/auth.ts
+import { z } from 'zod';
 
-export type ChatType = typeof CHAT_TYPE[keyof typeof CHAT_TYPE];
+export const loginSchema = z.object({
+    email:    z.string().email(),
+    password: z.string().min(8),
+});
+
+export type LoginPayload = z.infer<typeof loginSchema>;
 ```
 
 ### 3. Barrel Exports
@@ -204,10 +209,11 @@ import type { ChatType } from '@/lib/types';
 
 ## 🎨 UI/UX Стандарты
 
-1.  **Radix Base**: Используй кастомизированные компоненты Radix (`<Flex>`, `<Box>`, `<Text>`) для верстки. Не пиши `div` с классами для лейаута.
-2.  **CSS Modules**: Если нужно кастомизировать стиль, создай `Component.module.css`.
-3.  **Inline Styles ЗАПРЕЩЕНЫ**: `style={{ margin: 10 }}` — под запретом.
-4.  **Иконки**: Только `lucide-react`.
+1. **Radix Headless**: Используй наши компоненты-обёртки из `@/components/ui` (`<Button>`, `<Avatar>`, `<Dialog>`). Прямой импорт Radix-примитивов в `features/` и `pages/` запрещён.
+2. **CSS Modules**: Кастомизация только через `Component.module.css`.
+3. **Inline Styles ЗАПРЕЩЕНЫ**: `style={{ margin: 10 }}` — под запретом. Только `className`.
+4. **Иконки**: Только `lucide-react`.
+5. **Темы**: `default` (WA-inspired, по умолчанию) / `neon` / `emerald`. Подробнее: `docs/DESIGN.md` и `docs/DESIGN_SYSTEM_PLAN.md`.
 
 ---
 
@@ -239,10 +245,10 @@ import type { ChatType } from '@/lib/types';
 
 ## 🛡 Security Testing
 Регулярно (перед крупными релизами) проводить проверку на:
--   **XSS & Validation**: Попытка инъекции скриптов, XSS payload-текстов в сообщения и формы профиля.
--   **BOLA Bypass**: Попытка прочитать/изменить или удалить чужие сообщения посредством прямой подмены `message_id` или `room_id` в запросах к Supabase.
--   **Brute-Force**: Проверка блокировки после N попыток входа и лимитирования отправки спам-сообщений.
--   **Dependency Audit**: Анализ фронтенда и Serverless-функций `npm audit` на известные уязвимости (CVE).
+- **XSS & Validation**: Попытка инъекции скриптов, XSS payload-текстов в сообщения и формы профиля.
+- **BOLA Bypass**: Попытка прочитать/изменить или удалить чужие сообщения посредством прямой подмены `message_id` или `room_id` в запросах к PocketBase.
+- **Brute-Force**: Проверка блокировки после N попыток входа.
+- **Dependency Audit**: `npm audit` на известные уязвимости (CVE).
 
 ---
 

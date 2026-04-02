@@ -8,7 +8,7 @@
     font-size: var(--text-lg);
     font-weight: var(--font-weight-semibold);
     color: var(--foreground);
-    filter: drop-shadow(0 0 var(--space-1) var(--accent-secondary));
+    text-shadow: var(--title-glow);
     letter-spacing: 0.5px;
     margin: 0;
     padding: var(--space-1) 0;

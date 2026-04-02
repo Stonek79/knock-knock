@@ -4,8 +4,8 @@ import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/Text";
+import { useChatDialogs } from "@/hooks/chatDialogs";
 import { CHAT_TYPE } from "@/lib/constants";
-import { useChatDialogs } from "@/stores/ui/chatDialogs";
 
 export function TestTools() {
     const { t } = useTranslation();

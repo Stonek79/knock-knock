@@ -18,7 +18,7 @@
     font-weight: var(--font-weight-extrabold);
     letter-spacing: -0.5px;
     color: var(--accent-primary);
-    filter: drop-shadow(var(--shadow-glow) var(--accent-primary));
+    text-shadow: var(--title-glow);
     transition: all var(--transition-slow);
     cursor: default;
     user-select: none;

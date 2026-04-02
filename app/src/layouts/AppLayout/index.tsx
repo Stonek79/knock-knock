@@ -6,9 +6,9 @@ import { Flex } from "@/components/layout/Flex";
 import { Heading } from "@/components/ui/Heading";
 import { CreateChatDialog, CreateGroupDialog } from "@/features/chat";
 import { MobileHeader, Navigation } from "@/features/navigation";
+import { useChatDialogs } from "@/hooks/chatDialogs";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { APP_NAME, CHAT_TYPE, ROUTES } from "@/lib/constants";
-import { useChatDialogs } from "@/stores/ui/chatDialogs";
 import styles from "./applayout.module.css";
 import { SidebarContent, shouldShowSidebar } from "./components/SidebarContent";
 

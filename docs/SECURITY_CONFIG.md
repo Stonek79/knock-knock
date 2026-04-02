@@ -1,6 +1,7 @@
 # Безопасность конфигурации (Security Guide)
 
 > ⚠️ **Критически важно:** Прочитайте этот документ перед настройкой окружения!
+> **Версия:** 2.0 (PocketBase Era) | Апрель 2026
 
 ---
 
@@ -26,7 +27,7 @@
 | `.env.production` | Содержит production ключи |
 | `.env.local` | Локальные секреты разработки |
 | `*.wireguard_keys` | Приватные ключи VPN |
-| `infra/home/supabase.env` | Конфигурация Supabase с паролями |
+| `infra/home/pb.env` | Конфигурация PocketBase с паролями |
 | `infra/scripts/.env` | Скрипты с локальными ключами |
 
 ---
@@ -90,15 +91,15 @@ PocketBase рекомендуется запускать внутри довер
 
 ## 🚨 Что делать при утечке секретов
 
-### 1. Если утекли ключи Supabase
+### 1. Если скомпрометированы ключи PocketBase
 
 ```bash
-# 1. Сгенерируйте новые ключи в Supabase Dashboard
-# 2. Обновите .env файлы
-# 3. Перезапустите сервисы
-docker compose restart
+# 1. Зайти в PocketBase Admin UI → Settings → Application
+# 2. Обновить PB_ENCRYPTION_KEY и пересоздать Superuser
+# 3. Перезапустить контейнер
+docker compose -f docker-compose.pb.yml restart pocketbase
 
-# 4. Задокументируйте инцидент
+# 4. Задокументировать инцидент
 ```
 
 ### 2. Если утекли ключи WireGuard
@@ -111,14 +112,12 @@ wg genkey | tee privatekey | wg pubkey > publickey
 # 3. Переподключите VPN
 ```
 
-### 3. Если утекли пароли БД
+### 3. Если утекли SMTP-ключи (Brevo)
 
 ```bash
-# 1. Смените пароль postgres
-ALTER USER postgres WITH PASSWORD 'new-password';
-
-# 2. Обновите .env файлы
-# 3. Перезапустите Supabase
+# 1. Зайти в панель Brevo → API Keys → Revoke
+# 2. Сгенерировать новый ключ
+# 3. Обновить .env файлы и перезапустить контейнер
 ```
 
 ---
@@ -138,7 +137,6 @@ ALTER USER postgres WITH PASSWORD 'new-password';
 
 ## 📚 Дополнительные ресурсы
 
-- [Supabase Security Best Practices](https://supabase.com/docs/guides/database/security)
 - [WireGuard Security](https://www.wireguard.com/security/)
 - [12 Factor App: Config](https://12factor.net/config)
 - [OWASP API Security Top 10](https://owasp.org/www-project-api-security/)
@@ -162,8 +160,8 @@ ALTER USER postgres WITH PASSWORD 'new-password';
 
 ### Рекомендации по использованию
 
-- **GitHub Secrets**: При использовании скриптов в GitHub Actions, передавайте `SUPABASE_SERVICE_ROLE_KEY` через секреты репозитория, а не в файлах.
-- **RBAC (Role Based Access Control)**: Скрипты используют `service_role` ключ, который обходит все политики RLS. Храните этот ключ как "Root-пароль" вашей системы.
+- **GitHub Secrets**: При использовании скриптов в GitHub Actions передавайте `PB_ENCRYPTION_KEY` и `ADMIN_PASSWORD` через секреты репозитория, а не через файлы.
+- **Admin Access**: PocketBase Superuser имеет полный доступ к данным. Ключи хранить как «Root-пароль» системы — только в защищённом менеджере паролей.
 - **Аудит**: Любое использование административных скриптов на продакшене должно сопровождаться проверкой текущего контекста (правильный ли `.env` загружен).
 
 ---

@@ -71,6 +71,7 @@
     align-items: center;
     padding: 0 var(--space-5);
     border-bottom: var(--border-width-base) solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
     backdrop-filter: var(--glass-blur);
     flex-shrink: 0;
 }
@@ -95,7 +96,7 @@
     min-height: var(--header-height);
     position: sticky;
     top: 0;
-    background: var(--bg-cosmos);
+    background: var(--glass-bg);
 }
 
 /* Контент мобильный (занимает всё пространство между header и nav) */
