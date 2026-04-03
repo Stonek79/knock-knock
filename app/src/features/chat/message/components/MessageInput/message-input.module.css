@@ -38,9 +38,7 @@
     font-family: var(--font-family);
     scrollbar-width: thin;
     margin: 0;
-    padding: var(--space-2) var(--space-3);
     box-sizing: border-box;
-    /* transition: var(--transition-base); */
 }
 
 .textArea:focus-within {

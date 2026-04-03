@@ -18,7 +18,7 @@ interface ChatRoomGroupInfoProps {
  */
 export function ChatRoomGroupInfo({ roomId }: ChatRoomGroupInfoProps) {
     const navigate = useNavigate();
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
 
     const { data: roomInfo } = useChatRoomData(roomId);
     const room = roomInfo?.room;

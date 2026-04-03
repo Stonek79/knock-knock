@@ -55,7 +55,8 @@ router.update({
  * Управляет темами через data-theme и data-mode
  */
 function Root() {
-    const { theme, mode } = useThemeStore();
+    const theme = useThemeStore((state) => state.theme);
+    const mode = useThemeStore((state) => state.mode);
 
     return (
         <div data-theme={theme} data-mode={mode} className="knock-root">

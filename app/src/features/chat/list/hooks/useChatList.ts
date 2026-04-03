@@ -12,7 +12,7 @@ import { mapRoomToChatItem } from "../utils/roomUiMapper";
  */
 export function useChatList() {
     const { t } = useTranslation();
-    const { pbUser } = useAuthStore();
+    const pbUser = useAuthStore((state) => state.pbUser);
 
     return useQuery({
         queryKey: QUERY_KEYS.rooms(pbUser?.id),

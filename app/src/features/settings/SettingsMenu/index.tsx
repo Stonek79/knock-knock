@@ -70,7 +70,8 @@ export function SettingsMenu() {
 }
 
 function AdminSettingsItem() {
-    const { profile } = useAuthStore();
+    const profile = useAuthStore((state) => state.profile);
+
     const { t } = useTranslation();
 
     if (profile?.role !== USER_ROLE.ADMIN) {
@@ -79,7 +80,7 @@ function AdminSettingsItem() {
 
     return (
         <Link to={ROUTES.ADMIN} className={styles.mobileItemLink}>
-            <Card className={clsx(styles.mobileItem, styles.adminCard)}>
+            <Card className={styles.mobileItem}>
                 <Flex justify="between" align="center">
                     <Flex align="center" gap="3">
                         <Box

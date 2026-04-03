@@ -26,5 +26,20 @@ export const auth = {
         configError:
             "Ошибка конфигурации сервера (ANON_KEY). Обратитесь в поддержку.",
         unknown: "Произошла ошибка при входе. Попробуйте обновить страницу.",
+        loginAfterRegisterFailed:
+            "Не удалось войти после регистрации. Попробуйте войти вручную.",
+        registerFailed: "Ошибка регистрации. Попробуйте позже.",
     },
-};
+    emailInvalid: "Неверный формат email",
+    passwordTooShort: "Минимум 8 символов",
+    passwordLatinOnly: "Только латинские буквы и цифры",
+    passwordNeedLetter: "Нужна буква (A-Z)",
+    passwordNeedNumber: "Нужна цифра (0-9)",
+    displayNameTooShort: "Минимум 2 символа",
+    displayNameTooLong: "Максимум 50 символов",
+    mustAgreeToTerms: "Примите условия",
+    passwordsNotMatch: "Пароли не совпадают",
+    required: "Обязательное поле",
+    usernameMin: "Минимум {{min}} символов",
+    iAgreeToTerms: "Я принимаю условия использования",
+} as const;

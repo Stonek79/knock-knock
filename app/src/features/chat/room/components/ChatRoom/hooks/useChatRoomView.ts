@@ -19,7 +19,7 @@ import { useAuthStore } from "@/stores/auth";
  * @param roomId - ID комнаты чата
  */
 export function useChatRoomView(roomId: string) {
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
     const { pathname } = useLocation();
 
     // --- Данные комнаты (для определения типа и участников) ---

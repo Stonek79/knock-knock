@@ -11,10 +11,21 @@ import { mapPbErrorCode } from "../utils/errors";
 import { appError, err, fromPromise } from "../utils/result";
 
 /**
+ * Type Guard для проверки записи пользователя.
+ */
+function isUserRecord(record: unknown): record is AuthUser {
+    return (
+        typeof record === "object" &&
+        record !== null &&
+        "id" in record &&
+        "email" in record
+    );
+}
+
+/**
  * FUNCTIONAL AUTH REPOSITORY
  * Управляет авторизацией и состоянием текущего сеанса.
  */
-
 export const authRepository = {
     /**
      * Регистрация нового пользователя
@@ -77,11 +88,12 @@ export const authRepository = {
      */
     getCurrentUser: (): AuthUser | null => {
         const record = pb.authStore.record;
-        if (!record) {
+
+        if (!record || !isUserRecord(record)) {
             return null;
         }
-        // Приводим к типу AuthUser, так как мы синхронизировали схему
-        return record as unknown as AuthUser;
+
+        return record;
     },
 
     /**
@@ -123,6 +135,49 @@ export const authRepository = {
                 return appError(
                     ERROR_CODES.NETWORK_ERROR,
                     "Ошибка при обновлении профиля",
+                    e,
+                );
+            },
+        );
+    },
+
+    /**
+     * Запрос письма верификации email
+     */
+    requestVerification: async (
+        email: string,
+    ): Promise<Result<void, AuthRepoError>> => {
+        return fromPromise(
+            // Добавляем .then(() => {}), чтобы сбросить результат boolean в void
+            pb
+                .collection(DB_TABLES.USERS)
+                .requestVerification(email)
+                .then(() => {}),
+            (e) => {
+                return appError(
+                    mapPbErrorCode(e),
+                    "Ошибка отправки подтверждения",
+                    e,
+                );
+            },
+        );
+    },
+    /**
+     * Подтверждение email по токену
+     */
+    confirmVerification: async (
+        token: string,
+    ): Promise<Result<void, AuthRepoError>> => {
+        return fromPromise(
+            // Аналогично здесь
+            pb
+                .collection(DB_TABLES.USERS)
+                .confirmVerification(token)
+                .then(() => {}),
+            (e) => {
+                return appError(
+                    mapPbErrorCode(e),
+                    "Ошибка подтверждения email",
                     e,
                 );
             },

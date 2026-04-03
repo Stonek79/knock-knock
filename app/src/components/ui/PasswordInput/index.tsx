@@ -39,6 +39,10 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                 ref={ref}
                 type={showPassword ? INPUT_TYPE.TEXT : INPUT_TYPE.PASSWORD}
                 className={className}
+                lang="en"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
                 {...props}
             >
                 <TextField.Slot>

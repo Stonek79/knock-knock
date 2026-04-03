@@ -14,7 +14,7 @@ export function useUnreadTracking(
     messages: DecryptedMessageWithProfile[],
     lastReadAt?: string | null,
 ) {
-    const { pbUser } = useAuthStore();
+    const pbUser = useAuthStore((state) => state.pbUser);
     const [isManuallyRead, setIsManuallyRead] = useState(false);
     const [prevRoomId, setPrevRoomId] = useState(roomId);
 

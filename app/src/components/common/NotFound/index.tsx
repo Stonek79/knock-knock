@@ -7,7 +7,7 @@ import { useAuthStore } from "@/stores/auth";
  * Вынесен из роутера для чистоты кода.
  */
 export function NotFoundComponent() {
-    const { pbUser } = useAuthStore.getState();
+    const pbUser = useAuthStore((s) => s.pbUser);
 
     if (!pbUser) {
         return <Navigate to={ROUTES.LOGIN} replace />;

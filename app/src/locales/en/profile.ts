@@ -14,4 +14,6 @@ export const profile = {
     notifications: "Notifications",
     language: "Language",
     theme: "Theme",
+    confirmPassword: "Confirm Password",
+    namePlaceholder: "What's your name?",
 } as const;

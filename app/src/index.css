@@ -143,10 +143,13 @@
     --size-error-icon-sm: calc(32px * var(--scale-factor));
     --size-icon-box-lg: calc(80px * var(--scale-factor));
 
-    --size-preview-height: calc(64px * var(--scale-factor));
-    --size-preview-width: calc(240px * var(--scale-factor));
-    --size-preview-max-width: calc(240px * var(--scale-factor));
-    --size-preview-min-width: calc(240px * var(--scale-factor));
+    /* Внешний вид (Landscape - Широкие) */
+    --size-preview-height-wide: calc(90px * var(--scale-factor));
+    --size-preview-width-wide: calc(240px * var(--scale-factor));
+
+    /* Внешний вид (Portrait - Высокие) */
+    --size-preview-height-tall: calc(110px * var(--scale-factor));
+    --size-preview-width-portrait: calc(80px * var(--scale-factor));
 
     /* =========================================== */
     /* Layout Sizes                                */
@@ -154,6 +157,7 @@
     --header-height: calc(72px * var(--scale-factor));
     --footer-height: calc(72px * var(--scale-factor));
     --panel-width: 360px; /* Статичная ширина сайдбара */
+    --max-w-settings: 1200px;
 
     /* Container Max Widths (статичные) */
     --max-h-picker: 250px;
@@ -609,7 +613,6 @@ body {
     overflow: hidden;
 }
 
-/* Radix Theme Overrides */
 .rt-Theme {
     --cursor-default: default;
     --cursor-text: text;

@@ -12,7 +12,7 @@ import { useAuthStore } from "@/stores/auth";
  * Хук для загрузки истории сообщений и управления контекстом дешифровки.
  */
 export function useMessages(roomId: string, roomKey?: CryptoKey) {
-    const { pbUser } = useAuthStore();
+    const pbUser = useAuthStore((state) => state.pbUser);
 
     // Сообщаем сервису об активной комнате для дешифровки входящих событий
     useEffect(() => {

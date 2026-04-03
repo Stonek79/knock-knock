@@ -17,9 +17,9 @@ export function DMInitializer() {
     const { userId } = useParams({ from: ROUTES.AUTH_DM });
     const { isPrivate } = useSearch({ from: ROUTES.AUTH_DM });
     const navigate = useNavigate();
-    const { profile: user } = useAuthStore();
     const { t } = useTranslation();
     const createDM = useCreateDM();
+    const user = useAuthStore((state) => state.profile);
 
     const [error, setError] = useState<string | null>(null);
     const initializing = useRef(false);

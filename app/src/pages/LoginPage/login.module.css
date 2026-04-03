@@ -1,42 +1,73 @@
-.loginPage {
+.page {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-grow: 1;
-    padding: var(--space-4);
+    overflow: hidden;
+    background: var(--bg-cosmos, var(--bg-app));
 }
 
-.loginCard {
+.container {
+    position: relative;
+    z-index: var(--z-panel);
     width: 100%;
     max-width: var(--max-w-auth);
+    padding: var(--space-4);
+    container-type: inline-size;
 }
 
-.formContainer {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.submitButton {
+.glassCard {
     width: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--border-width-base) solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-10) var(--space-6);
+    box-shadow: var(--shadow-premium);
 }
 
-.centerButton {
-    margin: 0 auto;
-}
-
-/* Стили для SuccessView */
 .title {
-    font-size: var(--text-xl);
+    font-size: var(--text-2xl);
     font-weight: var(--font-weight-bold);
     color: var(--foreground);
     text-align: center;
-    margin: 0;
+    letter-spacing: var(--letter-spacing-tight);
 }
 
-.subtitle {
-    font-size: var(--text-base);
-    color: var(--muted);
+.tabsList {
+    background: var(--surface-1);
+    padding: var(--space-1);
+    border-radius: var(--radius-lg);
+    border: none;
+    margin-bottom: var(--space-6);
+}
+
+.tabsList [data-state="active"] {
+    background: var(--surface);
+    box-shadow: 0 0 10px var(--glow-soft);
+}
+
+.footer {
+    margin-top: var(--space-10);
+    font-size: var(--text-xxs);
+    color: var(--muted-foreground);
     text-align: center;
-    margin: 0;
+}
+
+@container (max-width: 440px) {
+    .glassCard {
+        padding: var(--space-6) var(--space-4);
+        border-radius: var(--radius-lg);
+        background: transparent;
+        border: none;
+        backdrop-filter: none;
+        box-shadow: none;
+    }
+
+    .title {
+        font-size: var(--text-xl);
+    }
 }

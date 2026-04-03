@@ -10,7 +10,7 @@ import { useAuthStore } from "@/stores/auth";
  * Синхронизация данных в реальном времени осуществляется через ChatRealtimeService на уровне AuthLayout.
  */
 export function useUnreadCounts() {
-    const { pbUser } = useAuthStore();
+    const pbUser = useAuthStore((state) => state.pbUser);
 
     const { data: counts = [] } = useQuery({
         queryKey: QUERY_KEYS.unreadCounts(pbUser?.id),

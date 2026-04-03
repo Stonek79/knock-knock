@@ -14,7 +14,7 @@ interface UseRoomHeaderInfoProps {
  */
 export function useRoomHeaderInfo({ room, peerUser }: UseRoomHeaderInfoProps) {
     const { t } = useTranslation();
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
 
     const isDM = room?.type === ROOM_TYPE.DIRECT;
     const isGroup = room?.type === ROOM_TYPE.GROUP;

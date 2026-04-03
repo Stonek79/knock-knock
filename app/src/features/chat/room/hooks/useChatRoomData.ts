@@ -16,7 +16,7 @@ export function useChatRoomData(propRoomId?: string) {
         string | undefined
     >;
     const roomId = propRoomId ?? params?.roomId;
-    const { pbUser } = useAuthStore();
+    const pbUser = useAuthStore((state) => state.pbUser);
 
     return useQuery({
         queryKey: QUERY_KEYS.room(roomId ?? ""),

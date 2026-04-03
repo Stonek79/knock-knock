@@ -1,6 +1,7 @@
 .mobileContainer {
     height: 100%;
     overflow-y: auto;
+    padding-top: var(--space-3);
 }
 
 .content {

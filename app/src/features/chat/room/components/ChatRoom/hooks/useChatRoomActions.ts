@@ -21,8 +21,8 @@ import { useChatRoomStore } from "../store";
  */
 export function useChatRoomActions(roomId: string) {
     const { t } = useTranslation();
-    const { profile: user } = useAuthStore();
     const toast = useToast();
+    const user = useAuthStore((state) => state.profile);
 
     // --- Данные комнаты ---
     const { data: roomInfo } = useChatRoomData(roomId);

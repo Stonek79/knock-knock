@@ -18,7 +18,7 @@ interface ChatRoomMessagesProps {
  * Принимает только `roomId` вместо ранее передаваемых 8 props.
  */
 export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
 
     // --- Данные комнаты (нужен roomKey для guard) ---
     const { data: roomInfo } = useChatRoomData(roomId);

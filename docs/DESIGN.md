@@ -1,6 +1,6 @@
 # Дизайн-система Knock-Knock
 
-> Версия: 2.1 | Апрель 2026
+> Базовый стандарт оформления
 
 ---
 
@@ -17,8 +17,14 @@ components/ui/            ← наши обёртки: Text, Heading, Avatar, Bu
       ↓
 @radix-ui                 ← используется ТОЛЬКО внутри components/ui/
       ↓
-index.css                 ← единственный источник всех токенов
+index.css                 ← единственный источник всех токенов (@layer tokens)
 ```
+
+### Принцип управления стилями
+
+Для управления стилями и предотвращения конфликтов со стилями библиотек (Radix, PocketBase UI) мы **избегаем использования `@layer`** (из-за проблем специфичности при смешивании со сторонним кодом) и опираемся на стандартную изоляцию:
+- **Глобальные токены**: `index.css` содержит только `:root`, `body` и переменные тем (`[data-theme="..."]`).
+- **Компоненты**: Изолированы через CSS Modules (`.module.css`). Специализация контролируется классами, а не порядком слоев.
 
 ### Почему так?
 
@@ -287,7 +293,12 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 ---
 
-## 📱 Breakpoints (Mobile First)
+## 📱 Адаптивность и Breakpoints (Mobile First)
+
+В Knock-Knock используется гибридный подход: **Global Breakpoints** для макета и **Container Queries** для компонентов.
+
+### Global Media Queries (Layout)
+Используются для глобальных изменений (скрытие Sidebar, изменение навигации).
 
 ```css
 /* Mobile (default) */
@@ -296,9 +307,30 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 /* Tablet */
 @media (min-width: 769px) { ... }
 
-/* Desktop */
-@media (min-width: 1024px) { ... }
+/* Desktop Max-Width Constraint */
+@media (min-width: 1200px) {
+    .settingsContainer {
+        max-width: var(--max-w-settings, 1200px);
+        margin: 0 auto;
+    }
+}
 ```
+
+### Container Queries (Components) ⭐ 
+**Предпочтительный метод** для всех новых UI-компонентов. Компонент адаптируется под размер своего родителя.
+
+```css
+.cardContainer {
+    container-type: inline-size;
+}
+
+@container (max-width: 450px) {
+    .cardContent {
+        flex-direction: column;
+    }
+}
+```
+
 
 ```tsx
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
@@ -339,25 +371,8 @@ const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
 ## 🚀 Roadmap: CSS Architecture v3
 
-> **Статус:** ☾ Техдолг — не реализуется сейчас. Подробнее: `DESIGN_SYSTEM_PLAN.md`
+> **Статус:** 🟢 Внедрение (Текущий стандарт). Подробнее: `DESIGN_SYSTEM_PLAN.md`
 
-Текущая архитектура v2.x: компонент использует семантические токены темы напрямую (например `--muted`, `--accent-primary`).
-
-Следующий уровень (v3) вводит **мета-токены** — семантический слой, не зависящий от конкретной темы:
-
-```css
-/* Компоненты пишут: */
-color: var(--color-text-secondary);
-background: var(--color-surface-elevated);
-border-color: var(--color-separator);
-
-/* Каждая тема разрешает мета-токены в конкретные значения: */
-[data-theme="default"][data-mode="light"] {
-  --color-text-secondary:  #667781;
-  --color-surface-elevated: #f0f2f5;
-  --color-separator:        #e9edef;
-}
-```
-
-**Преимущества v3:** полная изоляция компонентов от тем, единое именование, легко добавлять новые темы.  
-**Когда переходить:** после стабилизации Auth + SMTP, до начала разработки Calls.
+1. **Container Queries**: Основной инструмент адаптивности внутри компонентов для независимости от экрана (например, смена ориентации контента).
+2. **Component Encapsulation**: Использование локальных CSS-переменных внутри модулей.
+4. **Layout Constraints**: Ограничение ширины контента до 1200px для десктопов.

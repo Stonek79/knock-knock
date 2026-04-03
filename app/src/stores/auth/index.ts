@@ -94,16 +94,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     loading: false,
                 });
             } else {
-                if (result.error.kind === ERROR_CODES.NETWORK_ERROR) {
+                const error = result.error;
+                // 1. Сетевая ошибка — сохраняем сессию
+                if (error.kind === ERROR_CODES.NETWORK_ERROR) {
                     logger.warn("Обновление профиля отложено: сеть недоступна");
                     set({ loading: false });
                     return;
                 }
-
-                logger.error("Сессия недействительна:", result.error);
-                ChatRealtimeService.destroy();
-                AuthService.logout();
-                set({ pbUser: null, profile: null, loading: false });
+                // 2. Явный 401 — сессия протухла, выходим
+                if (error.kind === ERROR_CODES.UNAUTHORIZED) {
+                    logger.error("Сессия недействительна (401):", error);
+                    get().signOut();
+                    set({ loading: false });
+                    return;
+                }
+                // 3. Остальные ошибки (500 и т.д.) — логируем, но не разлогиниваем
+                logger.error(
+                    "Ошибка при обновлении профиля (серверная/прочая):",
+                    error,
+                );
+                set({ loading: false });
             }
         } catch (error) {
             logger.error("Непредвиденная ошибка при получении профиля:", error);
@@ -114,8 +124,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     signOut: async () => {
-        ChatRealtimeService.destroy();
-        AuthService.logout();
         set({ pbUser: null, profile: null });
+        ChatRealtimeService.destroy();
     },
 }));

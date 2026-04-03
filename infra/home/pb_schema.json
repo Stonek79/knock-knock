@@ -382,6 +382,18 @@
 				]
 			},
 			{
+				"id": "text_username_field",
+				"name": "username",
+				"type": "text",
+				"system": false,
+				"required": false,
+				"options": {
+					"min": 1,
+					"max": 50,
+					"pattern": ""
+				}
+			},
+			{
 				"id": "user_status_field",
 				"name": "status",
 				"type": "select",
@@ -448,8 +460,11 @@
 				"onUpdate": true
 			}
 		],
+		"indexes": [
+			"CREATE UNIQUE INDEX `idx_username` ON `users` (`username`) WHERE `username` != ''"
+		],
 		"listRule": "id = @request.auth.id",
-		"viewRule": "",
+		"viewRule": "@request.auth.id != ''",
 		"createRule": "",
 		"updateRule": "id = @request.auth.id",
 		"deleteRule": "id = @request.auth.id"

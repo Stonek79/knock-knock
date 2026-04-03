@@ -15,7 +15,7 @@ interface UseChatScrollProps {
  * - Использует useLayoutEffect для предотвращения мерцания (layout shift).
  */
 export function useChatScroll({ messages }: UseChatScrollProps) {
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
     const viewportRef = useRef<HTMLDivElement>(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [isAtBottom, setIsAtBottom] = useState(true);

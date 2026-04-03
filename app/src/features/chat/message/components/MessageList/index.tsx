@@ -51,7 +51,8 @@ export function MessageList({
     roomType,
 }: MessageListProps) {
     const { t } = useTranslation();
-    const { pbUser, profile: user } = useAuthStore();
+    const pbUser = useAuthStore((state) => state.pbUser);
+    const user = useAuthStore((state) => state.profile);
 
     const {
         viewportRef,

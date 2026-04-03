@@ -9,7 +9,7 @@ import { useAuthStore } from "@/stores/auth";
  * Heartbeat и подписки управляются глобально через ChatRealtimeService.
  */
 export function usePresence() {
-    const { pbUser } = useAuthStore();
+    const pbUser = useAuthStore((state) => state.pbUser);
 
     const { data: onlineUsers = {} } = useQuery({
         queryKey: QUERY_KEYS.presence(),

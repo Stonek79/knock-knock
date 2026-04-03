@@ -19,7 +19,7 @@ interface ChatRoomHeaderProps {
  * Принимает только `roomId` вместо ранее передаваемых 14 props.
  */
 export function ChatRoomHeader({ roomId }: ChatRoomHeaderProps) {
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
 
     // --- Данные комнаты и собеседника ---
     const { data: roomInfo } = useChatRoomData(roomId);

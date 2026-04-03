@@ -10,7 +10,7 @@ import { useProfileKeys } from "./hooks/useProfileKeys";
  * Управление резервным копированием ключей шифрования.
  */
 export function SecuritySettings() {
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
     const { areKeysPublished } = useProfileKeys(user?.id);
     const backupProps = useKeysBackup();
 

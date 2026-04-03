@@ -47,7 +47,7 @@ export function ContactPicker({
 
     const { data: contacts = [], isLoading, isError } = useContacts();
 
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
 
     const filteredContacts = useMemo(() => {
         let list = contacts;

@@ -1,8 +1,4 @@
-import type { z } from "zod";
-import type { AUTH_MODES, AUTH_VIEW_MODES } from "@/lib/constants";
-import type { loginSchema } from "@/lib/schemas/auth";
+import type { AUTH_VIEW_MODES } from "@/lib/constants";
 
-export type AuthMode = (typeof AUTH_MODES)[keyof typeof AUTH_MODES];
 export type AuthViewMode =
     (typeof AUTH_VIEW_MODES)[keyof typeof AUTH_VIEW_MODES];
-export type LoginSchema = z.infer<typeof loginSchema>;

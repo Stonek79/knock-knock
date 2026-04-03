@@ -57,7 +57,7 @@ export function SettingsSidebar() {
  * Ссылка на Admin Panel — отображается только для роли ADMIN.
  */
 function AdminSidebarItem() {
-    const { profile } = useAuthStore();
+    const profile = useAuthStore((state) => state.profile);
     const { t } = useTranslation();
     const location = useLocation();
 

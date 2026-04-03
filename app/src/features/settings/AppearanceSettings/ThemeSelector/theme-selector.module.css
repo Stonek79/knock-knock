@@ -1,92 +1,24 @@
-/**
- * CSS-модуль для компонента ThemeSelector.
- * Использует CSS-переменные из index.css для интеграции с дизайн-системой.
- */
-
 .container {
+    container-type: inline-size;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    padding: var(--space-6);
+    border: var(--border-width-base) solid var(--glass-border);
+    padding: var(--space-4);
     border-radius: var(--kk-radius-lg);
 }
 
 .section {
     padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--glass-border);
-}
-
-.modeBtn {
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--glass-border);
-    background: transparent;
-    color: var(--foreground);
-    cursor: pointer;
-    transition: all var(--transition-base);
-}
-
-.modeBtn:hover {
-    background: var(--glass-hover-bg);
-}
-
-.active {
-    background: var(--accent-primary);
-    color: var(--foreground);
-    border-color: transparent;
-}
-
-.themeCard {
-    cursor: pointer;
-    padding: var(--space-2);
-    border-radius: var(--kk-radius-md);
-    border: 2px solid transparent;
-    transition: all var(--transition-base);
-    max-width: var(--size-preview-max-width);
-}
-
-.themeCard:hover {
-    background: var(--glass-hover-bg);
-}
-
-.selected {
-    border-color: var(--accent-primary);
-    background: var(--glass-bg);
-    box-shadow: 0 0 20px var(--glow-soft);
-}
-
-.previewDefault {
-    height: var(--size-preview-height);
-    max-width: var(--size-preview-width);
-    border-radius: var(--kk-radius-sm);
-    background: var(--preview-default-gradient);
-    box-shadow: 0 var(--space-1) var(--space-3) var(--preview-default-glow);
-}
-
-.previewNeon {
-    height: var(--size-preview-height);
-    max-width: var(--size-preview-width);
-    border-radius: var(--kk-radius-sm);
-    background: var(--preview-neon-gradient);
-    box-shadow: 0 var(--space-1) var(--space-3) var(--preview-neon-glow);
-}
-
-.previewEmerald {
-    height: var(--size-preview-height);
-    max-width: var(--size-preview-width);
-    border-radius: var(--kk-radius-sm);
-    background: var(--preview-emerald-gradient);
-    box-shadow: 0 var(--space-1) var(--space-3) var(--preview-emerald-glow);
-}
-
-.checkIcon {
-    color: var(--accent-primary);
-    font-weight: bold;
+    border-bottom: var(--border-width-base) solid var(--glass-border);
+    margin-bottom: var(--space-4);
 }
 
 .sectionTitle {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     font-weight: var(--font-weight-bold);
     color: var(--foreground);
+    margin-bottom: var(--space-4);
+    display: block;
 }
 
 .modeLabel {
@@ -94,16 +26,120 @@
     color: var(--muted);
 }
 
+.modeBtn {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--kk-radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    background: var(--glass-bg);
+    border: var(--border-width-base) solid var(--glass-border);
+    color: var(--foreground);
+    transition: all var(--transition-base);
+}
+
+.modeBtn:hover {
+    background: var(--glass-hover-bg);
+}
+
+.modeBtn.active {
+    background: var(--accent-primary);
+    color: var(--color-black);
+    border-color: transparent;
+}
+
+.themeGrid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    width: 100%;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.themeGrid::-webkit-scrollbar {
+    display: none;
+}
+
+.themeCard {
+    position: relative;
+    flex: 0 0 var(--size-preview-width-wide);
+    cursor: pointer;
+    padding: var(--space-1);
+    border-radius: var(--kk-radius-lg);
+    border: var(--border-width-focus) solid transparent;
+    transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.selected {
+    border-color: var(--accent-primary);
+    background: var(--glass-hover-bg);
+}
+
+.previewBase {
+    height: var(--size-preview-height-wide);
+    width: 100%;
+    border-radius: var(--kk-radius-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.previewDefault {
+    background: var(--preview-default-gradient);
+}
+.previewNeon {
+    background: var(--preview-neon-gradient);
+}
+.previewEmerald {
+    background: var(--preview-emerald-gradient);
+}
+
+.checkIcon {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    background: var(--accent-primary);
+    color: var(--color-white);
+    width: var(--size-badge);
+    height: var(--size-badge);
+    border-radius: var(--kk-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-xxs);
+    box-shadow: 0 var(--space-05) var(--space-1) rgba(0, 0, 0, 0.4);
+    border: var(--border-width-base) solid rgba(255, 255, 255, 0.2);
+}
+
 .themeName {
     font-size: var(--text-sm);
     font-weight: var(--font-weight-medium);
     color: var(--foreground);
-    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    padding: 0 var(--space-2);
 }
 
-@media (max-width: 450px) {
-    .themeName,
-    .checkIcon {
-        display: none;
+@container (max-width: 600px) {
+    .themeCard {
+        flex: 0 0 var(--size-preview-width-portrait);
+        width: var(--size-preview-width-portrait);
+    }
+
+    .previewBase {
+        height: var(--size-preview-height-tall);
+    }
+
+    .themeName {
+        font-size: var(--text-xxs);
+        padding: 0 0 var(--space-1) 0;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
     }
 }

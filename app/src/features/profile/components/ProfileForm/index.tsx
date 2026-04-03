@@ -21,8 +21,8 @@ import styles from "./profileform.module.css";
  */
 export function ProfileForm() {
     const { t } = useTranslation();
-    const { pbUser } = useAuthStore();
     const queryClient = useQueryClient();
+    const pbUser = useAuthStore((state) => state.pbUser);
 
     const [statusMessage, setStatusMessage] = useState<{
         type: ComponentIntent;

@@ -9,7 +9,8 @@ import { useAuthStore } from "@/stores/auth";
  * Проверяет авторизацию и рендерит AppLayout (с сайдбаром), если пользователь авторизован.
  */
 export function AuthLayout() {
-    const { pbUser, loading } = useAuthStore();
+    const pbUser = useAuthStore((state) => state.pbUser);
+    const loading = useAuthStore((state) => state.loading);
 
     if (loading) {
         return <MainLayoutSkeleton />;

@@ -14,8 +14,9 @@ import styles from "./accountsettings.module.css";
  */
 export function AccountSettings() {
     const { t } = useTranslation();
-    const { profile: user, signOut } = useAuthStore();
     const navigate = useNavigate();
+    const user = useAuthStore((state) => state.profile);
+    const signOut = useAuthStore((state) => state.signOut);
 
     const handleSignOut = async () => {
         await signOut();

@@ -1,0 +1,33 @@
+.form {
+    width: 100%;
+    container-type: inline-size;
+}
+
+.submitButton {
+    width: 100%;
+    height: var(--size-btn-h-4);
+    margin-top: var(--space-4);
+}
+
+.checkboxLabel {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    cursor: var(--cursor-pointer);
+    user-select: none;
+}
+
+.honeypot {
+    opacity: 0;
+    position: absolute;
+    height: 0;
+    width: 0;
+    z-index: var(--z-base);
+    pointer-events: none;
+}
+
+@container (max-width: 400px) {
+    .submitButton {
+        height: var(--size-touch);
+        font-size: var(--text-base);
+    }
+}

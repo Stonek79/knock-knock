@@ -32,5 +32,20 @@ export const auth = {
         rateLimitError:
             "Too many attempts. Please try again in {{seconds}} sec.",
         unknown: "An unexpected error occurred.",
+        loginAfterRegisterFailed:
+            "Failed to log in after registration. Please try logging in manually.",
+        registerFailed: "Registration failed. Please try again later.",
     },
-};
+    emailInvalid: "Invalid email format",
+    passwordTooShort: "Min 8 characters",
+    passwordLatinOnly: "Latin letters and numbers only",
+    passwordNeedLetter: "At least one letter (A-Z)",
+    passwordNeedNumber: "At least one number (0-9)",
+    displayNameTooShort: "Min 2 characters",
+    displayNameTooLong: "Max 50 characters",
+    mustAgreeToTerms: "Agree to terms",
+    passwordsNotMatch: "Passwords don't match",
+    required: "Required field",
+    usernameMin: "Min {{min}} characters",
+    iAgreeToTerms: "I agree to the terms of use",
+} as const;

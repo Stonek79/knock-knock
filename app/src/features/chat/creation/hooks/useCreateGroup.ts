@@ -20,7 +20,7 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const toast = useToast();
-    const { profile: user } = useAuthStore();
+    const user = useAuthStore((state) => state.profile);
 
     const [groupName, setGroupName] = useState("");
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);

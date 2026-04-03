@@ -31,7 +31,8 @@ import styles from "./pin.module.css";
  */
 export function PinScreen() {
     const { t } = useTranslation();
-    const { unlock, status } = useGhostStore();
+    const unlock = useGhostStore((state) => state.unlock);
+    const status = useGhostStore((state) => state.status);
 
     /**
      * Реф на скрытый input — при тапе на экран фокусируем его,

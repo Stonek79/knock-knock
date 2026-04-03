@@ -15,9 +15,10 @@ import styles from "./admin-layout.module.css";
  * Проверяет роль пользователя через userRepository и QUERY_KEYS.
  */
 export function AdminLayout() {
-    const { pbUser, loading: authLoading } = useAuthStore();
     const { t } = useTranslation();
     const router = useRouter();
+    const pbUser = useAuthStore((state) => state.pbUser);
+    const authLoading = useAuthStore((state) => state.loading);
 
     // Загрузка профиля для проверки роли через репозиторий
     const { data: profile, isLoading: profileLoading } = useQuery({

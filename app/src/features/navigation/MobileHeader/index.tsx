@@ -42,10 +42,10 @@ export function MobileHeader({
     showMenu = true,
 }: MobileHeaderProps) {
     const { t } = useTranslation();
-    const { signOut } = useAuthStore();
     const location = useLocation();
     const router = useRouter();
     const { setOpenDialog } = useChatDialogs();
+    const signOut = useAuthStore((state) => state.signOut);
 
     const isSubRoute = location.pathname.split("/").filter(Boolean).length > 1;
 

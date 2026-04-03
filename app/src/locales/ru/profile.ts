@@ -21,4 +21,6 @@ export const profile = {
     keysRestored: "Ключи восстановлены",
     restoreError: "Ошибка восстановления",
     enterBackupPassword: "Введите пароль",
+    confirmPassword: "Повторите пароль",
+    namePlaceholder: "Как вас зовут?",
 } as const;

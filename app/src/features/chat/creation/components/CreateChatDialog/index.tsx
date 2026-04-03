@@ -34,8 +34,8 @@ export function CreateChatDialog({
 }: CreateChatDialogProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { profile: user } = useAuthStore();
     const createDM = useCreateDM();
+    const user = useAuthStore((state) => state.profile);
 
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);

@@ -12,7 +12,7 @@ import { useAuthStore } from "@/stores/auth";
  */
 export function useFavoritesRoom() {
     const { t } = useTranslation();
-    const { profile } = useAuthStore();
+    const profile = useAuthStore((state) => state.profile);
 
     return useQuery({
         queryKey: QUERY_KEYS.favoritesRoom(profile?.id),

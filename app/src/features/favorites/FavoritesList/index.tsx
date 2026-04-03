@@ -18,11 +18,11 @@ import styles from "./favoriteslist.module.css";
  */
 export function FavoritesList() {
     const { t } = useTranslation();
-    const { profile: user } = useAuthStore();
     const navigate = useNavigate();
     const toast = useToast();
     const [loading, setLoading] = useState(true);
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
+    const user = useAuthStore((state) => state.profile);
 
     const openSavedMessages = useCallback(async () => {
         if (!user || isMobile) {
