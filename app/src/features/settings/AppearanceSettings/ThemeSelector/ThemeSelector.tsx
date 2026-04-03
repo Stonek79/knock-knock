@@ -26,13 +26,13 @@ export const ThemeSelector = () => {
     return (
         <Flex direction="column" gap="4" className={styles.container}>
             <span className={styles.sectionTitle}>
-                {t("settings.appearance", "Внешний вид")}
+                {t("settings.appearance.appearence", "Внешний вид")}
             </span>
 
             {/* Конфигурация режима (Светлая/Темная) */}
             <Flex gap="3" align="center" className={styles.section}>
                 <span className={styles.modeLabel}>
-                    {t("settings.mode", "Режим")}:
+                    {t("settings.appearance.mode", "Режим")}:
                 </span>
                 <Flex gap="2">
                     <Button

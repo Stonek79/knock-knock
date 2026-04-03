@@ -1,14 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import clsx from "clsx";
-import { ChevronRight, ShieldAlert } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/Text";
 import { SETTINGS_ITEMS } from "@/config/settings";
-import { ROUTES, USER_ROLE } from "@/lib/constants";
-import { useAuthStore } from "@/stores/auth";
 import styles from "./settingsmenu.module.css";
 
 /**
@@ -22,11 +19,6 @@ export function SettingsMenu() {
             <Flex direction="column" gap="2" px="4">
                 {SETTINGS_ITEMS.map((item) => {
                     const Icon = item.icon;
-                    // Формируем имя класса, например iconBlue, iconViolet
-                    const colorClass =
-                        styles[
-                            `icon${item.color.charAt(0).toUpperCase() + item.color.slice(1)}`
-                        ];
 
                     return (
                         <Link
@@ -37,13 +29,10 @@ export function SettingsMenu() {
                             <Card className={styles.mobileItem}>
                                 <Flex justify="between" align="center">
                                     <Flex align="center" gap="3">
-                                        <Box
-                                            className={clsx(
-                                                styles.iconBox,
-                                                colorClass,
-                                            )}
-                                        >
-                                            <Icon className={styles.icon} />
+                                        <Box className={styles.iconBox}>
+                                            <Icon
+                                                style={{ color: item.color }}
+                                            />
                                         </Box>
                                         <Text size="lg" weight="medium">
                                             {t(
@@ -61,43 +50,7 @@ export function SettingsMenu() {
                         </Link>
                     );
                 })}
-
-                {/* Admin Link */}
-                <AdminSettingsItem />
             </Flex>
         </Box>
-    );
-}
-
-function AdminSettingsItem() {
-    const profile = useAuthStore((state) => state.profile);
-
-    const { t } = useTranslation();
-
-    if (profile?.role !== USER_ROLE.ADMIN) {
-        return null;
-    }
-
-    return (
-        <Link to={ROUTES.ADMIN} className={styles.mobileItemLink}>
-            <Card className={styles.mobileItem}>
-                <Flex justify="between" align="center">
-                    <Flex align="center" gap="3">
-                        <Box
-                            className={clsx(
-                                styles.iconBox,
-                                styles.adminIconBox,
-                            )}
-                        >
-                            <ShieldAlert className={styles.icon} />
-                        </Box>
-                        <Text size="lg" weight="medium">
-                            {t("nav.admin", "Admin Panel")}
-                        </Text>
-                    </Flex>
-                    <ChevronRight color="gray" className={styles.icon} />
-                </Flex>
-            </Card>
-        </Link>
     );
 }

@@ -1,12 +1,11 @@
-import { Flex } from "@/components/layout/Flex";
+import { Box } from "@/components/layout/Box";
+import styles from "./appearance.module.css";
 import { ThemeSelector } from "./ThemeSelector/ThemeSelector";
 
 export function AppearanceSettings() {
     return (
-        <Flex direction="column" gap="4">
-            <Flex direction="column" gap="4" px="4" pb="4" pt="4">
-                <ThemeSelector />
-            </Flex>
-        </Flex>
+        <Box className={styles.container}>
+            <ThemeSelector />
+        </Box>
     );
 }

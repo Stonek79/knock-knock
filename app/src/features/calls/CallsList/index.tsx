@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
+import { SidebarHeader } from "../../navigation/components/SidebarHeader";
 import styles from "./callslist.module.css";
 
 /**
@@ -10,9 +11,7 @@ export function CallsList() {
 
     return (
         <Box>
-            <header className={styles.header}>
-                <h2 className={styles.title}>{t("calls.title", "Звонки")}</h2>
-            </header>
+            <SidebarHeader title={t("calls.title", "Звонки")} />
             <Box p="4">
                 <span className={styles.emptyText}>
                     {t("calls.empty", "История звонков пуста")}

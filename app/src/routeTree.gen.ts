@@ -26,6 +26,7 @@ import { Route as AuthChatIndexRouteImport } from './routes/_auth/chat/index'
 import { Route as AuthAdminIndexRouteImport } from './routes/_auth/admin/index'
 import { Route as AuthSettingsStorageRouteImport } from './routes/_auth/settings/storage'
 import { Route as AuthSettingsSecurityRouteImport } from './routes/_auth/settings/security'
+import { Route as AuthSettingsProfileRouteImport } from './routes/_auth/settings/profile'
 import { Route as AuthSettingsPrivacyRouteImport } from './routes/_auth/settings/privacy'
 import { Route as AuthSettingsNotificationsRouteImport } from './routes/_auth/settings/notifications'
 import { Route as AuthSettingsAppearanceRouteImport } from './routes/_auth/settings/appearance'
@@ -119,6 +120,11 @@ const AuthSettingsSecurityRoute = AuthSettingsSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => AuthSettingsRoute,
 } as any)
+const AuthSettingsProfileRoute = AuthSettingsProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthSettingsRoute,
+} as any)
 const AuthSettingsPrivacyRoute = AuthSettingsPrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/settings/privacy': typeof AuthSettingsPrivacyRoute
+  '/settings/profile': typeof AuthSettingsProfileRoute
   '/settings/security': typeof AuthSettingsSecurityRoute
   '/settings/storage': typeof AuthSettingsStorageRoute
   '/admin/': typeof AuthAdminIndexRoute
@@ -202,6 +209,7 @@ export interface FileRoutesByTo {
   '/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/settings/privacy': typeof AuthSettingsPrivacyRoute
+  '/settings/profile': typeof AuthSettingsProfileRoute
   '/settings/security': typeof AuthSettingsSecurityRoute
   '/settings/storage': typeof AuthSettingsStorageRoute
   '/admin': typeof AuthAdminIndexRoute
@@ -230,6 +238,7 @@ export interface FileRoutesById {
   '/_auth/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/_auth/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/_auth/settings/privacy': typeof AuthSettingsPrivacyRoute
+  '/_auth/settings/profile': typeof AuthSettingsProfileRoute
   '/_auth/settings/security': typeof AuthSettingsSecurityRoute
   '/_auth/settings/storage': typeof AuthSettingsStorageRoute
   '/_auth/admin/': typeof AuthAdminIndexRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/notifications'
     | '/settings/privacy'
+    | '/settings/profile'
     | '/settings/security'
     | '/settings/storage'
     | '/admin/'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/notifications'
     | '/settings/privacy'
+    | '/settings/profile'
     | '/settings/security'
     | '/settings/storage'
     | '/admin'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/_auth/settings/appearance'
     | '/_auth/settings/notifications'
     | '/_auth/settings/privacy'
+    | '/_auth/settings/profile'
     | '/_auth/settings/security'
     | '/_auth/settings/storage'
     | '/_auth/admin/'
@@ -442,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSettingsSecurityRouteImport
       parentRoute: typeof AuthSettingsRoute
     }
+    '/_auth/settings/profile': {
+      id: '/_auth/settings/profile'
+      path: '/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AuthSettingsProfileRouteImport
+      parentRoute: typeof AuthSettingsRoute
+    }
     '/_auth/settings/privacy': {
       id: '/_auth/settings/privacy'
       path: '/privacy'
@@ -558,6 +577,7 @@ interface AuthSettingsRouteChildren {
   AuthSettingsAppearanceRoute: typeof AuthSettingsAppearanceRoute
   AuthSettingsNotificationsRoute: typeof AuthSettingsNotificationsRoute
   AuthSettingsPrivacyRoute: typeof AuthSettingsPrivacyRoute
+  AuthSettingsProfileRoute: typeof AuthSettingsProfileRoute
   AuthSettingsSecurityRoute: typeof AuthSettingsSecurityRoute
   AuthSettingsStorageRoute: typeof AuthSettingsStorageRoute
   AuthSettingsIndexRoute: typeof AuthSettingsIndexRoute
@@ -568,6 +588,7 @@ const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
   AuthSettingsAppearanceRoute: AuthSettingsAppearanceRoute,
   AuthSettingsNotificationsRoute: AuthSettingsNotificationsRoute,
   AuthSettingsPrivacyRoute: AuthSettingsPrivacyRoute,
+  AuthSettingsProfileRoute: AuthSettingsProfileRoute,
   AuthSettingsSecurityRoute: AuthSettingsSecurityRoute,
   AuthSettingsStorageRoute: AuthSettingsStorageRoute,
   AuthSettingsIndexRoute: AuthSettingsIndexRoute,

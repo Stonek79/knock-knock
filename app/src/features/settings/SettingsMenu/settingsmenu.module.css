@@ -28,30 +28,6 @@
 }
 
 /* ============================================= */
-/* Icon Colors */
-/* ============================================= */
-
-.iconBlue {
-    color: var(--accent-primary);
-}
-
-.iconViolet {
-    color: var(--accent-secondary);
-}
-
-.iconGreen {
-    color: var(--color-success);
-}
-
-.iconOrange {
-    color: var(--color-warning);
-}
-
-.iconRed {
-    color: var(--color-error);
-}
-
-/* ============================================= */
 /* Admin Specific Styles */
 /* ============================================= */
 

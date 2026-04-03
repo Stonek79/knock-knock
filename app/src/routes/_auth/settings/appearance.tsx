@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppearanceSettings } from "@/features/settings/AppearanceSettings";
+import { AppearanceSettingsPage } from "@/pages/AppearanceSettingsPage";
 
 export const Route = createFileRoute("/_auth/settings/appearance")({
-    component: AppearanceSettings,
+    component: AppearanceSettingsPage,
 });

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
-import { Heading } from "@/components/ui/Heading";
+import { IconButton } from "@/components/ui/IconButton";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Spinner } from "@/components/ui/Spinner";
 import { Text } from "@/components/ui/Text";
@@ -14,6 +14,8 @@ import { useContacts } from "@/features/contacts/hooks/useContacts";
 import { usePresence } from "@/features/presence";
 import { USER_CONTACTS_MODES, USER_WEB_STATUS } from "@/lib/constants";
 import type { Profile } from "@/lib/types/profile";
+import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { SidebarHeader } from "../../navigation/components/SidebarHeader";
 import styles from "./contactlist.module.css";
 
 interface ContactListProps {
@@ -167,25 +169,31 @@ export function ContactList({
     return (
         <Flex direction="column" className={styles.container}>
             {/* Заголовок и поиск */}
-            <Box className={styles.header} p="3">
-                <Flex justify="between" align="center" mb="3">
-                    <Heading size="lg">{title}</Heading>
-                    {mode === USER_CONTACTS_MODES.LIST && (
-                        <Box
-                            className={styles.addContactButton}
-                            onClick={() => console.log("Add contact")}
-                        >
-                            <UserPlus />
-                        </Box>
-                    )}
-                </Flex>
+            <SidebarHeader title={title}>
+                {mode === USER_CONTACTS_MODES.LIST && (
+                    <IconButton
+                        variant="ghost"
+                        size="md"
+                        tooltip={t("contacts.add", "Добавить контакт")}
+                        onClick={() => console.log("Add contact")}
+                    >
+                        <UserPlus size={ICON_SIZE.sm} />
+                    </IconButton>
+                )}
+            </SidebarHeader>
+
+            <Box p="3" className={styles.searchWrapper}>
                 <TextField
                     placeholder={t("contacts.search", "Поиск по имени...")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 >
                     <TextField.Slot>
-                        {isSearching ? <Spinner size="sm" /> : <Search />}
+                        {isSearching ? (
+                            <Spinner size="sm" />
+                        ) : (
+                            <Search size={ICON_SIZE.sm} />
+                        )}
                     </TextField.Slot>
                 </TextField>
             </Box>

@@ -4,6 +4,7 @@
     width: 100%;
     overflow: hidden;
     background: var(--bg-cosmos, var(--bg-app));
+    flex-direction: column;
 }
 
 /* ========================== */

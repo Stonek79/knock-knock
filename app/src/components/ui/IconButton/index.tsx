@@ -1,5 +1,7 @@
+import { Slot } from "@radix-ui/react-slot";
 import clsx from "clsx";
-import { type ButtonHTMLAttributes, forwardRef } from "react";
+import { type ButtonHTMLAttributes, forwardRef, type JSX } from "react";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type {
     ComponentIntent,
     ComponentShape,
@@ -21,10 +23,17 @@ export interface IconButtonProps
     intent?: ComponentIntent;
     /** Форма кнопки */
     shape?: ComponentShape;
+    /** Использовать дочерний элемент как корневой (например, Link от роутера) */
+    asChild?: boolean;
+    /** Текст всплывающей подсказки (опционально) */
+    tooltip?: string;
 }
 
 /**
- * Кастомный компонент IconButton — нативная кнопка со стилями дизайн-системы.
+ * Универсальный IconButton.
+ * Поддерживает:
+ * 1. asChild — для использования с Link или другими компонентами.
+ * 2. tooltip — для встроенной подсказки при наведении.
  */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     (
@@ -33,22 +42,44 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
             variant = "ghost",
             intent = "neutral",
             shape = "round",
+            asChild = false,
+            tooltip,
             className,
             type = "button",
+            children,
             ...props
         },
         ref,
-    ) => {
-        const classes = clsx(
-            styles.iconButton,
-            styles[size],
-            styles[variant],
-            styles[intent],
-            styles[shape],
-            className,
+    ): JSX.Element => {
+        // Если asChild=true, используем Slot, иначе нативный button
+        const Comp = asChild ? Slot : "button";
+
+        // Базовый элемент кнопки
+        const buttonElement = (
+            <Comp
+                ref={ref}
+                // Для полиморфного компонента (Slot) атрибут type может быть вреден
+                type={asChild ? undefined : type}
+                className={clsx(
+                    styles.iconButton,
+                    styles[size],
+                    styles[variant],
+                    styles[intent],
+                    styles[shape],
+                    className,
+                )}
+                {...props}
+            >
+                {children}
+            </Comp>
         );
 
-        return <button ref={ref} type={type} className={classes} {...props} />;
+        // Если тултип передан — оборачиваем, если нет — возвращаем как есть
+        if (tooltip) {
+            return <Tooltip content={tooltip}>{buttonElement}</Tooltip>;
+        }
+
+        return buttonElement;
     },
 );
 

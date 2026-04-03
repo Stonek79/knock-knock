@@ -42,4 +42,6 @@ export const auth = {
     required: "Обязательное поле",
     usernameMin: "Минимум {{min}} символов",
     iAgreeToTerms: "Я принимаю условия использования",
+    verificationRequired:
+        "Пожалуйста, подтвердите ваш email для полного доступа.",
 } as const;

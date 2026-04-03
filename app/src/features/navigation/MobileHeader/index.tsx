@@ -1,4 +1,4 @@
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
 import {
     Camera,
     ChevronLeft,
@@ -7,14 +7,16 @@ import {
     MessageSquarePlus,
     MoreVertical,
     Search,
+    UserStar,
     Users,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
+import { IconButton } from "@/components/ui/IconButton";
 import { useChatDialogs } from "@/hooks/chatDialogs";
-import { APP_NAME, CHAT_TYPE } from "@/lib/constants";
+import { APP_NAME, CHAT_TYPE, ROUTES } from "@/lib/constants";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./mobileheader.module.css";
@@ -46,6 +48,7 @@ export function MobileHeader({
     const router = useRouter();
     const { setOpenDialog } = useChatDialogs();
     const signOut = useAuthStore((state) => state.signOut);
+    const isAdmin = useAuthStore((state) => state.isAdmin);
 
     const isSubRoute = location.pathname.split("/").filter(Boolean).length > 1;
 
@@ -64,23 +67,35 @@ export function MobileHeader({
                 <h1 className={styles.title}>{title}</h1>
             </Flex>
 
-            <Flex gap="1" align="center">
+            <Flex gap="2" align="center">
+                {isAdmin && (
+                    <IconButton
+                        asChild
+                        variant="ghost"
+                        size="md"
+                        tooltip={t("admin.toAdmin")}
+                    >
+                        <Link to={ROUTES.ADMIN}>
+                            <UserStar size={ICON_SIZE.md} />
+                        </Link>
+                    </IconButton>
+                )}
                 {showCamera && !isSubRoute && (
-                    <Box className={styles.iconButton}>
+                    <IconButton>
                         <Camera size={ICON_SIZE.md} />
-                    </Box>
+                    </IconButton>
                 )}
                 {showSearch && (
-                    <Box className={styles.iconButton}>
+                    <IconButton>
                         <Search size={ICON_SIZE.md} />
-                    </Box>
+                    </IconButton>
                 )}
                 {showMenu && (
                     <DropdownMenu.Root>
                         <DropdownMenu.Trigger asChild>
-                            <Box className={styles.iconButton}>
+                            <IconButton>
                                 <MoreVertical size={ICON_SIZE.md} />
-                            </Box>
+                            </IconButton>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
                             <DropdownMenu.Item

@@ -13,7 +13,6 @@
     color: var(--bubble-out-fg);
 }
 
-/* Нативный h2 вместо Radix Heading */
 .title {
     font-size: var(--text-xl);
     font-weight: var(--font-weight-bold);
@@ -21,7 +20,6 @@
     margin: 0;
 }
 
-/* Нативный p вместо Radix Text */
 .description {
     max-width: var(--max-w-empty-state);
     color: var(--muted);
@@ -33,7 +31,7 @@
 .actionButton {
     margin-top: var(--space-6);
     padding: var(--space-3) var(--space-6);
-    border-radius: var(--kk-radius-full);
+    border-radius: var(--kk-radius-md);
     background: var(--accent-9);
     color: var(--bubble-out-fg);
     cursor: pointer;

@@ -14,6 +14,7 @@ interface AuthState {
     /** Профиль в формате приложения */
     profile: Profile | null;
     loading: boolean;
+    isAdmin: boolean;
     initialize: () => Promise<void>;
     signOut: () => Promise<void>;
     fetchProfile: () => Promise<void>;
@@ -29,6 +30,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     pbUser: null,
     profile: null,
     loading: true,
+    isAdmin: false,
 
     initialize: async () => {
         try {
@@ -92,6 +94,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     pbUser: user,
                     profile,
                     loading: false,
+                    isAdmin: profile.role === "admin",
                 });
             } else {
                 const error = result.error;

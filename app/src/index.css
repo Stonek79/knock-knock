@@ -164,6 +164,7 @@
     --max-w-auth: 450px;
     --max-w-dialog: 450px;
     --max-w-content: 600px;
+    --max-w-content-wide: 800px;
     --max-w-profile: 480px;
     --max-w-toast: 380px;
     --max-w-empty-state: 300px;
@@ -187,6 +188,7 @@
     --opacity-muted: 0.7;
     --border-width-base: 1px;
     --border-width-focus: 2px;
+    --border-width-focus-bold: 3px;
 
     /* =========================================== */
     /* Z-Index Scale                               */

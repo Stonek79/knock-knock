@@ -1,6 +1,7 @@
 .container {
-    height: 100%;
+    max-width: var(--max-w-content-wide);
     width: 100%;
+    margin: 0 auto;
 }
 
 .content {
@@ -11,12 +12,6 @@
 
 .icon {
     color: var(--accent-11);
-}
-
-.infoRow {
-    padding: var(--space-3);
-    background: var(--accent-2);
-    border-radius: var(--radius-3);
 }
 
 .clearButton {
@@ -30,4 +25,15 @@
 
 .dialogActions {
     margin-top: var(--space-md);
+}
+
+.card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
+}
+
+.infoRow {
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--glass-border);
 }

@@ -13,6 +13,7 @@ export const ROUTES = {
     SETTINGS_NOTIFICATIONS: "/settings/notifications",
     SETTINGS_SECURITY: "/settings/security",
     SETTINGS_STORAGE: "/settings/storage",
+    SETTINGS_PROFILE: "/settings/profile",
     FAVORITES: "/favorites",
     CALLS: "/calls",
     ADMIN: "/admin",

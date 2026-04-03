@@ -35,9 +35,9 @@ export function StorageSettings() {
     };
 
     return (
-        <Flex direction="column" className={styles.container}>
-            <Box className={styles.content}>
-                <Card>
+        <Box className={styles.container}>
+            <Flex direction="column" className={styles.content}>
+                <Card className={styles.card}>
                     <Flex direction="column" gap="4">
                         <Flex align="center" gap="3">
                             <Database
@@ -132,7 +132,7 @@ export function StorageSettings() {
                         </AlertDialog.Root>
                     </Flex>
                 </Card>
-            </Box>
-        </Flex>
+            </Flex>{" "}
+        </Box>
     );
 }

@@ -1,0 +1,20 @@
+.container {
+    max-width: var(--max-w-content-wide);
+    width: 100%;
+    margin: 0 auto;
+}
+
+.card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
+}
+
+@container (max-width: 768px) {
+    .card {
+        padding: var(--spacing-3);
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+}

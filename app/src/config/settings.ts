@@ -1,19 +1,44 @@
-import { Bell, Database, Lock, Moon, Shield, User } from "lucide-react";
+import {
+    Bell,
+    Database,
+    Lock,
+    Palette,
+    Shield,
+    ShieldCheck,
+    User,
+} from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 
-export const SETTINGS_ITEMS = [
+export interface SettingsItemConfig {
+    key: string;
+    path: string;
+    icon: React.ElementType;
+    labelKey: string;
+    defaultLabel: string;
+    color: string;
+}
+
+export const SETTINGS_ITEMS: SettingsItemConfig[] = [
+    {
+        key: "profile",
+        path: ROUTES.SETTINGS_PROFILE,
+        icon: User,
+        labelKey: "settings.profile.profile",
+        defaultLabel: "Профиль",
+        color: "grey",
+    },
     {
         key: "account",
-        icon: User,
-        labelKey: "settings.account",
+        icon: ShieldCheck,
+        labelKey: "settings.account.account",
         defaultLabel: "Аккаунт",
         path: ROUTES.SETTINGS_ACCOUNT,
         color: "blue",
     },
     {
         key: "appearance",
-        icon: Moon,
-        labelKey: "settings.appearance",
+        icon: Palette,
+        labelKey: "settings.appearance.appearance",
         defaultLabel: "Внешний вид",
         path: ROUTES.SETTINGS_APPEARANCE,
         color: "violet",
@@ -21,7 +46,7 @@ export const SETTINGS_ITEMS = [
     {
         key: "privacy",
         icon: Lock,
-        labelKey: "settings.privacy",
+        labelKey: "settings.privacy.privacy",
         defaultLabel: "Конфиденциальность",
         path: ROUTES.SETTINGS_PRIVACY,
         color: "green",
@@ -29,7 +54,7 @@ export const SETTINGS_ITEMS = [
     {
         key: "notifications",
         icon: Bell,
-        labelKey: "settings.notifications",
+        labelKey: "settings.notifications.notifications",
         defaultLabel: "Уведомления",
         path: ROUTES.SETTINGS_NOTIFICATIONS,
         color: "orange",
@@ -37,7 +62,7 @@ export const SETTINGS_ITEMS = [
     {
         key: "security",
         icon: Shield,
-        labelKey: "settings.security",
+        labelKey: "settings.security.security",
         defaultLabel: "Безопасность",
         path: ROUTES.SETTINGS_SECURITY,
         color: "red",
@@ -45,9 +70,9 @@ export const SETTINGS_ITEMS = [
     {
         key: "storage",
         icon: Database,
-        labelKey: "settings.storage",
+        labelKey: "settings.storage.storage",
         defaultLabel: "Хранилище и данные",
         path: ROUTES.SETTINGS_STORAGE,
-        color: "indigo",
+        color: "aqua",
     },
 ];

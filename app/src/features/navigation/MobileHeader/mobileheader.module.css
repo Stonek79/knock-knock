@@ -16,18 +16,6 @@
     font-weight: 600;
 }
 
-.iconButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--size-touch);
-    height: var(--size-touch);
-    border-radius: var(--kk-radius-full);
-    cursor: pointer;
-    color: var(--foreground);
-    transition: background-color var(--transition-base);
-}
-
 .iconButton:hover {
     background: var(--muted);
 }

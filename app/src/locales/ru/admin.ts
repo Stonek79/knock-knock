@@ -34,4 +34,6 @@ export const admin = {
     createTestGroup: "Тестовая группа",
     createPublicChat: "Публичный чат",
     createPrivateChat: "Приватный чат",
+
+    toAdmin: "В админку",
 };

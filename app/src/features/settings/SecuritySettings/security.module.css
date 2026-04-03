@@ -23,9 +23,9 @@
 }
 
 .container {
-    gap: var(--space-4);
-    display: flex;
-    flex-direction: column;
+    max-width: var(--max-w-content-wide);
+    width: 100%;
+    margin: 0 auto;
 }
 
 /* Стили для BackupControls */
@@ -46,4 +46,10 @@
 .statusDesc {
     font-size: var(--text-xs);
     color: var(--muted);
+}
+
+.card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
 }

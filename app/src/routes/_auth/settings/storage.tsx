@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { StorageSettings } from "@/features/settings/StorageSettings";
+import { StorageSettingsPage } from "@/pages/StorageSettingsPage";
 
 export const Route = createFileRoute("/_auth/settings/storage")({
-    component: StorageSettings,
+    component: StorageSettingsPage,
 });

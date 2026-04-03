@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DMInitializer, validateDMSearch } from "@/features/chat/room";
+import { DirectChatPage, validateDMSearch } from "@/pages/DirectChatPage";
 
 export const Route = createFileRoute("/_auth/dm/$userId")({
-    component: DMInitializer,
+    component: DirectChatPage,
     validateSearch: validateDMSearch,
 });

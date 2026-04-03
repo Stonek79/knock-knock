@@ -4,9 +4,9 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Search } from "@/components/ui/Search";
-import { useFavoritesChatList } from "@/features/chat/list/hooks/useFavoritesChatList";
 import { ROUTES } from "@/lib/constants";
-import { ChatListHeader } from "../ChatListHeader";
+import { SidebarHeader } from "../../../../navigation/components/SidebarHeader";
+import { useFavoritesChatList } from "../../hooks/useFavoritesChatList";
 import { ChatListItem } from "../ChatListItem";
 import { ChatListLoadingState } from "../ChatListItemSkeleton";
 import styles from "./favorites-chatlist.module.css";
@@ -26,10 +26,7 @@ export function FavoritesChatList() {
     return (
         <Flex direction="column" className={styles.container}>
             <Box>
-                <ChatListHeader
-                    title={t("nav.favorites", "Избранное")}
-                    hideActions={true}
-                />
+                <SidebarHeader title={t("nav.favorites", "Избранное")} />
                 <Box p="3">
                     <Search
                         placeholder={t(

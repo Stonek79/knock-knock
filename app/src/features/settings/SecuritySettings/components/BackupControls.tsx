@@ -4,6 +4,7 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { COMPONENT_INTENT } from "@/lib/constants/ui";
 import type { StatusMessage } from "../hooks/useKeysBackup";
@@ -35,68 +36,70 @@ export function BackupControls({
     const { t } = useTranslation();
 
     return (
-        <Flex direction="column" gap="4">
-            {statusMessage && (
-                <Box>
-                    <Alert variant={statusMessage.type}>
-                        <AlertTitle>
-                            {statusMessage.type === COMPONENT_INTENT.SUCCESS
-                                ? t("common.success")
-                                : t("common.error")}
-                        </AlertTitle>
-                        <AlertDescription>
-                            {statusMessage.text}
-                        </AlertDescription>
-                    </Alert>
-                </Box>
-            )}
+        <Card variant="surface">
+            <Flex direction="column" gap="4">
+                {statusMessage && (
+                    <Box>
+                        <Alert variant={statusMessage.type}>
+                            <AlertTitle>
+                                {statusMessage.type === COMPONENT_INTENT.SUCCESS
+                                    ? t("common.success")
+                                    : t("common.error")}
+                            </AlertTitle>
+                            <AlertDescription>
+                                {statusMessage.text}
+                            </AlertDescription>
+                        </Alert>
+                    </Box>
+                )}
 
-            <Flex direction="column" gap="2">
-                <form>
-                    <label
-                        htmlFor="backupPassword"
-                        className={styles.fieldLabel}
+                <Flex direction="column" gap="2">
+                    <form>
+                        <label
+                            htmlFor="backupPassword"
+                            className={styles.fieldLabel}
+                        >
+                            {t("profile.backupPassword")}
+                        </label>
+                        <PasswordInput
+                            id="backupPassword"
+                            placeholder={t("profile.backupPasswordPlaceholder")}
+                            value={backupPassword}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setBackupPassword(e.target.value)
+                            }
+                        />
+                    </form>
+                </Flex>
+
+                <Flex gap="3" wrap="wrap">
+                    <Button
+                        type="button"
+                        onClick={handleDownloadBackup}
+                        disabled={!keysInitialized || !backupPassword}
                     >
-                        {t("profile.backupPassword")}
-                    </label>
-                    <PasswordInput
-                        id="backupPassword"
-                        placeholder={t("profile.backupPasswordPlaceholder")}
-                        value={backupPassword}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setBackupPassword(e.target.value)
-                        }
-                    />
-                </form>
+                        {t("profile.downloadBackup")}
+                    </Button>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={!backupPassword}
+                    >
+                        {t("profile.restoreBackup")}
+                    </Button>
+
+                    <Box className={styles.hiddenInput}>
+                        <input
+                            type="file"
+                            accept=".json"
+                            ref={fileInputRef}
+                            onChange={handleRestoreBackup}
+                        />
+                    </Box>
+                </Flex>
             </Flex>
-
-            <Flex gap="3" wrap="wrap">
-                <Button
-                    type="button"
-                    onClick={handleDownloadBackup}
-                    disabled={!keysInitialized || !backupPassword}
-                >
-                    {t("profile.downloadBackup")}
-                </Button>
-
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={!backupPassword}
-                >
-                    {t("profile.restoreBackup")}
-                </Button>
-
-                <Box className={styles.hiddenInput}>
-                    <input
-                        type="file"
-                        accept=".json"
-                        ref={fileInputRef}
-                        onChange={handleRestoreBackup}
-                    />
-                </Box>
-            </Flex>
-        </Flex>
+        </Card>
     );
 }

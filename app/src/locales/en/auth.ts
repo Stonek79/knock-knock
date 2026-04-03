@@ -48,4 +48,5 @@ export const auth = {
     required: "Required field",
     usernameMin: "Min {{min}} characters",
     iAgreeToTerms: "I agree to the terms of use",
+    verificationRequired: "Please verify your email to access full features.",
 } as const;

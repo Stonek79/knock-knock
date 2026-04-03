@@ -4,26 +4,6 @@
     height: 100%;
 }
 
-.header {
-    height: var(--header-height);
-    padding: 0 var(--space-4);
-    display: flex;
-    align-items: center;
-    border-bottom: var(--border-width-base) solid var(--glass-border);
-    justify-content: space-between;
-}
-
-.title {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-extrabold);
-    letter-spacing: -0.5px;
-    color: var(--accent-primary);
-    text-shadow: var(--title-glow);
-    transition: all var(--transition-slow);
-    cursor: default;
-    user-select: none;
-}
-
 .desktopItem {
     padding: var(--space-3) var(--space-4);
     color: var(--muted);
@@ -49,13 +29,7 @@
     color: var(--accent-primary);
 }
 
-/* Нативный span вместо Radix Text */
 .itemLabel {
     font-size: var(--text-base);
     color: inherit;
-}
-
-.topPadding {
-    padding-top: var(--header-height);
-    border-bottom: 1px solid var(--glass-border);
 }
