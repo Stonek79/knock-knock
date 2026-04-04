@@ -44,4 +44,14 @@ export const auth = {
     iAgreeToTerms: "Я принимаю условия использования",
     verificationRequired:
         "Пожалуйста, подтвердите ваш email для полного доступа.",
+    verificationTitle: "Верификация аккаунта",
+    verificationProcessing: "Проверяем ваш токен...",
+    verificationSuccess: "Аккаунт успешно подтвержден!",
+    verificationError:
+        "Ошибка верификации. Ссылка устарела или недействительна.",
+    backToLogin: "Вернуться ко входу",
+    goToChat: "Перейти в чат",
+    welcomeTitle: "Добро пожаловать!",
+    welcomeDesc: "Давайте настроим ваш профиль, чтобы друзья могли вас найти.",
+    onboardingComplete: "К общению!",
 } as const;

@@ -81,6 +81,24 @@ export const AuthService = {
     },
 
     /**
+     * Запрос письма верификации email
+     */
+    requestVerification: async (
+        email: string,
+    ): Promise<Result<void, AuthRepoError>> => {
+        return authRepository.requestVerification(email);
+    },
+
+    /**
+     * Подтверждение email по токену
+     */
+    confirmVerification: async (
+        token: string,
+    ): Promise<Result<void, AuthRepoError>> => {
+        return authRepository.confirmVerification(token);
+    },
+
+    /**
      * Подписка на изменения авторизации
      */
     onChange: (callback: (token: string, model: unknown) => void) => {

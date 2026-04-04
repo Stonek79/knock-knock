@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AuthSettingsRouteImport } from './routes/_auth/settings'
 import { Route as AuthProfileRouteImport } from './routes/_auth/profile'
 import { Route as AuthPrivateRouteImport } from './routes/_auth/private'
@@ -36,6 +38,11 @@ import { Route as AuthDmUserIdRouteImport } from './routes/_auth/dm.$userId'
 import { Route as AuthChatRoomIdRouteImport } from './routes/_auth/chat/$roomId'
 import { Route as AuthAdminUsersRouteImport } from './routes/_auth/admin/users'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -48,6 +55,11 @@ const AuthRoute = AuthRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/auth/verify',
+  path: '/auth/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSettingsRoute = AuthSettingsRouteImport.update({
@@ -170,6 +182,7 @@ const AuthAdminUsersRoute = AuthAdminUsersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/terms': typeof TermsRoute
   '/admin': typeof AuthAdminRouteWithChildren
   '/calls': typeof AuthCallsRoute
   '/chat': typeof AuthChatRouteWithChildren
@@ -178,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/private': typeof AuthPrivateRouteWithChildren
   '/profile': typeof AuthProfileRoute
   '/settings': typeof AuthSettingsRouteWithChildren
+  '/auth/verify': typeof AuthVerifyRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/chat/$roomId': typeof AuthChatRoomIdRoute
   '/dm/$userId': typeof AuthDmUserIdRoute
@@ -197,10 +211,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/terms': typeof TermsRoute
   '/calls': typeof AuthCallsRoute
   '/contacts': typeof AuthContactsRoute
   '/favorites': typeof AuthFavoritesRouteWithChildren
   '/profile': typeof AuthProfileRoute
+  '/auth/verify': typeof AuthVerifyRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/chat/$roomId': typeof AuthChatRoomIdRoute
   '/dm/$userId': typeof AuthDmUserIdRoute
@@ -222,6 +238,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/terms': typeof TermsRoute
   '/_auth/admin': typeof AuthAdminRouteWithChildren
   '/_auth/calls': typeof AuthCallsRoute
   '/_auth/chat': typeof AuthChatRouteWithChildren
@@ -230,6 +247,7 @@ export interface FileRoutesById {
   '/_auth/private': typeof AuthPrivateRouteWithChildren
   '/_auth/profile': typeof AuthProfileRoute
   '/_auth/settings': typeof AuthSettingsRouteWithChildren
+  '/auth/verify': typeof AuthVerifyRoute
   '/_auth/admin/users': typeof AuthAdminUsersRoute
   '/_auth/chat/$roomId': typeof AuthChatRoomIdRoute
   '/_auth/dm/$userId': typeof AuthDmUserIdRoute
@@ -251,6 +269,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/terms'
     | '/admin'
     | '/calls'
     | '/chat'
@@ -259,6 +278,7 @@ export interface FileRouteTypes {
     | '/private'
     | '/profile'
     | '/settings'
+    | '/auth/verify'
     | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
@@ -278,10 +298,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/terms'
     | '/calls'
     | '/contacts'
     | '/favorites'
     | '/profile'
+    | '/auth/verify'
     | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
@@ -302,6 +324,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/login'
+    | '/terms'
     | '/_auth/admin'
     | '/_auth/calls'
     | '/_auth/chat'
@@ -310,6 +333,7 @@ export interface FileRouteTypes {
     | '/_auth/private'
     | '/_auth/profile'
     | '/_auth/settings'
+    | '/auth/verify'
     | '/_auth/admin/users'
     | '/_auth/chat/$roomId'
     | '/_auth/dm/$userId'
@@ -331,10 +355,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   LoginRoute: typeof LoginRoute
+  TermsRoute: typeof TermsRoute
+  AuthVerifyRoute: typeof AuthVerifyRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -354,6 +387,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/auth/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/settings': {
@@ -628,6 +668,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   LoginRoute: LoginRoute,
+  TermsRoute: TermsRoute,
+  AuthVerifyRoute: AuthVerifyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

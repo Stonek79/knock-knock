@@ -162,6 +162,7 @@ export const authRepository = {
             },
         );
     },
+
     /**
      * Подтверждение email по токену
      */
@@ -181,6 +182,82 @@ export const authRepository = {
                     e,
                 );
             },
+        );
+    },
+
+    /**
+     * Смена пароля текущего пользователя
+     */
+    changePassword: async (
+        oldPassword: string,
+        password: string,
+        passwordConfirm: string,
+    ): Promise<Result<AuthUser, AuthRepoError>> => {
+        const currentUserId = pb.authStore.record?.id;
+        if (!currentUserId) {
+            return err(
+                appError(
+                    ERROR_CODES.AUTHENTICATION_ERROR,
+                    "Пользователь не авторизован",
+                ),
+            );
+        }
+
+        return fromPromise(
+            pb.collection(DB_TABLES.USERS).update<AuthUser>(currentUserId, {
+                oldPassword,
+                password,
+                passwordConfirm,
+            }),
+            (e) => appError(mapPbErrorCode(e), "Ошибка при смене пароля", e),
+        );
+    },
+
+    /**
+     * Удаление аккаунта с подтверждением пароля
+     */
+    deleteAccount: async (
+        password: string,
+    ): Promise<Result<void, AuthRepoError>> => {
+        const record = pb.authStore.record;
+        if (!record?.id || !record?.email) {
+            return err(
+                appError(
+                    ERROR_CODES.AUTHENTICATION_ERROR,
+                    "Пользователь не авторизован",
+                ),
+            );
+        }
+
+        // 1. Проверяем пароль через повторную авторизацию
+        const authResult = await fromPromise(
+            pb
+                .collection(DB_TABLES.USERS)
+                .authWithPassword(record.email, password),
+            (e) =>
+                appError(
+                    ERROR_CODES.AUTHENTICATION_ERROR,
+                    "Неверный пароль",
+                    e,
+                ),
+        );
+
+        if (authResult.isErr()) {
+            return err(authResult.error);
+        }
+
+        // 2. Если пароль ок — удаляем запись
+        return fromPromise(
+            pb
+                .collection(DB_TABLES.USERS)
+                .delete(record.id)
+                .then(() => {}),
+            (e) =>
+                appError(
+                    ERROR_CODES.NETWORK_ERROR,
+                    "Ошибка при удалении аккаунта",
+                    e,
+                ),
         );
     },
 

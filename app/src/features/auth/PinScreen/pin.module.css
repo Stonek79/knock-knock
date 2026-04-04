@@ -2,8 +2,8 @@
 .overlay {
     --pin-error-color: var(--color-error);
     --pin-error-glow: color-mix(in srgb, var(--color-error), transparent 50%);
-    --pin-dot-size: 16px;
-    --pin-key-size: 72px;
+    --pin-dot-size: var(--space-4);
+    --pin-key-size: calc(var(--space-9) * 2);
     --pin-key-font-size: var(--text-2xl);
 
     position: fixed;
@@ -25,33 +25,34 @@
 .lockIcon {
     color: var(--accent-primary);
     opacity: 0.8;
-    filter: drop-shadow(0 0 8px var(--accent-primary));
+    filter: drop-shadow(0 0 var(--space-2) var(--accent-primary));
 }
 
 /* === Заголовок === */
 .title {
     color: var(--foreground);
     text-align: center;
-    font-weight: 600;
+    font-weight: var(--font-weight-bold);
 }
 
 /* === Точки ввода PIN === */
 .dotsContainer {
-    min-height: 24px;
+    min-height: var(--space-6);
 }
 
 .dot {
     width: var(--pin-dot-size);
     height: var(--pin-dot-size);
-    border-radius: var(--kk-radius-full);
-    border: 2px solid var(--glass-border-active, var(--accent-primary));
+    border-radius: var(--radius-full);
+    border: var(--border-width-focus) solid
+        var(--glass-border-active, var(--accent-primary));
     background: transparent;
     transition: all var(--transition-base);
 }
 
 .dot.filled {
     background: var(--accent-primary);
-    box-shadow: 0 0 8px var(--accent-primary);
+    box-shadow: 0 0 var(--space-2) var(--accent-primary);
 }
 
 /* Ошибка — тряска контейнера + красные точки */
@@ -62,12 +63,12 @@
 .dot.error {
     border-color: var(--pin-error-color);
     background: var(--pin-error-color);
-    box-shadow: 0 0 8px var(--pin-error-glow);
+    box-shadow: 0 0 var(--space-2) var(--pin-error-glow);
 }
 
 /* === Цифровая клавиатура === */
 .numpad {
-    max-width: 280px;
+    max-width: calc(var(--space-10) * 7);
     width: 100%;
 }
 
@@ -75,9 +76,9 @@
     width: var(--pin-key-size);
     height: var(--pin-key-size);
     margin: 0 auto;
-    border-radius: var(--kk-radius-full);
+    border-radius: var(--radius-full);
     background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    border: var(--border-width-base) solid var(--glass-border);
     color: var(--foreground);
     font-size: var(--pin-key-font-size);
     font-weight: var(--font-weight-medium);
@@ -90,7 +91,7 @@
 .numpadKey:hover {
     background: var(--accent-primary);
     color: var(--bubble-out-fg);
-    box-shadow: 0 0 12px var(--accent-primary);
+    box-shadow: 0 0 var(--space-3) var(--accent-primary);
 }
 
 .numpadKey:active {
@@ -122,7 +123,7 @@
 .errorText {
     color: var(--pin-error-color);
     font-size: var(--text-xs);
-    min-height: 20px;
+    min-height: var(--space-5);
     text-align: center;
 }
 
@@ -130,8 +131,8 @@
 .hiddenInput {
     position: absolute;
     opacity: 0;
-    width: 1px;
-    height: 1px;
+    width: var(--border-width-base);
+    height: var(--border-width-base);
     overflow: hidden;
     pointer-events: none;
 }

@@ -5,7 +5,16 @@ export const settings = {
         security: "Безопасность",
         dangerZone: "Опасная зона",
         changePassword: "Изменить пароль",
+        oldPassword: "Старый пароль",
+        newPassword: "Новый пароль",
+        confirmPassword: "Подтвердите пароль",
+        passwordsNotMatch: "Пароли не совпадают",
+        changeSuccess: "Пароль успешно изменен",
+        passwordError: "Ошибка при смене пароля",
         deleteAccount: "Удалить аккаунт",
+        deleteWarning:
+            "Удаление невозвратное и все данные пользователя и информация о нем будут уничтожены и не подлежат восстановлению",
+        enterPasswordToDelete: "Введите пароль для подтверждения",
     },
     appearance: {
         appearance: "Внешний вид",

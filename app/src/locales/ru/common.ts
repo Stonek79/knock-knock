@@ -6,6 +6,8 @@ export const common = {
     signOut: "Выйти",
     loading: "Загрузка...",
     error: "Ошибка",
+    delete: "Удалить",
+    deleting: "Удаление...",
     unknownError: "Неизвестная ошибка (ХЗ)",
     success: "Успешно",
     password: "Пароль",

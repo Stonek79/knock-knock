@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Heading } from "@/components/ui/Heading";
+import { OnboardingModal } from "@/features/auth/components/OnboardingModal";
 import { VerificationBanner } from "@/features/auth/components/VerificationBanner";
 import { CreateChatDialog, CreateGroupDialog } from "@/features/chat";
 import { MobileHeader, Navigation } from "@/features/navigation";
@@ -91,6 +92,7 @@ export function AppLayout() {
     return (
         <div id="app-container" className={styles.container}>
             <VerificationBanner />
+            <OnboardingModal />
             {isMobile ? (
                 /* === МОБИЛЬНЫЙ LAYOUT === */
                 <Flex direction="column" className={styles.mobileLayout}>

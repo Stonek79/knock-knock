@@ -284,6 +284,7 @@
     --color-success: #00a884;
     --color-warning: #ffbc38;
     --color-info: #009de2;
+    --glow-soft: rgba(0, 168, 132, 0.15);
     --title-glow: none;
     --glass-shadow: none;
 

@@ -16,8 +16,8 @@
 }
 
 .avatarPlaceholder {
-    width: var(--size-avatar-xl-temp);
-    height: var(--size-avatar-xl-temp);
+    width: var(--size-avatar-lg);
+    height: var(--size-avatar-lg);
     border-radius: var(--kk-radius-full);
     background: var(--muted);
     display: flex;

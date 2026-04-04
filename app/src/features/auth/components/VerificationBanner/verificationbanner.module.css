@@ -1,31 +1,32 @@
 .banner {
-    background: linear-gradient(to right, #fff9db, #fff3bf);
-    border-bottom: 1px solid #ffe066;
-    color: #856404;
+    background: var(--glass-bg);
+    border-bottom: var(--border-width-base) solid var(--color-warning-alpha);
+    color: var(--foreground);
     width: 100%;
     position: sticky;
     top: 0;
-    z-index: 100;
-    backdrop-filter: blur(8px);
-    height: 5%;
+    z-index: var(--z-dropdown);
+    backdrop-filter: var(--glass-blur-sm);
+    padding: var(--space-2) var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
 }
 
 .icon {
-    color: #f08c00;
+    color: var(--color-warning);
+    filter: drop-shadow(0 0 8px var(--color-warning-alpha));
     flex-shrink: 0;
 }
 
 .text {
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1.4;
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-tight);
 }
 
 @media (max-width: 768px) {
     .text {
-        font-size: 0.8125rem;
-    }
-    .banner {
-        height: 8%;
+        font-size: var(--text-xs);
     }
 }

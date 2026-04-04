@@ -17,3 +17,9 @@ export const KEYSTORE_TYPES = {
     IDENTITY: "identity",
     PREKEY: "prekey",
 } as const satisfies Record<string, KeyType>;
+
+export const VERIFY_STATUS = {
+    PENDING: "pending",
+    VERIFIED: "verified",
+    ERROR: "error",
+} as const;

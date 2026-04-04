@@ -158,134 +158,61 @@ Dark:  #111b21 фон | #202c33 surface | #00a884 акцент | #005c4b bubble-
 
 ### ЭТАП 1: Система Auth — Schema, Forms, Persistent Session
 
-#### 1.1 Исправление уязвимости в PocketBase API Rules
+#### 1.1 ✅ Настройка API Rules в PocketBase (Завершено)
 
-**MODIFY** `infra/home/pb_schema.json` (коллекция `users`):
-- Исправить `"viewRule": ""` → `"viewRule": "@request.auth.id != ''"` — закрыть публичный доступ
-- Добавить поле `username` (type: text, optional, уникальный индекс case-insensitive)
-- Применить через PocketBase admin → Import collections
+**STATUS**: Реализовано в `pb_schema.json`.
+- `"viewRule": "@request.auth.id != ''"` для коллекции `users`.
+- Поле `username` добавлено и проиндексировано.
 
-#### 1.2 Исправление Type Guard в репозитории
+#### 1.2 ✅ Исправление Type Guard и методы репозитория (Завершено)
 
-**MODIFY** `app/src/lib/repositories/auth.repository.ts`:
+**STATUS**: Реализовано в `auth.repository.ts`.
+- Внедрен `isUserRecord` type guard.
+- Добавлены методы `requestVerification` и `confirmVerification`.
 
-```ts
-// Убрать строку 84: return record as unknown as AuthUser;
-// Заменить на Type Guard:
-function isUserRecord(record: unknown): record is AuthUser {
-  return (
-    typeof record === 'object' &&
-    record !== null &&
-    'id' in record &&
-    'email' in record
-  );
-}
+#### 1.3 ✅ Zod-схемы и типы (Завершено)
 
-getCurrentUser: (): AuthUser | null => {
-  const record = pb.authStore.record;
-  if (!record || !isUserRecord(record)) {
-    return null;
-  }
-  return record;
-},
-```
+**STATUS**: Реализовано в `lib/schemas/auth.ts`.
+- `loginSchema` и `registerFieldsSchema` (наш аналог `registerSchema`) готовы.
+- Типы `LoginFormData` и `RegisterFormData` доступны.
 
-Также добавить:
-- `requestVerification(email: string): Promise<Result<void, AuthRepoError>>`
-- `confirmVerification(token: string): Promise<Result<void, AuthRepoError>>`
+#### 1.4 ✅ Компоненты форм и Honeypot (Завершено)
 
-#### 1.3 Zod-схемы и типы
+**STATUS**: Реализовано в `RegisterForm`, `LoginForm`, `useAuthForms`.
+- Honeypot `username_bot` внедрен и проверяется.
+- Логика регистрации (register -> login -> updateProfile) работает через хуки.
 
-**MODIFY** `app/src/lib/schemas/auth.ts`:
+#### 1.5 ✅ Silent Token Refresh (Завершено)
 
-```ts
-// loginSchema — убрать optional(), min(8)
-export const loginSchema = z.object({
-  email: z.email({ message: 'validation.emailInvalid' }),
-  password: z.string().min(8, { message: 'validation.passwordTooShort' }),
-});
+**STATUS**: Реализовано реактивно в `AuthStore`.
+- Сессия обновляется через `AuthService.onChange` и при инициализации.
+- Исключены утечки памяти (без `setInterval`).
 
-// registerSchema — НОВАЯ схема с 4 полями + Terms
-export const registerSchema = z.object({
-  email: z.email({ message: 'validation.emailInvalid' }),
-  display_name: z.string().min(2).max(50, { message: 'validation.displayNameLength' }),
-  password: z.string().min(8).regex(/[0-9]/).regex(/[a-zA-Z]/),
-  passwordConfirm: z.string(),
-  agreeToTerms: z.literal(true, { message: 'validation.mustAgreeToTerms' }),
-}).refine(d => d.password === d.passwordConfirm, {
-  message: 'validation.passwordsNotMatch',
-  path: ['passwordConfirm'],
-});
+#### 1.6 ✅ Verification Banner (Завершено)
 
-export type LoginFormData = z.infer<typeof loginSchema>;
-export type RegisterFormData = z.infer<typeof registerSchema>;
-```
+**STATUS**: Реализовано в `app/src/features/auth/components/VerificationBanner/`.
+- Выводит баннер для неверифицированных пользователей с поддержкой Dismiss.
 
-#### 1.4 Компоненты форм
+#### 1.7 ✅ Логика верификации (Завершено)
 
-**MODIFY** `app/src/features/auth/components/LoginForm.tsx`:
-- Выделить отдельным компонентом только UI логина
-- Добавить Honeypot-поле `_hp` (скрытое, `tabIndex=-1`, `aria-hidden`)
-- Добавить time-based check (timestamp монтирования)
+**STATUS**: Реализовано в `app/src/routes/auth.verify.tsx` и `VerifyPage`.
+- Прямой роут для ссылок подтверждения.
+- Получение токена из параметров URL.
+- Вызов `AuthService.confirmVerification(token)`.
+- Автоматическое обновление профиля при успехе.
 
-**NEW** `app/src/features/auth/components/RegisterForm.tsx`:
-- 4 поля: `email`, `display_name`, `password`, `passwordConfirm`
-- Чекбокс `agreeToTerms` со ссылкой на `/terms`
-- Honeypot-поле `_hp`
-- Валидация через `registerSchema` + TanStack Form
+#### 1.8 ✅ Terms Route (Завершено)
 
-**NEW** `app/src/features/auth/hooks/useRegisterForm.ts`:
-- `display_name` → `AuthService.register()` → авто-логин → показать `VerificationBanner`
+**STATUS**: Реализовано в `app/src/routes/terms.tsx` и `TermsPage`.
+- Публичный маршрут для правил проекта.
+- Контент адаптирован под Mobile First.
 
-#### 1.5 Silent Token Refresh
+#### 1.9 ✅ Onboarding Modal (Завершено)
 
-**MODIFY** `app/src/stores/auth/index.ts`:
-
-```ts
-// Добавить в initialize() после подписки onChange:
-const REFRESH_INTERVAL_MS = 1000 * 60 * 30; // 30 минут
-
-// Фоновый refresh пока вкладка активна
-const refreshInterval = setInterval(async () => {
-  if (AuthService.isValid() && document.visibilityState === 'visible') {
-    await get().fetchProfile();
-  }
-}, REFRESH_INTERVAL_MS);
-
-// Refresh при возврате к вкладке после длительного перерыва
-const handleVisibilityChange = async () => {
-  if (document.visibilityState === 'visible' && AuthService.isValid()) {
-    await get().fetchProfile();
-  }
-};
-document.addEventListener('visibilitychange', handleVisibilityChange);
-```
-
-**MODIFY** `app/src/stores/auth/index.ts` — `fetchProfile()`:
-- При `NetworkError` → НЕ разлогиниваем, `set({ loading: false })` + логируем `warn`
-- Только при явной ошибке авторизации (401) → разлогиниваем
-
-#### 1.6 Маршруты Email верификации
-
-**NEW** `app/src/routes/auth.verify.tsx`:
-- Публичный маршрут `/auth/verify?token=...`
-- Читает `token` из URL, вызывает `AuthService.confirmVerification(token)`
-- UI: спиннер → успех (редирект в чат) / ошибка (ссылка отправить повторно)
-
-**NEW** `app/src/features/auth/components/VerificationBanner.tsx`:
-- Показывается если `user.verified === false`
-- Кнопка «Отправить письмо повторно» с кулдауном 60 сек
-- Dismissible (флаг `verification_banner_dismissed` в localStorage)
-
-#### 1.7 Terms и Onboarding
-
-**NEW** `app/src/routes/terms.tsx` — публичный маршрут `/terms`:
-- Mobile-First, поддержка dark/light темы
-- Контент из `docs/RULES.md`
-
-**NEW** `app/src/features/auth/components/OnboardingModal.tsx`:
-- Показывается один раз при первом входе (флаг `onboarding_shown` в `user.settings` JSON)
-- Приветствие + ссылка на Terms + кнопка «Начать»
+**STATUS**: Реализовано в `app/src/features/auth/components/OnboardingModal`.
+- Модальное окно после регистрации.
+- Поля для настройки профиля (display_name, username).
+- Интеграция с `AppLayout`.
 
 ---
 

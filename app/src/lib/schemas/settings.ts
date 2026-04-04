@@ -37,6 +37,7 @@ export const userSettingsSchema = z.object({
             show_last_seen: true,
             show_online: true,
         }),
+    onboarding_shown: z.boolean().default(false),
 });
 
 /** Настройки участника комнаты (room_members.settings) */
@@ -47,5 +48,3 @@ export const roomMemberSettingsSchema = z.object({
 
 /** Метаданные */
 export const metadataSchema = z.record(z.string(), z.unknown()).default({});
-
-export type UserSettings = z.infer<typeof userSettingsSchema>;

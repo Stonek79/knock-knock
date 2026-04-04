@@ -9,6 +9,13 @@
     background: var(--bg-app);
 }
 
+.background {
+    position: absolute;
+    inset: 0;
+    background: var(--glass-hover-bg);
+    z-index: 1;
+}
+
 .container {
     position: relative;
     z-index: var(--z-panel);
@@ -27,40 +34,69 @@
     border-radius: var(--radius-xl);
     padding: var(--space-10) var(--space-6);
     box-shadow: var(--shadow-premium);
+    text-align: center;
+}
+
+.iconWrapper {
+    width: var(--size-icon-box-lg);
+    height: var(--size-icon-box-lg);
+    border-radius: var(--radius-full);
+    background: var(--surface-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-6);
+    position: relative;
+}
+
+.isLoading {
+    background: transparent;
+}
+
+.successIcon {
+    color: var(--color-success);
+    /* Добавляем легкое свечение для успеха */
+    filter: drop-shadow(
+        0 0 calc(var(--space-1) * 2.5) var(--color-success-alpha)
+    );
+}
+
+.errorIcon {
+    color: var(--color-error);
+    filter: drop-shadow(
+        0 0 calc(var(--space-1) * 2.5) var(--color-error-alpha)
+    );
 }
 
 .title {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-bold);
     color: var(--foreground);
-    text-align: center;
+    margin-bottom: var(--space-4);
     letter-spacing: var(--letter-spacing-tight);
 }
 
-.tabsList {
-    background: var(--surface-1);
-    padding: var(--space-1);
-    border-radius: var(--radius-lg);
-    border: none;
-    margin-bottom: var(--space-6);
+.message {
+    font-size: var(--text-base);
+    color: var(--muted-foreground);
+    margin-bottom: var(--space-8);
+    line-height: var(--line-height-relaxed);
 }
 
-.tabsList [data-state="active"] {
-    background: var(--surface);
-    box-shadow: 0 0 10px var(--glow-soft);
+.actionButton {
+    width: 100%;
+    height: var(--size-btn-h-4);
 }
 
 .footer {
     margin-top: var(--space-10);
     font-size: var(--text-xxs);
     color: var(--muted-foreground);
-    text-align: center;
 }
 
 @container (max-width: 440px) {
     .glassCard {
-        padding: var(--space-6) var(--space-4);
-        border-radius: var(--radius-lg);
+        padding: var(--space-8) var(--space-4);
         background: transparent;
         border: none;
         backdrop-filter: none;

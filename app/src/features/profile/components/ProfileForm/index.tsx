@@ -16,7 +16,6 @@ import styles from "./profileform.module.css";
 
 /**
  * Форма редактирования профиля пользователя.
- * Использует наш кастомный TextField вместо Radix TextField.
  * Данные загружаются и обновляются через userRepository.
  */
 export function ProfileForm() {

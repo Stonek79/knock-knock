@@ -22,4 +22,6 @@ export const ROUTES = {
     FAVORITES_ROOM: "/favorites/$roomId",
     DM: "/dm/$userId",
     AUTH_DM: "/_auth/dm/$userId",
+    TERMS: "/terms",
+    VERIFY: "/auth/verify",
 } as const;

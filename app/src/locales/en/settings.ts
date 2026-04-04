@@ -5,7 +5,16 @@ export const settings = {
         security: "Security",
         dangerZone: "Danger Zone",
         changePassword: "Change Password",
+        oldPassword: "Old Password",
+        newPassword: "New Password",
+        confirmPassword: "Confirm Password",
+        passwordsNotMatch: "Passwords do not match",
+        changeSuccess: "Password changed successfully",
+        passwordError: "Error changing password",
         deleteAccount: "Delete Account",
+        deleteWarning:
+            "Deletion is irreversible and all user data and information about them will be destroyed and cannot be restored",
+        enterPasswordToDelete: "Enter password to confirm",
     },
     appearance: {
         appearance: "Appearance",

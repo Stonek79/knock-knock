@@ -9,11 +9,18 @@
     background: var(--bg-app);
 }
 
+.background {
+    position: absolute;
+    inset: 0;
+    background: var(--glass-hover-bg);
+    z-index: 1;
+}
+
 .container {
     position: relative;
     z-index: var(--z-panel);
     width: 100%;
-    max-width: var(--max-w-auth);
+    max-width: var(--max-w-content-wide);
     padding: var(--space-4);
     container-type: inline-size;
 }
@@ -25,49 +32,49 @@
     -webkit-backdrop-filter: var(--glass-blur);
     border: var(--border-width-base) solid var(--glass-border);
     border-radius: var(--radius-xl);
-    padding: var(--space-10) var(--space-6);
+    padding: var(--space-8) var(--space-6);
     box-shadow: var(--shadow-premium);
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+}
+
+.header {
+    flex-shrink: 0;
+    border-bottom: var(--border-width-base) solid var(--border);
+    padding-bottom: var(--space-4);
 }
 
 .title {
-    font-size: var(--text-2xl);
+    font-size: var(--text-xl);
     font-weight: var(--font-weight-bold);
     color: var(--foreground);
-    text-align: center;
-    letter-spacing: var(--letter-spacing-tight);
+    margin: 0;
 }
 
-.tabsList {
-    background: var(--surface-1);
-    padding: var(--space-1);
-    border-radius: var(--radius-lg);
-    border: none;
-    margin-bottom: var(--space-6);
+.scrollArea {
+    flex-grow: 1;
+    margin: var(--space-4) 0;
 }
 
-.tabsList [data-state="active"] {
-    background: var(--surface);
-    box-shadow: 0 0 10px var(--glow-soft);
+.content {
+    line-height: var(--line-height-relaxed);
+    color: var(--foreground);
+    padding: var(--space-2);
 }
 
-.footer {
-    margin-top: var(--space-10);
-    font-size: var(--text-xxs);
-    color: var(--muted-foreground);
-    text-align: center;
+.acceptButton {
+    width: 100%;
+    margin-top: auto;
 }
 
 @container (max-width: 440px) {
     .glassCard {
         padding: var(--space-6) var(--space-4);
-        border-radius: var(--radius-lg);
-        background: transparent;
         border: none;
+        background: transparent;
         backdrop-filter: none;
         box-shadow: none;
-    }
-
-    .title {
-        font-size: var(--text-xl);
+        max-height: none;
     }
 }

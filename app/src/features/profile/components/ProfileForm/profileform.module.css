@@ -3,7 +3,6 @@
  */
 
 .container {
-    max-width: var(--max-w-profile);
     width: 100%;
 }
 
