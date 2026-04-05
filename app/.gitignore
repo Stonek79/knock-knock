@@ -26,7 +26,7 @@ test-results
 
 # Auto-generated files
 src/routeTree.gen.ts
-
+dev-dist
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

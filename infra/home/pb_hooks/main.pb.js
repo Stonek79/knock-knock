@@ -203,7 +203,9 @@ onRecordAfterCreateSuccess((e) => {
 	const message = e.record;
 
 	// Системные сообщения не пушатся (если они есть)
-	if (message.get(DB.FIELDS.TYPE) === DB.VALUES.TYPE_SYSTEM) return;
+	if (message.get(DB.FIELDS.TYPE) === DB.VALUES.TYPE_SYSTEM) {
+		return
+	};
 
 	try {
 		const roomId = message.get(DB.FIELDS.ROOM);
@@ -219,7 +221,9 @@ onRecordAfterCreateSuccess((e) => {
 			{ roomId: roomId, senderId: senderId },
 		);
 
-		if (members.length === 0) return;
+		if (members.length === 0) {
+			return
+		};
 
 		const userIds = members.map((m) => m.get(DB.FIELDS.USER));
 
@@ -236,7 +240,9 @@ onRecordAfterCreateSuccess((e) => {
 			{},
 		);
 
-		if (subscriptions.length === 0) return;
+		if (subscriptions.length === 0) {
+			return
+		};
 
 		const pushSubs = subscriptions.map((sub) => ({
 			endpoint: sub.get(DB.FIELDS.ENDPOINT),
