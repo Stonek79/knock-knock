@@ -25,17 +25,17 @@
 
 | # | Проблема | Приоритет |
 |---|---|---|
-| 1 | **`as unknown as AuthUser`** в `auth.repository.ts:84` — запрещённый каст | 🔴 Критично |
-| 2 | **`loginSchema`** — `password: z.string().min(6).optional()` — пароль optional! | 🔴 Критично |
-| 3 | **`viewRule: ""`** в схеме users — публичный доступ к профилям (уязвимость) | 🔴 Критично |
-| 4 | **Нет `registerSchema`** — форма регистрации встроена в LoginForm без отдельной схемы | 🟡 Важно |
-| 5 | **Нет `display_name`** в форме регистрации — поле есть в PB, но не запрашивается | 🟡 Важно |
-| 6 | **Нет email верификации** — PocketBase поддерживает, но не задействована | 🟡 Важно |
-| 7 | **Нет honeypot-защиты** в форме — только клиентский Rate Limiter | 🟡 Важно |
-| 8 | **SMTP не настроен** — Brevo ещё не подключён | 🟡 Важно |
-| 9 | **Нет маршрута `/auth/verify`** — некуда редиректить из письма верификации | 🟡 Важно |
+| 1 | **`as unknown as AuthUser`** в `auth.repository.ts:84` — запрещённый каст | ✅ Исправлено |
+| 2 | **`loginSchema`** — `password: z.string().min(6).optional()` — пароль optional! | ✅ Исправлено |
+| 3 | **`viewRule: ""`** в схеме users — публичный доступ к профилям (уязвимость) | ✅ Исправлено |
+| 4 | **Нет `registerSchema`** — форма регистрации встроена в LoginForm без отдельной схемы | ✅ Исправлено |
+| 5 | **Нет `display_name`** в форме регистрации — поле есть в PB, но не запрашивается | ✅ Исправлено |
+| 6 | **Нет email верификации** — PocketBase поддерживает, но не задействована | ✅ Исправлено |
+| 7 | **Нет honeypot-защиты** в форме — только клиентский Rate Limiter | ✅ Исправлено |
+| 8 | **SMTP не настроен** — Brevo ещё не подключён | ✅ Исправлено |
+| 9 | **Нет маршрута `/auth/verify`** — некуда редиректить из письма верификации | ✅ Исправлено |
 | 10 | **Нет страницы `/terms`** и чекбокса принятия правил | 🟢 Нормально |
-| 11 | **Silent Refresh не реализован** — токен может протухнуть при длительном использовании | 🟡 Важно |
+| 11 | **Silent Refresh не реализован** — токен может протухнуть при длительном использовании | ✅ Исправлено |
 | 12 | **WEBRTC_CALLS_IMPLEMENTATION.md** ссылается на Supabase Edge Functions (устарело) | 🟢 Нормально |
 | 13 | **ROADMAP.md секция Calls** всё ещё упоминает Supabase `call_logs` | 🟢 Нормально |
 
@@ -216,31 +216,15 @@ Dark:  #111b21 фон | #202c33 surface | #00a884 акцент | #005c4b bubble-
 
 ---
 
-### ЭТАП 2: SMTP — Brevo + Email верификация
+### ЭТАП 2: ✅ SMTP — Brevo + Email верификация (Завершено)
 
 **Описание архитектуры:** `docs/AUTH_STRATEGY.md` → раздел «Email верификация»
 
-**MODIFY** `infra/home/docker-compose.pb.yml` — добавить env SMTP:
-
-```yaml
-environment:
-  PB_ENCRYPTION_KEY: "${PB_ENCRYPTION_KEY:-}"
-  # SMTP через Brevo (заполнить в .env на сервере)
-  PB_SMTP_HOST: smtp-relay.brevo.com
-  PB_SMTP_PORT: 587
-  PB_SMTP_USERNAME: ${BREVO_SMTP_USER}
-  PB_SMTP_PASSWORD: ${BREVO_SMTP_PASS}
-  PB_SMTP_SENDER_NAME: Knock-Knock
-  PB_SMTP_SENDER_ADDRESS: noreply@knok-knok.ru
-```
-
-**Шаги:**
-1. Зарегистрировать аккаунт Brevo, получить SMTP-credentials
-2. Настроить SMTP в PocketBase Admin → Settings → Mail settings
-3. Включить `emailVisibility = false` и email verification в коллекции `users`
-4. **NEW** `infra/home/docker-compose.smtp.dev.yml` — Mailpit (SMTP sandbox для Dev:
-   - SMTP на `localhost:1025`, Web UI на `localhost:8025`)
-5. Обновить `.env.example` переменными SMTP
+**STATUS**: Реализовано.
+- Инфраструктура: Brevo (Prod) и Mailpit (Dev) настроены.
+- Docker: Сеть `pb_network` объединяет контейнеры.
+- Безопасность: Honeypot и Time-check внедрены во все формы авторизации.
+- Верификация: Email отправителя зафиксирован как `admin@knok-knok.ru`.
 
 ---
 

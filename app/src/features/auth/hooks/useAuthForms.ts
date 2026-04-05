@@ -7,17 +7,31 @@ import { ChatRealtimeService } from "@/lib/services/chat-realtime";
 export function useAuthForms() {
     const { t } = useTranslation();
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [startTime] = useState(Date.now());
 
     // --- ФОРМА ВХОДА ---
     const loginForm = useForm({
-        defaultValues: { email: "", password: "" },
+        defaultValues: {
+            email: "",
+            password: "",
+            _startTime: startTime.toString(),
+            username_bot: "",
+        },
         onSubmit: async ({ value }) => {
+            if (value.username_bot) {
+                return;
+            } // Игнорируем бота
+
             setSubmitError(null);
             ChatRealtimeService.destroy();
 
             const result = await AuthService.loginWithPassword(
                 value.email,
                 value.password,
+                {
+                    _startTime: value._startTime,
+                    username_bot: value.username_bot,
+                },
             );
 
             if (result.isOk()) {
@@ -40,6 +54,7 @@ export function useAuthForms() {
             passwordConfirm: "",
             agreeToTerms: false,
             username_bot: "", // Honeypot
+            _startTime: startTime.toString(),
         },
         onSubmit: async ({ value }) => {
             if (value.username_bot) {
@@ -54,6 +69,10 @@ export function useAuthForms() {
             const regResult = await AuthService.register(
                 value.email,
                 value.password,
+                {
+                    _startTime: value._startTime,
+                    username_bot: value.username_bot,
+                },
             );
 
             if (regResult.isOk()) {
@@ -61,6 +80,10 @@ export function useAuthForms() {
                 const loginResult = await AuthService.loginWithPassword(
                     value.email,
                     value.password,
+                    {
+                        _startTime: value._startTime,
+                        username_bot: value.username_bot,
+                    },
                 );
 
                 if (loginResult.isOk()) {

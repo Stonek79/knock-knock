@@ -463,7 +463,7 @@
 		"indexes": [
 			"CREATE UNIQUE INDEX `idx_username` ON `users` (`username`) WHERE `username` != ''"
 		],
-		"listRule": "id = @request.auth.id",
+		"listRule": "@request.auth.id != ''",
 		"viewRule": "@request.auth.id != ''",
 		"createRule": "",
 		"updateRule": "id = @request.auth.id",

@@ -33,12 +33,14 @@ export const authRepository = {
     register: async (
         email: string,
         password: string,
+        meta?: Record<string, string>,
     ): Promise<Result<AuthUser, AuthRepoError>> => {
         return fromPromise(
             pb.collection(DB_TABLES.USERS).create<AuthUser>({
                 email,
                 password,
                 passwordConfirm: password,
+                ...meta,
             }),
             (e) => {
                 return appError(mapPbErrorCode(e), "Ошибка регистрации", e);
@@ -52,11 +54,12 @@ export const authRepository = {
     login: async (
         email: string,
         password: string,
+        meta?: Record<string, string>,
     ): Promise<Result<AuthUser, AuthRepoError>> => {
         return fromPromise(
             pb
                 .collection(DB_TABLES.USERS)
-                .authWithPassword<AuthUser>(email, password)
+                .authWithPassword<AuthUser>(email, password, meta)
                 .then((res) => res.record),
             (e) => {
                 return appError(

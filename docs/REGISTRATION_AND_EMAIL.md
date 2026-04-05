@@ -10,15 +10,17 @@
 
 ### Выбранное решение
 1. **Регистрация**: Встроенная в PocketBase (Email/Password).
-2. **Атомарность**: При регистрации серверный хук (`pb_hooks/main.pb.js`) автоматически создает системную комнату «Избранное».
-3. **Почта**: SMTP Relay через **Brevo**. PocketBase напрямую отправляет письма подтверждения и восстановления.
-4. **Защита от ботов**: Cloudflare Turnstile интегрируется на уровне фронтенда и проверяется на бэкенде (через хук или Middleware).
+2. **Атомарность**: При регистрации серверный хук (`pb_hooks/main.pb.js`) автоматически создает системную команду и проверяет ботов.
+3. **Почта (Prod)**: SMTP Relay через **Brevo**.
+4. **Почта (Dev)**: Локальный перехватчик **Mailpit** (Docker-контейнер).
+5. **Защита от ботов**: Honeypot (`username_bot`) + Time-check (мин. 3 сек).
 
 ### Схема взаимодействия
 ```
-[Client] -> [Nginx (VPS)] -> [PocketBase (Home Server)]
+[Client] -> [Nginx (VPS)] -> [PocketBase Core]
                                  |
-                                 |---> [Brevo SMTP] ---> [User Email]
+                                 |--- (Prod) ---> [Brevo SMTP] ---> [User Email]
+                                 |--- (Dev)  ---> [Mailpit UI]
 ```
 
 ---
@@ -26,28 +28,35 @@
 ## 🛠 Инфраструктура
 
 ### 1. Настройка DNS (Brevo)
-Для корректной доставки писем необходимо настроить TXT-записи (SPF, DKIM, DMARC) в панели управления вашим доменом. Инструкции доступны в панели Brevo в разделе "Senders & IP".
+Для домена `knok-knok.ru` настроены DKIM, SPF и DMARC записи.
+**Sender email:** `admin@knok-knok.ru` (верифицированный отправитель).
 
-### 2. Настройка PocketBase SMTP
-В админ-панели PocketBase (**Settings > Mail settings**):
-- **SMTP Server**: `smtp-relay.brevo.com`
-- **Port**: `587`
-- **Username**: Ваш email в Brevo
-- **Password**: Ваш SMTP Master Key из Brevo
-- **Sender address**: `noreply@knok-knok.ru`
+### 2. Настройка PocketBase SMTP (Prod)
+Переменные окружения в `.env.production`:
+- **PB_SMTP_HOST**: `smtp-relay.brevo.com`
+- **PB_SMTP_PORT**: `587`
+- **PB_SMTP_USER**: `a72bc5001@smtp-brevo.com`
+- **PB_SMTP_TLS**: `true` (StartTLS)
+
+### 3. Локальная разработка (Dev / Mailpit)
+Для тестирования почты без реальной отправки:
+- **Host**: `mailpit`
+- **Port**: `1025`
+- **Web UI**: `http://server-ip:8025`
+- **Docker Network**: Обязательно наличие внешней сети `pb_network` (`docker network create pb_network`).
 
 ---
 
-## 🚀 План реализации
+## 🚀 Статус реализации
 
-### Этап 1: Подтверждение Email
-- [ ] Включить "Email verification" в настройках PocketBase.
-- [ ] Кастомизировать шаблоны писем (RU/EN) в админке.
-- [ ] Реализовать на фронтенде страницу `/auth/confirm` для обработки перехода по ссылке (если требуется кастомный UI).
+### Этап 1: Подтверждение Email ✅
+- [x] Включить "Email verification" в настройках PocketBase.
+- [x] Кастомизировать шаблоны писем (RU) в админке.
+- [x] Реализовать роут `/auth/verify` для обработки ссылок.
 
-### Этап 2: Защита от ботов
-- [ ] Добавить Honeypot-поле `_hp` + time-check в формы (`LoginForm`, `RegisterForm`).
-- [ ] Реализовать проверку Honeypot на бэкенде через `onRecordBeforeCreateRequest` в `pb_hooks`.
+### Этап 2: Защита от ботов ✅
+- [x] Добавить Honeypot-поле `username_bot` + time-check.
+- [x] Реализовать проверку на бэкенде через `onRecordBeforeCreateRequest`.
 > **Примечание:** Cloudflare Turnstile остаётся резервным вариантом (Фаза 2) — если Honeypot окажется недостаточным.
 
 ### Этап 3: Правила и Онбординг

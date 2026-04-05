@@ -13,6 +13,7 @@ export const admin = {
     manageUsers: "Управление пользователями",
     viewBans: "Блокировки",
     queueEmpty: "Очередь пуста",
+    youAreAdmin: "Вы вошли как: ",
 
     // User Management
     userManagement: "Управление пользователями",

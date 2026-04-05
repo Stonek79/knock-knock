@@ -8,6 +8,7 @@ import { Table } from "@/components/ui/Table";
 import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
 import { COMPONENT_INTENT, USER_ROLE } from "@/lib/constants";
+import { formatChatTime } from "@/lib/utils/date";
 import { useUserManagement } from "../hooks/useUserManagement";
 import styles from "./userlist.module.css";
 
@@ -15,13 +16,6 @@ export function UserList() {
     const { t } = useTranslation();
     const { users, search, setSearch, banUser, unbanUser } =
         useUserManagement();
-
-    const formatDate = (dateString?: string) => {
-        if (!dateString) {
-            return "-";
-        }
-        return new Date(dateString).toLocaleDateString();
-    };
 
     return (
         <Flex direction="column" gap="4" className={styles.container}>
@@ -73,13 +67,16 @@ export function UserList() {
                                         <Text weight="bold">
                                             {user.display_name}
                                         </Text>
-                                        <Text className={styles.userRole}>
-                                            (@{user.username})
-                                        </Text>
+                                        {user?.username && (
+                                            <Text className={styles.userRole}>
+                                                (@{user.username})
+                                            </Text>
+                                        )}
                                     </Flex>
                                 </Table.RowHeaderCell>
                                 <Table.Cell>
                                     <Badge
+                                        className={styles.badge}
                                         intent={
                                             user.role === USER_ROLE.ADMIN
                                                 ? COMPONENT_INTENT.PRIMARY
@@ -92,17 +89,25 @@ export function UserList() {
                                 </Table.Cell>
                                 <Table.Cell>
                                     {isBanned ? (
-                                        <Badge intent="danger" variant="solid">
+                                        <Badge
+                                            className={styles.badge}
+                                            intent="danger"
+                                            variant="solid"
+                                        >
                                             {t("admin.statusBanned", "Banned")}
                                         </Badge>
                                     ) : (
-                                        <Badge intent="success" variant="soft">
+                                        <Badge
+                                            className={styles.badge}
+                                            intent="success"
+                                            variant="soft"
+                                        >
                                             {t("admin.statusActive", "Active")}
                                         </Badge>
                                     )}
                                 </Table.Cell>
                                 <Table.Cell>
-                                    {formatDate(user.created_at)}
+                                    {formatChatTime(user?.created_at || "")}
                                 </Table.Cell>
                                 <Table.Cell>
                                     <DropdownMenu.Root>

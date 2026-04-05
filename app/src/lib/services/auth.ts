@@ -19,8 +19,9 @@ export const AuthService = {
     register: async (
         email: string,
         password: string,
+        meta?: Record<string, string>,
     ): Promise<Result<AuthUser, AuthRepoError>> => {
-        const result = await authRepository.register(email, password);
+        const result = await authRepository.register(email, password, meta);
 
         if (result.isOk()) {
             logger.info(
@@ -39,8 +40,9 @@ export const AuthService = {
     loginWithPassword: async (
         email: string,
         password: string,
+        meta?: Record<string, string>,
     ): Promise<Result<AuthUser, AuthRepoError>> => {
-        return authRepository.login(email, password);
+        return authRepository.login(email, password, meta);
     },
 
     /**

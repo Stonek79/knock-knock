@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, useRouter } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
@@ -52,8 +53,14 @@ export function AdminLayout() {
         return <Navigate to={ROUTES.LOGIN} />;
     }
 
+    if (!profile) {
+        return null;
+    }
+
+    const { display_name, role, username } = profile;
+
     // Проверка роли администратора
-    if (profile && profile.role !== USER_ROLE.ADMIN) {
+    if (profile && role !== USER_ROLE.ADMIN) {
         return (
             <Flex className={styles.accessDeniedContainer}>
                 <Text size="xl" weight="bold" intent="danger">
@@ -72,19 +79,22 @@ export function AdminLayout() {
         );
     }
 
-    if (!profile) {
-        return null;
-    }
-
     return (
         <div className={styles.adminContainer}>
             <header className={styles.adminHeader}>
+                <Button onClick={() => router.history.back()}>
+                    <ArrowLeft />
+                </Button>
                 <Text weight="bold" size="lg">
-                    Панель администратора
+                    {t("admin.adminPanel", "Панель администратора")}
                 </Text>
                 <Flex gap="3" align="center">
                     <Text size="md" intent="secondary">
-                        Вы вошли как: {profile.username} ({profile.role})
+                        {t("admin.youAreAdmin", "Вы вошли как: ")}
+                        <Text weight="bold">
+                            {username || display_name || ""}
+                        </Text>{" "}
+                        <Text intent="secondary">({role})</Text>
                     </Text>
                 </Flex>
             </header>

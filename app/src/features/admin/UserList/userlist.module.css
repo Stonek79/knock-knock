@@ -29,3 +29,8 @@
     color: var(--muted);
     font-size: var(--text-sm);
 }
+
+.badge {
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+}

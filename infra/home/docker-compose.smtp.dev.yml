@@ -1,0 +1,16 @@
+# 1. Локальный SMTP-сервер (Mailpit) для разработки
+
+services:
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    restart: always
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI
+    networks:
+      - pb_network
+
+networks:
+  pb_network:
+    external: true

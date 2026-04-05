@@ -13,6 +13,7 @@ export const admin = {
     manageUsers: "Manage Users",
     viewBans: "View Bans",
     queueEmpty: "Queue Empty",
+    youAreAdmin: "You are logged in as: ",
 
     // User Management
     userManagement: "User Management",

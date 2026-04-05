@@ -149,3 +149,28 @@ onRecordAfterDeleteSuccess((e) => {
 
 	console.log(`🧹 [CLEANUP] Пользователь ${user.id} полностью очищен.`);
 }, "users");
+
+/**
+ * 3. Серверная проверка защиты от ботов (PocketBase Hooks)
+ * Файл: infra/home/pb_hooks/main.pb.js [MODIFY]
+ */
+
+onRecordBeforeCreateRequest((e) => {
+	const data = $apis.requestInfo(e.httpContext).data;
+
+	// 1. Проверка Honeypot
+	if (data.username_bot) {
+		throw new BadRequestError("Bot detected (honeypot)");
+	}
+
+	// 2. Проверка времени заполнения (минимум 3 секунды)
+	const start = parseInt(data._startTime || "0", 10);
+	const now = Date.now();
+	if (now - start < 3000) {
+		throw new BadRequestError("Bot detected (too fast)");
+	}
+
+	// Удаляем технические поля перед сохранением в БД
+	delete data.username_bot;
+	delete data._startTime;
+}, "users");
