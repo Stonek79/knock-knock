@@ -9,7 +9,7 @@ services:
       - --dir=/pb/pb_data 
       - --hooksDir=/pb/pb_hooks
     ports:
-      - "8091:8090" # Порт 8091 для DEV во внешний мир
+      - "9090:8090" # Порт 9090 для DEV во внешний мир
     volumes:
       - /home/alex/knok-knok-bd-dev/pb_data:/pb/pb_data
       - ../home/pb_hooks:/pb/pb_hooks
