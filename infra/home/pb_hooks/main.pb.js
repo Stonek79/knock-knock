@@ -155,7 +155,7 @@ onRecordAfterDeleteSuccess((e) => {
  * Файл: infra/home/pb_hooks/main.pb.js [MODIFY]
  */
 
-onRecordBeforeCreateRequest((e) => {
+onRecordCreateRequest((e) => {
 	const data = $apis.requestInfo(e.httpContext).data;
 
 	// 1. Проверка Honeypot
