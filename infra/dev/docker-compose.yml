@@ -1,0 +1,29 @@
+services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: knock-knock-pb-dev
+    restart: unless-stopped
+    command: 
+      - serve 
+      - --http=0.0.0.0:8090 
+      - --dir=/pb/pb_data 
+      - --hooksDir=/pb/pb_hooks
+    ports:
+      - "8091:8090" # Порт 8091 для DEV во внешний мир
+    volumes:
+      - /home/alex/knok-knok-bd-dev/pb_data:/pb/pb_data
+      - ../home/pb_hooks:/pb/pb_hooks
+      - ../home/pb_schema.json:/pb/pb_schema.json
+    env_file:
+      - .env
+    environment:
+      PB_PUSH_GATEWAY_URL: "http://knock-knock-push:4000"
+      PB_SMTP_HOST: "mailpit"
+      PB_SMTP_PORT: "1025"
+    networks:
+      - default
+
+networks:
+  default:
+    name: knock-knock-net
+    external: true

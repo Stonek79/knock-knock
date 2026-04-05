@@ -1,0 +1,15 @@
+services:
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # Панель управления Mailpit
+      - "1025:1025" # SMTP порт (будет доступен для dev-базы по имени mailpit:1025)
+    networks:
+      - default
+
+networks:
+  default:
+    name: knock-knock-net
+    external: true

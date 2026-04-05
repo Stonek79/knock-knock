@@ -1,0 +1,20 @@
+
+services:
+  push-gateway:
+    build: .
+    container_name: knock-knock-push
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+    env_file:
+      - .env
+
+networks:
+  default:
+    name: knock-knock-net
+    external: true
+
+
