@@ -12,8 +12,20 @@ services:
     ports:
       - "9090:8090"
     volumes:
-      - ./pb_data:/pb/pb_data
+      - /home/alex/knok-knok-bd-dev:/pb/pb_data
       - ./pb_hooks:/pb/pb_hooks
       - ./pb_schema.json:/pb/pb_schema.json
     environment:
       - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY_DEV}
+      - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY_DEV}
+      - PB_PUSH_GATEWAY_URL=http://push-gateway-dev:4000
+  push-gateway-dev:
+    build: ./push-gateway
+    container_name: knok-knok-push-dev
+    restart: always
+    ports:
+      - "4001:4000"
+    environment:
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_SUBJECT=mailto:admin@knok-knok.ru

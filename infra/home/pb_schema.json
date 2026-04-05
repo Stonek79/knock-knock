@@ -1289,5 +1289,77 @@
 		"createRule": "@request.auth.id != ''",
 		"updateRule": "@request.auth.role = 'admin'",
 		"deleteRule": "@request.auth.role = 'admin'"
+	},
+	{
+		"id": "pbc_push_subs_id",
+		"name": "push_subscriptions",
+		"type": "base",
+		"system": false,
+		"fields": [
+			{
+				"id": "text3208210256",
+				"name": "id",
+				"type": "text",
+				"system": true,
+				"primaryKey": true,
+				"required": true,
+				"autogeneratePattern": "[a-z0-9]{15}"
+			},
+			{
+				"id": "push_user_id",
+				"name": "user_id",
+				"type": "relation",
+				"system": false,
+				"required": true,
+				"collectionId": "_pb_users_auth_",
+				"maxSelect": 1,
+				"cascadeDelete": true
+			},
+			{
+				"id": "push_endpoint",
+				"name": "endpoint",
+				"type": "url",
+				"system": false,
+				"required": true
+			},
+			{
+				"id": "push_p256dh",
+				"name": "p256dh",
+				"type": "text",
+				"system": false,
+				"required": true
+			},
+			{
+				"id": "push_auth",
+				"name": "auth",
+				"type": "text",
+				"system": false,
+				"required": true
+			},
+			{
+				"id": "autodate2990389176",
+				"name": "created",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": false
+			},
+			{
+				"id": "autodate3332085495",
+				"name": "updated",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": true
+			}
+		],
+		"indexes": [
+			"CREATE UNIQUE INDEX `idx_push_sub_endpt` ON `push_subscriptions` (`endpoint`)"
+		],
+		"listRule": "@request.auth.id = user_id",
+		"viewRule": "@request.auth.id = user_id",
+		"createRule": "@request.auth.id = user_id",
+		"updateRule": "@request.auth.id = user_id",
+		"deleteRule": "@request.auth.id = user_id"
 	}
 ]

@@ -27,6 +27,10 @@ export const settings = {
     notifications: {
         notifications: "Уведомления",
         comingSoon: "Настройки уведомлений появятся скоро",
+        pushToggle: "Web Push уведомления",
+        unsupported: "Не поддерживается браузером",
+        pushDesc:
+            "Получайте уведомления о новых сообщениях, даже когда приложение закрыто. Полностью безопасно: мы используем E2E шифрование.",
     },
     security: {
         security: "Безопасность",

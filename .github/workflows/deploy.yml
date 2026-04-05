@@ -31,9 +31,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest
-            type=sha
+          tags: type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -44,17 +42,23 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+            VITE_VAPID_PUBLIC_KEY=${{ secrets.VITE_VAPID_PUBLIC_KEY }}
+
   deploy:
     runs-on: self-hosted
     needs: build-and-push
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Pull and Restart App
+      - name: Pull and Restart App AND PocketBase infrastructure
         run: |
           cd ~/knock-knock
-          docker compose pull app
-          docker compose up -d app
+          # Подтягиваем фронтенд (если вы используете docker-compose.yml для app)
+          # docker compose pull app 
+          # docker compose up -d app
+          
+          # Подтягиваем изменения бэкенда и рестартуем нужные сервисы (gateway и pb)
+          docker compose -f infra/home/docker-compose.pb.yml pull
+          docker compose -f infra/home/docker-compose.pb.yml up -d --build
+          
           docker image prune -f

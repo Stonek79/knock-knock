@@ -27,6 +27,10 @@ export const settings = {
     notifications: {
         notifications: "Notifications",
         comingSoon: "Notifications settings will appear soon",
+        pushToggle: "Web Push notifications",
+        unsupported: "Not supported by browser",
+        pushDesc:
+            "Receive notifications about new messages, even when the app is closed. Completely secure: we use E2E encryption.",
     },
     security: {
         security: "Security",

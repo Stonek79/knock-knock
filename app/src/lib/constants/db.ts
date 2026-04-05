@@ -7,6 +7,7 @@ import type {
     MessagesTypeOptions,
     PBRealtimeAction,
     PresenceStatusResponse,
+    PushSubscriptionsResponse,
     RoomMembersResponse,
     RoomMembersRoleOptions,
     RoomsResponse,
@@ -39,6 +40,7 @@ export const DB_TABLES = {
     MESSAGE_REACTIONS: "message_reactions",
     USER_FOLDERS: "user_folders",
     MESSAGE_REPORTS: "message_reports",
+    PUSH_SUBSCRIPTIONS: "push_subscriptions",
 } as const satisfies Record<string, CollectionName>;
 
 /** Поля коллекции users */
@@ -204,6 +206,15 @@ export const FOLDER_FIELDS = {
     UPDATED: "updated",
 } as const satisfies Record<string, AllFields<UserFoldersResponse>>;
 
+export const PUSH_SUBSCRIPTIONS_FIELDS = {
+    ID: "id",
+    ENDPOINT: "endpoint",
+    P256DH: "p256dh",
+    AUTH: "auth",
+    CREATED: "created",
+    UPDATED: "updated",
+} as const satisfies Record<string, AllFields<PushSubscriptionsResponse>>;
+
 /** Поля коллекции media */
 export const MEDIA_FIELDS = {
     ID: "id",
@@ -221,6 +232,7 @@ export const REALTIME_ACTIONS = {
     UPDATE: "update",
     DELETE: "delete",
 } as const satisfies Record<string, PBRealtimeAction>;
+
 /**
  * Ключи для раскрытия связей (expand).
  * Составляются динамически из имен таблиц и полей для обеспечения консистентности.

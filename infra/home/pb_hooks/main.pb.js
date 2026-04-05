@@ -174,3 +174,102 @@ onRecordBeforeCreateRequest((e) => {
 	delete data.username_bot;
 	delete data._startTime;
 }, "users");
+
+/**
+ * 4. Уведомления о новых сообщениях (Push Gateway)
+ * Триггер: Создание нового сообщения (коллекция "messages")
+ */
+onRecordAfterCreateSuccess((e) => {
+	const DB = {
+		TABLES: {
+			MEMBERS: "room_members",
+			PUSH_SUBS: "push_subscriptions",
+		},
+		FIELDS: {
+			TYPE: "type",
+			ROOM: "room",
+			SENDER: "sender",
+			USER: "user",
+			USER_ID: "user_id",
+			ENDPOINT: "endpoint",
+			P256DH: "p256dh",
+			AUTH: "auth",
+		},
+		VALUES: {
+			TYPE_SYSTEM: "system",
+		},
+	};
+
+	const message = e.record;
+
+	// Системные сообщения не пушатся (если они есть)
+	if (message.get(DB.FIELDS.TYPE) === DB.VALUES.TYPE_SYSTEM) return;
+
+	try {
+		const roomId = message.get(DB.FIELDS.ROOM);
+		const senderId = message.get(DB.FIELDS.SENDER);
+
+		// 1. Ищем участников комнаты, кроме отправителя
+		const members = $app.findRecordsByFilter(
+			DB.TABLES.MEMBERS,
+			`${DB.FIELDS.ROOM} = {:roomId} && ${DB.FIELDS.USER} != {:senderId}`,
+			"",
+			100,
+			0,
+			{ roomId: roomId, senderId: senderId },
+		);
+
+		if (members.length === 0) return;
+
+		const userIds = members.map((m) => m.get(DB.FIELDS.USER));
+
+		// 2. Ищем VAPID подписки найденных участников
+		const filterQuery = userIds
+			.map((id) => `${DB.FIELDS.USER_ID} = '${id}'`)
+			.join(" || ");
+		const subscriptions = $app.findRecordsByFilter(
+			DB.TABLES.PUSH_SUBS,
+			filterQuery,
+			"",
+			500,
+			0,
+			{},
+		);
+
+		if (subscriptions.length === 0) return;
+
+		const pushSubs = subscriptions.map((sub) => ({
+			endpoint: sub.get(DB.FIELDS.ENDPOINT),
+			p256dh: sub.get(DB.FIELDS.P256DH),
+			auth: sub.get(DB.FIELDS.AUTH),
+		}));
+
+		console.log(
+			`[PUSH] Отправка ${pushSubs.length} пушей для комнаты ${roomId}`,
+		);
+
+		// Payload (только мета-информация, сам текст вытянет PWA Service Worker)
+		const payload = {
+			type: "NEW_MESSAGE",
+			roomId: roomId,
+		};
+
+		// Достаем URL шлюза из ENV, чтобы в Dev режиме ходить в правильный контейнер
+		const pushGatewayUrl =
+			$os.getenv("PB_PUSH_GATEWAY_URL") || "http://push-gateway:4000";
+
+		const res = $http.send({
+			url: `${pushGatewayUrl}/api/send-push`,
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				subscriptions: pushSubs,
+				payload: payload,
+			}),
+		});
+
+		console.log(`[PUSH] Gateway HTTP-Code: ${res.statusCode}`);
+	} catch (err) {
+		console.error(`❌ [PUSH_ERROR]: ${err}`);
+	}
+}, "messages");

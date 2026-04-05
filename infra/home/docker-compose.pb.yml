@@ -24,7 +24,7 @@ services:
       - "8090:8090"
     volumes:
       # Данные PocketBase (БД SQLite + файлы)
-      - ./pb_data:/pb/pb_data
+      - /home/alex/knok-knok-bd:/pb/pb_data
       # Кастомные хуки и расширения (опционально)
       - ./pb_hooks:/pb/pb_hooks
       - ./pb_schema.json:/pb/pb_schema.json
@@ -36,6 +36,7 @@ services:
       PB_SMTP_USER: "${PB_SMTP_USER}"
       PB_SMTP_PASS: "${PB_SMTP_PASS}"
       PB_SMTP_TLS: "${PB_SMTP_TLS:-true}"
+      PB_PUSH_GATEWAY_URL: "http://push-gateway:4000"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
       interval: 30s
@@ -44,6 +45,21 @@ services:
       start_period: 10s
     networks:
       - pb_network
+  push-gateway:
+    build: ./push-gateway
+    container_name: knock-knock-push
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_SUBJECT=mailto:admin@knok-knok.ru
+    networks:
+      - pb_network
+    depends_on:
+      - pocketbase
+
 
 networks:
   pb_network:

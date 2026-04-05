@@ -20,7 +20,8 @@ export type CollectionName =
     | "presence_status"
     | "message_reactions"
     | "user_folders"
-    | "message_reports";
+    | "message_reports"
+    | "push_subscriptions";
 
 // Вспомогательные типы
 export type RecordIdString = string;
@@ -146,6 +147,7 @@ export type UsersRecord = {
     email: string;
     display_name: string;
     avatar?: string;
+    username?: string;
     status?: UsersStatusOptions;
     role?: UsersRoleOptions;
     last_seen?: string;
@@ -313,6 +315,20 @@ export type MessageReportsRecord = {
 export type MessageReportsResponse<Texpand = unknown> =
     Required<MessageReportsRecord> & BaseSystemFields<Texpand>;
 
+// ---------------------------------------------------------------------------
+// Коллекция: push_subscriptions
+// ---------------------------------------------------------------------------
+
+export type PushSubscriptionsRecord = {
+    user_id: RecordIdString;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+};
+
+export type PushSubscriptionsResponse<Texpand = unknown> =
+    Required<PushSubscriptionsRecord> & BaseSystemFields<Texpand>;
+
 export type CollectionRecords = {
     _mfas: MfasRecord;
     _otps: OtpsRecord;
@@ -329,6 +345,7 @@ export type CollectionRecords = {
     message_reactions: MessageReactionsRecord;
     user_folders: UserFoldersRecord;
     message_reports: MessageReportsRecord;
+    push_subscriptions: PushSubscriptionsRecord;
 };
 
 export type CollectionResponses = {
@@ -347,6 +364,7 @@ export type CollectionResponses = {
     message_reactions: MessageReactionsResponse;
     user_folders: UserFoldersResponse;
     message_reports: MessageReportsResponse;
+    push_subscriptions: PushSubscriptionsResponse;
 };
 
 export type TypedPocketBase = PocketBase & {
@@ -374,4 +392,7 @@ export type TypedPocketBase = PocketBase & {
     collection(
         idOrName: "message_reports",
     ): RecordService<MessageReportsResponse>;
+    collection(
+        idOrName: "push_subscriptions",
+    ): RecordService<PushSubscriptionsResponse>;
 };

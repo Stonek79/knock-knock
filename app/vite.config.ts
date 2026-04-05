@@ -22,6 +22,16 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: "autoUpdate",
+            strategies: "injectManifest", // Переопределяем поведение
+            srcDir: "src", // Искать файл в папке app/src
+            filename: "sw.ts", // Имя входного файла
+            injectManifest: {
+                maximumFileSizeToCacheInBytes: 4000000,
+            },
+            devOptions: {
+                enabled: true,
+                type: "module",
+            },
             manifest: {
                 name: "PrivMessenger",
                 short_name: "PrivMsg",
