@@ -2,13 +2,16 @@ import { z } from "zod";
 
 /**
  * Схема валидации переменных окружения приложения.
- * Гарантирует, что приложение не запустится без необходимых ключей или с неверным форматом URL.
- *
- * PocketBase требует только один URL — авторизация хранится в pb.authStore (localStorage).
  */
 const envSchema = z.object({
     /** URL инстанса PocketBase (например: https://api.knok-knok.ru) */
-    VITE_PB_URL: z.string().min(1).default("https://api.knok-knok.ru:8443"),
+    VITE_PB_URL: z
+        .string()
+        .min(1)
+        .default("https://api.knok-knok.ru:8443")
+        .refine((val) => val.startsWith("http"), {
+            message: "URL PocketBase должен начинаться с http:// или https://",
+        }),
     /** Использовать ли моки вместо реального API */
     VITE_USE_MOCK: z.enum(["true", "false"]).optional().default("false"),
     /** Опциональные переменные для разработки */
@@ -17,16 +20,17 @@ const envSchema = z.object({
 
 /**
  * Валидация текущих переменных окружения.
- * В случае ошибки приложение выбросит исключение при инициализации.
  */
-const _env = envSchema.safeParse(import.meta.env);
+const _envResult = envSchema.safeParse(import.meta.env);
 
-if (!_env.success) {
-    console.error(
-        "❌ Ошибка в переменных окружения:",
-        z.treeifyError(_env.error),
-    );
-    throw new Error("Некорректная конфигурация окружения");
+if (!_envResult.success) {
+    console.group("⚠️ Внимание: Конфигурация окружения не идеальна");
+    console.warn("Используются значения по умолчанию.");
+    console.warn("Детали:", _envResult.error.format());
+    console.groupEnd();
 }
 
-export const env = _env.data;
+// Экспортируем данные. Если парсинг не удался — берем дефолтные значения из схемы.
+export const env = _envResult.success
+    ? _envResult.data
+    : envSchema.parse({ VITE_PB_URL: "https://api.knok-knok.ru:8443" });
