@@ -1,7 +1,7 @@
 # Единый пульт управления инфраструктурой Knock-Knock
 # Поднимает контейнеры в соответствующих папках infra/
 
-.PHONY: help network start-all stop-all start-prod start-dev start-mailpit start-push stop-prod stop-dev stop-mailpit stop-push logs-push logs-prod
+.PHONY: help network start-all stop-all start-prod start-dev start-mailpit start-push start-web stop-prod stop-dev stop-mailpit stop-push stop-web logs-push logs-prod logs-web
 
 help:
 	@echo "Доступные команды управления инфраструктурой:"
@@ -29,6 +29,9 @@ start-mailpit: network
 start-push: network
 	cd infra/home/push-gateway && docker compose up -d
 
+start-web: network
+	cd infra/web && docker compose up -d
+
 # --- ОСТАНОВКА ---
 stop-prod:
 	cd infra/prod && docker compose down
@@ -42,11 +45,14 @@ stop-mailpit:
 stop-push:
 	cd infra/home/push-gateway && docker compose down
 
+stop-web:
+	cd infra/web && docker compose down
+
 # --- ГРУППОВЫЕ ---
-start-all: start-prod start-dev start-mailpit start-push
+start-all: start-prod start-dev start-mailpit start-push start-web
 	@echo "✅ Все среды и шлюз успешно запущены!"
 
-stop-all: stop-prod stop-dev stop-mailpit stop-push
+stop-all: stop-prod stop-dev stop-mailpit stop-push stop-web
 	@echo "🛑 Вся инфраструктура остановлена."
 
 # --- ЛОГИ ---
@@ -54,7 +60,10 @@ logs-push:
 	docker logs knock-knock-push -f
 
 logs-prod:
-	docker logs knock-knock-pb-prod -f
+	docker logs knock-knock-pb -f
 
 logs-dev:
 	docker logs knock-knock-pb-dev -f
+
+logs-web:
+	docker logs knock-knock-web -f

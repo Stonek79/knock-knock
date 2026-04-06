@@ -1,0 +1,16 @@
+services:
+  web:
+    build:
+      context: ../../app
+      dockerfile: Dockerfile
+    container_name: knock-knock-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - default
+
+networks:
+  default:
+    name: knock-knock-net
+    external: true

@@ -17,9 +17,11 @@ services:
     env_file:
       - .env
     environment:
-      PB_PUSH_GATEWAY_URL: "http://knock-knock-push:4000"
-      PB_SMTP_HOST: "mailpit"
-      PB_SMTP_PORT: "1025"
+      - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-}
+      - PB_PUSH_GATEWAY_URL=http://knock-knock-push:4000
+      - PB_SMTP_HOST=mailpit
+      - PB_SMTP_PORT=1025
+      - PB_SMTP_TLS=false
     networks:
       - default
 

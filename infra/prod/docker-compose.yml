@@ -17,8 +17,13 @@ services:
     env_file:
       - .env
     environment:
-      # Заглушка, если .env неполный
-      PB_PUSH_GATEWAY_URL: "http://knock-knock-push:4000"
+      - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-}
+      - PB_SMTP_HOST=${PB_SMTP_HOST:-}
+      - PB_SMTP_PORT=${PB_SMTP_PORT:-}
+      - PB_SMTP_USER=${PB_SMTP_USER:-}
+      - PB_SMTP_PASS=${PB_SMTP_PASS:-}
+      - PB_SMTP_TLS=${PB_SMTP_TLS:-true}
+      - PB_PUSH_GATEWAY_URL=http://knock-knock-push:4000
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
       interval: 30s

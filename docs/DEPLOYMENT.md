@@ -9,6 +9,10 @@
 - **Home Server (10.0.0.2)**: Хостит инстанс PocketBase.
 
 ### Nginx (VPS)
+ls -la /etc/nginx/sites-enabled/
+
+sudo nano /etc/nginx/sites-available/api.knok-knok.ru
+
 Конфигурация Nginx должна поддерживать SSE (Server-Sent Events) для реалтайма:
 ```nginx
 location / {

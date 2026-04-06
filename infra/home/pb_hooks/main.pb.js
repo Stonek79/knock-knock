@@ -173,6 +173,8 @@ onRecordCreateRequest((e) => {
 	// Удаляем технические поля перед сохранением в БД
 	delete data.username_bot;
 	delete data._startTime;
+
+    return e.next();
 }, "users");
 
 /**
