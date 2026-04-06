@@ -32,6 +32,12 @@ start-push: network
 start-web: network
 	cd infra/web && docker compose up -d
 
+start-web-build: network
+	cd infra/web && docker compose up -d --build
+
+build:
+	cd app && npm run build
+
 # --- ОСТАНОВКА ---
 stop-prod:
 	cd infra/prod && docker compose down

@@ -156,7 +156,14 @@ onRecordAfterDeleteSuccess((e) => {
  */
 
 onRecordCreateRequest((e) => {
-	const data = $apis.requestInfo(e.httpContext).data;
+	const info = $apis.requestInfo(e.httpContext);
+
+	// Если запрос от админа (через панель управления) — пропускаем все проверки на ботов
+	if (info.admin) {
+		return e.next();
+	}
+
+	const data = info.data;
 
 	// 1. Проверка Honeypot
 	if (data.username_bot) {
