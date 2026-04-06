@@ -8,7 +8,7 @@ import { z } from "zod";
  */
 const envSchema = z.object({
     /** URL инстанса PocketBase (например: https://api.knok-knok.ru) */
-    VITE_PB_URL: z.url("Некорректный URL PocketBase"),
+    VITE_PB_URL: z.string().min(1).default("https://api.knok-knok.ru:8443"),
     /** Использовать ли моки вместо реального API */
     VITE_USE_MOCK: z.enum(["true", "false"]).optional().default("false"),
     /** Опциональные переменные для разработки */
