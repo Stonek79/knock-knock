@@ -156,14 +156,17 @@ onRecordAfterDeleteSuccess((e) => {
  */
 
 onRecordCreateRequest((e) => {
+	console.log("🔍 [HOOK] Попытка создания пользователя...");
 	const info = $apis.requestInfo(e.httpContext);
 
 	// Если запрос от админа (через панель управления) — пропускаем все проверки на ботов
 	if (info.admin) {
+		console.log("👑 [HOOK] Запрос от админа, пропускаем защиту от ботов.");
 		return e.next();
 	}
 
 	const data = info.data;
+	console.log(`👤 [HOOK] Обычный запрос, проверяем данные: ${JSON.stringify(data)}`);
 
 	// 1. Проверка Honeypot
 	if (data.username_bot) {
