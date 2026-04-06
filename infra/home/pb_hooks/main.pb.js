@@ -157,34 +157,42 @@ onRecordAfterDeleteSuccess((e) => {
 
 onRecordCreateRequest((e) => {
 	console.log("🔍 [HOOK] Попытка создания пользователя...");
-	const info = $apis.requestInfo(e.httpContext);
+	
+	try {
+		if (e.httpContext?.get("admin")) {
+			console.log("👑 [HOOK] Админ обнаружен через контекст, пропускаем защиту.");
+			return e.next();
+		}
 
-	// Если запрос от админа (через панель управления) — пропускаем все проверки на ботов
-	if (info.admin) {
-		console.log("👑 [HOOK] Запрос от админа, пропускаем защиту от ботов.");
-		return e.next();
+		const data = $apis.requestInfo(e.httpContext).data;
+		console.log(`👤 [HOOK] Проверка данных регистрации: ${JSON.stringify(data)}`);
+
+		// 1. Проверка Honeypot
+		if (data.username_bot) {
+			throw new BadRequestError("Bot detected (honeypot)");
+		}
+
+		// 2. Проверка времени заполнения (минимум 3 секунды)
+		const start = parseInt(data._startTime || "0", 10);
+		const now = Date.now();
+		if (now - start < 3000) {
+			throw new BadRequestError("Bot detected (too fast)");
+		}
+
+		// Удаляем технические поля перед сохранением в БД
+		delete data.username_bot;
+		delete data._startTime;
+
+	} catch (err) {
+		// Если это наша ошибка BadRequestError (бот) — прокидываем её дальше
+		if (err.name === "BadRequestError" || (err.message?.includes("Bot detected"))) {
+			throw err;
+		}
+		// В случае системной ошибки в хуке — логируем и даем создать запись (safety first)
+		console.error("❌ [HOOK_CRASH]: Непредвиденная ошибка в хуке:", err);
 	}
 
-	const data = info.data;
-	console.log(`👤 [HOOK] Обычный запрос, проверяем данные: ${JSON.stringify(data)}`);
-
-	// 1. Проверка Honeypot
-	if (data.username_bot) {
-		throw new BadRequestError("Bot detected (honeypot)");
-	}
-
-	// 2. Проверка времени заполнения (минимум 3 секунды)
-	const start = parseInt(data._startTime || "0", 10);
-	const now = Date.now();
-	if (now - start < 3000) {
-		throw new BadRequestError("Bot detected (too fast)");
-	}
-
-	// Удаляем технические поля перед сохранением в БД
-	delete data.username_bot;
-	delete data._startTime;
-
-    return e.next();
+	return e.next();
 }, "users");
 
 /**
