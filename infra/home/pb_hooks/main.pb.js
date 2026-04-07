@@ -157,17 +157,27 @@ onRecordAfterDeleteSuccess((e) => {
 
 onRecordCreateRequest((e) => {
 	console.log("🔍 [HOOK] Попытка создания пользователя...");
+	// Discovery Log: выводим доступные поля объекта события, чтобы понять API v0.23
+	try {
+		console.log("Keys in event object:", Object.keys(e).join(", "));
+	} catch (_) {}
 
 	try {
-		// Проверка на админа через контекст (в v0.23 это делается так)
-		const admin = e.httpContext.get("admin");
+		// В v0.23 Go-поля часто доступны с большой буквы (PascalCase)
+		const ctx = e.httpContext || e.HttpContext;
+		if (!ctx) {
+			console.log("⚠️ [HOOK] HttpContext не найден в объекте события.");
+			return e.next();
+		}
+
+		const admin = ctx.get("admin");
 		if (admin) {
 			return e.next();
 		}
 
 		// В v0.23 данные запроса берем через formValue
-		const usernameBot = e.httpContext.formValue("username_bot");
-		const startTimeStr = e.httpContext.formValue("_startTime");
+		const usernameBot = ctx.formValue("username_bot");
+		const startTimeStr = ctx.formValue("_startTime");
 
 		// 1. Проверка Honeypot
 		if (usernameBot) {
@@ -190,7 +200,7 @@ onRecordCreateRequest((e) => {
 
 		// Гарантируем passwordConfirm для Auth записи
 		if (!e.record.get("passwordConfirm")) {
-			const password = e.httpContext.formValue("password");
+			const password = ctx.formValue("password");
 			if (password) {
 				e.record.set("passwordConfirm", password);
 			}
