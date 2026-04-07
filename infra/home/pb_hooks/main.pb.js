@@ -72,7 +72,7 @@ onRecordAfterCreateSuccess((e) => {
 			`❌ [REG_ERROR] Ошибка инициализации для ${user.email()}: ${err}`,
 		);
 		// В v0.23+ мы в AfterCreateSuccess, юзер уже сохранен. Если упали — удаляем его.
-		$app.deleteNoValidate(user);
+		// $app.deleteNoValidate(user);
 	}
 }, "users");
 
@@ -157,34 +157,22 @@ onRecordAfterDeleteSuccess((e) => {
 
 onRecordCreateRequest((e) => {
 	console.log("🔍 [HOOK] Попытка создания пользователя...");
-	// Discovery Log: выводим доступные поля объекта события, чтобы понять API v0.23
-	try {
-		console.log("Keys in event object:", Object.keys(e).join(", "));
-	} catch (_) {}
 
 	try {
-		// В v0.23 Go-поля часто доступны с большой буквы (PascalCase)
-		const ctx = e.httpContext || e.HttpContext;
-		if (!ctx) {
-			console.log("⚠️ [HOOK] HttpContext не найден в объекте события.");
+		// В v0.23 e — это и есть контекст запроса, либо он содержит requestInfo.data
+		const data = e.requestInfo ? e.requestInfo.data : {};
+
+		if (e.get?.("admin")) {
 			return e.next();
 		}
-
-		const admin = ctx.get("admin");
-		if (admin) {
-			return e.next();
-		}
-
-		// В v0.23 данные запроса берем через formValue
-		const usernameBot = ctx.formValue("username_bot");
-		const startTimeStr = ctx.formValue("_startTime");
 
 		// 1. Проверка Honeypot
-		if (usernameBot) {
+		if (data.username_bot) {
 			throw $errors.badRequest("Bot detected (honeypot)");
 		}
 
 		// 2. Проверка времени заполнения (минимум 3 секунды)
+		const startTimeStr = data._startTime;
 		const start = parseInt(startTimeStr || "0", 10);
 		const now = Date.now();
 		if (startTimeStr && now - start < 3000) {
@@ -192,25 +180,22 @@ onRecordCreateRequest((e) => {
 		}
 
 		// --- ШАГ 1: ПРИНУДИТЕЛЬНОЕ ЗАПОЛНЕНИЕ TOKENKEY ---
-		// В v0.23 e.record.get() возвращает пустое значение, если ключ не сгенерирован
 		if (!e.record.get("tokenKey")) {
 			e.record.set("tokenKey", $security.randomString(30));
 			console.log("⚡ [HOOK] tokenKey сгенерирован принудительно.");
 		}
 
-		// Гарантируем passwordConfirm для Auth записи
+		// Гарантируем passwordConfirm
 		if (!e.record.get("passwordConfirm")) {
-			const password = ctx.formValue("password");
+			const password = data.password;
 			if (password) {
 				e.record.set("passwordConfirm", password);
 			}
 		}
 	} catch (err) {
-		// Если это наша ошибка — прокидываем её дальше
 		if (err.message?.includes("Bot detected")) {
 			throw err;
 		}
-		// В случае системной ошибки — логируем и даем создать запись
 		console.error("❌ [HOOK_CRASH]:", err.message || err);
 	}
 
