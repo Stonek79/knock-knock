@@ -183,6 +183,20 @@ onRecordCreateRequest((e) => {
 			throw $errors.badRequest("Bot detected (too fast)");
 		}
 
+		// --- ШАГ 1: ПРИНУДИТЕЛЬНОЕ ЗАПОЛНЕНИЕ TOKENKEY ---
+		// Если PocketBase по какой-то причине считает поле пустым на этапе валидации,
+		// мы заполняем его вручную до сохранения в БД.
+		if (!e.record.get("tokenKey")) {
+			// Генерируем случайную строку длиной 30 символов (стандарт для PB)
+			e.record.set("tokenKey", $security.randomString(30));
+			console.log("⚡ [HOOK] tokenKey сгенерирован принудительно.");
+		}
+
+		// Также на всякий случай гарантируем passwordConfirm, если он потерялся
+		if (!e.record.get("passwordConfirm") && data.password) {
+			e.record.set("passwordConfirm", data.password);
+		}
+
 		// Удаляем технические поля перед сохранением в БД
 		delete data.username_bot;
 		delete data._startTime;
