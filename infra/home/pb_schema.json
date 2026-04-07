@@ -26,7 +26,7 @@
 				"name": "tokenKey",
 				"type": "text",
 				"system": true,
-				"required": true
+				"required": false
 			},
 			{
 				"id": "email3885137012",
@@ -365,7 +365,7 @@
 				"name": "display_name",
 				"type": "text",
 				"system": false,
-				"required": true
+				"required": false
 			},
 			{
 				"id": "file376926767",
@@ -1361,5 +1361,96 @@
 		"createRule": "@request.auth.id = user_id",
 		"updateRule": "@request.auth.id = user_id",
 		"deleteRule": "@request.auth.id = user_id"
+	},
+	{
+		"id": "pbc_media_id",
+		"name": "media",
+		"type": "base",
+		"system": false,
+		"fields": [
+			{
+				"id": "text3208210256",
+				"name": "id",
+				"type": "text",
+				"system": true,
+				"primaryKey": true,
+				"required": true,
+				"autogeneratePattern": "[a-z0-9]{15}"
+			},
+			{
+				"id": "med_file_id",
+				"name": "file",
+				"type": "file",
+				"system": false,
+				"required": true,
+				"maxSelect": 1
+			},
+			{
+				"id": "med_cb_id",
+				"name": "created_by",
+				"type": "relation",
+				"system": false,
+				"required": true,
+				"collectionId": "_pb_users_auth_",
+				"maxSelect": 1,
+				"cascadeDelete": true
+			},
+			{
+				"id": "med_type_id",
+				"name": "type",
+				"type": "select",
+				"system": false,
+				"required": true,
+				"values": ["image", "video", "audio", "document"]
+			},
+			{
+				"id": "med_size_id",
+				"name": "size",
+				"type": "number",
+				"system": false
+			},
+			{
+				"id": "med_mime_id",
+				"name": "mime_type",
+				"type": "text",
+				"system": false
+			},
+			{
+				"id": "med_meta_id",
+				"name": "metadata",
+				"type": "json",
+				"system": false
+			},
+			{
+				"id": "med_is_test",
+				"name": "is_test",
+				"type": "bool",
+				"system": false
+			},
+			{
+				"id": "autodate2990389176",
+				"name": "created",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": false
+			},
+			{
+				"id": "autodate3332085495",
+				"name": "updated",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": true
+			}
+		],
+		"indexes": [
+			"CREATE INDEX `idx_media_created_by` ON `media` (`created_by`)"
+		],
+		"listRule": "@request.auth.id != ''",
+		"viewRule": "@request.auth.id != ''",
+		"createRule": "@request.auth.id != ''",
+		"updateRule": "@request.auth.id = created_by",
+		"deleteRule": "@request.auth.id = created_by"
 	}
 ]

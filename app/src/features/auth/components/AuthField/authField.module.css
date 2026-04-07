@@ -12,6 +12,14 @@
     animation: slideIn var(--transition-fast);
 }
 
+.helperText {
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    margin-left: var(--space-05);
+    margin-top: var(--space-05);
+    opacity: 0.8;
+}
+
 @keyframes slideIn {
     from {
         opacity: 0;
@@ -21,4 +29,18 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Safari fix: hide auto-fill icons which ignore autocomplete="off" */
+.fieldContainer input::-webkit-contacts-auto-fill-button,
+.fieldContainer input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
+.fieldContainer input::-webkit-texfield-decoration-container {
+    display: none;
 }

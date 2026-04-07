@@ -157,15 +157,19 @@ onRecordAfterDeleteSuccess((e) => {
 
 onRecordCreateRequest((e) => {
 	console.log("🔍 [HOOK] Попытка создания пользователя...");
-	
+
 	try {
 		if (e.httpContext?.get("admin")) {
-			console.log("👑 [HOOK] Админ обнаружен через контекст, пропускаем защиту.");
+			console.log(
+				"👑 [HOOK] Админ обнаружен через контекст, пропускаем защиту.",
+			);
 			return e.next();
 		}
 
 		const data = $apis.requestInfo(e.httpContext).data;
-		console.log(`👤 [HOOK] Проверка данных регистрации: ${JSON.stringify(data)}`);
+		console.log(
+			`👤 [HOOK] Проверка данных регистрации: ${JSON.stringify(data)}`,
+		);
 
 		// 1. Проверка Honeypot
 		if (data.username_bot) {
@@ -182,10 +186,12 @@ onRecordCreateRequest((e) => {
 		// Удаляем технические поля перед сохранением в БД
 		delete data.username_bot;
 		delete data._startTime;
-
 	} catch (err) {
 		// Если это наша ошибка BadRequestError (бот) — прокидываем её дальше
-		if (err.name === "BadRequestError" || (err.message?.includes("Bot detected"))) {
+		if (
+			err.name === "BadRequestError" ||
+			err.message?.includes("Bot detected")
+		) {
 			throw err;
 		}
 		// В случае системной ошибки в хуке — логируем и даем создать запись (safety first)
@@ -224,8 +230,8 @@ onRecordAfterCreateSuccess((e) => {
 
 	// Системные сообщения не пушатся (если они есть)
 	if (message.get(DB.FIELDS.TYPE) === DB.VALUES.TYPE_SYSTEM) {
-		return
-	};
+		return;
+	}
 
 	try {
 		const roomId = message.get(DB.FIELDS.ROOM);
@@ -242,8 +248,8 @@ onRecordAfterCreateSuccess((e) => {
 		);
 
 		if (members.length === 0) {
-			return
-		};
+			return;
+		}
 
 		const userIds = members.map((m) => m.get(DB.FIELDS.USER));
 
@@ -261,8 +267,8 @@ onRecordAfterCreateSuccess((e) => {
 		);
 
 		if (subscriptions.length === 0) {
-			return
-		};
+			return;
+		}
 
 		const pushSubs = subscriptions.map((sub) => ({
 			endpoint: sub.get(DB.FIELDS.ENDPOINT),

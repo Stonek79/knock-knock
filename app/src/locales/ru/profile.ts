@@ -22,5 +22,7 @@ export const profile = {
     restoreError: "Ошибка восстановления",
     enterBackupPassword: "Введите пароль",
     confirmPassword: "Повторите пароль",
-    namePlaceholder: "Как вас зовут?",
+    namePlaceholder: "Придумайте никнейм",
+    displayNameHint:
+        "Если оставить пустым, будет использована часть вашего email",
 } as const;

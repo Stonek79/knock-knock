@@ -24,30 +24,57 @@ export function RegisterForm() {
             className={styles.form}
         >
             <Flex direction="column" gap="4">
+                {/* Honeypot поле для защиты от ботов (скрыто от пользователей) */}
+                <div className={styles.honeypot} aria-hidden="true">
+                    <registerForm.Field name="username_bot">
+                        {(field) => (
+                            <input
+                                type="text"
+                                name={field.name}
+                                value={field.state.value}
+                                onChange={(e) =>
+                                    field.handleChange(e.target.value)
+                                }
+                                tabIndex={-1}
+                                autoComplete="off"
+                            />
+                        )}
+                    </registerForm.Field>
+                </div>
+
                 {/* Имя */}
                 <registerForm.Field
                     name="display_name"
                     validators={{
                         onBlur: ({ value }) => {
-                            const res =
-                                registerFieldsSchema.shape.display_name.safeParse(
-                                    value,
-                                );
-                            return res.success
-                                ? undefined
-                                : t(res.error.issues[0].message);
-                        },
-                        onChange: ({ value, fieldApi }) => {
-                            if (fieldApi.state.meta.errors.length === 0) {
+                            if (!value || value.trim() === "") {
                                 return undefined;
                             }
                             const res =
                                 registerFieldsSchema.shape.display_name.safeParse(
                                     value,
                                 );
-                            return res.success
-                                ? undefined
-                                : t(res.error.issues[0].message);
+                            if (res.success) {
+                                return undefined;
+                            }
+                            return t(res.error.issues[0].message);
+                        },
+                        onChange: ({ value, fieldApi }) => {
+                            if (
+                                !value ||
+                                value.trim() === "" ||
+                                fieldApi.state.meta.errors.length === 0
+                            ) {
+                                return undefined;
+                            }
+                            const res =
+                                registerFieldsSchema.shape.display_name.safeParse(
+                                    value,
+                                );
+                            if (res.success) {
+                                return undefined;
+                            }
+                            return t(res.error.issues[0].message);
                         },
                     }}
                 >
@@ -55,13 +82,16 @@ export function RegisterForm() {
                         <AuthField
                             label={t("profile.displayName")}
                             field={field}
+                            helperText={t("profile.displayNameHint")}
                         >
                             <TextField
                                 value={field.state.value}
-                                onChange={(e) =>
-                                    field.handleChange(e.target.value)
-                                }
+                                onChange={(e) => {
+                                    field.handleChange(e.target.value);
+                                }}
                                 placeholder={t("profile.namePlaceholder")}
+                                autoComplete="off"
+                                spellCheck={false}
                             />
                         </AuthField>
                     )}
@@ -76,9 +106,10 @@ export function RegisterForm() {
                                 registerFieldsSchema.shape.email.safeParse(
                                     value,
                                 );
-                            return res.success
-                                ? undefined
-                                : t(res.error.issues[0].message);
+                            if (res.success) {
+                                return undefined;
+                            }
+                            return t(res.error.issues[0].message);
                         },
                         onChange: ({ value, fieldApi }) => {
                             if (fieldApi.state.meta.errors.length === 0) {
@@ -88,9 +119,10 @@ export function RegisterForm() {
                                 registerFieldsSchema.shape.email.safeParse(
                                     value,
                                 );
-                            return res.success
-                                ? undefined
-                                : t(res.error.issues[0].message);
+                            if (res.success) {
+                                return undefined;
+                            }
+                            return t(res.error.issues[0].message);
                         },
                     }}
                 >
@@ -98,9 +130,9 @@ export function RegisterForm() {
                         <AuthField label={t("common.email")} field={field}>
                             <EmailInput
                                 value={field.state.value}
-                                onChange={(e) =>
-                                    field.handleChange(e.target.value)
-                                }
+                                onChange={(e) => {
+                                    field.handleChange(e.target.value);
+                                }}
                                 autoComplete="email"
                                 placeholder={t("auth.emailPlaceholder")}
                             />
@@ -117,9 +149,10 @@ export function RegisterForm() {
                                 registerFieldsSchema.shape.password.safeParse(
                                     value,
                                 );
-                            return res.success
-                                ? undefined
-                                : t(res.error.issues[0].message);
+                            if (res.success) {
+                                return undefined;
+                            }
+                            return t(res.error.issues[0].message);
                         },
                         onChange: ({ value, fieldApi }) => {
                             if (fieldApi.state.meta.errors.length === 0) {
@@ -129,9 +162,10 @@ export function RegisterForm() {
                                 registerFieldsSchema.shape.password.safeParse(
                                     value,
                                 );
-                            return res.success
-                                ? undefined
-                                : t(res.error.issues[0].message);
+                            if (res.success) {
+                                return undefined;
+                            }
+                            return t(res.error.issues[0].message);
                         },
                     }}
                 >
@@ -139,9 +173,9 @@ export function RegisterForm() {
                         <AuthField label={t("common.password")} field={field}>
                             <PasswordInput
                                 value={field.state.value}
-                                onChange={(e) =>
-                                    field.handleChange(e.target.value)
-                                }
+                                onChange={(e) => {
+                                    field.handleChange(e.target.value);
+                                }}
                                 autoComplete="new-password"
                                 placeholder={t("auth.passwordPlaceholder")}
                             />
@@ -156,9 +190,10 @@ export function RegisterForm() {
                         onBlur: ({ value, fieldApi }) => {
                             const pass =
                                 fieldApi.form.getFieldValue("password");
-                            return value === pass
-                                ? undefined
-                                : t("auth.passwordsNotMatch");
+                            if (value === pass) {
+                                return undefined;
+                            }
+                            return t("auth.passwordsNotMatch");
                         },
                         onChange: ({ value, fieldApi }) => {
                             if (fieldApi.state.meta.errors.length === 0) {
@@ -166,9 +201,10 @@ export function RegisterForm() {
                             }
                             const pass =
                                 fieldApi.form.getFieldValue("password");
-                            return value === pass
-                                ? undefined
-                                : t("auth.passwordsNotMatch");
+                            if (value === pass) {
+                                return undefined;
+                            }
+                            return t("auth.passwordsNotMatch");
                         },
                     }}
                 >
@@ -179,9 +215,9 @@ export function RegisterForm() {
                         >
                             <PasswordInput
                                 value={field.state.value}
-                                onChange={(e) =>
-                                    field.handleChange(e.target.value)
-                                }
+                                onChange={(e) => {
+                                    field.handleChange(e.target.value);
+                                }}
                                 autoComplete="new-password"
                                 placeholder={t("auth.passwordPlaceholder")}
                             />
@@ -193,8 +229,12 @@ export function RegisterForm() {
                 <registerForm.Field
                     name="agreeToTerms"
                     validators={{
-                        onChange: ({ value }) =>
-                            value ? undefined : t("auth.mustAgreeToTerms"),
+                        onChange: ({ value }) => {
+                            if (value) {
+                                return undefined;
+                            }
+                            return t("auth.mustAgreeToTerms");
+                        },
                     }}
                 >
                     {(field) => (
@@ -202,9 +242,9 @@ export function RegisterForm() {
                             <Flex align="center" gap="2">
                                 <Checkbox
                                     checked={field.state.value}
-                                    onCheckedChange={(c) =>
-                                        field.handleChange(!!c)
-                                    }
+                                    onCheckedChange={(c) => {
+                                        field.handleChange(!!c);
+                                    }}
                                 />
                                 <span className={styles.checkboxLabel}>
                                     {t("auth.iAgreeToTerms")}

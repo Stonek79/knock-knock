@@ -32,6 +32,7 @@ interface AuthFieldProps<TField extends MinimalFieldApi> {
     label: string;
     field: TField;
     children: ReactElement<ValidatedInputProps>;
+    helperText?: string;
     className?: string;
 }
 
@@ -42,6 +43,7 @@ export function AuthField<TField extends MinimalFieldApi>({
     label,
     field,
     children,
+    helperText,
     className,
 }: AuthFieldProps<TField>) {
     const { errors, isTouched } = field.state.meta;
@@ -59,7 +61,11 @@ export function AuthField<TField extends MinimalFieldApi>({
     }
 
     return (
-        <Flex direction="column" gap="1" className={className}>
+        <Flex
+            direction="column"
+            gap="1"
+            className={`${styles.fieldContainer} ${className || ""}`}
+        >
             <label htmlFor={field.name} className={styles.label}>
                 {label}
             </label>
@@ -69,6 +75,9 @@ export function AuthField<TField extends MinimalFieldApi>({
                 "aria-invalid": hasError,
                 "aria-describedby": hasError ? errorId : undefined,
             })}
+            {!hasError && helperText && (
+                <span className={styles.helperText}>{helperText}</span>
+            )}
             {hasError && (
                 <span id={errorId} className={styles.error} role="alert">
                     {String(errors[0])}

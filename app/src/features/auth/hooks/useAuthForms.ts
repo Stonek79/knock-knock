@@ -65,11 +65,16 @@ export function useAuthForms() {
 
             ChatRealtimeService.destroy();
 
-            // 1. Регистрация (Email + Password)
+            // Если имя не введено, берем часть email до @ в качестве дефолта
+            const displayName =
+                value.display_name.trim() || value.email.split("@")[0];
+
+            // 1. Регистрация (Email + Password + Display Name)
             const regResult = await AuthService.register(
                 value.email,
                 value.password,
                 {
+                    display_name: displayName,
                     _startTime: value._startTime,
                     username_bot: value.username_bot,
                 },
@@ -86,14 +91,7 @@ export function useAuthForms() {
                     },
                 );
 
-                if (loginResult.isOk()) {
-                    // 3. Обновление отображаемого имени
-                    if (value.display_name) {
-                        await AuthService.updateMe({
-                            display_name: value.display_name,
-                        });
-                    }
-                } else {
+                if (!loginResult.isOk()) {
                     setSubmitError(t("auth.errors.loginAfterRegisterFailed"));
                 }
             } else {
