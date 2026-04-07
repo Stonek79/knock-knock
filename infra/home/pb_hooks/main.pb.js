@@ -159,54 +159,49 @@ onRecordCreateRequest((e) => {
 	console.log("🔍 [HOOK] Попытка создания пользователя...");
 
 	try {
-		if (e.httpContext?.get("admin")) {
-			console.log(
-				"👑 [HOOK] Админ обнаружен через контекст, пропускаем защиту.",
-			);
+		// Проверка на админа через контекст (в v0.23 это делается так)
+		const admin = e.httpContext.get("admin");
+		if (admin) {
 			return e.next();
 		}
 
-		const data = $apis.requestInfo(e.httpContext).data;
-		console.log(
-			`👤 [HOOK] Проверка данных регистрации: ${JSON.stringify(data)}`,
-		);
+		// В v0.23 данные запроса берем через formValue
+		const usernameBot = e.httpContext.formValue("username_bot");
+		const startTimeStr = e.httpContext.formValue("_startTime");
 
 		// 1. Проверка Honeypot
-		if (data.username_bot) {
+		if (usernameBot) {
 			throw $errors.badRequest("Bot detected (honeypot)");
 		}
 
 		// 2. Проверка времени заполнения (минимум 3 секунды)
-		const start = parseInt(data._startTime || "0", 10);
+		const start = parseInt(startTimeStr || "0", 10);
 		const now = Date.now();
-		if (now - start < 3000) {
+		if (startTimeStr && now - start < 3000) {
 			throw $errors.badRequest("Bot detected (too fast)");
 		}
 
 		// --- ШАГ 1: ПРИНУДИТЕЛЬНОЕ ЗАПОЛНЕНИЕ TOKENKEY ---
-		// Если PocketBase по какой-то причине считает поле пустым на этапе валидации,
-		// мы заполняем его вручную до сохранения в БД.
+		// В v0.23 e.record.get() возвращает пустое значение, если ключ не сгенерирован
 		if (!e.record.get("tokenKey")) {
-			// Генерируем случайную строку длиной 30 символов (стандарт для PB)
 			e.record.set("tokenKey", $security.randomString(30));
 			console.log("⚡ [HOOK] tokenKey сгенерирован принудительно.");
 		}
 
-		// Также на всякий случай гарантируем passwordConfirm, если он потерялся
-		if (!e.record.get("passwordConfirm") && data.password) {
-			e.record.set("passwordConfirm", data.password);
+		// Гарантируем passwordConfirm для Auth записи
+		if (!e.record.get("passwordConfirm")) {
+			const password = e.httpContext.formValue("password");
+			if (password) {
+				e.record.set("passwordConfirm", password);
+			}
 		}
-
-		// Удаляем технические поля перед сохранением в БД
-		delete data.username_bot;
-		delete data._startTime;
 	} catch (err) {
 		// Если это наша ошибка — прокидываем её дальше
 		if (err.message?.includes("Bot detected")) {
 			throw err;
 		}
-		// В случае системной ошибки в хуке — логируем и даем создать запись (safety first)
-		console.error("❌ [HOOK_CRASH]: Непредвиденная ошибка в хуке:", err);
+		// В случае системной ошибки — логируем и даем создать запись
+		console.error("❌ [HOOK_CRASH]:", err.message || err);
 	}
 
 	return e.next();
