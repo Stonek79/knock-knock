@@ -26,7 +26,7 @@
 				"name": "tokenKey",
 				"type": "text",
 				"system": true,
-				"required": false
+				"required": true
 			},
 			{
 				"id": "email3885137012",
@@ -339,7 +339,7 @@
 				"name": "tokenKey",
 				"type": "text",
 				"system": true,
-				"required": true
+				"required": false
 			},
 			{
 				"id": "email3885137012",
@@ -461,6 +461,7 @@
 			}
 		],
 		"indexes": [
+			"CREATE UNIQUE INDEX `idx_tokenKey_users` ON `users` (`tokenKey`)",
 			"CREATE UNIQUE INDEX `idx_username` ON `users` (`username`) WHERE `username` != ''"
 		],
 		"listRule": "@request.auth.id != ''",
@@ -620,7 +621,8 @@
 				"name": "unread_count",
 				"type": "number",
 				"system": false,
-				"required": true
+				"required": true,
+				"noZero": false
 			},
 			{
 				"id": "rm_un_id",

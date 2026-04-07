@@ -111,7 +111,7 @@ onRecordAfterDeleteSuccess((e) => {
 	try {
 		const mediaRecords = $app.findRecordsByFilter(
 			DB.TABLES.MEDIA,
-			`${DB.FIELDS.OWNER} = {:uid} || ${DB.FIELDS.USER} = {:uid}`,
+			`${DB.FIELDS.CREATED_BY} = {:uid} || ${DB.FIELDS.USER} = {:uid}`,
 			"-created",
 			500,
 			0,
@@ -173,25 +173,22 @@ onRecordCreateRequest((e) => {
 
 		// 1. Проверка Honeypot
 		if (data.username_bot) {
-			throw new BadRequestError("Bot detected (honeypot)");
+			throw $errors.badRequest("Bot detected (honeypot)");
 		}
 
 		// 2. Проверка времени заполнения (минимум 3 секунды)
 		const start = parseInt(data._startTime || "0", 10);
 		const now = Date.now();
 		if (now - start < 3000) {
-			throw new BadRequestError("Bot detected (too fast)");
+			throw $errors.badRequest("Bot detected (too fast)");
 		}
 
 		// Удаляем технические поля перед сохранением в БД
 		delete data.username_bot;
 		delete data._startTime;
 	} catch (err) {
-		// Если это наша ошибка BadRequestError (бот) — прокидываем её дальше
-		if (
-			err.name === "BadRequestError" ||
-			err.message?.includes("Bot detected")
-		) {
+		// Если это наша ошибка — прокидываем её дальше
+		if (err.message?.includes("Bot detected")) {
 			throw err;
 		}
 		// В случае системной ошибки в хуке — логируем и даем создать запись (safety first)
