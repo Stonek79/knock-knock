@@ -159,15 +159,24 @@ onRecordCreateRequest((e) => {
 	console.log("🔍 [HOOK] Попытка создания пользователя...");
 
 	try {
-		// В v0.23 e — это и есть контекст запроса, либо он содержит requestInfo.data
-		const data = e.requestInfo ? e.requestInfo.data : {};
+		// В v0.23 e.requestInfo() — это метод.
+		const info = typeof e.requestInfo === "function" ? e.requestInfo() : e.requestInfo;
+		console.log("🔍 [HOOK] info:", info);
+		const data = info?.Data || info?.data || {};
+		console.log("🔍 [HOOK] data:", data);
 
+		if (e.hasSuperuserAuth?.()) {
+			console.log("✅ [HOOK] Superuser bypass");
+			return e.next();
+		}
 		if (e.get?.("admin")) {
+			console.log("✅ [HOOK] Admin bypass");
 			return e.next();
 		}
 
 		// 1. Проверка Honeypot
 		if (data.username_bot) {
+			console.log("❌ [HOOK] Bot detected (honeypot)");
 			throw $errors.badRequest("Bot detected (honeypot)");
 		}
 
@@ -176,13 +185,15 @@ onRecordCreateRequest((e) => {
 		const start = parseInt(startTimeStr || "0", 10);
 		const now = Date.now();
 		if (startTimeStr && now - start < 3000) {
+			console.log("❌ [HOOK] Bot detected (too fast)");
 			throw $errors.badRequest("Bot detected (too fast)");
 		}
 
 		// --- ШАГ 1: ПРИНУДИТЕЛЬНОЕ ЗАПОЛНЕНИЕ TOKENKEY ---
 		if (!e.record.get("tokenKey")) {
+			console.log("⚡ [HOOK] start tokenKey generation");
 			e.record.set("tokenKey", $security.randomString(30));
-			console.log("⚡ [HOOK] tokenKey сгенерирован принудительно.");
+			console.log("⚡ [HOOK] tokenKey generated");
 		}
 
 		// Гарантируем passwordConfirm
