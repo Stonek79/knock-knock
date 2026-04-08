@@ -1,0 +1,12 @@
+wing: knock_knock
+rooms:
+- name: configuration
+  description: Files from infra/
+- name: app
+  description: Files from app/
+- name: documentation
+  description: Files from docs/
+- name: scripts
+  description: Files from scripts/
+- name: general
+  description: Files that don't fit other rooms

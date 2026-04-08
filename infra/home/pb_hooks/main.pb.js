@@ -43,6 +43,20 @@ onRecordAfterCreateSuccess((e) => {
 
 	try {
 		$app.runInTransaction((tx) => {
+			// Проверяем, нет ли уже комнаты (защита от дубликатов при повторной регистрации)
+			let roomExists = false;
+			try {
+				tx.findRecordById(DB.TABLES.ROOMS, deterministicId);
+				roomExists = true;
+			} catch (_findErr) {
+				// Запись не найдена — это нормально, создаём ниже
+			}
+
+			if (roomExists) {
+				console.log(`ℹ️ [REG] Избранное уже существует для: ${user.email()}`);
+				return;
+			}
+
 			const roomCollection = tx.findCollectionByNameOrId(DB.TABLES.ROOMS);
 			const memberCollection = tx.findCollectionByNameOrId(DB.TABLES.MEMBERS);
 
@@ -54,7 +68,7 @@ onRecordAfterCreateSuccess((e) => {
 				[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
 				[DB.FIELDS.CREATED_BY]: user.id,
 			});
-			tx.saveNoValidate(room); // В v0.23+ save() может проверять права, используем более прямой путь если нужно
+			tx.saveNoValidate(room);
 
 			// Добавляем создателя в участники
 			const member = new Record(memberCollection, {
@@ -69,10 +83,8 @@ onRecordAfterCreateSuccess((e) => {
 		});
 	} catch (err) {
 		console.error(
-			`❌ [REG_ERROR] Ошибка инициализации для ${user.email()}: ${err}`,
+			`❌ [REG_ERROR] Ошибка инициализации для ${user.email()}: ${err.message || err}`,
 		);
-		// В v0.23+ мы в AfterCreateSuccess, юзер уже сохранен. Если упали — удаляем его.
-		// $app.deleteNoValidate(user);
 	}
 }, "users");
 
@@ -159,49 +171,48 @@ onRecordCreateRequest((e) => {
 	console.log("🔍 [HOOK] Попытка создания пользователя...");
 
 	try {
-		// В v0.23 e.requestInfo() — это метод.
-		const info = typeof e.requestInfo === "function" ? e.requestInfo() : e.requestInfo;
-		console.log("🔍 [HOOK] info:", info);
+		const info =
+			typeof e.requestInfo === "function" ? e.requestInfo() : e.requestInfo;
 		const data = info?.Data || info?.data || {};
-		console.log("🔍 [HOOK] data:", data);
 
-		if (e.hasSuperuserAuth?.()) {
-			console.log("✅ [HOOK] Superuser bypass");
-			return e.next();
-		}
-		if (e.get?.("admin")) {
-			console.log("✅ [HOOK] Admin bypass");
-			return e.next();
-		}
+		// --- ШАГИ, ОБЩИЕ ДЛЯ ВСЕХ ЗАПРОСОВ (включая суперпользователя) ---
 
-		// 1. Проверка Honeypot
-		if (data.username_bot) {
-			console.log("❌ [HOOK] Bot detected (honeypot)");
-			throw $errors.badRequest("Bot detected (honeypot)");
-		}
-
-		// 2. Проверка времени заполнения (минимум 3 секунды)
-		const startTimeStr = data._startTime;
-		const start = parseInt(startTimeStr || "0", 10);
-		const now = Date.now();
-		if (startTimeStr && now - start < 3000) {
-			console.log("❌ [HOOK] Bot detected (too fast)");
-			throw $errors.badRequest("Bot detected (too fast)");
-		}
-
-		// --- ШАГ 1: ПРИНУДИТЕЛЬНОЕ ЗАПОЛНЕНИЕ TOKENKEY ---
+		// 1. Принудительное заполнение tokenKey (PocketBase v0.23 не генерирует автоматически)
 		if (!e.record.get("tokenKey")) {
-			console.log("⚡ [HOOK] start tokenKey generation");
 			e.record.set("tokenKey", $security.randomString(30));
-			console.log("⚡ [HOOK] tokenKey generated");
+			console.log("⚡ [HOOK] tokenKey сгенерирован");
 		}
 
-		// Гарантируем passwordConfirm
+		// 2. Гарантируем passwordConfirm
 		if (!e.record.get("passwordConfirm")) {
 			const password = data.password;
 			if (password) {
 				e.record.set("passwordConfirm", password);
 			}
+		}
+
+		// --- СУПЕРПОЛЬЗОВАТЕЛЬ: пропускаем проверки безопасности ---
+		const isSuperuser = e.hasSuperuserAuth?.() || e.get?.("admin");
+		if (isSuperuser) {
+			console.log("✅ [HOOK] Superuser bypass (tokenKey установлен)");
+			return e.next();
+		}
+
+		// --- ПРОВЕРКИ БЕЗОПАСНОСТИ (только для обычных запросов) ---
+
+		// 3. Проверка Honeypot
+		if (data.username_bot) {
+			console.log("❌ [HOOK] Бот обнаружен (honeypot)");
+			throw $errors.badRequest("Bot detected (honeypot)");
+		}
+
+		// 4. Проверка времени заполнения (минимум 3 секунды)
+		const startTimeStr = data._startTime;
+		const start = parseInt(startTimeStr || "0", 10);
+		const now = Date.now();
+		if (startTimeStr && now - start < 3000) {
+			console.log("❌ [HOOK] Бот обнаружен (слишком быстро)");
+			throw $errors.badRequest("Bot detected (too fast)");
 		}
 	} catch (err) {
 		if (err.message?.includes("Bot detected")) {

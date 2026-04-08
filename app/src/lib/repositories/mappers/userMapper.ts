@@ -28,7 +28,7 @@ export const UserMapper = {
             username: user.username || "",
             display_name: user.display_name || user.username || "",
             avatar_url: user.avatar ? getFileUrl(user, user.avatar) : null,
-            role: user.role ?? USER_ROLE.USER,
+            role: user.role || USER_ROLE.USER,
             status: user.status ?? USER_WEB_STATUS.OFFLINE,
             last_seen:
                 user.last_seen || user.updated || new Date().toISOString(),
