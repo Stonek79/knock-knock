@@ -19,94 +19,60 @@
 - [x] **State Management**: Zustand (+ devtools).
 - [x] **Backend**: Миграция на **PocketBase v0.23+**.
 - [x] **Realtime**: Подписки через SSE (сообщения, чаты).
-- [ ] **Presence**: Индикаторы "В сети" и "Печатает..." (🏗 Переписывается под коллекцию `presence_status`).
 
 ### 3. UI/UX и Брендинг
 - [x] **Логотип**: Дизайн логотипа "Knock-Knock", адаптация под светлую тему.
 - [x] **Лендинг**: Стартовая страница (`/`) с приветствием.
 - [x] **Компоненты**: Пакет из 29 обёрток и UI-компонентов (Button, Alert, Text, Heading и др.).
+- [x] **Дизайн-система**: Рефакторинг `index.css`, добавление темы `default` и 13 новых переменных.
 
 ### 4. Авторизация (Auth) и Безопасность
 - [x] Вход по Magic Link (Email) и Паролю.
 - [x] Валидация форм (TanStack Form + Zod).
 - [x] **Ghost Mode**: PIN-код, ложный вход (Decoy PIN).
+- [x] **Регистрация**: Email + Password (display_name, Terms, Onboarding).
+- [x] **Сессия**: Persistent (JWT в localStorage, Silent Refresh).
 
 ### 5. Чаты (Messaging)
-- [x] `ChatList`: Список чатов с поиском, фильтрацией и корректной сортировкой (новые сверху).
+- [x] `ChatList`: Список чатов с поиском, фильтрацией и сортировкой.
 - [x] `ChatRoom`: Экран переписки.
 - [x] `Favorites`: Системная комната (Self-Chat), создается автоматически хуком.
 - [x] Отправка/получение текстовых сообщений.
-- [x] **Backend-Driven Entities**: Логика создания комнат перенесена на серверные JS-хуки.
+- [x] **Backend-Driven Entities**: Логика комнат на серверных JS-хуках.
+- [x] **Optimistic UI**: Оптимистичная отправка текстовых сообщений (v2).
 
 ### 6. End-to-End Шифрование (E2E)
 - [x] Генерация ключей (Web Crypto API), автосинхронизация, обмен ключами (ECDH).
 - [x] Прозрачное шифрование/расшифровка (AES-GCM), wrap/unwrap Room Keys.
 
-### 7. Архитектура и Рефакторинг (FSD)
-- [x] Полный рефакторинг компонентов, избавление от хардкода CSS.
-- [x] Декомпозиция крупных фичей и внедрение FSD-подобной структуры (`admin`, `auth`, `calls`, `chat` и др.).
-- [x] Безопасность фронтенда: внедрен заголовок Content-Security-Policy (CSP).
-
-### 8. Медиа и Файлы
-- [x] Отправка изображений (шифрованная через E2E).
-- [x] Интеграция полноэкранной галереи (`yet-another-react-lightbox`).
-- [x] Голосовые сообщения с кастомным интерфейсом (`AudioMessagePlayer`).
-- [x] Интеграция `useLongPress` для выделения сообщений (Mobile-First interactions).
+### 7. Инфраструктура сообщений и SMTP
+- [x] **SMTP (Brevo)**: Настроена отправка писем через внешний сервис.
+- [x] **Mailpit**: Локальная отладка писем.
+- [x] **Security**: Honeypot + Time-check на формах регистрации.
 
 ---
 
 ## 🟡 Актуальные задачи (In Progress / Next Steps)
 
-### 0. Дизайн-система — рефакторинг и тема `default`
+### 1. Фоновая архитектура (Task Runner)
+- [ ] **1.1** Создание коллекции `task_queue` в PocketBase.
+- [ ] **1.2** Реализация `pb_hooks/task_runner.pb.js` для обработки задач по расписанию (Cron).
+- [ ] **1.3** Интеграция Task Runner для отправки Push-уведомлений.
 
-**Аудит выявил** 13 undeclared CSS-переменных, осиротевшие Radix-алиасы и отсутствие CSS-блока темы `default`.  
-Детальный план: `docs/DESIGN_SYSTEM_PLAN.md`
+### 2. Push-уведомления (Stage 3)
+- [ ] **2.1** Web Push API: регистрация Service Worker.
+- [ ] **2.2** Сохранение подписок (subscriptions) в БД.
+- [ ] **2.3** Отправка уведомлений через Task Runner.
 
-- [x] **0.1** Исправить `:root` — добавить 13 undeclared-переменных и нейтральные дефолты
-- [x] **0.2** Добавить Radix-алиасы (`--gray-1..12`, `--accent-9..11`) в `:root`
-- [x] **0.3** Создать CSS-блок `[data-theme="default"]` (WA-inspired, light + dark)
-- [x] **0.4** Обновить `neon` / `emerald` — добавить новые переменные
-- [x] **0.5** Theme Store + константы: сменить дефолт на `default` / `light`
-- [x] **0.6** Обновить `DESIGN.md` и `SKILL.md` (добавить тему default, CSS v3 как Roadmap)
+### 3. Современная медиа-система (v3) — 📋 `plans/media_system_v3.md`
+- [ ] **3.1** Переход на **Dexie.js** для Offline-хранилища (IndexedDB).
+- [ ] **3.2** Реализация **Web Workers** для сжатия (WebCodecs) и шифрования медиа.
+- [ ] **3.3** "Умная" очистка кэша (TTL + Favorites retention).
 
-### 1. Групповые чаты
-- [ ] Создание групп (UI готов, требуется интеграция с PB).
-- [ ] E2E шифрование для групп (распределение Room Key через `room_keys`).
-- [ ] Управление участниками (админка внутри чата).
-
-### 2. Дополнительные медиа функции
-- [ ] Предпросмотр ссылок (OpenGraph).
-- [ ] Отправка файлов/документов (не изображений/аудио).
-
-### 3. Тестирование и Оптимизация
-- [ ] Unit-тесты для новых компонентов (Settings).
-- [ ] E2E тесты для чатов и шифрования.
-- [ ] Покрытие тестами > 40%.
-- [ ] **CI/CD пайплайн для PR:**
-  - [ ] GitHub Actions workflow (`.github/workflows/test.yml`)
-  - [ ] Автоматический запуск Biome lint при PR
-  - [ ] Автоматический запуск tsc --noEmit при PR
-  - [ ] Автоматический запуск Unit-тестов (Vitest) при PR
-  - [ ] Статус проверки отображается в PR
-  - [ ] Блокировка мержа без прохождения проверок
-
-### 4. Регистрация и Онбординг
-
-**✅ Принятые решения (PocketBase Era):**
-- **Регистрация:** Email + Password (4 поля: email, display_name, password, passwordConfirm)
-- **Верификация:** Через PocketBase + Brevo SMTP (без блокировки входа)
-- **Защита:** Honeypot + Time-check + Rate Limiter (без CAPTCHA)
-- **Сессия:** Persistent (JWT в localStorage, Silent Refresh каждые 30 мин)
-- Подробнее: **`docs/AUTH_STRATEGY.md`** и **`docs/IMPLEMENTATION_PLAN_v2.md` → Этап 1**
-
-- [ ] **1.1** Исправить `viewRule: ""` → `"@request.auth.id != ''"` в схеме users (уязвимость!)
-- [ ] **1.2** Убрать `as unknown as AuthUser` в `auth.repository.ts:84` (Type Guard)
-- [ ] **1.3** Исправить `loginSchema` (убрать `optional()`), добавить `registerSchema`
-- [ ] **1.4** Создать `RegisterForm.tsx` + `useRegisterForm.ts` (display_name, Terms)
-- [ ] **1.5** Реализовать Silent Token Refresh в `useAuthStore`
-- [ ] **1.6** Создать маршрут `/auth/verify` + `VerificationBanner`
-- [ ] **1.7** Создать `/terms` + `OnboardingModal`
-- [ ] **2.x** Настроить SMTP (Brevo) + Mailpit для dev
+### 4. Групповые чаты
+- [ ] Создание групп (интеграция с PB).
+- [ ] E2E шифрование для групп.
+- [ ] Управление участниками.
 
 ---
 

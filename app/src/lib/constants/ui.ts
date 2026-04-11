@@ -24,3 +24,15 @@ export const NOTIFICATION_SOUNDS = [
     NOTIFICATION_SOUND.CHIME,
     NOTIFICATION_SOUND.NONE,
 ] as const;
+
+/**
+ * Клиентские статусы сообщений.
+ * НЕ сохраняются в PocketBase — существуют только в кэше TanStack Query.
+ * Используются для оптимистичного UI (индикаторы «отправляется» / «ошибка»).
+ */
+export const CLIENT_MESSAGE_STATUS = {
+    /** Сообщение отправляется (ещё не на сервере) */
+    SENDING: "sending",
+    /** Ошибка отправки (сеть / сервер) — доступен retry */
+    FAILED: "failed",
+} as const;

@@ -129,9 +129,28 @@ async function handleMessageEvent(e: PBRealtimeEvent<MessageRecord>) {
                     const idx = old.findIndex((m) => m.id === mapped.id);
 
                     if (idx > -1) {
+                        // Сообщение с таким ID уже есть (обновление или onSuccess уже заменил tempId)
                         const next = [...old];
                         next[idx] = { ...old[idx], ...mapped };
                         return next;
+                    }
+
+                    // Де-дупликация с оптимистичными сообщениями:
+                    // Если это CREATE от текущего пользователя, возможно в кэше есть
+                    // оптимистичное сообщение с _tempId. Удаляем его перед добавлением серверного.
+                    if (
+                        e.action === REALTIME_ACTIONS.CREATE &&
+                        record.sender === userId
+                    ) {
+                        const withoutOptimistic = old.filter(
+                            (m) =>
+                                !(
+                                    "_tempId" in m &&
+                                    m._tempId &&
+                                    m.sender_id === userId
+                                ),
+                        );
+                        return [...withoutOptimistic, mapped];
                     }
 
                     return [...old, mapped];

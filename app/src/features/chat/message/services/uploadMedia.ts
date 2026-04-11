@@ -10,6 +10,17 @@ import { encryptBlob } from "@/lib/crypto/messages";
 import { mediaRepository } from "@/lib/repositories/media.repository";
 import type { Attachment, AttachmentType } from "@/lib/types/message";
 
+interface UploadMediaParams {
+    file: File | Blob;
+    userId: string;
+    fileNameOverride?: string;
+}
+
+interface UploadAudioParams {
+    blob: Blob;
+    userId: string;
+    roomKey: CryptoKey;
+}
 /**
  * Определяет внутренний тип вложения по MIME-типу файла.
  * Возвращает строго типизированный AttachmentType.
@@ -35,10 +46,11 @@ function determineAttachmentType(mime: string): AttachmentType {
  * В PocketBase файлы привязаны к записям коллекций.
  * Мы используем коллекцию 'media' как временное/общее хранилище.
  */
-export async function uploadMedia(
-    file: File | Blob,
-    fileNameOverride?: string,
-): Promise<Attachment> {
+export async function uploadMedia({
+    file,
+    userId,
+    fileNameOverride,
+}: UploadMediaParams): Promise<Attachment> {
     const originalName =
         fileNameOverride ||
         (file instanceof File ? file.name : MEDIA_DEFAULTS.FALLBACK_FILE_NAME);
@@ -46,6 +58,13 @@ export async function uploadMedia(
     // Подготовка FormData для PocketBase (используем MEDIA_FIELDS.FILE для имени поля)
     const formData = new FormData();
     formData.append(MEDIA_FIELDS.FILE, file, originalName);
+    formData.append(MEDIA_FIELDS.CREATED_BY, userId);
+    formData.append(
+        MEDIA_FIELDS.MIME_TYPE,
+        file.type || DEFAULT_MIME_TYPES.OCTET_STREAM,
+    );
+    formData.append(MEDIA_FIELDS.SIZE, file.size.toString());
+    formData.append(MEDIA_FIELDS.TYPE, determineAttachmentType(file.type));
 
     const uploadResult = await mediaRepository.uploadMedia(formData);
 
@@ -75,11 +94,11 @@ export async function uploadMedia(
  * Загружает аудиосообщение в PocketBase.
  * Аудиосообщения E2E-шифруются симметричным ключом комнаты.
  */
-export async function uploadAudio(
-    blob: Blob,
-    _roomId: string,
-    roomKey: CryptoKey,
-): Promise<Attachment> {
+export async function uploadAudio({
+    blob,
+    userId,
+    roomKey,
+}: UploadAudioParams): Promise<Attachment> {
     // Шифруем данные E2E ключом
     const encryptedBlob = await encryptBlob(blob, roomKey);
 
@@ -89,6 +108,13 @@ export async function uploadAudio(
     // Подготовка FormData для PocketBase (используем MEDIA_FIELDS.FILE для имени поля)
     const formData = new FormData();
     formData.append(MEDIA_FIELDS.FILE, encryptedBlob, fileName);
+    formData.append(MEDIA_FIELDS.CREATED_BY, userId);
+    formData.append(MEDIA_FIELDS.TYPE, ATTACHMENT_TYPES.AUDIO);
+    formData.append(MEDIA_FIELDS.SIZE, blob.size.toString());
+    formData.append(
+        MEDIA_FIELDS.MIME_TYPE,
+        blob.type || DEFAULT_MIME_TYPES.WEBM_AUDIO,
+    );
 
     const uploadResult = await mediaRepository.uploadMedia(formData);
 

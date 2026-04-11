@@ -31,7 +31,6 @@ vi.mock("@/lib/cache/media", () => ({
 const { mediaRepository } = await import("@/lib/repositories/media.repository");
 
 describe("Сервис загрузки медиа", () => {
-    const mockRoomId = "test-room-id";
     const mockFile = new File(["test content"], "test-image.png", {
         type: "image/png",
     });
@@ -68,7 +67,10 @@ describe("Сервис загрузки медиа", () => {
                 "https://example.com/media",
             );
 
-            const result = await uploadMedia(mockFile);
+            const result = await uploadMedia({
+                file: mockFile,
+                userId: "test-user-id",
+            });
 
             expect(mediaRepository.uploadMedia).toHaveBeenCalled();
             const formDataArg = vi.mocked(mediaRepository.uploadMedia).mock
@@ -102,9 +104,9 @@ describe("Сервис загрузки медиа", () => {
             );
 
             // Проверяем, что ошибка пробрасывается с корректным текстом
-            await expect(uploadMedia(mockFile)).rejects.toThrow(
-                repoErrorMessage,
-            );
+            await expect(
+                uploadMedia({ file: mockFile, userId: "test-user-id" }),
+            ).rejects.toThrow(repoErrorMessage);
 
             // Также убедимся, что репозиторий вызывался один раз
             expect(mediaRepository.uploadMedia).toHaveBeenCalledTimes(1);
@@ -129,11 +131,11 @@ describe("Сервис загрузки медиа", () => {
                 "https://example.com/audio",
             );
 
-            const result = await uploadAudio(
-                mockAudioBlob,
-                mockRoomId,
-                mockRoomKey,
-            );
+            const result = await uploadAudio({
+                blob: mockAudioBlob,
+                userId: "test-user-id",
+                roomKey: mockRoomKey,
+            });
 
             expect(cryptoMessages.encryptBlob).toHaveBeenCalledWith(
                 mockAudioBlob,

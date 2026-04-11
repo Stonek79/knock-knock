@@ -21,7 +21,8 @@ export type CollectionName =
     | "message_reactions"
     | "user_folders"
     | "message_reports"
-    | "push_subscriptions";
+    | "push_subscriptions"
+    | "media";
 
 // Вспомогательные типы
 export type RecordIdString = string;
@@ -71,6 +72,8 @@ export type MessageReportsReasonOptions =
     | "other";
 
 export type MessageReportsStatusOptions = "pending" | "reviewed" | "dismissed";
+
+export type MediaTypeOptions = "image" | "video" | "audio" | "document";
 
 // ---------------------------------------------------------------------------
 // Коллекция: _mfas
@@ -145,7 +148,7 @@ export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> &
 export type UsersRecord = {
     password: string;
     email: string;
-    display_name: string;
+    display_name?: string;
     avatar?: string;
     username?: string;
     status?: UsersStatusOptions;
@@ -188,7 +191,7 @@ export type RoomMembersRecord = {
     room: RecordIdString;
     user: RecordIdString;
     role: RoomMembersRoleOptions;
-    unread_count: number;
+    unread_count?: number;
     user_name?: string;
     user_avatar?: string;
     folder_id?: string;
@@ -329,6 +332,23 @@ export type PushSubscriptionsRecord = {
 export type PushSubscriptionsResponse<Texpand = unknown> =
     Required<PushSubscriptionsRecord> & BaseSystemFields<Texpand>;
 
+// ---------------------------------------------------------------------------
+// Коллекция: media
+// ---------------------------------------------------------------------------
+
+export type MediaRecord = {
+    file: string;
+    created_by: RecordIdString;
+    type: MediaTypeOptions;
+    size?: number;
+    mime_type?: string;
+    metadata?: null | unknown;
+    is_test?: boolean;
+};
+
+export type MediaResponse<Texpand = unknown> = Required<MediaRecord> &
+    BaseSystemFields<Texpand>;
+
 export type CollectionRecords = {
     _mfas: MfasRecord;
     _otps: OtpsRecord;
@@ -346,6 +366,7 @@ export type CollectionRecords = {
     user_folders: UserFoldersRecord;
     message_reports: MessageReportsRecord;
     push_subscriptions: PushSubscriptionsRecord;
+    media: MediaRecord;
 };
 
 export type CollectionResponses = {
@@ -365,6 +386,7 @@ export type CollectionResponses = {
     user_folders: UserFoldersResponse;
     message_reports: MessageReportsResponse;
     push_subscriptions: PushSubscriptionsResponse;
+    media: MediaResponse;
 };
 
 export type TypedPocketBase = PocketBase & {
@@ -395,4 +417,5 @@ export type TypedPocketBase = PocketBase & {
     collection(
         idOrName: "push_subscriptions",
     ): RecordService<PushSubscriptionsResponse>;
+    collection(idOrName: "media"): RecordService<MediaResponse>;
 };

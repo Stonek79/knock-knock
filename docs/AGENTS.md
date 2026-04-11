@@ -40,3 +40,18 @@
 2. Подготовка ресурсов (скрипты, референсы).
 3. Инициализация через `init_skill.py` (если применимо).
 4. Описание навыка в `SKILL.md`.
+
+## Сохранение навыков в MemPalace
+
+Для сохранения навыков в MemPalace используйте команду:
+
+```bash
+    mempalace mine ~/.gemini/antigravity/brain/ --mode convos --extract general --wing knock_knock
+```
+
+или алиас:
+
+```bash
+    mempalace-save
+```
+в корне проекта

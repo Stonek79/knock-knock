@@ -21,20 +21,36 @@
 |------|------------|
 | **Frontend** | React 19, TypeScript, Vite |
 | **Routing** | TanStack Router (File-based routing) |
+| **Storage (Offline)** | **Dexie.js** (IndexedDB) — для кэширования медиа и оффлайн-режима |
+| **Media Processing** | **WebCodecs API**, **mp4-muxer**, **OffscreenCanvas** (в Web Workers) |
 | **State (Server)** | TanStack Query (v5) |
 | **State (Global)** | Zustand |
 | **UI Kit** | Radix UI Primitives (Headless) + наши обёртки |
-| **Styling** | CSS Modules + Vanilla CSS (Variables) + темы `default`/`neon`/`emerald` |
-| **Icons** | Lucide React |
-| **Backend** | PocketBase v0.23+ (Auth, SQLite, Realtime SSE, JS Hooks) |
+| **Styling** | CSS Modules + Vanilla CSS (Variables) |
+| **Backend** | PocketBase v0.26+ (Auth, SQLite, Realtime SSE, JS Hooks) |
+| **Background Tasks** | **Task Runner** (SQLite-based queue + Cron Hooks) |
 | **Crypto** | Web Crypto API (SubtleCrypto: ECDH-ES, AES-GCM) |
 | **Линтинг** | Biome (lint + format) |
-| **Тесты** | Vitest (unit), Playwright (E2E), Storybook |
-| **Wrappers** | Capacitor (Mobile), Tauri (Desktop) — *Planned* |
 
 ---
 
 ## 📂 Структура проекта (Feature-Driven Architecture)
+
+...
+
+## 🔄 Фоновые задачи (Task Runner)
+
+Для выполнения тяжелых или отложенных операций (Push-уведомления, очистка старых файлов, агрегация данных) используется кастомный Task Runner на стороне PocketBase:
+1.  **Очередь задач**: Коллекция `task_queue` хранит тип задачи, полезную нагрузку (payload) и статус.
+2.  **Cron Hooks**: JS-хук в `pb_hooks` просыпается по расписанию, выбирает новые задачи и выполняет их порциями.
+3.  **Retry Logic**: Механизм повторов при сбоях (экспоненциальная задержка).
+
+## 🌍 Offline First и Кэширование
+
+Приложение должно сохранять работоспособность без интернета:
+1.  **Сообщения**: TanStack Query кеширует данные в памяти.
+2.  **Медиа**: Все зашифрованные файлы сохраняются в **Dexie.js** (IndexedDB). При повторном просмотре файлы берутся из локальной БД, а не скачиваются заново.
+3.  **Оптимистичные обновления**: UI меняется мгновенно, данные синхронизируются в фоне.
 
 Проект организован по функциональным доменам (Features), а не по типу файлов. Мы используем прагматичный подход (Feature-Driven Architecture), а не строгий FSD, чтобы избежать излишней фрагментации.
 

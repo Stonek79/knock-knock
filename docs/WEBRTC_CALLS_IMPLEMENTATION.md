@@ -1,19 +1,8 @@
 # Реализация звонков (WebRTC) в Knock-Knock
 
-**Версия:** 1.0
-**Дата:** Март 2026
-**Статус:** ⚠️ ЧАСТИЧНО УСТАРЕЛ — требует переработки под PocketBase
+**Статус:** 🟢 Актуально (PocketBase Edition)
 
-> **ВАЖНО:** Этот документ написан в эпоху Supabase. Следующие части **требуют переработки** перед реализацией:
-> - **Схема архитектуры** — блок «Supabase» заменить на «PocketBase JS Hooks» (генерация токенов LiveKit через PB-хуки, а не Edge Functions)
-> - **Этап 1.2** — «Edge Function» (Supabase Deno) → PocketBase JS Hook (`pb_hooks/generate_livekit_token.pb.js`)
-> - **Компонент CallRoom** — `supabase.functions.invoke()` → `pb.send('/api/livekit-token', ...)`
-> - **Этап 2** — SQL-миграции для `call_logs` → PocketBase коллекция через Admin UI или `pb_schema.json`
-> - **RLS Policies** → **PocketBase API Rules** (`@request.auth.id != ""`)
->
-> Остальное (LiveKit Server, Nginx, Coturn, iptables DNAT, firewall, Zustand store) — **актуально**.
->
-> Полный переработанный план будет в `WEBRTC_CALLS_IMPLEMENTATION_v2.md`.
+Этот документ описывает архитектуру и шаги внедрения системы аудио- и видеозвонков на базе **LiveKit** и **PocketBase**.
 
 
 ---
@@ -131,7 +120,7 @@ Caller                              Supabase LiveKit Server                     
 
 ---
 
-### Шаг 1: Настройка LiveKit Server на домашнем сервере
+### Шаг 1: Настройка LiveKit Server
 
 #### 1.1: Docker Compose конфигурация
 
@@ -539,17 +528,14 @@ export function CallRoom({
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    // Получить токен через Edge Function
+    // Генерация токенов LiveKit через PB-хуки
     (async () => {
       try {
-        const { data, error } = await supabase.functions.invoke(
-          'generate-livekit-token',
-          {
-            body: { roomName, participantName },
-          }
-        );
+        const data = await pb.send('/api/livekit-token', {
+          method: 'POST',
+          body: { roomName, participantName },
+        });
         
-        if (error) throw error;
         setToken(data.token);
       } catch (err) {
         setError(err.message);

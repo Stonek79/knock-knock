@@ -56,6 +56,11 @@
 **Итого видимых полей при регистрации: 4** (email, display_name, password, passwordConfirm).
 Форму регистрации оставляем **внутри LoginPage** (переключатель tab).
 
+### План реализации v2: Auth, SMTP, Messaging & Calls (PocketBase)
+
+**Статус:** 🔵 В процессе (Этапы 0, 1, 2 — ЗАВЕРШЕНЫ)
+**Версия:** 2.1 (Обновлено под Media v3 и Task Runner)
+
 ### Стратегия сессии (Persistent Auth)
 
 - PocketBase `LocalAuthStore` сохраняет JWT в `localStorage` — сессия восстанавливается при перезагрузке
@@ -92,11 +97,12 @@
 | # | Задача | Оценка |
 |---|---|---|
 | **0** | ✅ Дизайн-система — рефакторинг `index.css` + тема `default` | Завершено |
-| **1** | Auth — Schema + Forms + Persistent Session | 2–3 дня |
-| **2** | SMTP / Brevo + Email верификация | 1 день |
+| **1** | Auth — Schema + Forms + Persistent Session | Завершено |
+| **2** | SMTP / Brevo + Email верификация | Завершено |
 | **3** | Push-уведомления (Web Push + PWA) | 3–4 дня |
 | **4** | Audio/Video Calls (LiveKit + WebRTC) | 5–7 дней |
-| **5** | Видеозапись и отправка | 3–4 дня |
+| **5** | Видеозапись и отправка (Media v3) | 3–4 дня |
+| **5.1** | Task Runner (SQLite-based) | 1–2 дня |
 | **6** | Тестирование (параллельно) | постоянно |
 
 ---
@@ -105,7 +111,7 @@
 
 ---
 
-### ЭТАП 0: ✅ Дизайн-система (Завершено)
+### ЭТАП 0: Дизайн-система — Тема Default (ЗАВЕРШЕНО)
 
 > **Детальный план:** `docs/DESIGN_SYSTEM_PLAN.md`
 
@@ -156,7 +162,7 @@ Dark:  #111b21 фон | #202c33 surface | #00a884 акцент | #005c4b bubble-
 
 ---
 
-### ЭТАП 1: Система Auth — Schema, Forms, Persistent Session
+### ЭТАП 1: Система Auth (PocketBase) (ЗАВЕРШЕНО)
 
 #### 1.1 ✅ Настройка API Rules в PocketBase (Завершено)
 
@@ -216,7 +222,7 @@ Dark:  #111b21 фон | #202c33 surface | #00a884 акцент | #005c4b bubble-
 
 ---
 
-### ЭТАП 2: ✅ SMTP — Brevo + Email верификация (Завершено)
+### ЭТАП 2: SMTP и Bot Protection (ЗАВЕРШЕНО)
 
 **Описание архитектуры:** `docs/AUTH_STRATEGY.md` → раздел «Email верификация»
 
@@ -294,6 +300,36 @@ npm install @livekit/components-react livekit-client
 
 ---
 
+### ЭТАП 5.1: Архитектура фонового Task Runner (SQLite-based)
+
+Вместо использования внешних брокеров (Redis/BullMQ), мы реализуем систему очередей непосредственно на базе PocketBase. Это сохраняет проект легковесным и переносимым.
+
+### 1. Системная коллекция `queue_tasks`
+Создается новая коллекция для хранения задач:
+- **type** (select, required): `push_notification`, `email_send`, `ephemeral_cleanup`.
+- **payload** (json, required): Данные задачи (IDs, контент, получатели).
+- **status** (select): `pending`, `processing`, `failed`, `completed`. По умолчанию `pending`.
+- **attempts** (number): Текущее количество попыток исполнения.
+- **last_error** (text): Описание ошибки последней попытки.
+- **run_at** (datetime): Время следующего запуска (используется для задержки при ретраях).
+
+### 2. Механизм исполнения (Cron Worker)
+Логика реализуется в файле `infra/home/pb_hooks/tasks.pb.js`:
+- Регистрация планировщика: `$app.cron.add("tasks_worker", "*/1 * * * *", () => { ... })` (запуск каждую минуту).
+- Алгоритм:
+  1. Выборка 10 самых старых задач со статусом `pending` или `failed` (где `run_at` <= текущее время).
+  2. Перевод задач в статус `processing`.
+  3. Выполнение логики через асинхронные HTTP-запросы (например, к `push-gateway`).
+  4. При успехе — статус `completed`.
+  5. При ошибке — инкремент `attempts`, запись ошибки и вычисление `run_at` (экспоненциальный бэкофф).
+
+### 3. Преимущества
+- **Атомарность**: Задача в очередь добавляется в той же транзакции SQLite, что и само сообщение. Если сообщение не сохранилось — пуш-уведомление не встанет в очередь.
+- **Минимализм**: Не требуется установка и поддержка Redis.
+- **Визуализация**: Все фоновые задачи видны и доступны для ручного перезапуска прямо в админке PocketBase.
+
+---
+
 ### ЭТАП 6: Тестирование (параллельно с 1–5)
 
 - **Unit**: `auth.repository.ts`, `AuthService`, `useRegisterForm`, `useLoginForm`, `useAuthStore`
@@ -313,6 +349,7 @@ npm install @livekit/components-react livekit-client
 | **Неделя 2** | Этап 3 (Push-уведомления + PWA) |
 | **Неделя 3–4** | Этап 4 (LiveKit Audio/Video Calls) |
 | **Неделя 5** | Этап 5 (Video recording) |
+| **Неделя 5** | Этап 5.1 (Task Runner) |
 | **Постоянно** | Этап 6 (Тесты параллельно каждому этапу) |
 
 ---

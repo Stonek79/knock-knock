@@ -18,8 +18,12 @@ import {
     MESSAGE_STATUS,
     ROOM_TYPE,
 } from "@/lib/constants";
-import type { Attachment, MessagePosition, MessageStatus } from "@/lib/types";
-import type { RoomType } from "@/lib/types/room";
+import type {
+    Attachment,
+    MessagePosition,
+    RoomType,
+    UIMessageStatus,
+} from "@/lib/types";
 import { getUserColor } from "@/lib/utils/colors";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { AttachmentRenderer } from "./components/AttachmentRenderer";
@@ -33,7 +37,7 @@ interface MessageBubbleProps {
     timestamp: string;
     senderName?: string;
     senderAvatar?: string;
-    status?: MessageStatus;
+    status?: UIMessageStatus;
     isEdited?: boolean;
     isDeleted?: boolean;
     isSelected?: boolean;

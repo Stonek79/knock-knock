@@ -1,15 +1,21 @@
 import {
+    DB_TABLES,
     ERROR_CODES,
     KEYSTORE_TYPES,
     ROOM_FIELDS,
     ROOM_TYPE,
 } from "@/lib/constants";
 import { unwrapRoomKey } from "@/lib/crypto/encryption";
-import { base64ToArrayBuffer } from "@/lib/crypto/keys";
+import {
+    arrayBufferToBase64,
+    base64ToArrayBuffer,
+    exportPublicKey,
+} from "@/lib/crypto/keys";
 import { getKeyPair } from "@/lib/crypto/keystore";
 import {
     generateDeterministicRoomId,
     generateDeterministicRoomKey,
+    generateRoomKey,
 } from "@/lib/crypto/rooms";
 import { logger } from "@/lib/logger";
 import { messageRepository } from "@/lib/repositories/message.repository";
@@ -25,7 +31,138 @@ import type {
 } from "@/lib/types";
 import { DEFAULT_DATE } from "@/lib/utils/date";
 import { appError, err, ok } from "@/lib/utils/result";
+import { encryptRoomKeysForMembers } from "./crypto";
 import { createRoom } from "./mutations";
+
+/**
+ * Self-key provisioning: Генерирует и сохраняет ключ комнаты для self-chat (Избранное).
+ *
+ * Серверный хук PocketBase создаёт комнату и room_members при регистрации,
+ * но НЕ может создать room_keys, т.к. не имеет доступа к криптоключам пользователя.
+ * Эта функция решает проблему: при первом входе клиент сам генерирует AES-256-GCM ключ,
+ * шифрует его через ECDH для самого себя и сохраняет в room_keys.
+ *
+ * @param roomId - ID комнаты «Избранное»
+ * @param userId - ID текущего пользователя
+ * @returns CryptoKey - расшифрованный ключ комнаты
+ */
+async function provisionSelfChatKey(
+    roomId: string,
+    userId: string,
+): Promise<Result<CryptoKey, AppError<string>>> {
+    try {
+        // 1. Генерируем новый AES-256-GCM ключ комнаты
+        const roomKey = await generateRoomKey();
+
+        // 2. Получаем свои Identity и Prekey для ECDH wrap
+        const prekey = await getKeyPair(KEYSTORE_TYPES.PREKEY);
+        if (!prekey) {
+            return err(
+                appError(
+                    ERROR_CODES.MISSING_KEYS,
+                    "Prekey не инициализирован. Невозможно создать ключ комнаты.",
+                ),
+            );
+        }
+
+        // 3. Экспортируем публичный ключ в Base64 для encryptRoomKeysForMembers
+        const pubKeyBase64 = arrayBufferToBase64(
+            await exportPublicKey(prekey.publicKey),
+        );
+
+        // 4. Шифруем ключ комнаты через стандартный ECDH flow (для единственного участника — себя)
+        const cryptoResult = await encryptRoomKeysForMembers(
+            [{ id: userId, public_key_x25519: pubKeyBase64 }],
+            roomKey,
+            roomId,
+            userId,
+        );
+
+        if (cryptoResult.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    "Self-key provisioning: ошибка шифрования ключа комнаты",
+                    cryptoResult.error,
+                ),
+            );
+        }
+
+        const encryptedKeyRecord = cryptoResult.value.encryptedKeys[0];
+        if (!encryptedKeyRecord) {
+            return err(
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    "Self-key provisioning: пустой результат шифрования",
+                ),
+            );
+        }
+
+        // 5. Сохраняем в room_keys (с обработкой race condition — две вкладки одновременно)
+        const saveResult = await roomRepository.createRoomKey({
+            room: encryptedKeyRecord.room,
+            user: encryptedKeyRecord.user,
+            encrypted_key: encryptedKeyRecord.encrypted_key,
+        });
+
+        if (saveResult.isErr()) {
+            // Race condition: другая вкладка уже создала ключ — пытаемся получить существующий
+            logger.warn(
+                "Self-key provisioning: createRoomKey conflict, пытаемся получить существующий ключ",
+            );
+            const retryResult = await roomRepository.getRoomKey(roomId, userId);
+            if (retryResult.isErr()) {
+                return err(
+                    appError(
+                        ERROR_CODES.DB_ERROR,
+                        "Self-key provisioning: не удалось ни создать, ни получить ключ комнаты",
+                        retryResult.error,
+                    ),
+                );
+            }
+
+            // Расшифровываем существующий ключ (созданный другой вкладкой)
+            const identity = await getKeyPair(KEYSTORE_TYPES.IDENTITY);
+            if (!identity) {
+                return err(
+                    appError(
+                        ERROR_CODES.MISSING_KEYS,
+                        "Identity не инициализирован при fallback-расшифровке",
+                    ),
+                );
+            }
+
+            const encryptedData = JSON.parse(retryResult.value.encrypted_key);
+            const existingRoomKey = await unwrapRoomKey(
+                {
+                    ephemeralPublicKey: base64ToArrayBuffer(
+                        encryptedData.ephemeralPublicKey,
+                    ),
+                    iv: base64ToArrayBuffer(encryptedData.iv),
+                    ciphertext: base64ToArrayBuffer(encryptedData.ciphertext),
+                },
+                identity.privateKey,
+            );
+
+            return ok(existingRoomKey);
+        }
+
+        logger.info(
+            `Self-key provisioning: ключ комнаты ${roomId} успешно создан`,
+        );
+
+        return ok(roomKey);
+    } catch (error) {
+        logger.error("Self-key provisioning: непредвиденная ошибка", error);
+        return err(
+            appError(
+                ERROR_CODES.CRYPTO_ERROR,
+                "Self-key provisioning: не удалось создать ключ",
+                error,
+            ),
+        );
+    }
+}
 
 /**
  * Находит существующий DM (прямой чат) или создает новый.
@@ -156,6 +293,23 @@ export async function getChatRoomData(
             );
             const tempRoomKey = await generateDeterministicRoomKey(roomId);
             return ok({ room, roomKey: tempRoomKey, otherUserId });
+        }
+
+        // SELF-KEY PROVISIONING: Если ключ не найден и это Избранное — создаём автоматически
+        if (keyResult.isErr() && room.name === DB_TABLES.FAVORITES) {
+            logger.info(
+                `Self-key provisioning: комната ${roomId} не имеет ключа, создаём...`,
+            );
+            const provisionResult = await provisionSelfChatKey(roomId, userId);
+            if (provisionResult.isOk()) {
+                return ok({
+                    room,
+                    roomKey: provisionResult.value,
+                    otherUserId,
+                });
+            }
+            // Если provisioning тоже не сработал — возвращаем ошибку provisioning
+            return err(provisionResult.error);
         }
 
         if (keyResult.isErr()) {

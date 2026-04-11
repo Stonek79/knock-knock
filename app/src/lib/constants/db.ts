@@ -1,6 +1,7 @@
 import type {
     AuthSystemFields,
     CollectionName,
+    MediaRecord,
     MessageReactionsResponse,
     MessagesResponse,
     MessagesStatusOptions,
@@ -219,10 +220,14 @@ export const PUSH_SUBSCRIPTIONS_FIELDS = {
 export const MEDIA_FIELDS = {
     ID: "id",
     FILE: "file",
-    OWNER: "owner",
+    CREATED_BY: "created_by",
+    TYPE: "type",
+    SIZE: "size",
+    MIME_TYPE: "mime_type",
+    METADATA: "metadata",
     CREATED: "created",
     UPDATED: "updated",
-} as const;
+} as const satisfies Record<string, AllFields<MediaRecord>>;
 
 /**
  * Действия Realtime-событий

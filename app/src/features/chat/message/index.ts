@@ -3,5 +3,6 @@ export { MessageInput } from "./components/MessageInput";
 export { MessageList } from "./components/MessageList";
 export { useChatActions } from "./hooks/useChatActions";
 export { useMessages } from "./hooks/useMessages";
+export { useSendMessage } from "./hooks/useSendMessage";
 export { useTypingIndicator } from "./hooks/useTypingIndicator";
 export { useUnreadTracking } from "./hooks/useUnreadTracking";

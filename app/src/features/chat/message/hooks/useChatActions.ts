@@ -6,8 +6,8 @@ import { QUERY_KEYS, ROOM_TYPE, ROUTES, USER_ROLE } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { MessageService } from "@/lib/services/message";
 import { RoomService } from "@/lib/services/room";
-import type { Attachment, Profile, RoomWithMembers } from "@/lib/types";
-import { uploadAudio, uploadMedia } from "../services/uploadMedia";
+import type { Profile, RoomWithMembers } from "@/lib/types";
+import { useSendMessage } from "./useSendMessage";
 
 interface UseChatActionsProps {
     roomId?: string;
@@ -20,6 +20,8 @@ interface UseChatActionsProps {
 /**
  * Хук действий чата (отправка, удаление, завершение сессии).
  * Инкапсулирует вызовы RoomService/MessageService и навигацию.
+ *
+ * Отправка сообщений делегирована в useSendMessage для оптимистичного UI.
  */
 export function useChatActions({
     roomId,
@@ -32,70 +34,29 @@ export function useChatActions({
     const toast = useToast();
     const [ending, setEnding] = useState(false);
 
+    // Оптимистичная отправка через useSendMessage
+    // Хук вызывается безусловно (правила React hooks).
+    // Защита от undefined roomId/roomKey/user — внутри useSendMessage.
+    const sendMutation = useSendMessage({ roomId, roomKey, user });
+
     /**
-     * Отправка зашифрованного сообщения.
+     * Отправка зашифрованного сообщения с оптимистичным обновлением UI.
+     * Сообщение мгновенно появляется в чате с индикатором «отправляется»,
+     * затем обновляется со статусом «отправлено» или «ошибка».
      */
     const sendMessage = async (
         text: string,
         files?: File[],
         audioBlob?: Blob,
     ) => {
-        if (!roomKey || !user || !roomId) {
+        if (!roomId || !roomKey || !user) {
             logger.warn(
                 "Невозможно отправить: отсутствуют ключи или ID комнаты",
             );
             return;
         }
 
-        const attachments: Attachment[] = [];
-
-        try {
-            if (audioBlob) {
-                const audioAttachment = await uploadAudio(
-                    audioBlob,
-                    roomId,
-                    roomKey,
-                );
-                attachments.push(audioAttachment);
-            }
-
-            if (files && files.length > 0) {
-                const filePromises = files.map((file) => uploadMedia(file));
-                const uploadedFiles = await Promise.all(filePromises);
-                attachments.push(...uploadedFiles);
-            }
-        } catch (uploadError) {
-            logger.error("Ошибка загрузки медиафайла", uploadError);
-            toast({
-                title: "Ошибка при загрузке файла",
-                variant: "error",
-            });
-            throw uploadError;
-        }
-
-        const result = await MessageService.sendMessage({
-            roomId,
-            senderId: user.id,
-            senderName: user.display_name,
-            senderAvatar: user.avatar_url || "",
-            content: text,
-            roomKey,
-            attachments: attachments.length > 0 ? attachments : undefined,
-        });
-
-        if (result.isErr()) {
-            logger.error("Ошибка отправки сообщения", result.error);
-            toast({
-                title: "Не удалось отправить сообщение",
-                variant: "error",
-            });
-            return;
-        }
-
-        // Инвалидируем список чатов, чтобы обновился last_message и применилась сортировка
-        await queryClient.invalidateQueries({
-            queryKey: QUERY_KEYS.rooms(user.id),
-        });
+        sendMutation.mutate({ text, files, audioBlob });
     };
 
     /**
