@@ -1,66 +1,41 @@
 /**
- * КНОК-КНОК: СЕРВЕРНЫЕ ХУКИ (POCKETBASE)
+ * @module MainHooks
+ * @description КНОК-КНОК: ОСНОВНЫЕ СЕРВЕРНЫЕ ХУКИ
  *
- * Эти хуки обеспечивают:
- * 1. Транзакционное создание комнаты "Избранное" при регистрации.
- * 2. Рекурсивное удаление всех данных пользователя (сообщения, ключи, медиа).
+ * Файл содержит логику инициализации пользователей, очистки данных
+ * и интеграции с асинхронным Task Runner для уведомлений.
  */
 
-// 1. Создание Избранного при регистрации
+/**
+ * 1. ИНИЦИАЛИЗАЦИЯ ИЗБРАННОГО
+ * Создает персональную комнату "Избранное" при успешной регистрации.
+ */
 onRecordAfterCreateSuccess((e) => {
-	const DB = {
-		TABLES: {
-			USERS: "users",
-			ROOMS: "rooms",
-			MEMBERS: "room_members",
-			MEDIA: "media",
-		},
-		FIELDS: {
-			ID: "id",
-			TYPE: "type",
-			NAME: "name",
-			VISIBILITY: "visibility",
-			CREATED_BY: "created_by",
-			USER: "user",
-			ROLE: "role",
-			UNREAD_COUNT: "unread_count",
-			ROOM: "room",
-			OWNER: "owner",
-		},
-		VALUES: {
-			ROOM_TYPE_DIRECT: "direct",
-			VISIBILITY_PRIVATE: "private",
-			ROLE_OWNER: "owner",
-			FAVORITES_NAME: "chat.favorites",
-		},
-	};
-
+	const DB = require(`${__hooks}/db.js`);
 	const user = e.record;
 
-	// Чтобы фронтенд всегда находил комнату, нам НУЖЕН детерминизм.
-	const rawHash = $security.md5(`"self-chat:" ${user.id}`);
+	// Генерация детерминированного ID для комнаты на основе ID пользователя
+	const rawHash = $security.md5(`"${DB.VALUES.PREFIX_SELF_CHAT}" ${user.id}`);
 	const deterministicId = rawHash.slice(0, 15);
 
 	try {
 		$app.runInTransaction((tx) => {
-			// Проверяем, нет ли уже комнаты (защита от дубликатов при повторной регистрации)
 			let roomExists = false;
 			try {
 				tx.findRecordById(DB.TABLES.ROOMS, deterministicId);
 				roomExists = true;
 			} catch (_findErr) {
-				// Запись не найдена — это нормально, создаём ниже
+				// Запись не найдена — продолжаем создание
 			}
 
 			if (roomExists) {
-				console.log(`ℹ️ [REG] Избранное уже существует для: ${user.email()}`);
 				return;
 			}
 
 			const roomCollection = tx.findCollectionByNameOrId(DB.TABLES.ROOMS);
 			const memberCollection = tx.findCollectionByNameOrId(DB.TABLES.MEMBERS);
 
-			// Создаем комнату Избранное (Saved Messages)
+			// Создание комнаты
 			const room = new Record(roomCollection, {
 				[DB.FIELDS.ID]: deterministicId,
 				[DB.FIELDS.TYPE]: DB.VALUES.ROOM_TYPE_DIRECT,
@@ -70,7 +45,7 @@ onRecordAfterCreateSuccess((e) => {
 			});
 			tx.saveNoValidate(room);
 
-			// Добавляем создателя в участники
+			// Добавление единственного участника (себя)
 			const member = new Record(memberCollection, {
 				[DB.FIELDS.ROOM]: room.id,
 				[DB.FIELDS.USER]: user.id,
@@ -82,48 +57,23 @@ onRecordAfterCreateSuccess((e) => {
 			console.log(`⭐ [REG] Создано Избранное для: ${user.email()}`);
 		});
 	} catch (err) {
-		console.error(
-			`❌ [REG_ERROR] Ошибка инициализации для ${user.email()}: ${err.message || err}`,
-		);
+		console.error(`❌ [REG_ERROR]: ${err.message || err}`);
 	}
 }, "users");
 
-// 2. Рекурсивное удаление данных при удалении пользователя
+/**
+ * 2. КАШКАДНОЕ УДАЛЕНИЕ ДАННЫХ
+ * Удаляет связанные файлы и личные чаты при удалении пользователя.
+ */
 onRecordAfterDeleteSuccess((e) => {
-	const DB = {
-		TABLES: {
-			USERS: "users",
-			ROOMS: "rooms",
-			MEMBERS: "room_members",
-			MEDIA: "media",
-		},
-		FIELDS: {
-			ID: "id",
-			TYPE: "type",
-			NAME: "name",
-			VISIBILITY: "visibility",
-			CREATED_BY: "created_by",
-			USER: "user",
-			ROLE: "role",
-			UNREAD_COUNT: "unread_count",
-			ROOM: "room",
-			OWNER: "owner",
-		},
-		VALUES: {
-			ROOM_TYPE_DIRECT: "direct",
-			VISIBILITY_PRIVATE: "private",
-			ROLE_OWNER: "owner",
-			FAVORITES_NAME: "chat.favorites",
-		},
-	};
-
+	const DB = require(`${__hooks}/db.js`);
 	const user = e.record;
 
-	// 2.1. Удаление MEDIA (физические файлы)
+	// Удаление медиафайлов
 	try {
 		const mediaRecords = $app.findRecordsByFilter(
 			DB.TABLES.MEDIA,
-			`${DB.FIELDS.CREATED_BY} = {:uid} || ${DB.FIELDS.USER} = {:uid}`,
+			`${DB.FIELDS.CREATED_BY} = {:uid}`,
 			"-created",
 			500,
 			0,
@@ -136,7 +86,7 @@ onRecordAfterDeleteSuccess((e) => {
 		console.error(`❌ [CLEANUP_ERROR] Медиа: ${err}`);
 	}
 
-	// 2.2. Удаление личных чатов (Direct Rooms)
+	// Удаление личных диалогов
 	try {
 		const memberRecords = $app.findRecordsByFilter(
 			DB.TABLES.MEMBERS,
@@ -150,6 +100,7 @@ onRecordAfterDeleteSuccess((e) => {
 		for (const member of memberRecords) {
 			const roomId = member.get(DB.FIELDS.ROOM);
 			const room = $app.findRecordById(DB.TABLES.ROOMS, roomId);
+
 			if (room && room.get(DB.FIELDS.TYPE) === DB.VALUES.ROOM_TYPE_DIRECT) {
 				$app.deleteNoValidate(room);
 				console.log(`🗑️ [CLEANUP] Удален личный чат: ${room.id}`);
@@ -158,60 +109,47 @@ onRecordAfterDeleteSuccess((e) => {
 	} catch (err) {
 		console.error(`❌ [CLEANUP_ERROR] Комнаты: ${err}`);
 	}
-
-	console.log(`🧹 [CLEANUP] Пользователь ${user.id} полностью очищен.`);
 }, "users");
 
 /**
- * 3. Серверная проверка защиты от ботов (PocketBase Hooks)
- * Файл: infra/home/pb_hooks/main.pb.js [MODIFY]
+ * 3. КОНТРОЛЬ РЕГИСТРАЦИИ (АНТИБОТ)
+ * Генерирует tokenKey и проверяет защиту Honeypot/Time-check.
  */
-
 onRecordCreateRequest((e) => {
-	console.log("🔍 [HOOK] Попытка создания пользователя...");
-
+	const DB = require(`${__hooks}/db.js`);
 	try {
 		const info =
 			typeof e.requestInfo === "function" ? e.requestInfo() : e.requestInfo;
 		const data = info?.Data || info?.data || {};
 
-		// --- ШАГИ, ОБЩИЕ ДЛЯ ВСЕХ ЗАПРОСОВ (включая суперпользователя) ---
-
-		// 1. Принудительное заполнение tokenKey (PocketBase v0.23 не генерирует автоматически)
-		if (!e.record.get("tokenKey")) {
-			e.record.set("tokenKey", $security.randomString(30));
-			console.log("⚡ [HOOK] tokenKey сгенерирован");
+		// Автогенерация tokenKey для безопасности API
+		if (!e.record.get(DB.FIELDS.TOKEN_KEY)) {
+			e.record.set(DB.FIELDS.TOKEN_KEY, $security.randomString(30));
 		}
 
-		// 2. Гарантируем passwordConfirm
-		if (!e.record.get("passwordConfirm")) {
+		// Синхронизация подтверждения пароля
+		if (!e.record.get(DB.FIELDS.PASSWORD_CONFIRM)) {
 			const password = data.password;
 			if (password) {
-				e.record.set("passwordConfirm", password);
+				e.record.set(DB.FIELDS.PASSWORD_CONFIRM, password);
 			}
 		}
 
-		// --- СУПЕРПОЛЬЗОВАТЕЛЬ: пропускаем проверки безопасности ---
-		const isSuperuser = e.hasSuperuserAuth?.() || e.get?.("admin");
+		// Пропускаем проверки для администраторов
+		const isSuperuser = e.hasSuperuserAuth?.() || e.get?.(DB.FIELDS.ADMIN);
 		if (isSuperuser) {
-			console.log("✅ [HOOK] Superuser bypass (tokenKey установлен)");
 			return e.next();
 		}
 
-		// --- ПРОВЕРКИ БЕЗОПАСНОСТИ (только для обычных запросов) ---
-
-		// 3. Проверка Honeypot
-		if (data.username_bot) {
-			console.log("❌ [HOOK] Бот обнаружен (honeypot)");
+		// Ловушка для ботов (Honeypot)
+		if (data[DB.FIELDS.USERNAME_BOT]) {
 			throw $errors.badRequest("Bot detected (honeypot)");
 		}
 
-		// 4. Проверка времени заполнения (минимум 3 секунды)
-		const startTimeStr = data._startTime;
+		// Проверка времени заполнения формы
+		const startTimeStr = data[DB.FIELDS.START_TIME];
 		const start = parseInt(startTimeStr || "0", 10);
-		const now = Date.now();
-		if (startTimeStr && now - start < 3000) {
-			console.log("❌ [HOOK] Бот обнаружен (слишком быстро)");
+		if (startTimeStr && Date.now() - start < 3000) {
 			throw $errors.badRequest("Bot detected (too fast)");
 		}
 	} catch (err) {
@@ -225,33 +163,14 @@ onRecordCreateRequest((e) => {
 }, "users");
 
 /**
- * 4. Уведомления о новых сообщениях (Push Gateway)
- * Триггер: Создание нового сообщения (коллекция "messages")
+ * 4. ПОСТАНОВКА ЗАДАЧ ТИПА PUSH
+ * Создает задачу в очереди при появлении нового сообщения.
  */
 onRecordAfterCreateSuccess((e) => {
-	const DB = {
-		TABLES: {
-			MEMBERS: "room_members",
-			PUSH_SUBS: "push_subscriptions",
-		},
-		FIELDS: {
-			TYPE: "type",
-			ROOM: "room",
-			SENDER: "sender",
-			USER: "user",
-			USER_ID: "user_id",
-			ENDPOINT: "endpoint",
-			P256DH: "p256dh",
-			AUTH: "auth",
-		},
-		VALUES: {
-			TYPE_SYSTEM: "system",
-		},
-	};
-
+	const DB = require(`${__hooks}/db.js`);
 	const message = e.record;
 
-	// Системные сообщения не пушатся (если они есть)
+	// Игнорируем сервисные сообщения
 	if (message.get(DB.FIELDS.TYPE) === DB.VALUES.TYPE_SYSTEM) {
 		return;
 	}
@@ -260,7 +179,7 @@ onRecordAfterCreateSuccess((e) => {
 		const roomId = message.get(DB.FIELDS.ROOM);
 		const senderId = message.get(DB.FIELDS.SENDER);
 
-		// 1. Ищем участников комнаты, кроме отправителя
+		// Поиск получателей уведомления
 		const members = $app.findRecordsByFilter(
 			DB.TABLES.MEMBERS,
 			`${DB.FIELDS.ROOM} = {:roomId} && ${DB.FIELDS.USER} != {:senderId}`,
@@ -276,10 +195,11 @@ onRecordAfterCreateSuccess((e) => {
 
 		const userIds = members.map((m) => m.get(DB.FIELDS.USER));
 
-		// 2. Ищем VAPID подписки найденных участников
+		// Сбор активных подписок
 		const filterQuery = userIds
 			.map((id) => `${DB.FIELDS.USER_ID} = '${id}'`)
 			.join(" || ");
+
 		const subscriptions = $app.findRecordsByFilter(
 			DB.TABLES.PUSH_SUBS,
 			filterQuery,
@@ -299,32 +219,31 @@ onRecordAfterCreateSuccess((e) => {
 			auth: sub.get(DB.FIELDS.AUTH),
 		}));
 
-		console.log(
-			`[PUSH] Отправка ${pushSubs.length} пушей для комнаты ${roomId}`,
-		);
-
-		// Payload (только мета-информация, сам текст вытянет PWA Service Worker)
 		const payload = {
-			type: "NEW_MESSAGE",
+			type: DB.VALUES.PUSH_TYPE_NEW_MESSAGE,
 			roomId: roomId,
 		};
 
-		// Достаем URL шлюза из ENV, чтобы в Dev режиме ходить в правильный контейнер
-		const pushGatewayUrl =
-			$os.getenv("PB_PUSH_GATEWAY_URL") || "http://push-gateway:4000";
-
-		const res = $http.send({
-			url: `${pushGatewayUrl}/api/send-push`,
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
+		// Сохранение задачи в task_queue
+		const taskCollection = $app
+			.dao()
+			.findCollectionByNameOrId(DB.TABLES.TASK_QUEUE);
+		const task = new Record(taskCollection, {
+			[DB.FIELDS.TASK_KEY]: `push:msg:${message.id}`,
+			[DB.FIELDS.TYPE]: DB.VALUES.TASK_TYPE_PUSH,
+			[DB.FIELDS.PAYLOAD]: {
 				subscriptions: pushSubs,
-				payload: payload,
-			}),
+				data: payload,
+			},
+			[DB.FIELDS.STATUS]: DB.VALUES.STATUS_PENDING,
+			[DB.FIELDS.RUN_AT]: new Date()
+				.toISOString()
+				.replace("T", " ")
+				.split(".")[0],
 		});
 
-		console.log(`[PUSH] Gateway HTTP-Code: ${res.statusCode}`);
+		$app.dao().saveRecord(task);
 	} catch (err) {
-		console.error(`❌ [PUSH_ERROR]: ${err}`);
+		console.error(`❌ [PUSH_QUEUE_ERROR]: ${err}`);
 	}
 }, "messages");

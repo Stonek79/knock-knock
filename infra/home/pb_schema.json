@@ -1454,5 +1454,95 @@
 		"createRule": "@request.auth.id != ''",
 		"updateRule": "@request.auth.id = created_by",
 		"deleteRule": "@request.auth.id = created_by"
+	},
+	{
+		"id": "pbc_tasks_id",
+		"name": "task_queue",
+		"type": "base",
+		"system": false,
+		"fields": [
+			{
+				"id": "text3208210256",
+				"name": "id",
+				"type": "text",
+				"system": true,
+				"primaryKey": true,
+				"required": true,
+				"autogeneratePattern": "[a-z0-9]{15}"
+			},
+			{
+				"id": "tq_key_id",
+				"name": "task_key",
+				"type": "text",
+				"system": false,
+				"required": false
+			},
+			{
+				"id": "tq_type_id",
+				"name": "type",
+				"type": "select",
+				"system": false,
+				"required": true,
+				"values": ["push", "email", "media_cleanup", "cleanup", "test"]
+			},
+			{
+				"id": "tq_payload_id",
+				"name": "payload",
+				"type": "json",
+				"system": false,
+				"required": true
+			},
+			{
+				"id": "tq_status_id",
+				"name": "status",
+				"type": "select",
+				"system": false,
+				"values": ["pending", "processing", "completed", "failed"]
+			},
+			{
+				"id": "tq_attempts_id",
+				"name": "attempts",
+				"type": "number",
+				"system": false
+			},
+			{
+				"id": "tq_error_id",
+				"name": "last_error",
+				"type": "text",
+				"system": false
+			},
+			{
+				"id": "tq_runat_id",
+				"name": "run_at",
+				"type": "date",
+				"system": false,
+				"required": true
+			},
+			{
+				"id": "autodate2990389176",
+				"name": "created",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": false
+			},
+			{
+				"id": "autodate3332085495",
+				"name": "updated",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": true
+			}
+		],
+		"indexes": [
+			"CREATE INDEX `idx_task_queue_status_run_at` ON `task_queue` (`status`, `run_at`)",
+			"CREATE UNIQUE INDEX `idx_task_queue_key` ON `task_queue` (`task_key`) WHERE task_key != ''"
+		],
+		"listRule": "",
+		"viewRule": "",
+		"createRule": "",
+		"updateRule": "",
+		"deleteRule": ""
 	}
 ]
