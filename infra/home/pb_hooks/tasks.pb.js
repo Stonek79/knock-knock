@@ -5,15 +5,18 @@
  * Файл реализует логику циклической обработки очереди задач (пуши, очистка).
  */
 
+// Импорт для верхнего уровня (настройка крона)
+const DB_TOP = require(`${__hooks}/db.js`);
+
 /**
  * 1. ОСНОВНОЙ ЦИКЛ ОБРАБОТКИ
  * Выполняется каждую минуту согласно конфигурации в db.js.
  */
-cronAdd("task_runner", DB.CONFIG.CRON_RUNNER, () => {
+cronAdd("task_runner", DB_TOP.CONFIG.CRON_RUNNER, () => {
+	// Внутренний импорт для изоляции обработчика
 	const DB = require(`${__hooks}/db.js`);
 	const nowStr = new Date().toISOString().replace("T", " ").split(".")[0];
 
-	// Выборка задач: новые (pending) или упавшие (failed) с учетом ретраев
 	const tasks = $app
 		.dao()
 		.findRecordsByFilter(
@@ -63,8 +66,7 @@ function processTask(task) {
 
 /**
  * ОБРАБОТЧИК PUSH-УВЕДОМЛЕНИЙ
- * Отправляет данные на внешний шлюз уведомлений.
- * @param {Object} payload - Полезная нагрузка задачи (subscriptions + data)
+ * @param {Object} payload - Полезная нагрузка задачи
  */
 function handlePushTask(payload) {
 	const DB = require(`${__hooks}/db.js`);
@@ -94,9 +96,7 @@ function handlePushTask(payload) {
 }
 
 /**
- * ЛОГИКА ОШИБОК И ЭКСПОНЕНЦИАЛЬНОЙ ЗАДЕРЖКИ
- * @param {Record} task - Объект задачи
- * @param {Error} err - Исключение
+ * ЛОГИКА ОШИБОК И РЕТРАЕВ
  */
 function handleTaskError(task, err) {
 	const DB = require(`${__hooks}/db.js`);
@@ -109,7 +109,6 @@ function handleTaskError(task, err) {
 	if (attempts >= maxAttempts) {
 		task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_FAILED);
 	} else {
-		// Интервалы ретраев: 1, 5, 15, 60 минут
 		const backoffMinutes = [1, 5, 15, 60][attempts - 1] || 60;
 		const nextRun = new Date(Date.now() + backoffMinutes * 60000);
 
@@ -124,14 +123,12 @@ function handleTaskError(task, err) {
 }
 
 /**
- * ЛОГИКА ОЧИСТКИ ОЧЕРЕДИ
- * Удаляет успешно выполненные задачи старше 24 часов и ошибки старше недели.
+ * ОЧИСТКА СТАРЫХ ЗАДАЧ
  */
 function handleCleanupTask() {
 	const DB = require(`${__hooks}/db.js`);
 	const now = Date.now();
 
-	// Очистка выполненных (24ч)
 	const yesterday = new Date(now - 24 * 60 * 60 * 1000)
 		.toISOString()
 		.replace("T", " ")
@@ -151,7 +148,6 @@ function handleCleanupTask() {
 		$app.dao().deleteRecord(rec);
 	}
 
-	// Очистка фатальных ошибок (7 дней)
 	const lastWeek = new Date(now - 7 * 24 * 60 * 60 * 1000)
 		.toISOString()
 		.replace("T", " ")
@@ -172,10 +168,7 @@ function handleCleanupTask() {
 	}
 }
 
-/**
- * ЗАДАЧА ОЧИСТКИ ОЧЕРЕДИ ПО РАСПИСАНИЮ
- * Запускается ежедневно согласно CONFIG.CRON_CLEANUP.
- */
-cronAdd("task_cleanup", DB.CONFIG.CRON_CLEANUP, () => {
+// Запуск очистки по расписанию
+cronAdd("task_cleanup", DB_TOP.CONFIG.CRON_CLEANUP, () => {
 	handleCleanupTask();
 });
