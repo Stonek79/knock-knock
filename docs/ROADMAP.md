@@ -12,6 +12,7 @@
 - [x] **Staging Environment**: Настройка изолированного окружения на домашнем сервере (VPN + VPS).
 - [x] **Production Ready**: Очистка боевой базы и создание защищенного аккаунта администратора.
 - [x] **QA Infrastructure**: Интеграция сид-скриптов и механики переключения .env файлов.
+- [x] **Task Runner Architecture**: Внедрена асинхронная очередь на базе SQLite-коллекций и серверных JS-хуков.
 
 ### 2. Базовой Функционал
 - [x] **Роутинг**: TanStack Router (File-based routing).
@@ -55,9 +56,9 @@
 ## 🟡 Актуальные задачи (In Progress / Next Steps)
 
 ### 1. Фоновая архитектура (Task Runner)
-- [ ] **1.1** Создание коллекции `task_queue` в PocketBase.
-- [ ] **1.2** Реализация `pb_hooks/task_runner.pb.js` для обработки задач по расписанию (Cron).
-- [ ] **1.3** Интеграция Task Runner для отправки Push-уведомлений.
+- [x] **1.1** Создание коллекции `task_queue` в PocketBase.
+- [x] **1.2** Реализация `pb_hooks/task_runner.pb.js` для обработки задач по расписанию (Cron).
+- [x] **1.3** Интеграция Task Runner для отправки Push-уведомлений (**Backend Ready**).
 
 ### 2. Push-уведомления (Stage 3)
 - [ ] **2.1** Web Push API: регистрация Service Worker.

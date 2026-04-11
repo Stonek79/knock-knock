@@ -11,7 +11,8 @@
 3.  **Secure by Design**: E2E шифрование не опция, а база. Приватные ключи пользователя никогда не покидают устройство.
 4.  **Zero Knowledge**: Сервер (PocketBase) хранит только зашифрованные блобы и метаданные. Никаких открытых сообщений в БД.
 5.  **Backend-Driven Entities**: Критически важные системные сущности (например, комната "Избранное") создаются на стороне сервера через хуки, гарантируя целостность данных.
-6.  **Web Core as Source of Truth**: Основная разработка ведется как Web/PWA. Нативные приложения (Android/Desktop) являются обертками (Wrappers) над веб-ядром.
+6.  **Isolated Handlers Pattern**: Использование двойного импорта (`require`) для обеспечения стабильности JavaScript хуков в изолированных контекстах PocketBase v0.23+.
+7.  **Web Core as Source of Truth**: Основная разработка ведется как Web/PWA. Нативные приложения (Android/Desktop) являются обертками (Wrappers) над веб-ядром.
 
 ---
 
@@ -27,7 +28,7 @@
 | **State (Global)** | Zustand |
 | **UI Kit** | Radix UI Primitives (Headless) + наши обёртки |
 | **Styling** | CSS Modules + Vanilla CSS (Variables) |
-| **Backend** | PocketBase v0.26+ (Auth, SQLite, Realtime SSE, JS Hooks) |
+| **Backend** | PocketBase v0.23+ (Auth, SQLite, Realtime SSE, JS Hooks) |
 | **Background Tasks** | **Task Runner** (SQLite-based queue + Cron Hooks) |
 | **Crypto** | Web Crypto API (SubtleCrypto: ECDH-ES, AES-GCM) |
 | **Линтинг** | Biome (lint + format) |
@@ -273,3 +274,22 @@ import type { ChatType } from '@/lib/types';
 1.  **Линтинг**: `npm run lint` и `npx tsc --noEmit` должны проходить перед каждым коммитом.
 2.  **Импорты**: Используй алиас `@/` (напр. `@/features/chat`). Относительные пути (`../../`) допустимы только внутри одной фичи.
 3.  **Язык**: Код, комментарии и коммиты — на **русском** или **английском** (но консистентно). Текущий стандарт — комментарии RU.
+
+---
+
+## 🛠 Стандарты PocketBase Hooks (v0.23+)
+
+Из-за специфики среды выполнения PocketBase (изоляция обработчиков), необходимо соблюдать паттерн **"Double Require"**:
+
+1.  **Top-level Require**: Импорт `db.js` в начале файла необходим, если константы используются в параметрах регистрации (например, в `cronAdd` или `onRecord...`).
+2.  **Internal Require**: Каждая функция-обработчик или колбэк ДОЛЖНЫ содержать свой `require(`${__hooks}/db.js`)`, так как внешние переменные из глобальной области видимости затираются или становятся недоступны при вызове обработчика.
+
+```javascript
+// ✅ Правильно:
+const DB_TOP = require(`${__hooks}/db.js`);
+
+cronAdd("task", DB_TOP.CONFIG.CRON, () => {
+    const DB = require(`${__hooks}/db.js`); // Внутренний импорт
+    // ... логика
+});
+```

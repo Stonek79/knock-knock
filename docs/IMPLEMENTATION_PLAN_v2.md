@@ -58,7 +58,7 @@
 
 ### План реализации v2: Auth, SMTP, Messaging & Calls (PocketBase)
 
-**Статус:** 🔵 В процессе (Этапы 0, 1, 2 — ЗАВЕРШЕНЫ)
+**Статус:** 🔵 В процессе (Этапы 0, 1, 2, 5.1 — ЗАВЕРШЕНЫ)
 **Версия:** 2.1 (Обновлено под Media v3 и Task Runner)
 
 ### Стратегия сессии (Persistent Auth)
@@ -99,10 +99,10 @@
 | **0** | ✅ Дизайн-система — рефакторинг `index.css` + тема `default` | Завершено |
 | **1** | Auth — Schema + Forms + Persistent Session | Завершено |
 | **2** | SMTP / Brevo + Email верификация | Завершено |
-| **3** | Push-уведомления (Web Push + PWA) | 3–4 дня |
+| **3** | Push-уведомления (Web Push + PWA) | 🟠 Backend готов, клиент в процессе |
 | **4** | Audio/Video Calls (LiveKit + WebRTC) | 5–7 дней |
 | **5** | Видеозапись и отправка (Media v3) | 3–4 дня |
-| **5.1** | Task Runner (SQLite-based) | 1–2 дня |
+| **5.1** | ✅ Task Runner (SQLite-based) | Завершено |
 | **6** | Тестирование (параллельно) | постоянно |
 
 ---
@@ -300,11 +300,11 @@ npm install @livekit/components-react livekit-client
 
 ---
 
-### ЭТАП 5.1: Архитектура фонового Task Runner (SQLite-based)
+### ЭТАП 5.1: Архитектура фонового Task Runner (SQLite-based) (ЗАВЕРШЕНО)
 
 Вместо использования внешних брокеров (Redis/BullMQ), мы реализуем систему очередей непосредственно на базе PocketBase. Это сохраняет проект легковесным и переносимым.
 
-### 1. Системная коллекция `queue_tasks`
+### 1. Системная коллекция `task_queue` (Реализовано)
 Создается новая коллекция для хранения задач:
 - **type** (select, required): `push_notification`, `email_send`, `ephemeral_cleanup`.
 - **payload** (json, required): Данные задачи (IDs, контент, получатели).
