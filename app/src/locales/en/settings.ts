@@ -31,6 +31,12 @@ export const settings = {
         unsupported: "Not supported by browser",
         pushDesc:
             "Receive notifications about new messages, even when the app is closed. Completely secure: we use E2E encryption.",
+        subscribedSuccess: "Notifications enabled successfully!",
+        unsubscribedSuccess: "Notifications disabled",
+        errorSubscription: "Subscription error",
+        errorUnsubscription: "Unsubscription error",
+        requestDenied: "You denied the browser request for notifications",
+        configError: "Configuration error. Please check settings",
     },
     security: {
         security: "Security",

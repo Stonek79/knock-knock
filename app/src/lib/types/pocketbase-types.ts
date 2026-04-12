@@ -22,7 +22,8 @@ export type CollectionName =
     | "user_folders"
     | "message_reports"
     | "push_subscriptions"
-    | "media";
+    | "media"
+    | "task_queue";
 
 // Вспомогательные типы
 export type RecordIdString = string;
@@ -74,6 +75,19 @@ export type MessageReportsReasonOptions =
 export type MessageReportsStatusOptions = "pending" | "reviewed" | "dismissed";
 
 export type MediaTypeOptions = "image" | "video" | "audio" | "document";
+
+export type TaskQueueTypeOptions =
+    | "push"
+    | "email"
+    | "media_cleanup"
+    | "cleanup"
+    | "test";
+
+export type TaskQueueStatusOptions =
+    | "pending"
+    | "processing"
+    | "completed"
+    | "failed";
 
 // ---------------------------------------------------------------------------
 // Коллекция: _mfas
@@ -191,7 +205,7 @@ export type RoomMembersRecord = {
     room: RecordIdString;
     user: RecordIdString;
     role: RoomMembersRoleOptions;
-    unread_count?: number;
+    unread_count: number;
     user_name?: string;
     user_avatar?: string;
     folder_id?: string;
@@ -349,6 +363,23 @@ export type MediaRecord = {
 export type MediaResponse<Texpand = unknown> = Required<MediaRecord> &
     BaseSystemFields<Texpand>;
 
+// ---------------------------------------------------------------------------
+// Коллекция: task_queue
+// ---------------------------------------------------------------------------
+
+export type TaskQueueRecord = {
+    task_key?: string;
+    type: TaskQueueTypeOptions;
+    payload: null | unknown;
+    status?: TaskQueueStatusOptions;
+    attempts?: number;
+    last_error?: string;
+    run_at: string;
+};
+
+export type TaskQueueResponse<Texpand = unknown> = Required<TaskQueueRecord> &
+    BaseSystemFields<Texpand>;
+
 export type CollectionRecords = {
     _mfas: MfasRecord;
     _otps: OtpsRecord;
@@ -367,6 +398,7 @@ export type CollectionRecords = {
     message_reports: MessageReportsRecord;
     push_subscriptions: PushSubscriptionsRecord;
     media: MediaRecord;
+    task_queue: TaskQueueRecord;
 };
 
 export type CollectionResponses = {
@@ -387,6 +419,7 @@ export type CollectionResponses = {
     message_reports: MessageReportsResponse;
     push_subscriptions: PushSubscriptionsResponse;
     media: MediaResponse;
+    task_queue: TaskQueueResponse;
 };
 
 export type TypedPocketBase = PocketBase & {
@@ -418,4 +451,5 @@ export type TypedPocketBase = PocketBase & {
         idOrName: "push_subscriptions",
     ): RecordService<PushSubscriptionsResponse>;
     collection(idOrName: "media"): RecordService<MediaResponse>;
+    collection(idOrName: "task_queue"): RecordService<TaskQueueResponse>;
 };

@@ -22,9 +22,9 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: "autoUpdate",
-            strategies: "injectManifest", // Переопределяем поведение
-            srcDir: "src", // Искать файл в папке app/src
-            filename: "sw.ts", // Имя входного файла
+            strategies: "injectManifest",
+            srcDir: "src",
+            filename: "sw.ts",
             injectManifest: {
                 maximumFileSizeToCacheInBytes: 4000000,
             },
@@ -42,12 +42,12 @@ export default defineConfig({
                 start_url: "/",
                 icons: [
                     {
-                        src: "pwa-192x192.png",
+                        src: "images/favicon-en.png",
                         sizes: "192x192",
                         type: "image/png",
                     },
                     {
-                        src: "pwa-512x512.png",
+                        src: "images/favicon-en.png",
                         sizes: "512x512",
                         type: "image/png",
                     },

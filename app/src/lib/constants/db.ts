@@ -209,6 +209,7 @@ export const FOLDER_FIELDS = {
 
 export const PUSH_SUBSCRIPTIONS_FIELDS = {
     ID: "id",
+    USER_ID: "user_id", // Дополнение
     ENDPOINT: "endpoint",
     P256DH: "p256dh",
     AUTH: "auth",

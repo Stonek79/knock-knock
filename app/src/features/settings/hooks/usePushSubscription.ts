@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
+import {
+    COMPONENT_INTENT,
+    NOTIFICATION_CONFIG,
+    NOTIFICATION_PERMISSIONS,
+} from "@/lib/constants";
 import { pushService } from "@/lib/services/push";
 import { urlBase64ToUint8Array } from "@/lib/utils/format";
 
@@ -8,6 +14,7 @@ export function usePushSubscription() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSupported, setIsSupported] = useState(false);
 
+    const { t } = useTranslation();
     const toast = useToast();
 
     useEffect(() => {
@@ -34,22 +41,23 @@ export function usePushSubscription() {
 
         try {
             const permission = await Notification.requestPermission();
-            if (permission !== "granted") {
+            if (permission !== NOTIFICATION_PERMISSIONS.GRANTED) {
                 toast({
-                    title: "Внимание",
-                    description: "Вы отклонили запрос браузера на уведомления",
-                    variant: "info",
+                    title: t("settings.notifications.notifications"),
+                    description: t("settings.notifications.requestDenied"),
+                    variant: COMPONENT_INTENT.INFO,
                 });
                 return;
             }
 
-            const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+            const publicVapidKey = import.meta.env[
+                NOTIFICATION_CONFIG.VAPID_KEY_ENV
+            ];
             if (!publicVapidKey) {
                 toast({
-                    title: "Ошибка конфигурации",
-                    description:
-                        "VITE_VAPID_PUBLIC_KEY отсутствует. Проверьте .env",
-                    variant: "error",
+                    title: t("settings.notifications.notifications"),
+                    description: t("settings.notifications.configError"),
+                    variant: COMPONENT_INTENT.ERROR,
                 });
                 return;
             }
@@ -58,7 +66,7 @@ export function usePushSubscription() {
             const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
 
             const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
+                userVisibleOnly: NOTIFICATION_CONFIG.USER_VISIBLE_ONLY,
                 applicationServerKey: convertedVapidKey.buffer as ArrayBuffer,
             });
 
@@ -66,9 +74,9 @@ export function usePushSubscription() {
 
             if (saveRes.isErr()) {
                 toast({
-                    title: "Ошибка сервера",
+                    title: t("settings.notifications.errorSubscription"),
                     description: saveRes.error.message,
-                    variant: "error",
+                    variant: COMPONENT_INTENT.ERROR,
                 });
                 await subscription.unsubscribe();
                 return;
@@ -76,18 +84,15 @@ export function usePushSubscription() {
 
             setIsSubscribed(true);
             toast({
-                title: "Готово",
-                description: "Уведомления успешно включены!",
-                variant: "success",
+                title: t("settings.notifications.notifications"),
+                description: t("settings.notifications.subscribedSuccess"),
+                variant: COMPONENT_INTENT.SUCCESS,
             });
         } catch (e: unknown) {
             toast({
-                title: "Ошибка подписки",
-                description:
-                    e instanceof Error
-                        ? e.message
-                        : "Неизвестная ошибка подписки",
-                variant: "error",
+                title: t("settings.notifications.errorSubscription"),
+                description: e instanceof Error ? e.message : String(e),
+                variant: COMPONENT_INTENT.ERROR,
             });
         } finally {
             setIsLoading(false);
@@ -108,27 +113,27 @@ export function usePushSubscription() {
 
                 if (delRes.isErr()) {
                     toast({
-                        title: "Ошибка отписки на сервере",
+                        title: t("settings.notifications.errorUnsubscription"),
                         description: delRes.error.message,
-                        variant: "error",
+                        variant: COMPONENT_INTENT.ERROR,
                     });
                 }
 
                 await subscription.unsubscribe();
                 setIsSubscribed(false);
                 toast({
-                    title: "Уведомления отключены",
-                    variant: "info",
+                    title: t("settings.notifications.notifications"),
+                    description: t(
+                        "settings.notifications.unsubscribedSuccess",
+                    ),
+                    variant: COMPONENT_INTENT.INFO,
                 });
             }
         } catch (e: unknown) {
             toast({
-                title: "Ошибка отписки",
-                description:
-                    e instanceof Error
-                        ? e.message
-                        : "Неизвестная ошибка отписки",
-                variant: "error",
+                title: t("settings.notifications.errorUnsubscription"),
+                description: e instanceof Error ? e.message : String(e),
+                variant: COMPONENT_INTENT.ERROR,
             });
         } finally {
             setIsLoading(false);

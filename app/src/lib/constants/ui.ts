@@ -3,6 +3,7 @@ export const COMPONENT_INTENT = {
     SUCCESS: "success",
     WARNING: "warning",
     DANGER: "danger",
+    ERROR: "error",
     NEUTRAL: "neutral",
     PRIMARY: "primary",
     SECONDARY: "secondary",

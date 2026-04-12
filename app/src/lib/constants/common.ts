@@ -25,3 +25,23 @@ export const CHAT_TYPE = {
 /** Режим разработчика */
 /** Режим разработчика (заменяется Vite при сборке на true/false) */
 export const IS_DEV = import.meta.env.DEV;
+
+export const NOTIFICATION_CONFIG = {
+    VAPID_KEY_ENV: "VITE_VAPID_PUBLIC_KEY",
+    ICON: "/images/favicon-en.png",
+    BADGE: "/images/favicon-en.png",
+    VIBRATE_PATTERN: [100, 50, 100],
+    USER_VISIBLE_ONLY: true,
+} as const;
+
+/** Статусы прав на уведомления */
+export const NOTIFICATION_PERMISSIONS = {
+    GRANTED: "granted",
+    DENIED: "denied",
+    DEFAULT: "default",
+} as const;
+/** Действия уведомлений */
+export const NOTIFICATION_ACTIONS = {
+    OPEN: "open",
+    CLOSE: "close",
+} as const;

@@ -60,10 +60,21 @@
 - [x] **1.2** Реализация `pb_hooks/task_runner.pb.js` для обработки задач по расписанию (Cron).
 - [x] **1.3** Интеграция Task Runner для отправки Push-уведомлений (**Backend Ready**).
 
-### 2. Push-уведомления (Stage 3)
-- [ ] **2.1** Web Push API: регистрация Service Worker.
-- [ ] **2.2** Сохранение подписок (subscriptions) в БД.
-- [ ] **2.3** Отправка уведомлений через Task Runner.
+### 8. Push-уведомления (Stage 3)
+- [x] **Web Push API**: Регистрация и жизненный цикл Service Worker.
+- [x] **Subscription Management**: Сохранение и удаление подписок в PocketBase (поле `user_id`).
+- [x] **Payload Handlers**: Обработка push-событий, объединение слушателей кликов, логика `navigate` и `focus`.
+- [x] **Type Safety**: Полная типизация воркера и хуков без использования `any`.
+- [x] **Clean Code**: 100% покрытие константами, отсутствие магических строк.
+
+---
+
+## 🟡 Актуальные задачи (In Progress / Next Steps)
+
+### 1. Фоновая архитектура (Task Runner)
+- [x] **1.1** Создание коллекции `task_queue` в PocketBase.
+- [x] **1.2** Реализация `pb_hooks/task_runner.pb.js` для обработки задач по расписанию (Cron).
+- [x] **1.3** Интеграция Task Runner для отправки Push-уведомлений (**Backend Ready**).
 
 ### 3. Современная медиа-система (v3) — 📋 `plans/media_system_v3.md`
 - [ ] **3.1** Переход на **Dexie.js** для Offline-хранилища (IndexedDB).
