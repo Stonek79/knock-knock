@@ -1,6 +1,6 @@
 # План доработки Media Vault v3 — Финальная интеграция
 
-> Дата: 2026-04-15 | 🔴 Критично | 🟡 Архитектура | 🟢 Улучшение
+> Дата: 2026-04-15 | ✅ Критично | ✅ Архитектура | 🟢 Улучшение
 
 ---
 
@@ -28,7 +28,7 @@ export type WorkerMediaPayload = {
 
 ---
 
-### Шаг 1.2 — `app/src/lib/workers/media.client.ts` 🔴
+### Шаг 1.2 — `app/src/lib/workers/media.client.ts` ✅
 **Проблемы:**
 1. `class MediaWorkerClient` — нарушение правила проекта (классы не используются)
 2. `postTask` без таймаута — при зависании воркера Promise висит вечно
@@ -43,7 +43,7 @@ export type WorkerMediaPayload = {
 
 ## ЭТАП 2 — `useMedia`: useEffect → useQuery
 
-### Шаг 2.1 — `app/src/lib/mediadb/useMedia.ts` 🔴
+### Шаг 2.1 — `app/src/lib/mediadb/useMedia.ts` ✅
 **Проблемы:**
 1. `useEffect` — 10 компонентов с одним `mediaId` запускают 10 параллельных запросов
 2. Нет дедупликации, staleTime, механизма инвалидации
@@ -71,7 +71,7 @@ export type WorkerMediaPayload = {
 
 ## ЭТАП 3 — Исправление компонентов отображения
 
-### Шаг 3.1 — `app/src/features/chat/message/components/MessageBubble/index.tsx` 🔴
+### Шаг 3.1 — `app/src/features/chat/message/components/MessageBubble/index.tsx` ✅
 **Проблема:** Lightbox открывает `img.url` — зашифрованный URL PocketBase.
 Пользователь видит ошибку или бинарный мусор вместо изображения.
 
@@ -84,7 +84,7 @@ export type WorkerMediaPayload = {
 
 ---
 
-### Шаг 3.2 — `app/src/features/chat/message/components/MessageBubble/components/AttachmentRenderer/index.tsx` 🔴
+### Шаг 3.2 — `app/src/features/chat/message/components/MessageBubble/components/AttachmentRenderer/index.tsx` ✅
 **Проблемы:**
 1. Документы скачиваются через `<a href={att.url}>` — файл зашифрован
 2. `CachedImage`, `CachedVideo` не получают `userId`
@@ -108,12 +108,12 @@ export type WorkerMediaPayload = {
 
 ---
 
-### Шаг 3.3 — `app/src/features/chat/message/components/AudioMessagePlayer/index.tsx` 🟡
+### Шаг 3.3 — `app/src/features/chat/message/components/AudioMessagePlayer/index.tsx` ✅
 **Задача:** Добавить проп `userId: string` → пробросить в `useAudioPlayer`
 
 ---
 
-### Шаг 3.4 — `app/src/features/chat/message/hooks/useAudioPlayer.ts` 🟡
+### Шаг 3.4 — `app/src/features/chat/message/hooks/useAudioPlayer.ts` ✅
 **Проблемы:**
 1. Нет `userId` в параметрах → не передаётся в `useMedia`
 2. Fallback `src` — воспроизводит зашифрованный файл при отсутствии blob
@@ -132,7 +132,7 @@ export type WorkerMediaPayload = {
 
 ## ЭТАП 4 — Исправление логики отправки
 
-### Шаг 4.1 — `app/src/features/chat/message/hooks/useSendMessage.ts` 🟡
+### Шаг 4.1 — `app/src/features/chat/message/hooks/useSendMessage.ts` ✅
 **Проблемы:**
 1. Дублирование `_getFileType` логики (строки 115–119 и 199–203) — оба места
    повторяют то, что уже есть в `mediaService._getFileType()`
@@ -156,7 +156,7 @@ export type WorkerMediaPayload = {
 
 ---
 
-### Шаг 4.2 — `app/src/features/chat/message/hooks/useFileAttachments.ts` 🟡
+### Шаг 4.2 — `app/src/features/chat/message/hooks/useFileAttachments.ts` ✅
 **Проблема:** Проверка "одно видео" (строки 56–63) не работает при мультиселекте файлов.
 
 **Задача:** Заменить логику валидации:
@@ -174,7 +174,7 @@ if (incomingVideos + existingVideos > 1) {
 
 ## ЭТАП 5 — Проброс `userId` через дерево компонентов
 
-### Шаг 5.1 — Цепочка пропсов 🟡
+### Шаг 5.1 — Цепочка пропсов ✅
 Поскольку `useMedia` теперь требует явный `userId`, добавить его сверху вниз:
 
 ```
@@ -227,13 +227,13 @@ ChatRoom (user из useChatRoomData)
 
 | Файл | Изменение | Этап | Приоритет |
 |------|-----------|------|-----------|
-| `lib/types/media.ts` | Добавить `WorkerMediaPayload` | 1.1 | 🔴 |
-| `lib/workers/media.client.ts` | Класс → фабрика + таймаут | 1.2 | 🔴 |
-| `lib/mediadb/useMedia.ts` | useEffect → useQuery + `userId` param | 2.1 | 🔴 |
-| `components/MessageBubble/index.tsx` | `userId` prop + Lightbox fix | 3.1 | 🔴 |
-| `components/AttachmentRenderer/index.tsx` | `userId` prop + doc download fix | 3.2 | 🔴 |
-| `components/AudioMessagePlayer/index.tsx` | `userId` prop | 3.3 | 🟡 |
-| `hooks/useAudioPlayer.ts` | `userId` param + fallback fix | 3.4 | 🟡 |
-| `hooks/useSendMessage.ts` | DRY + удалить `mediaRepository` + заменить 3x `getFileUrl` на blob URL из кэша | 4.1 | 🟡 |
-| `hooks/useFileAttachments.ts` | Валидация видео при мультиселекте | 4.2 | 🟡 |
-| `ChatRoomMessages`, `MessageList` | Проброс `userId` | 5.1 | 🟡 |
+| `lib/types/media.ts` | Добавить `WorkerMediaPayload` | 1.1 | ✅ |
+| `lib/workers/media.client.ts` | Класс → фабрика + таймаут | 1.2 | ✅ |
+| `lib/mediadb/useMedia.ts` | useEffect → useQuery + `userId` param | 2.1 | ✅ |
+| `components/MessageBubble/index.tsx` | `userId` prop + Lightbox fix | 3.1 | ✅ |
+| `components/AttachmentRenderer/index.tsx` | `userId` prop + doc download fix | 3.2 | ✅ |
+| `components/AudioMessagePlayer/index.tsx` | `userId` prop | 3.3 | ✅ |
+| `hooks/useAudioPlayer.ts` | `userId` param + fallback fix | 3.4 | ✅ |
+| `hooks/useSendMessage.ts` | DRY + удалить `mediaRepository` + заменить 3x `getFileUrl` на blob URL из кэша | 4.1 | ✅ |
+| `hooks/useFileAttachments.ts` | Валидация видео при мультиселекте | 4.2 | ✅ |
+| `ChatRoomMessages`, `MessageList` | Проброс `userId` | 5.1 | ✅ |
