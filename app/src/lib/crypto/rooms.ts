@@ -3,7 +3,10 @@
  * Включает генерацию ID комнат и симметричных ключей (AES-GCM).
  */
 
-const subtle = window.crypto.subtle;
+import { CRYPTO_CONFIG } from "../constants";
+import { cryptoProvider, subtleProvider } from "./provider";
+
+const subtle = subtleProvider;
 
 /**
  * Генерирует криптографически стойкий ID комнаты.
@@ -11,26 +14,35 @@ const subtle = window.crypto.subtle;
  */
 export function generateRoomId(): string {
     // Генерируем 10 байт (80 бит), что дает ~16 символов в hex или ~15 в custom base
-    const bytes = crypto.getRandomValues(new Uint8Array(10));
+    const bytes = cryptoProvider.getRandomValues(
+        new Uint8Array(CRYPTO_CONFIG.ROOM_ID_BYTES),
+    );
     return Array.from(bytes)
         .map((b) => b.toString(36))
         .join("")
-        .slice(0, 15);
+        .slice(0, CRYPTO_CONFIG.ROOM_ID_LENGTH);
 }
 
+/**
+ * Генерирует детерминированный ID комнаты для чата с самим собой (Self-Chat).
+ * Это гарантирует, что у пользователя всегда будет одна и та же комната для заметок.
+ *
+ * @param {string} userId - ID пользователя.
+ * @returns {Promise<string>} Детерминированный ID комнаты (15 символов).
+ */
 export async function generateDeterministicRoomId(
     userId: string,
 ): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(`self-chat:${userId}`);
-    const hash = await subtle.digest("SHA-256", data);
+    const hash = await subtle.digest(CRYPTO_CONFIG.ALGORITHM.SHA_256, data);
     const bytes = new Uint8Array(hash);
 
     // Используем base36 для компактности и попадания в 15 символов
     return Array.from(bytes)
         .map((b) => b.toString(36))
         .join("")
-        .slice(0, 15);
+        .slice(0, CRYPTO_CONFIG.ROOM_ID_LENGTH);
 }
 
 /**
@@ -40,11 +52,11 @@ export async function generateDeterministicRoomId(
 export async function generateRoomKey(): Promise<CryptoKey> {
     return await subtle.generateKey(
         {
-            name: "AES-GCM",
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
             length: 256,
         },
         true, // extractable (нужен для экспорта/импорта другим участникам)
-        ["encrypt", "decrypt"],
+        CRYPTO_CONFIG.USAGE.ENCRYPT_DECRYPT,
     );
 }
 
@@ -53,7 +65,7 @@ export async function generateRoomKey(): Promise<CryptoKey> {
  * Полезно для отладки или низкоуровневых операций.
  */
 export async function exportRoomKeyRaw(key: CryptoKey): Promise<ArrayBuffer> {
-    return await subtle.exportKey("raw", key);
+    return await subtle.exportKey(CRYPTO_CONFIG.FORMAT.RAW, key);
 }
 
 /**
@@ -62,10 +74,13 @@ export async function exportRoomKeyRaw(key: CryptoKey): Promise<ArrayBuffer> {
 export async function importRoomKeyRaw(
     keyData: ArrayBuffer,
 ): Promise<CryptoKey> {
-    return await subtle.importKey("raw", keyData, { name: "AES-GCM" }, true, [
-        "encrypt",
-        "decrypt",
-    ]);
+    return await subtle.importKey(
+        CRYPTO_CONFIG.FORMAT.RAW,
+        keyData,
+        { name: CRYPTO_CONFIG.ALGORITHM.AES_GCM },
+        true,
+        CRYPTO_CONFIG.USAGE.ENCRYPT_DECRYPT,
+    );
 }
 /**
  * Генерирует детерминированный ключ комнаты на основе roomId.
@@ -77,10 +92,13 @@ export async function generateDeterministicRoomKey(
 ): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const data = encoder.encode(`dev-room-key-v1:${roomId}`);
-    const hash = await subtle.digest("SHA-256", data);
+    const hash = await subtle.digest(CRYPTO_CONFIG.ALGORITHM.SHA_256, data);
 
-    return await subtle.importKey("raw", hash, { name: "AES-GCM" }, true, [
-        "encrypt",
-        "decrypt",
-    ]);
+    return await subtle.importKey(
+        CRYPTO_CONFIG.FORMAT.RAW,
+        hash,
+        { name: CRYPTO_CONFIG.ALGORITHM.AES_GCM },
+        true,
+        CRYPTO_CONFIG.USAGE.ENCRYPT_DECRYPT,
+    );
 }

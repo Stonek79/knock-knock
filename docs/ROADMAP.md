@@ -95,8 +95,8 @@
 **✅ Принятые решения (PocketBase Era):**
 - **WebRTC решение:** LiveKit Server (Self-Hosted на домашнем сервере)
 - **Инфраструктура:** Docker Compose + Nginx (VPS) для проксирования
-- **Генерация токенов:** PocketBase Hook `pb_hooks/calls.pb.js` (НЕ Supabase Edge Functions)
-- **Хранение истории:** коллекция `call_logs` в **PocketBase** (НЕ Supabase)
+- **Генерация токенов:** PocketBase Hook `pb_hooks/calls.pb.js`
+- **Хранение истории:** коллекция `call_logs` в **PocketBase**
 
 - [ ] **Этап 0: Инфраструктура** (2-3 часа):
   - [ ] `infra/home/docker-compose.livekit.yml` — LiveKit Server

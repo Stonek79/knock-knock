@@ -1,6 +1,7 @@
 export * from "./auth";
 export * from "./errors";
 export * from "./ghost";
+export * from "./media";
 export * from "./message";
 export * from "./pocketbase";
 export * from "./pocketbase-types";

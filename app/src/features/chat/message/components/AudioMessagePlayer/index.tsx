@@ -14,9 +14,11 @@ import styles from "./AudioMessagePlayer.module.css";
 /**
  * Пропсы компонента AudioMessagePlayer.
  */
-export interface AudioMessagePlayerProps {
+export type AudioMessagePlayerProps = {
     /** URL аудиофайла (зашифрованный или blob:/data:) */
     src: string;
+    /** ID медиа-записи для кеширования (media v3) */
+    mediaId?: string;
     /** Своё ли сообщение (влияет на стиль кнопки) */
     isOwn: boolean;
     /** Есть ли транскрипция у сообщения */
@@ -29,24 +31,15 @@ export interface AudioMessagePlayerProps {
     roomKey?: CryptoKey;
     /** MIME тип аудио (по умолчанию audio/webm) */
     mimeType?: string;
-}
+};
 
 /**
  * Компонент для проигрывания голосовых и аудио сообщений в чате.
  * Premium Telegram-like дизайн с точечным прогрессом.
- *
- * @example
- * ```tsx
- * <AudioMessagePlayer
- *   src={message.audioUrl}
- *   isOwn={false}
- *   roomKey={roomKey}
- *   hasTranscript
- * />
- * ```
  */
 export function AudioMessagePlayer({
     src,
+    mediaId,
     isOwn,
     hasTranscript,
     isTranscriptExpanded,
@@ -56,6 +49,7 @@ export function AudioMessagePlayer({
 }: AudioMessagePlayerProps) {
     const { state, controls, audioRef } = useAudioPlayer({
         src,
+        mediaId,
         roomKey,
         mimeType,
     });
@@ -71,12 +65,12 @@ export function AudioMessagePlayer({
             className={styles.container}
             align="center"
             gap="3"
-            // Останавливаем onPointerDown в capture phase ДО MessageBubble
-            // Это предотвращает срабатывание useLongPress (выделение сообщения)
             onPointerDownCapture={(e) => {
                 e.stopPropagation();
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                e.stopPropagation();
+            }}
         >
             <audio ref={audioRef} src={decryptedSrc} preload="metadata">
                 <track kind="captions" />

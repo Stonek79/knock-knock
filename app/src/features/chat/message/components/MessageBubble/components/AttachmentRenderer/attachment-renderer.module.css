@@ -84,3 +84,37 @@
 .imageButton:hover .imagePlaceholder {
     background: var(--glass-hover-bg);
 }
+
+/* Контейнер для превью видео */
+.videoThumbnailContainer {
+    position: relative;
+    cursor: pointer;
+    border-radius: var(--kk-radius-sm);
+    overflow: hidden;
+    transition: transform var(--transition-fast);
+}
+
+.videoThumbnailContainer:hover {
+    transform: scale(1.02);
+}
+
+/* Оверлей с кнопкой Play для видео */
+.playOverlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--space-1));
+    color: var(--foreground);
+    padding: var(--space-2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-fast);
+}
+
+.videoThumbnailContainer:hover .playOverlay {
+    background: var(--glass-hover-bg);
+}

@@ -3,18 +3,23 @@
  * Использует PBKDF2 для деривации ключа шифрования из пароля
  * и AES-GCM для защиты данных.
  */
-import { ERROR_CODES } from "@/lib/constants/errors";
-import type { AppError, Result } from "@/lib/types/result";
-import { appError, err, ok } from "@/lib/utils/result";
+import { CRYPTO_CONFIG, ERROR_CODES } from "../constants";
+import type { AppError, Result } from "../types/result";
+import { appError, err, ok } from "../utils/result";
+import { arrayBufferToBase64, base64ToArrayBuffer } from "./keys";
+import { cryptoProvider, subtleProvider } from "./provider";
 
-const subtle = window.crypto.subtle;
+const subtle = subtleProvider;
 
-/** Формат файла бэкапа */
+/**
+ * Формат зашифрованного бэкапа ключей.
+ * Представляет собой JSON, упакованный в Base64.
+ */
 export interface KeyBackup {
     version: number;
     salt: string; // Base64
     iv: string; // Base64
-    data: string; // Base64 (encrypted JSON with JWKs)
+    data: string; // Base64 (зашифрованный JSON с ключами JWK)
 }
 
 /** Внутренняя структура данных для шифрования */
@@ -29,26 +34,7 @@ interface BackupPayload {
     };
 }
 
-// Утилиты преобразования
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-}
-
-function base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const binaryString = window.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-}
+// Утилиты перенесены в keys.ts
 
 /**
  * Генерирует ключ шифрования из пароля.
@@ -58,25 +44,26 @@ async function getKeyFromPassword(
     salt: Uint8Array,
 ): Promise<CryptoKey> {
     const enc = new TextEncoder();
+    const passwordBuffer = enc.encode(password);
     const keyMaterial = await subtle.importKey(
-        "raw",
-        enc.encode(password),
-        { name: "PBKDF2" },
+        CRYPTO_CONFIG.FORMAT.RAW,
+        passwordBuffer,
+        { name: CRYPTO_CONFIG.ALGORITHM.PBKDF2 },
         false,
-        ["deriveKey"],
+        [CRYPTO_CONFIG.USAGE.DERIVE_KEY],
     );
 
     return await subtle.deriveKey(
         {
-            name: "PBKDF2",
+            name: CRYPTO_CONFIG.ALGORITHM.PBKDF2,
             salt: salt as BufferSource,
-            iterations: 100000,
-            hash: "SHA-256",
+            iterations: CRYPTO_CONFIG.PBKDF2_ITERATIONS,
+            hash: CRYPTO_CONFIG.ALGORITHM.SHA_256,
         },
         keyMaterial,
-        { name: "AES-GCM", length: 256 },
+        { name: CRYPTO_CONFIG.ALGORITHM.AES_GCM, length: 256 },
         false,
-        ["encrypt", "decrypt"],
+        CRYPTO_CONFIG.USAGE.ENCRYPT_DECRYPT,
     );
 }
 
@@ -91,25 +78,37 @@ export async function createBackup(
     // 1. Экспортируем ключи в JWK
     const payload: BackupPayload = {
         identity: {
-            private: await subtle.exportKey("jwk", identityPair.privateKey),
-            public: await subtle.exportKey("jwk", identityPair.publicKey),
+            private: await subtle.exportKey(
+                CRYPTO_CONFIG.FORMAT.JWK,
+                identityPair.privateKey,
+            ),
+            public: await subtle.exportKey(
+                CRYPTO_CONFIG.FORMAT.JWK,
+                identityPair.publicKey,
+            ),
         },
         prekey: {
-            private: await subtle.exportKey("jwk", preKeyPair.privateKey),
-            public: await subtle.exportKey("jwk", preKeyPair.publicKey),
+            private: await subtle.exportKey(
+                CRYPTO_CONFIG.FORMAT.JWK,
+                preKeyPair.privateKey,
+            ),
+            public: await subtle.exportKey(
+                CRYPTO_CONFIG.FORMAT.JWK,
+                preKeyPair.publicKey,
+            ),
         },
     };
 
     // 2. Готовим данные
     const plaintext = new TextEncoder().encode(JSON.stringify(payload));
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const salt = cryptoProvider.getRandomValues(new Uint8Array(16));
+    const iv = cryptoProvider.getRandomValues(new Uint8Array(12));
 
     // 3. Шифруем
     const key = await getKeyFromPassword(password, salt);
     const ciphertext = await subtle.encrypt(
         {
-            name: "AES-GCM",
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
             iv: iv,
         },
         key,
@@ -117,12 +116,14 @@ export async function createBackup(
     );
 
     // 4. Формируем результат
-    return {
+    const backup: KeyBackup = {
         version: 1,
         salt: arrayBufferToBase64(salt.buffer),
         iv: arrayBufferToBase64(iv.buffer),
         data: arrayBufferToBase64(ciphertext),
     };
+
+    return backup;
 }
 
 /**
@@ -152,7 +153,7 @@ export async function restoreBackup(
         return err(
             appError(
                 ERROR_CODES.UNSUPPORTED_VERSION,
-                "Unsupported backup version",
+                "Неподдерживаемая версия бэкапа",
             ),
         );
     }
@@ -168,7 +169,7 @@ export async function restoreBackup(
         // 2. Расшифровка
         const plaintextBuffer = await subtle.decrypt(
             {
-                name: "AES-GCM",
+                name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
                 iv: iv,
             },
             key,
@@ -181,31 +182,31 @@ export async function restoreBackup(
 
         // 4. Импорт ключей (JWK -> CryptoKey)
         const identityPrivate = await subtle.importKey(
-            "jwk",
+            CRYPTO_CONFIG.FORMAT.JWK,
             payload.identity.private,
-            { name: "Ed25519" },
+            { name: CRYPTO_CONFIG.ALGORITHM.ED25519 },
             true,
-            ["sign"],
+            [CRYPTO_CONFIG.USAGE.SIGN],
         );
         const identityPublic = await subtle.importKey(
-            "jwk",
+            CRYPTO_CONFIG.FORMAT.JWK,
             payload.identity.public,
-            { name: "Ed25519" },
+            { name: CRYPTO_CONFIG.ALGORITHM.ED25519 },
             true,
-            ["verify"],
+            [CRYPTO_CONFIG.USAGE.VERIFY],
         );
 
         const prekeyPrivate = await subtle.importKey(
-            "jwk",
+            CRYPTO_CONFIG.FORMAT.JWK,
             payload.prekey.private,
-            { name: "X25519" },
+            { name: CRYPTO_CONFIG.ALGORITHM.X25519 },
             true,
-            ["deriveKey", "deriveBits"],
+            CRYPTO_CONFIG.USAGE.DERIVE,
         );
         const prekeyPublic = await subtle.importKey(
-            "jwk",
+            CRYPTO_CONFIG.FORMAT.JWK,
             payload.prekey.public,
-            { name: "X25519" },
+            { name: CRYPTO_CONFIG.ALGORITHM.X25519 },
             true,
             [],
         );
@@ -223,7 +224,7 @@ export async function restoreBackup(
             return err(
                 appError(
                     ERROR_CODES.DECRYPT_FAILED,
-                    "Failed to decrypt backup. Wrong password?",
+                    "Не удалось расшифровать бэкап. Неверный пароль?",
                     e,
                 ),
             );
@@ -231,7 +232,7 @@ export async function restoreBackup(
         return err(
             appError(
                 ERROR_CODES.INVALID_BACKUP,
-                "Failed to parse backup data",
+                "Ошибка парсинга данных бэкапа",
                 e instanceof Error ? e : undefined,
             ),
         );

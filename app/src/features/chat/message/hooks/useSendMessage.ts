@@ -4,61 +4,54 @@ import {
     ATTACHMENT_TYPES,
     CLIENT_MESSAGE_STATUS,
     DEFAULT_MIME_TYPES,
+    MIME_PREFIXES,
     QUERY_KEYS,
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { mediaRepository } from "@/lib/repositories/media.repository";
+import { mediaService } from "@/lib/services/media";
 import { MessageService } from "@/lib/services/message";
 import type { Attachment, ChatMessage, Profile } from "@/lib/types";
-import { uploadAudio, uploadMedia } from "../services/uploadMedia";
 import { createOptimisticMessage } from "../utils/optimistic";
 
 /**
  * Параметры инициализации хука useSendMessage
  */
-interface UseSendMessageOptions {
+type UseSendMessageOptions = {
     /** ID текущей комнаты (опционален для безусловного вызова хука) */
     roomId?: string;
     /** Ключ шифрования комнаты (AES-GCM) */
     roomKey?: CryptoKey;
     /** Профиль текущего пользователя */
     user?: Profile | null;
-}
+};
 
 /**
  * Переменные мутации (передаются в mutate())
  */
-interface SendMessageVariables {
+type SendMessageVariables = {
     /** Текст сообщения */
     text: string;
     /** Прикреплённые файлы (фото, видео, документы) */
     files?: File[];
     /** Голосовое сообщение (аудио blob) */
     audioBlob?: Blob;
-}
+};
 
 /**
  * Контекст оптимистичной мутации (возвращается из onMutate для rollback)
  */
-interface SendMessageContext {
+type SendMessageContext = {
     /** Снимок кэша сообщений до оптимистичного обновления */
     previousMessages: ChatMessage[];
     /** Временный ID оптимистичного сообщения */
     tempId: string;
     /** Blob URLs для очистки */
     blobUrls: string[];
-}
+};
 
 /**
  * Хук оптимистичной отправки сообщений.
- *
- * Использует TanStack Query useMutation с полным lifecycle:
- * - onMutate: мгновенно добавляет сообщение в кэш (UI показывает «отправляется»)
- * - onSuccess: заменяет tempId на реальный серверный ID
- * - onError: помечает сообщение как FAILED (доступен retry)
- * - onSettled: очищает blob URLs + инвалидирует кэш для финальной синхронизации
- *
- * @param options - roomId, roomKey, user
- * @returns TanStack useMutation результат
  */
 export function useSendMessage({
     roomId,
@@ -72,7 +65,6 @@ export function useSendMessage({
         {
             /**
              * Основная функция отправки: загрузка медиа + шифрование + отправка.
-             * Возвращает серверный ID созданного сообщения.
              */
             mutationFn: async ({ text, files, audioBlob }) => {
                 if (!roomId || !roomKey || !user) {
@@ -83,26 +75,79 @@ export function useSendMessage({
 
                 const attachments: Attachment[] = [];
 
-                // 1. Загружаем медиа (если есть)
+                // 1. Загружаем медиа через единый сервис оркестрации
                 if (audioBlob) {
-                    const audioAttachment = await uploadAudio({
-                        blob: audioBlob,
+                    const uploadResult = await mediaService.uploadMedia({
+                        file: audioBlob,
                         userId: user.id,
-                        roomKey,
+                        roomId,
+                        cryptoKey: roomKey,
                     });
-                    attachments.push(audioAttachment);
+
+                    if (uploadResult.isErr()) {
+                        throw new Error(uploadResult.error.message);
+                    }
+
+                    const record = uploadResult.value;
+
+                    attachments.push({
+                        id: record.id,
+                        file_name: "voice-message.webm",
+                        file_size: audioBlob.size,
+                        content_type:
+                            audioBlob.type || DEFAULT_MIME_TYPES.WEBM_AUDIO,
+                        url: mediaRepository.getFileUrl({
+                            record,
+                            filename: record.file,
+                        }),
+                        type: ATTACHMENT_TYPES.AUDIO,
+                    });
                 }
 
                 if (files && files.length > 0) {
-                    const filePromises = files.map((file) =>
-                        uploadMedia({
+                    const uploadPromises = files.map(async (file) => {
+                        const uploadResult = await mediaService.uploadMedia({
                             file,
                             userId: user.id,
-                            fileNameOverride: file.name,
-                        }),
-                    );
-                    const uploadedFiles = await Promise.all(filePromises);
-                    attachments.push(...uploadedFiles);
+                            roomId,
+                            cryptoKey: roomKey,
+                        });
+
+                        if (uploadResult.isErr()) {
+                            throw new Error(uploadResult.error.message);
+                        }
+
+                        const record = uploadResult.value;
+
+                        const type = file.type.startsWith(MIME_PREFIXES.IMAGE)
+                            ? ATTACHMENT_TYPES.IMAGE
+                            : file.type.startsWith(MIME_PREFIXES.VIDEO)
+                              ? ATTACHMENT_TYPES.VIDEO
+                              : ATTACHMENT_TYPES.DOCUMENT;
+
+                        const attachment: Attachment = {
+                            id: record.id,
+                            file_name: file.name,
+                            file_size: file.size,
+                            content_type: file.type,
+                            url: mediaRepository.getFileUrl({
+                                record,
+                                filename: record.file,
+                            }),
+                            thumbnail_url: record.thumbnail
+                                ? mediaRepository.getFileUrl({
+                                      record,
+                                      filename: record.thumbnail,
+                                  })
+                                : undefined,
+                            type,
+                        };
+
+                        return attachment;
+                    });
+
+                    const uploaded = await Promise.all(uploadPromises);
+                    attachments.push(...uploaded);
                 }
 
                 // 2. Шифруем и отправляем на сервер
@@ -121,34 +166,27 @@ export function useSendMessage({
                     throw new Error(result.error.message);
                 }
 
-                // Возвращаем серверный ID сообщения
                 return result.value;
             },
 
             /**
-             * Optimistic update: мгновенно вставляем сообщение в кэш.
-             * Пользователь видит сообщение СРАЗУ с индикатором «отправляется».
+             * Optimistic update
              */
             onMutate: async (variables) => {
                 if (!roomId || !roomKey || !user) {
                     return { previousMessages: [], tempId: "", blobUrls: [] };
                 }
 
-                // 1. Отменяем текущие refetch'и (чтобы не перезаписали оптимистичные данные)
                 await queryClient.cancelQueries({
                     queryKey: QUERY_KEYS.messages(roomId),
                 });
 
-                // 2. Снапшот текущих данных для потенциального rollback
                 const previousMessages =
                     queryClient.getQueryData<ChatMessage[]>(
                         QUERY_KEYS.messages(roomId),
                     ) ?? [];
 
-                // 3. Генерируем временный ID
                 const tempId = crypto.randomUUID();
-
-                // 4. Формируем blob URLs для медиа-превью
                 const blobUrls: string[] = [];
                 const optimisticAttachments: Attachment[] = [];
 
@@ -170,11 +208,9 @@ export function useSendMessage({
                         const blobUrl = URL.createObjectURL(file);
                         blobUrls.push(blobUrl);
 
-                        const type = file.type.startsWith(
-                            `${ATTACHMENT_TYPES.IMAGE}/`,
-                        )
+                        const type = file.type.startsWith(MIME_PREFIXES.IMAGE)
                             ? ATTACHMENT_TYPES.IMAGE
-                            : file.type.startsWith(`${ATTACHMENT_TYPES.VIDEO}/`)
+                            : file.type.startsWith(MIME_PREFIXES.VIDEO)
                               ? ATTACHMENT_TYPES.VIDEO
                               : ATTACHMENT_TYPES.DOCUMENT;
 
@@ -189,7 +225,6 @@ export function useSendMessage({
                     }
                 }
 
-                // 5. Оптимистично добавляем в кэш
                 queryClient.setQueryData<ChatMessage[]>(
                     QUERY_KEYS.messages(roomId),
                     (old = []) => [
@@ -214,8 +249,7 @@ export function useSendMessage({
             },
 
             /**
-             * Успешная отправка: заменяем tempId на реальный серверный ID.
-             * Защита от дубликата с Realtime: проверяем, не пришло ли сообщение через SSE раньше.
+             * Успешная отправка
              */
             onSuccess: (serverId, _variables, context) => {
                 if (!context || !roomId) {
@@ -225,17 +259,14 @@ export function useSendMessage({
                 queryClient.setQueryData<ChatMessage[]>(
                     QUERY_KEYS.messages(roomId),
                     (old = []) => {
-                        // Проверяем, не пришло ли сообщение через Realtime раньше
                         const realtimeAlreadyArrived = old.some(
                             (m) => m.id === serverId && !m._tempId,
                         );
 
                         if (realtimeAlreadyArrived) {
-                            // Realtime уже добавил — просто убираем оптимистичное
                             return old.filter((m) => m.id !== context.tempId);
                         }
 
-                        // Realtime ещё не пришёл — заменяем tempId на реальный ID
                         return old.map((m) => {
                             if (m.id === context.tempId) {
                                 return {
@@ -252,7 +283,7 @@ export function useSendMessage({
             },
 
             /**
-             * Ошибка: помечаем сообщение как FAILED (не полный rollback — даём retry).
+             * Ошибка
              */
             onError: (error, _variables, context) => {
                 if (!context || !roomId) {
@@ -282,12 +313,9 @@ export function useSendMessage({
             },
 
             /**
-             * Завершение мутации (успех или ошибка):
-             * - Очищаем blob URLs для предотвращения утечки памяти
-             * - Инвалидируем кэш для финальной синхронизации с сервером
+             * Завершение мутации
              */
             onSettled: (_data, _error, _variables, context) => {
-                // Очищаем blob URLs из памяти
                 if (context?.blobUrls) {
                     for (const url of context.blobUrls) {
                         URL.revokeObjectURL(url);
@@ -298,7 +326,6 @@ export function useSendMessage({
                     return;
                 }
 
-                // Финальная синхронизация с сервером
                 queryClient.invalidateQueries({
                     queryKey: QUERY_KEYS.messages(roomId),
                 });

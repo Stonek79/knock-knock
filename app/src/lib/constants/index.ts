@@ -3,6 +3,7 @@ export * from "./cache";
 export * from "./chat";
 export * from "./colors";
 export * from "./common";
+export * from "./crypto";
 export * from "./db";
 export * from "./errors";
 export * from "./ghost";

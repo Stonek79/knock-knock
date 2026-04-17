@@ -358,6 +358,9 @@ export type MediaRecord = {
     mime_type?: string;
     metadata?: null | unknown;
     is_test?: boolean;
+    is_vault?: boolean;
+    references?: null | unknown;
+    thumbnail?: string;
 };
 
 export type MediaResponse<Texpand = unknown> = Required<MediaRecord> &

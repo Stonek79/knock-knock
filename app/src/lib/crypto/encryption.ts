@@ -5,7 +5,10 @@
  * через их публичные ключи X25519.
  */
 
-const subtle = window.crypto.subtle;
+import { CRYPTO_CONFIG } from "../constants";
+import { cryptoProvider, subtleProvider } from "./provider";
+
+const subtle = subtleProvider;
 
 /**
  * Шифрует (заворачивает) симметричный ключ комнаты для получателя.
@@ -26,42 +29,50 @@ export async function wrapRoomKey(
     ciphertext: ArrayBuffer;
 }> {
     // Определяем параметры алгоритма на основе ключа получателя
-    const isX25519 = recipientPublicKey.algorithm.name === "X25519";
+    const isX25519 =
+        recipientPublicKey.algorithm.name === CRYPTO_CONFIG.ALGORITHM.X25519;
     const namedCurve =
-        (recipientPublicKey.algorithm as EcKeyAlgorithm).namedCurve || "P-256";
+        (recipientPublicKey.algorithm as EcKeyAlgorithm).namedCurve ||
+        CRYPTO_CONFIG.CURVE.P_256;
     const genAlgorithm = isX25519
-        ? { name: "X25519" }
-        : { name: "ECDH", namedCurve };
+        ? { name: CRYPTO_CONFIG.ALGORITHM.X25519 }
+        : { name: CRYPTO_CONFIG.ALGORITHM.ECDH, namedCurve };
 
     const deriveAlgorithm = isX25519
-        ? { name: "X25519", public: recipientPublicKey }
-        : { name: "ECDH", public: recipientPublicKey };
+        ? { name: CRYPTO_CONFIG.ALGORITHM.X25519, public: recipientPublicKey }
+        : { name: CRYPTO_CONFIG.ALGORITHM.ECDH, public: recipientPublicKey };
 
     // 1. Генерируем эфемерную пару ключей того же типа
-    const ephemeralKeyPair = (await subtle.generateKey(genAlgorithm, true, [
-        "deriveKey",
-        "deriveBits",
-    ])) as CryptoKeyPair;
+    const ephemeralKeyPair = (await subtle.generateKey(
+        genAlgorithm,
+        true,
+        CRYPTO_CONFIG.USAGE.DERIVE,
+    )) as CryptoKeyPair;
 
     // 2. ECDH Shared Secret -> 3. Derive KEK (AES-GCM 256)
     const kek = await subtle.deriveKey(
         deriveAlgorithm,
         ephemeralKeyPair.privateKey,
         {
-            name: "AES-GCM",
-            length: 256,
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
+            length: CRYPTO_CONFIG.AES_KEY_LENGTH_BITS,
         },
         false,
-        ["encrypt"],
+        [CRYPTO_CONFIG.USAGE.ENCRYPT],
     );
 
     // 4. Шифруем Room Key
-    const roomKeyBytes = await subtle.exportKey("raw", roomKey);
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const roomKeyBytes = await subtle.exportKey(
+        CRYPTO_CONFIG.FORMAT.RAW,
+        roomKey,
+    );
+    const iv = cryptoProvider.getRandomValues(
+        new Uint8Array(CRYPTO_CONFIG.IV_LENGTH_BYTES),
+    );
 
     const ciphertext = await subtle.encrypt(
         {
-            name: "AES-GCM",
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
             iv: iv,
         },
         kek,
@@ -71,7 +82,7 @@ export async function wrapRoomKey(
     // 5. Возвращаем
     return {
         ephemeralPublicKey: await subtle.exportKey(
-            "raw",
+            CRYPTO_CONFIG.FORMAT.RAW,
             ephemeralKeyPair.publicKey,
         ),
         iv: iv.buffer,
@@ -91,23 +102,24 @@ export async function unwrapRoomKey(
     myPrivateKey: CryptoKey,
 ): Promise<CryptoKey> {
     // Определяем параметры алгоритма на основе нашего приватного ключа
-    const isX25519 = myPrivateKey.algorithm.name === "X25519";
+    const isX25519 =
+        myPrivateKey.algorithm.name === CRYPTO_CONFIG.ALGORITHM.X25519;
     const importAlgorithm = isX25519
-        ? { name: "X25519" }
+        ? { name: CRYPTO_CONFIG.ALGORITHM.X25519 }
         : {
-              name: "ECDH",
+              name: CRYPTO_CONFIG.ALGORITHM.ECDH,
               namedCurve:
                   (myPrivateKey.algorithm as EcKeyAlgorithm).namedCurve ||
-                  "P-256",
+                  CRYPTO_CONFIG.CURVE.P_256,
           };
 
     const deriveAlgorithm = isX25519
-        ? { name: "X25519" } // Публичный ключ добавится ниже
-        : { name: "ECDH" };
+        ? { name: CRYPTO_CONFIG.ALGORITHM.X25519 } // Публичный ключ добавится ниже
+        : { name: CRYPTO_CONFIG.ALGORITHM.ECDH };
 
     // 1. Import Ephemeral Public Key
     const ephemeralPub = await subtle.importKey(
-        "raw",
+        CRYPTO_CONFIG.FORMAT.RAW,
         encryptedData.ephemeralPublicKey,
         importAlgorithm,
         false,
@@ -122,17 +134,17 @@ export async function unwrapRoomKey(
         } as EcdhKeyDeriveParams,
         myPrivateKey,
         {
-            name: "AES-GCM",
-            length: 256,
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
+            length: CRYPTO_CONFIG.AES_KEY_LENGTH_BITS,
         },
         false,
-        ["decrypt"],
+        [CRYPTO_CONFIG.USAGE.DECRYPT],
     );
 
     // 4. Decrypt Room Key Bytes
     const roomKeyBytes = await subtle.decrypt(
         {
-            name: "AES-GCM",
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
             iv: encryptedData.iv,
         },
         kek,
@@ -141,10 +153,10 @@ export async function unwrapRoomKey(
 
     // 5. Import Room Key
     return await subtle.importKey(
-        "raw",
+        CRYPTO_CONFIG.FORMAT.RAW,
         roomKeyBytes,
-        { name: "AES-GCM" },
+        { name: CRYPTO_CONFIG.ALGORITHM.AES_GCM },
         true,
-        ["encrypt", "decrypt"],
+        CRYPTO_CONFIG.USAGE.ENCRYPT_DECRYPT,
     );
 }

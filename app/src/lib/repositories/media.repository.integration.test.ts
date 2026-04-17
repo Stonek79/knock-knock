@@ -46,7 +46,10 @@ describe("MediaRepository: Integration", () => {
             expect(record.file).toContain("test-file");
 
             // Проверяем получение URL
-            const url = mediaRepository.getFileUrl(record, record.file);
+            const url = mediaRepository.getFileUrl({
+                record,
+                filename: record.file,
+            });
             expect(url).toContain(record.id);
         }
     });

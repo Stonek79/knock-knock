@@ -9,13 +9,13 @@ import { RoomService } from "@/lib/services/room";
 import type { Profile, RoomWithMembers } from "@/lib/types";
 import { useSendMessage } from "./useSendMessage";
 
-interface UseChatActionsProps {
+type UseChatActionsProps = {
     roomId?: string;
     roomKey?: CryptoKey;
     /** Профиль текущего пользователя */
     user?: Profile | null;
     room?: RoomWithMembers;
-}
+};
 
 /**
  * Хук действий чата (отправка, удаление, завершение сессии).
@@ -35,20 +35,20 @@ export function useChatActions({
     const [ending, setEnding] = useState(false);
 
     // Оптимистичная отправка через useSendMessage
-    // Хук вызывается безусловно (правила React hooks).
-    // Защита от undefined roomId/roomKey/user — внутри useSendMessage.
     const sendMutation = useSendMessage({ roomId, roomKey, user });
 
     /**
      * Отправка зашифрованного сообщения с оптимистичным обновлением UI.
-     * Сообщение мгновенно появляется в чате с индикатором «отправляется»,
-     * затем обновляется со статусом «отправлено» или «ошибка».
      */
-    const sendMessage = async (
-        text: string,
-        files?: File[],
-        audioBlob?: Blob,
-    ) => {
+    const sendMessage = async ({
+        text,
+        files,
+        audioBlob,
+    }: {
+        text: string;
+        files?: File[];
+        audioBlob?: Blob;
+    }) => {
         if (!roomId || !roomKey || !user) {
             logger.warn(
                 "Невозможно отправить: отсутствуют ключи или ID комнаты",
@@ -102,7 +102,13 @@ export function useChatActions({
     /**
      * Безопасное удаление сообщения (Secure Delete).
      */
-    const deleteMessage = async (messageId: string, isOwnMessage: boolean) => {
+    const deleteMessage = async ({
+        messageId,
+        isOwnMessage,
+    }: {
+        messageId: string;
+        isOwnMessage: boolean;
+    }) => {
         if (!user) {
             return;
         }
@@ -132,9 +138,14 @@ export function useChatActions({
 
     /**
      * Редактирование сообщения.
-     * Новый текст шифруется тем же ключом комнаты.
      */
-    const updateMessage = async (messageId: string, newContent: string) => {
+    const updateMessage = async ({
+        messageId,
+        newContent,
+    }: {
+        messageId: string;
+        newContent: string;
+    }) => {
         if (!roomKey) {
             logger.warn("Невозможно обновить: отсутствует ключ шифрования");
             return;

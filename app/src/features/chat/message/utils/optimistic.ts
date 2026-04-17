@@ -5,7 +5,7 @@ import type { Attachment, ChatMessage } from "@/lib/types";
 /**
  * Параметры для создания оптимистичного сообщения
  */
-export interface OptimisticMessageParams {
+export type OptimisticMessageParams = {
     /** Временный ID (crypto.randomUUID()) */
     tempId: string;
     /** Текст сообщения */
@@ -22,7 +22,7 @@ export interface OptimisticMessageParams {
     attachments?: Attachment[];
     /** Blob URLs для очистки через revokeObjectURL */
     blobUrls?: string[];
-}
+};
 
 /**
  * Создаёт оптимистичное сообщение для мгновенного отображения в UI.

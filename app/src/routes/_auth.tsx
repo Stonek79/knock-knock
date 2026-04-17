@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_auth")({
     beforeLoad: ({ context }) => {
         const { pbUser } = useAuthStore.getState();
         if (pbUser) {
-            ChatRealtimeService.init(context.queryClient, pbUser);
+            ChatRealtimeService.init({ qc: context.queryClient, user: pbUser });
         }
     },
     component: AuthLayout,

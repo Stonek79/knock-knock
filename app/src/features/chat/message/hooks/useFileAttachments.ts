@@ -1,11 +1,6 @@
-import imageCompression from "browser-image-compression";
 import { type ChangeEvent, useCallback, useState } from "react";
 import type { useToast } from "@/components/ui/Toast";
-import {
-    COMPRESSION_OPTIONS,
-    MEDIA_LIMITS,
-    MIME_PREFIXES,
-} from "@/lib/constants/storage";
+import { MEDIA_LIMITS, MIME_PREFIXES } from "@/lib/constants/storage";
 
 interface UseFileAttachmentsProps {
     toast: ReturnType<typeof useToast>;
@@ -13,7 +8,8 @@ interface UseFileAttachmentsProps {
 }
 
 /**
- * Хук для управления вложениями (выбор, валидация по размеру, сжатие изображений, лимиты).
+ * Хук для управления вложениями (выбор, валидация по размеру, лимиты).
+ * Логика сжатия и шифрования вынесена в MediaService.
  */
 export function useFileAttachments({ toast, t }: UseFileAttachmentsProps) {
     const [attachments, setAttachments] = useState<File[]>([]);
@@ -24,93 +20,9 @@ export function useFileAttachments({ toast, t }: UseFileAttachmentsProps) {
             if (e.target.files && e.target.files.length > 0) {
                 const selectedFiles = Array.from(e.target.files);
 
-                const videoFiles = selectedFiles.filter((f) =>
-                    f.type.startsWith(MIME_PREFIXES.VIDEO),
-                );
-                const imageFiles = selectedFiles.filter((f) =>
-                    f.type.startsWith(MIME_PREFIXES.IMAGE),
-                );
-                const otherFiles = selectedFiles.filter(
-                    (f) =>
-                        !f.type.startsWith(MIME_PREFIXES.VIDEO) &&
-                        !f.type.startsWith(MIME_PREFIXES.IMAGE),
-                );
-
-                // Проверка лимита в 30 МБ для видео
-                const validVideoFiles = videoFiles.filter((f) => {
-                    const limitBytes =
-                        MEDIA_LIMITS.MAX_VIDEO_SIZE_MB * 1024 * 1024;
-                    if (f.size > limitBytes) {
-                        toast({
-                            title: t(
-                                "chat.videoTooLarge",
-                                `Видео слишком большое (макс ${MEDIA_LIMITS.MAX_VIDEO_SIZE_MB} МБ). Рекомендуем сжать видео перед отправкой.`,
-                            ),
-                            variant: "error",
-                        });
-                        return false;
-                    }
-                    return true;
-                });
-
-                // Сжатие изображений
-                const compressedImages = await Promise.all(
-                    imageFiles.map(async (file) => {
-                        try {
-                            const options = {
-                                maxSizeMB: COMPRESSION_OPTIONS.MAX_SIZE_MB,
-                                maxWidthOrHeight:
-                                    COMPRESSION_OPTIONS.MAX_WIDTH_OR_HEIGHT,
-                                useWebWorker: false,
-                            };
-                            return await imageCompression(file, options);
-                        } catch (error) {
-                            console.error("Image compression error:", error);
-                            return file; // fallback к оригиналу
-                        }
-                    }),
-                );
-
-                let finalFiles = [...attachments];
-
-                if (validVideoFiles.length > 0) {
-                    const existingVideoCount = attachments.filter((f) =>
-                        f.type.startsWith(MIME_PREFIXES.VIDEO),
-                    ).length;
-
-                    if (existingVideoCount > 0 || validVideoFiles.length > 1) {
-                        toast({
-                            title: t(
-                                "chat.onlyOneVideoAllowed",
-                                "Можно прикрепить только одно видео.",
-                            ),
-                            variant: "error",
-                        });
-                    }
-
-                    if (existingVideoCount === 0) {
-                        finalFiles = [
-                            ...finalFiles,
-                            ...otherFiles,
-                            ...compressedImages,
-                            validVideoFiles[0],
-                        ];
-                    } else {
-                        finalFiles = [
-                            ...finalFiles,
-                            ...otherFiles,
-                            ...compressedImages,
-                        ];
-                    }
-                } else {
-                    finalFiles = [
-                        ...finalFiles,
-                        ...otherFiles,
-                        ...compressedImages,
-                    ];
-                }
-
-                if (finalFiles.length > MEDIA_LIMITS.MAX_ATTACHMENTS) {
+                // 1. Проверка общего лимита количества
+                const totalTarget = attachments.length + selectedFiles.length;
+                if (totalTarget > MEDIA_LIMITS.MAX_ATTACHMENTS) {
                     toast({
                         title: t(
                             "chat.maxFilesReached",
@@ -118,13 +30,61 @@ export function useFileAttachments({ toast, t }: UseFileAttachmentsProps) {
                         ),
                         variant: "error",
                     });
-                    finalFiles = finalFiles.slice(
-                        0,
-                        MEDIA_LIMITS.MAX_ATTACHMENTS,
-                    );
+                    return;
                 }
 
-                setAttachments(finalFiles);
+                // 2. Валидация типов и размеров (поверхностная, основная будет в сервисе)
+                const validFiles = selectedFiles.filter((file) => {
+                    const sizeMB = file.size / 1024 / 1024;
+
+                    if (file.type.startsWith(MIME_PREFIXES.VIDEO)) {
+                        if (sizeMB > MEDIA_LIMITS.MAX_VIDEO_SIZE_MB) {
+                            toast({
+                                title: t(
+                                    "chat.videoTooLarge",
+                                    `Видео ${file.name} слишком большое.`,
+                                ),
+                                variant: "error",
+                            });
+                            return false;
+                        }
+
+                        // Ограничение: одно видео на сообщение (бизнес-логика проекта)
+                        const hasVideo = attachments.some((a) =>
+                            a.type.startsWith(MIME_PREFIXES.VIDEO),
+                        );
+                        if (hasVideo) {
+                            toast({
+                                title: t(
+                                    "chat.onlyOneVideoAllowed",
+                                    "Только одно видео",
+                                ),
+                                variant: "error",
+                            });
+                            return false;
+                        }
+                    }
+
+                    if (file.type.startsWith(MIME_PREFIXES.IMAGE)) {
+                        if (sizeMB > MEDIA_LIMITS.MAX_IMAGE_SIZE_MB) {
+                            toast({
+                                title: t(
+                                    "chat.imageTooLarge",
+                                    `Фото ${file.name} слишком большое`,
+                                ),
+                                variant: "error",
+                            });
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+
+                if (validFiles.length > 0) {
+                    setAttachments((prev) => [...prev, ...validFiles]);
+                }
+
                 e.target.value = "";
             }
         },

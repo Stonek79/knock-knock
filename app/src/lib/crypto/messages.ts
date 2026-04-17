@@ -3,10 +3,11 @@
  * Использует AES-GCM (256-bit) с симметричным ключом комнаты.
  */
 
-import { DEFAULT_MIME_TYPES } from "../constants";
+import { CRYPTO_CONFIG, DEFAULT_MIME_TYPES } from "../constants";
 import { arrayBufferToBase64, base64ToArrayBuffer } from "./keys";
+import { cryptoProvider, subtleProvider } from "./provider";
 
-const subtle = window.crypto.subtle;
+const subtle = subtleProvider;
 const ENCODER = new TextEncoder();
 const DECODER = new TextDecoder();
 
@@ -21,11 +22,13 @@ export async function encryptMessage(
     key: CryptoKey,
 ): Promise<{ ciphertext: string; iv: string }> {
     const encoded = ENCODER.encode(content);
-    const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 96-bit nonce for GCM
+    const iv = cryptoProvider.getRandomValues(
+        new Uint8Array(CRYPTO_CONFIG.IV_LENGTH_BYTES),
+    ); // 96-bit nonce for GCM
 
     const encryptedBuffer = await subtle.encrypt(
         {
-            name: "AES-GCM",
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
             iv: iv,
         },
         key,
@@ -56,7 +59,7 @@ export async function decryptMessage(
 
         const decryptedBuffer = await subtle.decrypt(
             {
-                name: "AES-GCM",
+                name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
                 iv: ivBuffer,
             },
             key,
@@ -83,11 +86,13 @@ export async function decryptMessage(
  */
 export async function encryptBlob(blob: Blob, key: CryptoKey): Promise<Blob> {
     const arrayBuffer = await blob.arrayBuffer();
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const iv = cryptoProvider.getRandomValues(
+        new Uint8Array(CRYPTO_CONFIG.IV_LENGTH_BYTES),
+    );
 
     const encryptedBuffer = await subtle.encrypt(
         {
-            name: "AES-GCM",
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
             iv: iv,
         },
         key,
@@ -119,12 +124,12 @@ export async function decryptBlob(
     const combined = new Uint8Array(arrayBuffer);
 
     // Извлекаем IV (первые 12 байт)
-    const iv = combined.slice(0, 12);
-    const encryptedData = combined.slice(12);
+    const iv = combined.slice(0, CRYPTO_CONFIG.IV_LENGTH_BYTES);
+    const encryptedData = combined.slice(CRYPTO_CONFIG.IV_LENGTH_BYTES);
 
     const decryptedBuffer = await subtle.decrypt(
         {
-            name: "AES-GCM",
+            name: CRYPTO_CONFIG.ALGORITHM.AES_GCM,
             iv: iv,
         },
         key,

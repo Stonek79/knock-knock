@@ -8,16 +8,23 @@ import type { DecryptedMessageWithProfile } from "@/lib/types";
 import { decryptMessagePayload } from "@/lib/utils/decryptPayload";
 import { useAuthStore } from "@/stores/auth";
 
+type UseMessagesProps = {
+    roomId: string;
+    roomKey?: CryptoKey;
+};
+
 /**
  * Хук для загрузки истории сообщений и управления контекстом дешифровки.
+ *
+ * @param props - { roomId, roomKey }
  */
-export function useMessages(roomId: string, roomKey?: CryptoKey) {
+export function useMessages({ roomId, roomKey }: UseMessagesProps) {
     const pbUser = useAuthStore((state) => state.pbUser);
 
     // Сообщаем сервису об активной комнате для дешифровки входящих событий
     useEffect(() => {
         if (roomId && roomKey) {
-            ChatRealtimeService.setActiveRoom(roomId, roomKey);
+            ChatRealtimeService.setActiveRoom({ id: roomId, key: roomKey });
             return () => {
                 ChatRealtimeService.clearActiveRoom();
             };
@@ -33,7 +40,10 @@ export function useMessages(roomId: string, roomKey?: CryptoKey) {
 
             const result = await messageRepository.getRoomMessages(roomId);
             if (result.isErr()) {
-                logger.error("Ошибка при загрузке сообщений:", result.error);
+                logger.error(
+                    `useMessages [${roomId}]: load failed`,
+                    result.error,
+                );
                 throw new Error(result.error.message);
             }
 

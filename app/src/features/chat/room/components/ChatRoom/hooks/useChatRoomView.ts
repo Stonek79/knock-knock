@@ -28,10 +28,10 @@ export function useChatRoomView(roomId: string) {
     const roomKey = roomInfo?.roomKey;
 
     // --- Сырые сообщения из кэша ---
-    const { data: messages = [], isLoading: messagesLoading } = useMessages(
+    const { data: messages = [], isLoading: messagesLoading } = useMessages({
         roomId,
         roomKey,
-    );
+    });
 
     // --- Отслеживание непрочитанных ---
     const lastReadAt = useMemo(() => {

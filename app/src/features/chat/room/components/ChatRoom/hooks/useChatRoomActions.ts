@@ -30,7 +30,7 @@ export function useChatRoomActions(roomId: string) {
     const room = roomInfo?.room;
 
     // --- Текущие сообщения (нужны для копирования / удаления) ---
-    const { data: messages = [] } = useMessages(roomId, roomKey);
+    const { data: messages = [] } = useMessages({ roomId, roomKey });
 
     // --- Низкоуровневые действия (отправка, удаление, завершение сессии) ---
     const { sendMessage, endSession, deleteMessage, updateMessage, ending } =
@@ -60,10 +60,10 @@ export function useChatRoomActions(roomId: string) {
     ) => {
         try {
             if (editingId) {
-                await updateMessage(editingId, text);
+                await updateMessage({ messageId: editingId, newContent: text });
                 cancelEdit();
             } else {
-                await sendMessage(text, files, audioBlob);
+                await sendMessage({ text, files, audioBlob });
             }
         } catch (e) {
             toast({
@@ -82,7 +82,10 @@ export function useChatRoomActions(roomId: string) {
     const handleDeleteSelected = async () => {
         const promises = Array.from(selectedMessageIds).map((id) => {
             const msg = messages.find((m) => m.id === id);
-            return deleteMessage(id, msg?.sender_id === user?.id);
+            return deleteMessage({
+                messageId: id,
+                isOwnMessage: msg?.sender_id === user?.id,
+            });
         });
         await Promise.allSettled(promises);
         clearSelection();

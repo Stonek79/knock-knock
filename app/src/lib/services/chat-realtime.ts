@@ -251,7 +251,7 @@ async function syncPublicKeys(userId: string) {
 // --- Публичный API сервиса ---
 
 export const ChatRealtimeService = {
-    async init(qc: QueryClient, user: UserRecord) {
+    async init({ qc, user }: { qc: QueryClient; user: UserRecord }) {
         // Если сервис уже инициализирован для этого же пользователя или в процессе — выходим
         if (_currentUser?.id === user.id || _isInitializing) {
             return;
@@ -378,7 +378,7 @@ export const ChatRealtimeService = {
         }
     },
 
-    setActiveRoom(id: string, key: CryptoKey) {
+    setActiveRoom({ id, key }: { id: string; key: CryptoKey }) {
         _activeRoomId = id;
         _activeRoomKey = key;
     },
@@ -388,7 +388,13 @@ export const ChatRealtimeService = {
         _activeRoomKey = null;
     },
 
-    async setTypingStatus(roomId: string, isTyping: boolean) {
+    async setTypingStatus({
+        roomId,
+        isTyping,
+    }: {
+        roomId: string;
+        isTyping: boolean;
+    }) {
         if (_presenceRecordId) {
             await presenceRepository.updateTypingStatus(
                 _presenceRecordId,

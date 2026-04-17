@@ -25,6 +25,7 @@ export const messageAttachmentSchema = z.object({
     file_size: z.number(),
     content_type: z.string(),
     url: z.string(),
+    thumbnail_url: z.string().optional(),
     type: z.enum([
         ATTACHMENT_TYPES.IMAGE,
         ATTACHMENT_TYPES.VIDEO,

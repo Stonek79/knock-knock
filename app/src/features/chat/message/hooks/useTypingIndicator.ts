@@ -7,16 +7,16 @@ import { ChatRealtimeService } from "@/lib/services/chat-realtime";
 import type { PBUser } from "@/lib/types/pocketbase";
 import { useAuthStore } from "@/stores/auth";
 
-interface UseTypingIndicatorProps {
+type UseTypingIndicatorProps = {
     roomId: string;
-}
+};
 
-interface UseTypingIndicatorResult {
+type UseTypingIndicatorResult = {
     /** Список имён пользователей, которые сейчас печатают */
     typingUsers: string[];
     /** Сообщить о начале/остановке печати */
     setTyping: (isTyping: boolean) => void;
-}
+};
 
 /**
  * Хук индикатора печати.
@@ -71,7 +71,7 @@ export function useTypingIndicator({
             }
 
             // Сообщаем глобальному сервису о нашем статусе
-            ChatRealtimeService.setTypingStatus(roomId, isTyping).catch(
+            ChatRealtimeService.setTypingStatus({ roomId, isTyping }).catch(
                 () => {},
             );
 

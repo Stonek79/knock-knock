@@ -1430,6 +1430,32 @@
 				"system": false
 			},
 			{
+				"id": "med_is_vault",
+				"name": "is_vault",
+				"type": "bool",
+				"system": false,
+				"required": false
+			},
+			{
+				"id": "med_refs_id",
+				"name": "references",
+				"type": "json",
+				"system": false,
+				"required": false
+			},
+			{
+				"id": "med_thumb_id",
+				"name": "thumbnail",
+				"type": "file",
+				"system": false,
+				"required": false,
+				"maxSelect": 1,
+				"maxSize": 5242880,
+				"mimeTypes": [],
+				"thumbs": [],
+				"protected": true
+			},
+			{
 				"id": "autodate2990389176",
 				"name": "created",
 				"type": "autodate",

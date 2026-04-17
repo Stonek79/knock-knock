@@ -209,7 +209,7 @@ export const FOLDER_FIELDS = {
 
 export const PUSH_SUBSCRIPTIONS_FIELDS = {
     ID: "id",
-    USER_ID: "user_id", // Дополнение
+    USER_ID: "user_id",
     ENDPOINT: "endpoint",
     P256DH: "p256dh",
     AUTH: "auth",
@@ -226,9 +226,25 @@ export const MEDIA_FIELDS = {
     SIZE: "size",
     MIME_TYPE: "mime_type",
     METADATA: "metadata",
+    THUMBNAIL: "thumbnail",
+    IS_VAULT: "is_vault",
+    REFERENCES: "references",
     CREATED: "created",
     UPDATED: "updated",
 } as const satisfies Record<string, AllFields<MediaRecord>>;
+
+/** Поля локального кэша медиа (Dexie-specific) */
+export const MEDIA_CACHE_FIELDS = {
+    ID: "id",
+    BLOB: "blob",
+    THUMBNAIL: "thumbnail",
+    METADATA: "metadata",
+    REFERENCES: "references",
+    SYNC_STATUS: "syncStatus",
+    LAST_ACCESSED_AT: "lastAccessedAt",
+    CREATED_AT: "createdAt",
+    OWNER_ID: "ownerId",
+} as const;
 
 /**
  * Действия Realtime-событий
