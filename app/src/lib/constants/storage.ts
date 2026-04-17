@@ -59,6 +59,10 @@ export const MEDIA_ERROR_MESSAGES = {
     IDENTITY_KEY_NOT_FOUND: "Мастер-ключ пользователя (Identity) не найден",
     FILE_NOT_FOUND_CACHE: "Файл не найден в локальном кеше",
     UNAUTHORIZED: "Пользователь не авторизован для работы с медиа",
+    WORKER_TIMEOUT: "Превышено время ожидания ответа от воркера",
+    WORKER_NOT_READY:
+        "Медиа-воркер не инициализирован или находится в состоянии ошибки",
+    WORKER_DESTROYED: "Воркер был уничтожен во время выполнения задачи",
 } as const;
 
 /** Лимиты медиафайлов */
@@ -127,4 +131,5 @@ export const MEDIA_SYSTEM_CONSTANTS = {
     WORKER_NAME: "media-processor",
     CANVAS_CONTEXT_2D: "2d",
     DEFAULT_ATTACHMENT_NAME: "attachment.bin",
+    WORKER_TIMEOUT_MS: 30_000,
 } as const;

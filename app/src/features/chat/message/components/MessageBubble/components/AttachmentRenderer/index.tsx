@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { ImageOff, Paperclip, Play } from "lucide-react";
 import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import { Flex } from "@/components/layout/Flex";
@@ -18,6 +19,7 @@ interface AttachmentRendererProps {
     onToggleTranscript?: () => void;
     roomKey?: CryptoKey;
     isVault?: boolean;
+    userId: string;
 }
 
 /**
@@ -31,6 +33,7 @@ function CachedImage({
     setImageErrors,
     roomKey,
     isVault,
+    userId,
 }: {
     att: Attachment;
     index: number;
@@ -39,12 +42,14 @@ function CachedImage({
     setImageErrors: Dispatch<SetStateAction<Record<string, boolean>>>;
     roomKey?: CryptoKey;
     isVault?: boolean;
+    userId: string;
 }) {
     // Получаем оригинальный URL и URL превью
     const { objectUrl, thumbnailUrl, isLoading, error } = useMedia({
         mediaId: att.id,
         roomKey,
         isVault,
+        userId,
     });
     const hasError = imageErrors[att.id] || !!error;
 
@@ -99,15 +104,18 @@ function CachedVideo({
     att,
     roomKey,
     isVault,
+    userId,
 }: {
     att: Attachment;
     roomKey?: CryptoKey;
     isVault?: boolean;
+    userId: string;
 }) {
     const { objectUrl, thumbnailUrl, isLoading, error } = useMedia({
         mediaId: att.id,
         roomKey,
         isVault,
+        userId,
     });
     const hasError = !!error;
 
@@ -145,6 +153,51 @@ function CachedVideo({
 }
 
 /**
+ * Компонент для отображения документа.
+ */
+function CachedDocument({
+    att,
+    roomKey,
+    isVault,
+    userId,
+}: {
+    att: Attachment;
+    roomKey?: CryptoKey;
+    isVault?: boolean;
+    userId: string;
+}) {
+    const { objectUrl, isLoading, error } = useMedia({
+        mediaId: att.id,
+        roomKey,
+        isVault,
+        userId,
+    });
+
+    return (
+        <a
+            key={att.id}
+            href={objectUrl || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={clsx(styles.attachmentDoc, {
+                [styles.loading]: isLoading,
+                [styles.error]: !!error,
+            })}
+            onClick={(e) => {
+                if (!objectUrl) {
+                    e.preventDefault();
+                }
+                e.stopPropagation();
+            }}
+            download={att.file_name}
+        >
+            <Paperclip size={ICON_SIZE.sm} />
+            <Text size="sm">{att.file_name}</Text>
+        </a>
+    );
+}
+
+/**
  * Компонент рендера вложений сообщения.
  */
 export function AttachmentRenderer({
@@ -156,6 +209,7 @@ export function AttachmentRenderer({
     onToggleTranscript,
     roomKey,
     isVault,
+    userId,
 }: AttachmentRendererProps) {
     const imageAttachments = useMemo(
         () => attachments.filter((a) => a.type === ATTACHMENT_TYPES.IMAGE),
@@ -185,6 +239,7 @@ export function AttachmentRenderer({
                             setImageErrors={setImageErrors}
                             roomKey={roomKey}
                             isVault={isVault}
+                            userId={userId}
                         />
                     );
                 }
@@ -196,6 +251,7 @@ export function AttachmentRenderer({
                             att={att}
                             roomKey={roomKey}
                             isVault={isVault}
+                            userId={userId}
                         />
                     );
                 }
@@ -204,7 +260,6 @@ export function AttachmentRenderer({
                     return (
                         <AudioMessagePlayer
                             key={att.id}
-                            src={att.url}
                             mediaId={att.id}
                             isOwn={isOwn}
                             hasTranscript={hasTranscript}
@@ -212,22 +267,19 @@ export function AttachmentRenderer({
                             onToggleTranscript={onToggleTranscript}
                             roomKey={roomKey}
                             mimeType={att.content_type}
+                            userId={userId}
                         />
                     );
                 }
 
                 return (
-                    <a
+                    <CachedDocument
                         key={att.id}
-                        href={att.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.attachmentDoc}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <Paperclip size={ICON_SIZE.sm} />
-                        <Text size="sm">{att.file_name}</Text>
-                    </a>
+                        att={att}
+                        roomKey={roomKey}
+                        isVault={isVault}
+                        userId={userId}
+                    />
                 );
             })}
         </Flex>

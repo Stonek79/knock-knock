@@ -16,4 +16,6 @@ export const QUERY_KEYS = {
     presence: () => ["presence"] as const,
     typing: (roomId: string) => ["typing", roomId] as const,
     favoritesRoom: (userId?: string) => ["favorites-room", userId] as const,
+    media: (mediaId?: string | null, userId?: string | null) =>
+        ["media", mediaId, userId] as const,
 } as const;

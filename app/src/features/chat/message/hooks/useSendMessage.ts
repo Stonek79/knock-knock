@@ -8,7 +8,6 @@ import {
     QUERY_KEYS,
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
-import { mediaRepository } from "@/lib/repositories/media.repository";
 import { mediaService } from "@/lib/services/media";
 import { MessageService } from "@/lib/services/message";
 import type { Attachment, ChatMessage, Profile } from "@/lib/types";
@@ -96,10 +95,7 @@ export function useSendMessage({
                         file_size: audioBlob.size,
                         content_type:
                             audioBlob.type || DEFAULT_MIME_TYPES.WEBM_AUDIO,
-                        url: mediaRepository.getFileUrl({
-                            record,
-                            filename: record.file,
-                        }),
+                        url: mediaService.getFileUrl(record, record.file),
                         type: ATTACHMENT_TYPES.AUDIO,
                     });
                 }
@@ -130,15 +126,12 @@ export function useSendMessage({
                             file_name: file.name,
                             file_size: file.size,
                             content_type: file.type,
-                            url: mediaRepository.getFileUrl({
-                                record,
-                                filename: record.file,
-                            }),
+                            url: mediaService.getFileUrl(record, record.file),
                             thumbnail_url: record.thumbnail
-                                ? mediaRepository.getFileUrl({
+                                ? mediaService.getFileUrl(
                                       record,
-                                      filename: record.thumbnail,
-                                  })
+                                      record.thumbnail,
+                                  )
                                 : undefined,
                             type,
                         };

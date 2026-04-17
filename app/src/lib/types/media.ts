@@ -4,6 +4,7 @@ import type {
     mediaMetadataSchema,
     mediaReferenceSchema,
     mediaSchema,
+    mediaWorkerPayloadSchema,
     mediaWorkerResponseSchema,
     mediaWorkerTaskSchema,
 } from "../schemas/media";
@@ -37,6 +38,11 @@ export type WorkerTask = z.infer<typeof mediaWorkerTaskSchema>;
  * РЕЗУЛЬТАТ ВЫПОЛНЕНИЯ ЗАДАЧИ В ВОРКЕРЕ
  */
 export type WorkerProcessResult = z.infer<typeof mediaWorkerResponseSchema>;
+
+/**
+ * ТИП ДАННЫХ ДЛЯ ПЕРЕДАЧИ ИЗ ВОРКЕРА
+ */
+export type WorkerMediaPayload = z.infer<typeof mediaWorkerPayloadSchema>;
 
 /**
  * ТИП ДЛЯ ОБРАБОТАННЫХ ДАННЫХ (для UI компонентов)

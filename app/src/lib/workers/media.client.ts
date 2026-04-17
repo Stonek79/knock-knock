@@ -1,3 +1,4 @@
+import { MEDIA_ERROR_MESSAGES, MEDIA_SYSTEM_CONSTANTS } from "../constants";
 import { logger } from "../logger";
 import type {
     WorkerMediaPayload,
@@ -5,99 +6,147 @@ import type {
     WorkerTask,
 } from "../types";
 
+const { WORKER_TIMEOUT_MS, WORKER_NAME } = MEDIA_SYSTEM_CONSTANTS;
+
 /**
- * Клиент для взаимодействия с Media Web Worker.
- * Обеспечивает типизированный интерфейс и управление жизненным циклом воркера.
+ * Фабрика для создания клиента Media Web Worker.
+ * Обеспечивает функциональный интерфейс без использования классов.
  */
-export class MediaWorkerClient {
-    private worker: Error | Worker | null = null;
-    private pendingTasks = new Map<
+function createMediaWorkerClient() {
+    let worker: Worker | Error | null = null;
+    const pendingTasks = new Map<
         string,
         {
             resolve: (res: WorkerMediaPayload) => void;
             reject: (err: Error) => void;
+            timeoutId: ReturnType<typeof setTimeout>;
         }
     >();
-
-    constructor() {
-        if (typeof window !== "undefined") {
-            this.initWorker();
-        }
-    }
-
-    /**
-     * Инициализация воркера.
-     */
-    private initWorker(): void {
-        try {
-            this.worker = new Worker(
-                new URL("./media.worker.ts", import.meta.url),
-                {
-                    type: "module",
-                    name: "media-processor",
-                },
-            );
-
-            this.worker.onmessage = this.handleMessage.bind(this);
-            this.worker.onerror = (err) => {
-                logger.error("MediaWorkerClient: Worker error", err);
-            };
-
-            logger.info("MediaWorkerClient: Worker initialized");
-        } catch (error) {
-            this.worker =
-                error instanceof Error
-                    ? error
-                    : new Error("Worker init failed");
-            logger.error("MediaWorkerClient: Initialization failed", error);
-        }
-    }
 
     /**
      * Обработка сообщений от воркера.
      */
-    private handleMessage(event: MessageEvent<WorkerProcessResult>): void {
+    const handleMessage = (event: MessageEvent<WorkerProcessResult>) => {
         const { taskId, success, data, error } = event.data;
-        const task = this.pendingTasks.get(taskId);
+        const task = pendingTasks.get(taskId);
 
         if (!task) {
             return;
         }
 
+        clearTimeout(task.timeoutId);
+        pendingTasks.delete(taskId);
+
         if (success && data) {
             task.resolve(data);
         } else {
-            task.reject(new Error(error || "Worker processing error"));
+            task.reject(
+                new Error(error || MEDIA_ERROR_MESSAGES.WORKER_PROCESS_FAIL),
+            );
         }
-
-        this.pendingTasks.delete(taskId);
-    }
+    };
 
     /**
-     * Отправка задачи воркеру.
+     * Инициализация воркера.
      */
-    public async postTask(task: WorkerTask): Promise<WorkerMediaPayload> {
-        if (!this.worker || this.worker instanceof Error) {
-            throw new Error("Worker not initialized or in error state");
+    const initWorker = () => {
+        if (typeof window === "undefined" || worker instanceof Worker) {
+            return;
         }
 
-        return new Promise((resolve, reject) => {
-            this.pendingTasks.set(task.taskId, { resolve, reject });
-            (this.worker as Worker).postMessage(task);
-        });
-    }
+        try {
+            worker = new Worker(new URL("./media.worker.ts", import.meta.url), {
+                type: "module",
+                name: WORKER_NAME,
+            });
 
-    /**
-     * Очистка ресурсов.
-     */
-    public destroy(): void {
-        if (this.worker && !(this.worker instanceof Error)) {
-            this.worker.terminate();
+            worker.onmessage = handleMessage;
+            worker.onerror = (err) => {
+                logger.error(
+                    "MediaWorkerClient: Критическая ошибка воркера",
+                    err,
+                );
+            };
+
+            logger.info("MediaWorkerClient: Воркер успешно инициализирован");
+        } catch (error) {
+            worker =
+                error instanceof Error
+                    ? error
+                    : new Error(MEDIA_ERROR_MESSAGES.WORKER_INIT_FAIL);
+            logger.error(
+                "MediaWorkerClient: Ошибка инициализации воркера",
+                error,
+            );
         }
-        this.worker = null;
-        this.pendingTasks.clear();
-    }
+    };
+
+    // Первичная инициализация
+    initWorker();
+
+    return {
+        /**
+         * Отправка задачи воркеру с таймаутом.
+         * @param task - Данные задачи (id, действие, нагрузка)
+         * @returns Результат обработки данных воркером
+         */
+        postTask: async (task: WorkerTask): Promise<WorkerMediaPayload> => {
+            // Попытка переинициализации если воркер упал или не создался
+            if (!(worker instanceof Worker)) {
+                initWorker();
+            }
+
+            // Создаем локальную ссылку для TypeScript чтобы гарантировать тип Worker
+            const currentWorker = worker;
+
+            if (!(currentWorker instanceof Worker)) {
+                const errorMsg =
+                    currentWorker instanceof Error
+                        ? currentWorker.message
+                        : MEDIA_ERROR_MESSAGES.WORKER_NOT_READY;
+                throw new Error(errorMsg);
+            }
+
+            return new Promise((resolve, reject) => {
+                const timeoutId = setTimeout(() => {
+                    if (pendingTasks.has(task.taskId)) {
+                        pendingTasks.delete(task.taskId);
+                        const error = new Error(
+                            MEDIA_ERROR_MESSAGES.WORKER_TIMEOUT,
+                        );
+                        reject(error);
+                        logger.error(
+                            `MediaWorker: Превышено время ожидания задачи ${task.taskId}`,
+                        );
+                    }
+                }, WORKER_TIMEOUT_MS);
+
+                pendingTasks.set(task.taskId, { resolve, reject, timeoutId });
+                currentWorker.postMessage(task);
+            });
+        },
+
+        /**
+         * Очистка ресурсов воркера.
+         */
+        destroy: () => {
+            if (worker instanceof Worker) {
+                worker.terminate();
+            }
+            worker = null;
+            for (const task of pendingTasks.values()) {
+                clearTimeout(task.timeoutId);
+                task.reject(new Error(MEDIA_ERROR_MESSAGES.WORKER_DESTROYED));
+            }
+            pendingTasks.clear();
+            logger.info(
+                "MediaWorkerClient: Воркер уничтожен и ресурсы очищены",
+            );
+        },
+    };
 }
 
-// Экспортируем синглтон
-export const mediaWorkerClient = new MediaWorkerClient();
+/**
+ * Синглтон-клиент для работы с медиа-воркером.
+ */
+export const mediaWorkerClient = createMediaWorkerClient();

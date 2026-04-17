@@ -26,6 +26,7 @@ import type {
 } from "@/lib/types";
 import { getUserColor } from "@/lib/utils/colors";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { useLightboxSlides } from "../../hooks/useLightboxSlides";
 import { AttachmentRenderer } from "./components/AttachmentRenderer";
 import { StatusIcon } from "./components/StatusIcon";
 import { TranscriptBlock } from "./components/TranscriptBlock";
@@ -48,6 +49,7 @@ interface MessageBubbleProps {
     attachments?: Attachment[] | null;
     roomKey?: CryptoKey;
     roomType?: RoomType;
+    userId: string;
 }
 
 /**
@@ -71,6 +73,7 @@ export function MessageBubble({
     attachments = null,
     roomKey,
     roomType,
+    userId,
 }: MessageBubbleProps) {
     const { t } = useTranslation();
     const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
@@ -81,6 +84,13 @@ export function MessageBubble({
     );
     const imageAttachments =
         attachments?.filter((a) => a.type === ATTACHMENT_TYPES.IMAGE) || [];
+
+    const { slides } = useLightboxSlides({
+        attachments: imageAttachments,
+        userId,
+        roomKey,
+        enabled: lightboxIndex >= 0,
+    });
 
     // Проверяем, состоит ли сообщение ИСКЛЮЧИТЕЛЬНО из ОДНОЙ картинки
     const isImageOnly =
@@ -205,6 +215,7 @@ export function MessageBubble({
                                 setIsTranscriptExpanded((prev) => !prev)
                             }
                             roomKey={roomKey}
+                            userId={userId}
                         />
                         {isDeleted ? (
                             <Text className={styles.deletedContent}>
@@ -244,10 +255,7 @@ export function MessageBubble({
                     open={lightboxIndex >= 0}
                     close={() => setLightboxIndex(-1)}
                     index={lightboxIndex}
-                    slides={imageAttachments.map((img) => ({
-                        src: img.url,
-                        download: img.file_name,
-                    }))}
+                    slides={slides}
                     plugins={[Zoom, DownloadPlugin]}
                     carousel={{ finite: imageAttachments.length === 1 }}
                     render={{
@@ -267,7 +275,7 @@ export function MessageBubble({
                                 type="button"
                                 className="yarl__button"
                                 onClick={() => {
-                                    console.log("Star clicked for UI test");
+                                    // Кнопка в разработке
                                 }}
                                 title={t("chat.star", "В избранное")}
                             >
@@ -278,7 +286,7 @@ export function MessageBubble({
                                 type="button"
                                 className="yarl__button"
                                 onClick={() => {
-                                    console.log("Forward clicked for UI test");
+                                    // Кнопка в разработке
                                 }}
                                 title={t("chat.forward", "Переслать")}
                             >

@@ -77,7 +77,9 @@ export const mediaService = {
     },
 
     /**
-     * Загрузка нового медиафайла.
+     * Загрузка и шифрование нового медиафайла.
+     * @param params - Параметры загрузки (файл, ключи, метаданные)
+     * @returns Результат загрузки с данными записи PocketBase
      */
     uploadMedia: async (
         params: MediaUploadParams,
@@ -85,7 +87,7 @@ export const mediaService = {
         const { file, userId, roomId, cryptoKey, isVault = false } = params;
 
         try {
-            // 1. Выбор действия воркера
+            // 1. Выбор действия воркера (сжатие, шифрование или просто шифрование)
             const action = file.type.startsWith(MIME_PREFIXES.IMAGE)
                 ? MEDIA_WORKER_ACTIONS.COMPRESS_IMAGE
                 : file.type.startsWith(MIME_PREFIXES.VIDEO)
@@ -99,17 +101,7 @@ export const mediaService = {
                 cryptoKey,
             });
 
-            if (!workerData.success || !workerData.data) {
-                return err(
-                    appError(
-                        ERROR_CODES.CRYPTO_ERROR,
-                        workerData.error ||
-                            MEDIA_ERROR_MESSAGES.WORKER_PROCESS_FAIL,
-                    ),
-                );
-            }
-
-            const { original, thumbnail, metadata } = workerData.data;
+            const { original, thumbnail, metadata } = workerData;
 
             // 2. Подготовка FormData через константы
             const formData = new FormData();
@@ -279,13 +271,7 @@ export const mediaService = {
                 cryptoKey: roomKey,
             });
 
-            if (!decryptResult.success || !decryptResult.data) {
-                throw new Error(
-                    decryptResult.error || MEDIA_ERROR_MESSAGES.DECRYPT_FAIL,
-                );
-            }
-
-            const decryptedOriginal = decryptResult.data.original;
+            const decryptedOriginal = decryptResult.original;
 
             // 3. Обработка превью
             let decryptedThumbnail: Blob | null = null;
@@ -303,9 +289,7 @@ export const mediaService = {
                         payload: encThumb,
                         cryptoKey: roomKey,
                     });
-                    if (thumbDecrypt.success && thumbDecrypt.data) {
-                        decryptedThumbnail = thumbDecrypt.data.original;
-                    }
+                    decryptedThumbnail = thumbDecrypt.original;
                 }
             }
 
@@ -345,7 +329,21 @@ export const mediaService = {
     },
 
     /**
-     * Определение типа медиа.
+     * Получение URL файла для записи.
+     * Используется для формирования объектов Attachment.
+     * @param record - Запись из PocketBase
+     * @param filename - Имя файла
+     * @returns Прямой URL к файлу на сервере
+     */
+    getFileUrl: (record: MediaResponse, filename: string): string => {
+        return mediaRepository.getFileUrl({ record, filename });
+    },
+
+    /**
+     * Определение типа медиа на основе MIME-типа.
+     * @param mime - MIME-тип файла
+     * @returns Тип вложения (IMAGE, VIDEO, etc.)
+     * @private
      */
     _getFileType: (mime: string): AttachmentType => {
         if (mime.startsWith(MIME_PREFIXES.IMAGE)) {

@@ -49,6 +49,7 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
             <MessageList
                 messages={messages}
                 messagesLoading={messagesLoading}
+                userId={user?.id ?? ""}
                 selectedMessageIds={selectedMessageIds}
                 onToggleSelection={(id) =>
                     toggleSelection(id, messages, user?.id)

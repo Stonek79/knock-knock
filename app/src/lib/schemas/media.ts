@@ -158,15 +158,15 @@ export const mediaWorkerTaskSchema = z.object({
         .optional(),
 });
 
+export const mediaWorkerPayloadSchema = z.object({
+    original: blobSchema,
+    thumbnail: blobSchema.optional(),
+    metadata: mediaMetadataSchema.optional(),
+});
+
 export const mediaWorkerResponseSchema = z.object({
     taskId: z.string(),
     success: z.boolean(),
-    data: z
-        .object({
-            original: blobSchema,
-            thumbnail: blobSchema.optional(),
-            metadata: mediaMetadataSchema.optional(),
-        })
-        .optional(),
+    data: mediaWorkerPayloadSchema.optional(),
     error: z.string().optional(),
 });

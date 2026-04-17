@@ -1,19 +1,25 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { QUERY_KEYS } from "../constants";
 import { logger } from "../logger";
-import { pb } from "../pocketbase";
 import { mediaService } from "../services/media";
 import type { RecordIdString } from "../types";
 
 type UseMediaProps = {
+    /** ID медиа-записи */
     mediaId?: RecordIdString | null;
+    /** ID пользователя для изоляции кэша */
+    userId?: string | null;
+    /** Ключ для расшифровки */
     roomKey?: CryptoKey;
+    /** Флаг личного хранилища */
     isVault?: boolean;
 };
 
 type UseMediaResult = {
-    /** URL оригинального файла ( blob: ) */
+    /** URL оригинального файла (blob:) */
     objectUrl: string | undefined;
-    /** URL превью ( blob: ) */
+    /** URL превью (blob:) */
     thumbnailUrl: string | undefined;
     /** Статус загрузки */
     isLoading: boolean;
@@ -23,114 +29,91 @@ type UseMediaResult = {
 
 /**
  * React-хук для прозрачного получения медиафайлов с поддержкой шифрования и кеширования.
- * Реализует Offline-First подход:
- * 1. Ищет файл в локальном кеше (Dexie).
- * 2. Если нет в кеше — скачивает зашифрованный файл из PocketBase.
- * 3. Расшифровывает в Worker и сохраняет в кеш.
+ * Использует @tanstack/react-query для дедупликации запросов и управления состоянием.
  *
- * @param props - { mediaId, roomKey, isVault }
+ * @param props - { mediaId, userId, roomKey, isVault }
  */
 export function useMedia({
     mediaId,
+    userId,
     roomKey,
     isVault = false,
 }: UseMediaProps): UseMediaResult {
-    const [objectUrl, setObjectUrl] = useState<string | undefined>(undefined);
-    const [thumbnailUrl, setThumbnailUrl] = useState<string | undefined>(
-        undefined,
-    );
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
+    const {
+        data: mediaContent,
+        isLoading,
+        error: queryError,
+    } = useQuery({
+        queryKey: QUERY_KEYS.media(mediaId, userId),
+        queryFn: async () => {
+            if (!mediaId || !userId) {
+                return null;
+            }
 
+            // Единая точка входа для получения медиа через сервис
+            const result = await mediaService.ensureMedia({
+                id: mediaId,
+                userId,
+                roomKey,
+                isVault,
+            });
+
+            if (result.isErr()) {
+                logger.error(
+                    `useMedia [${mediaId}]: ошибка загрузки`,
+                    result.error,
+                );
+                throw new Error(result.error.message);
+            }
+
+            return result.value;
+        },
+        // Активируем запрос только если есть ID и доступ к ключам
+        enabled: !!mediaId && !!userId && (!!roomKey || !!isVault),
+        // Кешируем результат
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+        retry: 2,
+    });
+
+    /**
+     * Создаем Blob URL для отображения.
+     * Мы делаем это в useMemo для мгновенного доступа при рендере,
+     * но обязаны очистить их в useEffect.
+     */
+    const urls = useMemo(() => {
+        if (!mediaContent) {
+            return { objectUrl: undefined, thumbnailUrl: undefined };
+        }
+
+        const objectUrl = mediaContent.original
+            ? URL.createObjectURL(mediaContent.original)
+            : undefined;
+        const thumbnailUrl = mediaContent.thumbnail
+            ? URL.createObjectURL(mediaContent.thumbnail)
+            : undefined;
+
+        return { objectUrl, thumbnailUrl };
+    }, [mediaContent]);
+
+    /**
+     * Очистка созданных Blob URL при смене контента или размонтировании.
+     */
     useEffect(() => {
-        let isMounted = true;
-        let activeOriginalUrl: string | null = null;
-        let activeThumbnailUrl: string | null = null;
-
-        const cleanup = () => {
-            if (activeOriginalUrl) {
-                URL.revokeObjectURL(activeOriginalUrl);
-                activeOriginalUrl = null;
-            }
-            if (activeThumbnailUrl) {
-                URL.revokeObjectURL(activeThumbnailUrl);
-                activeThumbnailUrl = null;
-            }
-        };
-
-        const load = async () => {
-            if (!mediaId) {
-                setObjectUrl(undefined);
-                setThumbnailUrl(undefined);
-                return;
-            }
-
-            setIsLoading(true);
-            setError(null);
-
-            try {
-                const userId = pb.authStore.model?.id;
-                if (!userId) {
-                    throw new Error("Пользователь не авторизован");
-                }
-
-                // Единая точка входа для получения медиа
-                const result = await mediaService.ensureMedia({
-                    id: mediaId,
-                    userId,
-                    roomKey,
-                    isVault,
-                });
-
-                if (result.isErr()) {
-                    throw new Error(result.error.message);
-                }
-
-                const mediaContent = result.value;
-
-                if (isMounted && mediaContent) {
-                    cleanup(); // Очищаем старые URL
-
-                    if (mediaContent.original) {
-                        activeOriginalUrl = URL.createObjectURL(
-                            mediaContent.original,
-                        );
-                        setObjectUrl(activeOriginalUrl);
-                    }
-
-                    if (mediaContent.thumbnail) {
-                        activeThumbnailUrl = URL.createObjectURL(
-                            mediaContent.thumbnail,
-                        );
-                        setThumbnailUrl(activeThumbnailUrl);
-                    }
-                }
-            } catch (err) {
-                if (isMounted) {
-                    const message =
-                        err instanceof Error
-                            ? err.message
-                            : "Неизвестная ошибка загрузки медиа";
-                    logger.error(
-                        `useMedia [${mediaId}]: media loading failed`,
-                        err,
-                    );
-                    setError(err instanceof Error ? err : new Error(message));
-                }
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        load();
-
         return () => {
-            isMounted = false;
-            cleanup();
+            if (urls.objectUrl) {
+                URL.revokeObjectURL(urls.objectUrl);
+            }
+            if (urls.thumbnailUrl) {
+                URL.revokeObjectURL(urls.thumbnailUrl);
+            }
         };
-    }, [mediaId, roomKey, isVault]);
+    }, [urls]);
 
-    return { objectUrl, thumbnailUrl, isLoading, error };
+    return {
+        objectUrl: urls.objectUrl,
+        thumbnailUrl: urls.thumbnailUrl,
+        isLoading,
+        error: queryError,
+    };
 }

@@ -5,7 +5,7 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
-import { AUDIO_PLAYER, AUDIO_PLAYER_CONSTANTS } from "@/lib/constants/storage";
+import { AUDIO_PLAYER, AUDIO_PLAYER_CONSTANTS } from "@/lib/constants";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { formatTime } from "@/lib/utils/time";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
@@ -15,10 +15,10 @@ import styles from "./AudioMessagePlayer.module.css";
  * Пропсы компонента AudioMessagePlayer.
  */
 export type AudioMessagePlayerProps = {
-    /** URL аудиофайла (зашифрованный или blob:/data:) */
-    src: string;
     /** ID медиа-записи для кеширования (media v3) */
     mediaId?: string;
+    /** ID пользователя для изоляции кэша */
+    userId: string;
     /** Своё ли сообщение (влияет на стиль кнопки) */
     isOwn: boolean;
     /** Есть ли транскрипция у сообщения */
@@ -38,8 +38,8 @@ export type AudioMessagePlayerProps = {
  * Premium Telegram-like дизайн с точечным прогрессом.
  */
 export function AudioMessagePlayer({
-    src,
     mediaId,
+    userId,
     isOwn,
     hasTranscript,
     isTranscriptExpanded,
@@ -48,8 +48,8 @@ export function AudioMessagePlayer({
     mimeType,
 }: AudioMessagePlayerProps) {
     const { state, controls, audioRef } = useAudioPlayer({
-        src,
         mediaId,
+        userId,
         roomKey,
         mimeType,
     });
@@ -72,9 +72,11 @@ export function AudioMessagePlayer({
                 e.stopPropagation();
             }}
         >
-            <audio ref={audioRef} src={decryptedSrc} preload="metadata">
-                <track kind="captions" />
-            </audio>
+            {decryptedSrc && (
+                <audio ref={audioRef} src={decryptedSrc} preload="metadata">
+                    <track kind="captions" />
+                </audio>
+            )}
 
             {/* Кнопка Play/Pause */}
             <Button
@@ -83,6 +85,7 @@ export function AudioMessagePlayer({
                 size="sm"
                 className={styles.playButton}
                 onClick={togglePlay}
+                disabled={!decryptedSrc}
                 aria-label={isPlaying ? "Pause" : "Play"}
             >
                 {isPlaying ? (
@@ -100,6 +103,7 @@ export function AudioMessagePlayer({
                     step={AUDIO_PLAYER.SEEK_STEP}
                     onValueChange={handleSeek}
                     className={styles.sliderRoot}
+                    disabled={!decryptedSrc}
                     aria-label="Прогресс воспроизведения"
                 >
                     <SliderPrimitive.Track className={styles.audioTrack}>

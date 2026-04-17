@@ -11,22 +11,27 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
-import { MessageBubble } from "@/features/chat/message/components/MessageBubble";
-import { UnreadDivider } from "@/features/chat/message/components/UnreadDivider";
-import { useChatScroll } from "@/features/chat/room/hooks/useChatScroll";
 import { useUserActivity } from "@/hooks/useUserActivity";
-import type { DecryptedMessageWithProfile } from "@/lib/types/message";
-import type { RoomType } from "@/lib/types/room";
+import type { DecryptedMessageWithProfile, RoomType } from "@/lib/types";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { getMessageGroupPosition } from "@/lib/utils/messageGrouping";
-import { useAuthStore } from "@/stores/auth";
+import { useChatScroll } from "../../../room/hooks/useChatScroll";
+import { MessageBubble } from "../../components/MessageBubble";
+import { UnreadDivider } from "../../components/UnreadDivider";
 import styles from "./message-list.module.css";
 
 interface MessageListProps {
+    /** Список сообщений */
     messages?: DecryptedMessageWithProfile[];
+    /** Состояние загрузки */
     messagesLoading?: boolean;
+    /** ID текущего пользователя для изоляции медиа и проверки авторства */
+    userId: string;
+    /** Набор выбранных сообщений */
     selectedMessageIds?: Set<string>;
+    /** Обработчик выбора сообщения */
     onToggleSelection?: (id: string) => void;
+    /** ID редактируемого сообщения */
     editingId?: string | null;
     /** Ref для внешнего управления скроллом */
     scrollRef?: RefObject<{ scrollToBottom: () => void } | null>;
@@ -34,13 +39,16 @@ interface MessageListProps {
     firstUnreadId?: string | null;
     /** Состояние Избранного (фильтрация только звезд) */
     isFavoritesView?: boolean;
+    /** Ключ шифрования комнаты */
     roomKey?: CryptoKey;
+    /** Тип комнаты */
     roomType?: RoomType;
 }
 
 export function MessageList({
     messages,
     messagesLoading,
+    userId,
     selectedMessageIds,
     onToggleSelection,
     editingId,
@@ -51,8 +59,6 @@ export function MessageList({
     roomType,
 }: MessageListProps) {
     const { t } = useTranslation();
-    const pbUser = useAuthStore((state) => state.pbUser);
-    const user = useAuthStore((state) => state.profile);
 
     const {
         viewportRef,
@@ -82,7 +88,7 @@ export function MessageList({
         return (
             <Flex justify="center" align="center" className={styles.loadingBox}>
                 <span className={styles.statusText}>
-                    {user?.id
+                    {userId
                         ? t("chat.loadingMessages", "Загрузка сообщений...")
                         : t("common.authorizing", "Авторизация...")}
                 </span>
@@ -117,7 +123,7 @@ export function MessageList({
                 <Flex direction="column" gap="3">
                     {messages?.map(
                         (msg: DecryptedMessageWithProfile, index) => {
-                            const isOwn = pbUser?.id === msg.sender_id;
+                            const isOwn = userId === msg.sender_id;
                             const isEditing = editingId === msg.id && isOwn;
                             const isFirstUnread = msg.id === firstUnreadId;
 
@@ -139,6 +145,7 @@ export function MessageList({
                                     <MessageBubble
                                         content={msg.content}
                                         isOwn={isOwn}
+                                        userId={userId}
                                         timestamp={
                                             (msg.is_deleted
                                                 ? msg.updated_at

@@ -25,10 +25,10 @@ export type AudioPlayerControls = {
  * Параметры хука useAudioPlayer.
  */
 export type UseAudioPlayerParams = {
-    /** URL зашифрованного аудиофайла (fallback) */
-    src: string;
     /** ID медиа-записи для кеширования в Dexie */
     mediaId?: string;
+    /** ID пользователя для изоляции кэша */
+    userId: string;
     /** Ключ комнаты для расшифровки */
     roomKey?: CryptoKey;
     /** MIME тип аудио */
@@ -39,8 +39,8 @@ export type UseAudioPlayerParams = {
  * Хук для управления воспроизведением аудио с использованием новой системы кеширования.
  */
 export function useAudioPlayer({
-    src,
     mediaId,
+    userId,
     roomKey,
 }: UseAudioPlayerParams): {
     state: AudioPlayerState;
@@ -53,7 +53,7 @@ export function useAudioPlayer({
     const [duration, setDuration] = useState(0);
 
     // Используем новый хук для прозрачной расшифровки и кеширования
-    const { objectUrl: decryptedSrc } = useMedia({ mediaId, roomKey });
+    const { objectUrl: decryptedSrc } = useMedia({ mediaId, userId, roomKey });
 
     // Подписка на события аудио
     useEffect(() => {
@@ -97,7 +97,7 @@ export function useAudioPlayer({
 
     const togglePlay = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!audioRef.current) {
+        if (!audioRef.current || !decryptedSrc) {
             return;
         }
 
@@ -129,8 +129,7 @@ export function useAudioPlayer({
             currentTime,
             duration,
             isPlaying,
-            decryptedSrc:
-                decryptedSrc || (src.startsWith("blob:") ? src : undefined),
+            decryptedSrc,
         },
         controls: {
             togglePlay,

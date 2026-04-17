@@ -33,7 +33,7 @@ export function useFileAttachments({ toast, t }: UseFileAttachmentsProps) {
                     return;
                 }
 
-                // 2. Валидация типов и размеров (поверхностная, основная будет в сервисе)
+                // 2. Валидация типов и размеров
                 const validFiles = selectedFiles.filter((file) => {
                     const sizeMB = file.size / 1024 / 1024;
 
@@ -49,7 +49,7 @@ export function useFileAttachments({ toast, t }: UseFileAttachmentsProps) {
                             return false;
                         }
 
-                        // Ограничение: одно видео на сообщение (бизнес-логика проекта)
+                        // Проверка лимита на количество видео (1 на сообщение)
                         const hasVideo = attachments.some((a) =>
                             a.type.startsWith(MIME_PREFIXES.VIDEO),
                         );

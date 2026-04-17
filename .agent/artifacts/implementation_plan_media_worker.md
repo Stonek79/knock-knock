@@ -6,7 +6,7 @@
 
 ## ЭТАП 1 — Инфраструктура: типы и воркер-клиент
 
-### Шаг 1.1 — `app/src/lib/types/media.ts` 🔴
+### Шаг 1.1 — `app/src/lib/types/media.ts` ✅
 **Проблема:** `WorkerMediaPayload` используется в `media.client.ts` и `media.worker.ts`,
 но не объявлен в реестре типов и не экспортируется через `types/index.ts`.
 
@@ -136,14 +136,23 @@ export type WorkerMediaPayload = {
 **Проблемы:**
 1. Дублирование `_getFileType` логики (строки 115–119 и 199–203) — оба места
    повторяют то, что уже есть в `mediaService._getFileType()`
-2. Прямой импорт `mediaRepository` в UI-хук — нарушение слоёв
+2. Прямой импорт `mediaRepository` в UI-хук — нарушение слоёв:
+   - строка 11: `import { mediaRepository } from "@/lib/repositories/media.repository"`
+   - строка 99: `url: mediaRepository.getFileUrl({...})` — URL до загрузки
+   - строка 133: `url: mediaRepository.getFileUrl({...})` — URL основного файла
+   - строка 138: `url: mediaRepository.getFileUrl({...})` — URL thumbnail
+3. Все 3 вызова `getFileUrl` возвращают зашифрованные PocketBase URL — они не должны
+   попадать в UI, пока не пройдут через `mediaService.ensureMedia`
 
 **Задача:**
-- Удалить импорт `mediaRepository`
+- Удалить импорт `mediaRepository` полностью
 - Заменить дублирующую логику на `mediaService._getFileType(mime)`
-- URL вложений в `mutationFn` после uploadMedia брать из кэша:
-  сервис уже сохранил `original` blob в Dexie, читать через `mediaDb.getWithAccessUpdate`
-  и создавать blob URL, добавлять в `blobUrls` для cleanup в `onSettled`
+- Заменить все 3 вызова `mediaRepository.getFileUrl` на получение blob URL из кэша:
+  после `uploadMedia` сервис уже сохранил `original` blob в Dexie;
+  читать через `mediaDb.getWithAccessUpdate({ id, userId })` и создавать `URL.createObjectURL(blob)`,
+  добавлять в `blobUrls` массив для cleanup в `onSettled`
+- В оптимистичном обновлении (строка 99) URL формировать из локального blob File:
+  `URL.createObjectURL(file)` → добавить в `blobUrls` для cleanup
 
 ---
 
@@ -225,6 +234,6 @@ ChatRoom (user из useChatRoomData)
 | `components/AttachmentRenderer/index.tsx` | `userId` prop + doc download fix | 3.2 | 🔴 |
 | `components/AudioMessagePlayer/index.tsx` | `userId` prop | 3.3 | 🟡 |
 | `hooks/useAudioPlayer.ts` | `userId` param + fallback fix | 3.4 | 🟡 |
-| `hooks/useSendMessage.ts` | DRY + убрать mediaRepository | 4.1 | 🟡 |
+| `hooks/useSendMessage.ts` | DRY + удалить `mediaRepository` + заменить 3x `getFileUrl` на blob URL из кэша | 4.1 | 🟡 |
 | `hooks/useFileAttachments.ts` | Валидация видео при мультиселекте | 4.2 | 🟡 |
 | `ChatRoomMessages`, `MessageList` | Проброс `userId` | 5.1 | 🟡 |
