@@ -13,6 +13,7 @@ import type {
     PBRealtimeAction,
     PBRealtimeEvent,
     Result,
+    UnreadCount,
 } from "../types";
 import { appError, err, fromPromise, ok } from "../utils/result";
 import { MessageMapper } from "./mappers/messageMapper";
@@ -154,21 +155,40 @@ export const messageRepository = {
     },
 
     /**
-     * Физическое удаление из БД (использовать с осторожностью)
+     * Физическое удаление сообщения (Hard Delete).
+     * Полностью удаляет запись из базы данных без следов.
      */
-    deleteMessage: async (
+    hardDeleteMessage: async (
         messageId: string,
-    ): Promise<Result<boolean, MessageRepoError>> => {
+    ): Promise<Result<void, MessageRepoError>> => {
         return fromPromise(
-            pb.collection(DB_TABLES.MESSAGES).delete(messageId),
+            pb
+                .collection(DB_TABLES.MESSAGES)
+                .delete(messageId)
+                .then(() => {}),
             (e: unknown) => {
                 return appError(
                     ERROR_CODES.NETWORK_ERROR,
-                    "Не удалось физически удалить сообщение",
+                    "Не удалось удалить сообщение физически",
                     e,
                 );
             },
         );
+    },
+
+    /**
+     * Удаление сообщения (Soft Delete).
+     * Помечает сообщение как удаленное и очищает контент для приватности.
+     */
+    deleteMessage: async (
+        messageId: string,
+    ): Promise<Result<MessageRow, MessageRepoError>> => {
+        return messageRepository.updateMessage(messageId, {
+            [MESSAGE_FIELDS.IS_DELETED]: true,
+            [MESSAGE_FIELDS.CONTENT]: "",
+            [MESSAGE_FIELDS.IV]: "",
+            [MESSAGE_FIELDS.ATTACHMENTS]: [],
+        });
     },
 
     /**
@@ -192,10 +212,11 @@ export const messageRepository = {
     },
 
     /**
-     * Очистить комнату (удалить все сообщения)
+     * Очистить комнату (пометить все сообщения как удаленные)
      */
     clearRoom: async (
         roomId: string,
+        userId: string,
     ): Promise<Result<void, MessageRepoError>> => {
         try {
             const filter = pb.filter(`${MESSAGE_FIELDS.ROOM} = {:roomId}`, {
@@ -205,7 +226,7 @@ export const messageRepository = {
                 .collection(DB_TABLES.MESSAGES)
                 .getFullList({
                     filter,
-                    fields: MESSAGE_FIELDS.ID,
+                    fields: `${MESSAGE_FIELDS.ID},metadata`,
                     $autoCancel: false,
                 });
 
@@ -216,7 +237,32 @@ export const messageRepository = {
             const batch = pb.createBatch();
 
             for (const r of records) {
-                batch.collection(DB_TABLES.MESSAGES).delete(r.id);
+                const metadataObj =
+                    typeof r.metadata === "object" && r.metadata !== null
+                        ? r.metadata
+                        : {};
+
+                const rawDeletedBy =
+                    "deleted_by" in metadataObj
+                        ? metadataObj.deleted_by
+                        : undefined;
+
+                const deletedBy = Array.isArray(rawDeletedBy)
+                    ? rawDeletedBy.filter(
+                          (item): item is string => typeof item === "string",
+                      )
+                    : [];
+
+                if (!deletedBy.includes(userId)) {
+                    deletedBy.push(userId);
+                }
+                // Используем Soft Delete вместо физического удаления
+                batch.collection(DB_TABLES.MESSAGES).update(r.id, {
+                    metadata: {
+                        ...metadataObj,
+                        deleted_by: deletedBy,
+                    },
+                });
             }
 
             await batch.send();
@@ -317,9 +363,7 @@ export const messageRepository = {
     getUnreadCountsBatch: async (
         roomIds: string[],
         userId: string,
-    ): Promise<
-        Result<{ room_id: string; count: number }[], MessageRepoError>
-    > => {
+    ): Promise<Result<UnreadCount[], MessageRepoError>> => {
         if (roomIds.length === 0) {
             return ok([]);
         }
@@ -342,7 +386,7 @@ export const messageRepository = {
             return records
                 .filter((r) => roomIds.includes(r[ROOM_MEMBER_FIELDS.ROOM]))
                 .map((r) => ({
-                    room_id: r[ROOM_MEMBER_FIELDS.ROOM],
+                    room: r[ROOM_MEMBER_FIELDS.ROOM] as string,
                     count: (r[ROOM_MEMBER_FIELDS.UNREAD_COUNT] as number) || 0,
                 }));
         });

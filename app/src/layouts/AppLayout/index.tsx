@@ -151,12 +151,12 @@ export function AppLayout() {
 
             {/* Глобальные диалоги создания чатов */}
             <CreateChatDialog
-                open={openDialog === CHAT_TYPE.PUBLIC}
+                open={openDialog === CHAT_TYPE.DIRECT}
                 onOpenChange={(open) => !open && closeDialogs()}
                 isPrivate={false}
             />
             <CreateChatDialog
-                open={openDialog === CHAT_TYPE.PRIVATE}
+                open={openDialog === CHAT_TYPE.EPHEMERAL}
                 onOpenChange={(open) => !open && closeDialogs()}
                 isPrivate={true}
             />

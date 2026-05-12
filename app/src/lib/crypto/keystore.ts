@@ -1,14 +1,12 @@
 /**
  * Модуль для хранения криптографических ключей в IndexedDB.
  * Сохраняет нативные объекты CryptoKey.
+ * Использует Dexie (как и media-db.ts) для единообразия подхода к IndexedDB в проекте.
  */
-import { type IDBPDatabase, openDB } from "idb";
 
-const DB_NAME = "knock-knock-keystore";
-const DB_VERSION = 2; // Увеличили версию (миграция схемы)
-const STORE_NAME = "keys";
-
-export type KeyType = "identity" | "prekey";
+import Dexie, { type Table } from "dexie";
+import { KEYSTORE_CONFIG, KEYSTORE_TYPES } from "../constants";
+import type { KeyType } from "../types";
 
 /** Структура хранимой пары ключей */
 export interface StoredKeyPair {
@@ -20,73 +18,88 @@ export interface StoredKeyPair {
     createdAt: Date;
 }
 
-interface KeystoreDB {
-    keys: {
-        key: KeyType;
-        value: StoredKeyPair;
-    };
+/**
+ * Схема Dexie-базы для keystore.
+ * Хранит пары ключей с индексом по id.
+ */
+class KeystoreDatabase extends Dexie {
+    keys!: Table<StoredKeyPair, KeyType>;
+
+    constructor() {
+        super(KEYSTORE_CONFIG.DB_NAME);
+        this.version(1).stores({
+            // id — primaryKey (тип ключа: identity | prekey)
+            [KEYSTORE_CONFIG.TABLES.KEYS]: "id",
+        });
+
+        this.keys = this.table(KEYSTORE_CONFIG.TABLES.KEYS);
+    }
 }
 
-let dbInstance: IDBPDatabase<KeystoreDB> | null = null;
+/** Синглтон инстанса базы */
+let dbInstance: KeystoreDatabase | null = null;
 
-export async function openKeystore(): Promise<IDBPDatabase<KeystoreDB>> {
-    if (dbInstance) {
-        return dbInstance;
+/**
+ * Возвращает синглтон БД keystore.
+ * При первом вызове открывает/создает базу данных.
+ */
+export function openKeystore(): KeystoreDatabase {
+    if (!dbInstance) {
+        dbInstance = new KeystoreDatabase();
     }
-
-    dbInstance = await openDB<KeystoreDB>(DB_NAME, DB_VERSION, {
-        upgrade(db, oldVersion) {
-            if (oldVersion < 1) {
-                db.createObjectStore(STORE_NAME, { keyPath: "id" });
-            }
-            // Если была версия 1 (с Uint8Array), лучше очистить стор при миграции на v2,
-            // так как формат данных кардинально меняется.
-            // В продакшене нужна была бы миграция (импорт байтов -> CryptoKey),
-            // но на этапе dev можно сбросить.
-            if (oldVersion === 1) {
-                db.deleteObjectStore(STORE_NAME);
-                db.createObjectStore(STORE_NAME, { keyPath: "id" });
-            }
-        },
-    });
-
     return dbInstance;
 }
 
+/**
+ * Сохраняет или обновляет пару ключей в IndexedDB.
+ */
 export async function saveKeyPair(
     type: KeyType,
     privateKey: CryptoKey,
     publicKey: CryptoKey,
 ): Promise<void> {
-    const db = await openKeystore();
+    const db = openKeystore();
     const keyPair: StoredKeyPair = {
         id: type,
         privateKey,
         publicKey,
         createdAt: new Date(),
     };
-    await db.put(STORE_NAME, keyPair);
+    await db.keys.put(keyPair);
 }
 
+/**
+ * Возвращает пару ключей по типу.
+ * Возвращает undefined если ключ не найден.
+ */
 export async function getKeyPair(
     type: KeyType,
 ): Promise<StoredKeyPair | undefined> {
-    const db = await openKeystore();
-    return db.get(STORE_NAME, type);
+    const db = openKeystore();
+    return db.keys.get(type);
 }
 
+/**
+ * Удаляет пару ключей по типу.
+ */
 export async function deleteKeyPair(type: KeyType): Promise<void> {
-    const db = await openKeystore();
-    await db.delete(STORE_NAME, type);
+    const db = openKeystore();
+    await db.keys.delete(type);
 }
 
+/**
+ * Очищает все ключи из хранилища.
+ */
 export async function clearAllKeys(): Promise<void> {
-    const db = await openKeystore();
-    await db.clear(STORE_NAME);
+    const db = openKeystore();
+    await db.keys.clear();
 }
 
+/**
+ * Проверяет наличие обоих ключей (identity и prekey).
+ */
 export async function hasKeys(): Promise<boolean> {
-    const identity = await getKeyPair("identity");
-    const prekey = await getKeyPair("prekey");
+    const identity = await getKeyPair(KEYSTORE_TYPES.IDENTITY);
+    const prekey = await getKeyPair(KEYSTORE_TYPES.PREKEY);
     return !!identity && !!prekey;
 }

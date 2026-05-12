@@ -195,17 +195,25 @@ function mapFieldType(field, typeName) {
         case "date":
         case "autodate":
             return "string";
-        case "select":
-            if (field.values && field.values.length > 0) {
-                return `${typeName}${formatTypeName(field.name)}Options`;
-            }
-            return "string";
-        case "relation":
-            return field.maxSelect === 1
-                ? "RecordIdString"
-                : "RecordIdString[]";
-        case "file":
-            return field.maxSelect === 1 ? "string" : "string[]";
+        case "select": {
+            const max =
+                field.maxSelect === null ? 0 : Number(field.maxSelect || 1);
+            const baseType =
+                field.values && field.values.length > 0
+                    ? `${typeName}${formatTypeName(field.name)}Options`
+                    : "string";
+            return max === 1 ? baseType : `${baseType}[]`;
+        }
+        case "relation": {
+            const max =
+                field.maxSelect === null ? 0 : Number(field.maxSelect || 1);
+            return max === 1 ? "RecordIdString" : "RecordIdString[]";
+        }
+        case "file": {
+            const max =
+                field.maxSelect === null ? 0 : Number(field.maxSelect || 1);
+            return max === 1 ? "string" : "string[]";
+        }
         case "json":
             return "null | unknown";
         default:

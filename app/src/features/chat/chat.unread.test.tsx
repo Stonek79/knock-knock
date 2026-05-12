@@ -39,7 +39,7 @@ const { getRoomUnreadCounts } = await import("@/lib/services/room/queries");
 describe("Хук useUnreadCounts", () => {
     it("загружает начальные значения через сервис", async () => {
         // Подготовка мока — возвращаем Result<UnreadCount[]>
-        const mockCounts: UnreadCount[] = [{ room_id: "room-1", count: 5 }];
+        const mockCounts: UnreadCount[] = [{ room: "room-1", count: 5 }];
 
         vi.mocked(getRoomUnreadCounts).mockResolvedValue(ok(mockCounts));
 

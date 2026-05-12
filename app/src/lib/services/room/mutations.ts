@@ -1,6 +1,7 @@
 import { ERROR_CODES } from "@/lib/constants";
 import { generateRoomId, generateRoomKey } from "@/lib/crypto/rooms";
 import { logger } from "@/lib/logger";
+import { mediaDb } from "@/lib/mediadb/media-db";
 import { roomRepository } from "@/lib/repositories/room.repository";
 import { userRepository } from "@/lib/repositories/user.repository";
 import type {
@@ -159,9 +160,13 @@ export async function createRoom({
 /**
  * Удаляет комнату и все связанные данные.
  */
-export async function deleteRoom(
-    roomId: string,
-): Promise<Result<void, RoomError>> {
+export async function deleteRoom({
+    roomId,
+    userId,
+}: {
+    roomId: string;
+    userId: string;
+}): Promise<Result<void, RoomError>> {
     try {
         const result =
             await roomRepository.deleteRoomWithMembersAndKeys(roomId);
@@ -175,6 +180,19 @@ export async function deleteRoom(
                         : undefined,
                 ),
             );
+        }
+
+        // Рекурсивно удаляем медиа из локального кэша (IndexedDB)
+        try {
+            await mediaDb.deleteByRoomId({
+                roomId,
+                userId,
+            });
+        } catch (e) {
+            logger.warn("Не удалось очистить медиа при удалении комнаты", {
+                roomId,
+                error: e,
+            });
         }
 
         return ok(undefined);

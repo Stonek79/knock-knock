@@ -7,6 +7,7 @@ export const chat = {
         "Select a user from the list on the left to start chatting.",
     sending: "Sending...",
     typeMessage: "Type a message...",
+    sendFailed: "Failed to send message",
     newChat: "New Chat",
     newPrivate: "Private Chat",
     newGroup: "New Group",

@@ -35,7 +35,7 @@ export function useUnreadCounts() {
      * Получить количество непрочитанных для конкретной комнаты.
      */
     const getCount = (roomId: string) => {
-        return counts.find((c) => c.room_id === roomId)?.count || 0;
+        return counts.find((c) => c.room === roomId)?.count || 0;
     };
 
     return { counts, getCount };

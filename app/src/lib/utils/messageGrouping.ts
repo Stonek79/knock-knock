@@ -1,8 +1,8 @@
 import { MESSAGE_POSITION } from "@/lib/constants";
-import type { MessagePosition } from "@/lib/types/message";
+import type { MessagePosition } from "@/lib/types";
 
 interface MessageWithSender {
-    sender_id: string | null;
+    sender: string | null;
     is_deleted?: boolean;
 }
 
@@ -27,16 +27,12 @@ export function getMessageGroupPosition(
     // Проверка: сообщение от того же отправителя, что и предыдущее?
     // И оно НЕ удалено
     const isTop =
-        prevMsg &&
-        !prevMsg.is_deleted &&
-        prevMsg.sender_id === currentMsg.sender_id;
+        prevMsg && !prevMsg.is_deleted && prevMsg.sender === currentMsg.sender;
 
     // Проверка: сообщение от того же отправителя, что и следующее?
     // И оно НЕ удалено
     const isBottom =
-        nextMsg &&
-        !nextMsg.is_deleted &&
-        nextMsg.sender_id === currentMsg.sender_id;
+        nextMsg && !nextMsg.is_deleted && nextMsg.sender === currentMsg.sender;
 
     if (isTop && isBottom) {
         return MESSAGE_POSITION.MIDDLE;

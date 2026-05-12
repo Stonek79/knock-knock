@@ -137,6 +137,12 @@
     padding-right: var(--space-1);
 }
 
+.content::before {
+    content: "";
+    float: right;
+    height: 100%; /* Занимает всю высоту */
+    margin-bottom: -15px;
+}
 /* Удалённое сообщение */
 .deletedContent {
     display: block;

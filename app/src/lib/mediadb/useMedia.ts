@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { QUERY_KEYS } from "../constants";
 import { logger } from "../logger";
 import { mediaService } from "../services/media";
@@ -14,6 +14,8 @@ type UseMediaProps = {
     roomKey?: CryptoKey;
     /** Флаг личного хранилища */
     isVault?: boolean;
+    /** Начальный URL (например, временный blob URL для оптимистичных обновлений) */
+    initialUrl?: string;
 };
 
 type UseMediaResult = {
@@ -38,7 +40,10 @@ export function useMedia({
     userId,
     roomKey,
     isVault = false,
+    initialUrl,
 }: UseMediaProps): UseMediaResult {
+    const isOptimistic = mediaId?.startsWith("temp-");
+
     const {
         data: mediaContent,
         isLoading,
@@ -46,12 +51,12 @@ export function useMedia({
     } = useQuery({
         queryKey: QUERY_KEYS.media(mediaId, userId),
         queryFn: async () => {
-            if (!mediaId || !userId) {
+            if (!mediaId || !userId || isOptimistic) {
                 return null;
             }
 
-            // Единая точка входа для получения медиа через сервис
-            const result = await mediaService.ensureMedia({
+            // Единая точка входа для получения превью медиа через сервис
+            const result = await mediaService.ensureThumbnail({
                 id: mediaId,
                 userId,
                 roomKey,
@@ -68,8 +73,9 @@ export function useMedia({
 
             return result.value;
         },
-        // Активируем запрос только если есть ID и доступ к ключам
-        enabled: !!mediaId && !!userId && (!!roomKey || !!isVault),
+        // Активируем запрос только если есть ID, доступ к ключам и это не временный ID
+        enabled:
+            !!mediaId && !!userId && (!!roomKey || !!isVault) && !isOptimistic,
         // Кешируем результат
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
@@ -77,13 +83,71 @@ export function useMedia({
     });
 
     /**
-     * Создаем Blob URL для отображения.
-     * Мы делаем это в useMemo для мгновенного доступа при рендере,
-     * но обязаны очистить их в useEffect.
+     * Храним сгенерированные URL в стейте, чтобы они гарантированно
+     * создавались заново при монтировании компонента (решает проблему React Query кэша).
      */
-    const urls = useMemo(() => {
+    // const urls = useMemo(() => {
+    // 	// Если это оптимистичное сообщение, просто возвращаем переданный URL
+    // 	if (isOptimistic && initialUrl) {
+    // 		return {
+    // 			objectUrl: initialUrl,
+    // 			thumbnailUrl: undefined,
+    // 			isFromInitial: true,
+    // 		};
+    // 	}
+
+    // 	if (!mediaContent) {
+    // 		return {
+    // 			objectUrl: undefined,
+    // 			thumbnailUrl: undefined,
+    // 			isFromInitial: false,
+    // 		};
+    // 	}
+
+    // 	const objectUrl = mediaContent.original
+    // 		? URL.createObjectURL(mediaContent.original)
+    // 		: undefined;
+    // 	const thumbnailUrl = mediaContent.thumbnail
+    // 		? URL.createObjectURL(mediaContent.thumbnail)
+    // 		: undefined;
+
+    // 	return { objectUrl, thumbnailUrl, isFromInitial: false };
+    // }, [mediaContent, isOptimistic, initialUrl]);
+
+    /**
+     * Очистка созданных Blob URL при смене контента или размонтировании.
+     * Очищаем только те, что создали сами (не initialUrl).
+     */
+    // useEffect(() => {
+    // 	return () => {
+    // 		if (!urls.isFromInitial) {
+    // 			if (urls.objectUrl) {
+    // 				URL.revokeObjectURL(urls.objectUrl);
+    // 			}
+    // 			if (urls.thumbnailUrl) {
+    // 				URL.revokeObjectURL(urls.thumbnailUrl);
+    // 			}
+    // 		}
+    // 	};
+    // }, [urls]);
+
+    const [urls, setUrls] = useState<{
+        objectUrl: string | undefined;
+        thumbnailUrl: string | undefined;
+    }>({
+        objectUrl: isOptimistic ? initialUrl : undefined,
+        thumbnailUrl: undefined,
+    });
+
+    useEffect(() => {
+        if (isOptimistic && initialUrl) {
+            setUrls({ objectUrl: initialUrl, thumbnailUrl: undefined });
+            return;
+        }
+
         if (!mediaContent) {
-            return { objectUrl: undefined, thumbnailUrl: undefined };
+            setUrls({ objectUrl: undefined, thumbnailUrl: undefined });
+            return;
         }
 
         const objectUrl = mediaContent.original
@@ -93,22 +157,17 @@ export function useMedia({
             ? URL.createObjectURL(mediaContent.thumbnail)
             : undefined;
 
-        return { objectUrl, thumbnailUrl };
-    }, [mediaContent]);
+        setUrls({ objectUrl, thumbnailUrl });
 
-    /**
-     * Очистка созданных Blob URL при смене контента или размонтировании.
-     */
-    useEffect(() => {
         return () => {
-            if (urls.objectUrl) {
-                URL.revokeObjectURL(urls.objectUrl);
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
             }
-            if (urls.thumbnailUrl) {
-                URL.revokeObjectURL(urls.thumbnailUrl);
+            if (thumbnailUrl) {
+                URL.revokeObjectURL(thumbnailUrl);
             }
         };
-    }, [urls]);
+    }, [mediaContent, isOptimistic, initialUrl]);
 
     return {
         objectUrl: urls.objectUrl,

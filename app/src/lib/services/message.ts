@@ -1,10 +1,11 @@
 import { ERROR_CODES, MESSAGE_STATUS } from "@/lib/constants";
 import { encryptMessage } from "@/lib/crypto/messages";
 import { logger } from "@/lib/logger";
-import type { Attachment, Result } from "@/lib/types";
-import type { MessageError } from "@/lib/types/message";
+import { mediaDb } from "@/lib/mediadb/media-db";
+import type { Attachment, MessageError, Result } from "@/lib/types";
 import { appError, err, ok } from "@/lib/utils/result";
 import { messageRepository } from "../repositories/message.repository";
+import { mediaService } from "./media";
 
 /**
  * Параметры для отправки сообщения
@@ -39,7 +40,7 @@ export interface DeleteMessageOptions {
 }
 
 /**
- * Сервис для управления сообщениями в чате (V2+).
+ * Сервис для управления сообщениями в чате.
  * Оркестрирует бизнес-логику (шифрование) и использует репозиторий для сохранения данных.
  */
 export const MessageService = {
@@ -74,14 +75,15 @@ export const MessageService = {
         }
 
         const result = await messageRepository.sendMessage({
-            room_id: roomId,
-            sender_id: senderId,
+            room: roomId,
+            sender: senderId,
             sender_name: senderName || "",
             sender_avatar: senderAvatar || "",
             content: ciphertext,
             iv,
             attachments: attachments ?? null,
             status: MESSAGE_STATUS.SENT,
+            metadata: { deleted_by: [] },
         });
 
         if (result.isErr()) {
@@ -144,6 +146,7 @@ export const MessageService = {
 
     /**
      * Удаляет сообщение (Soft Delete или Local Delete).
+     * После успешного удаления очищает медиа из локального IndexedDB.
      */
     async deleteMessage({
         messageId,
@@ -151,43 +154,59 @@ export const MessageService = {
         isOwnMessage,
         isAdmin,
     }: DeleteMessageOptions): Promise<Result<void, MessageError>> {
-        // Если это своё сообщение ИЛИ мы админ — удаляем для всех (soft delete)
+        // 1. Получаем сообщение для проверки прав и вложений
+        const msgResult = await messageRepository.getMessageById(messageId);
+        if (msgResult.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.DB_ERROR,
+                    "Не удалось получить сообщение для удаления",
+                    msgResult.error.details,
+                ),
+            );
+        }
+
+        const msg = msgResult.value;
+
+        // 2. Если это своё сообщение ИЛИ мы админ — удаляем для всех
         if (isOwnMessage || isAdmin) {
-            const result = await messageRepository.updateMessage(messageId, {
-                content: "",
-                iv: "",
-                is_edited: false,
-                is_deleted: true,
-                metadata: {
-                    deleted_by: [],
-                    moderation: isAdmin,
-                },
-            });
+            // Если оно уже удалено глобально (старый артефакт), пропускаем лишний запрос
+            if (msg.is_deleted) {
+                return ok(undefined);
+            }
+
+            if (msg.attachments) {
+                // Удаляем медиа-файлы физически из облака и кэша
+                for (const att of msg.attachments) {
+                    await mediaService.deleteMedia({
+                        id: att.id,
+                        userId: currentUserId,
+                    });
+                }
+            }
+
+            const result = await messageRepository.hardDeleteMessage(messageId);
+
             if (result.isErr()) {
                 return err(
                     appError(
                         ERROR_CODES.DB_ERROR,
-                        "Не удалось удалить сообщение",
+                        "Не удалось удалить сообщение глобально",
                         result.error.details,
                     ),
                 );
             }
         } else {
-            // Если чужое — скрываем только для себя через массив deleted_by в метаданных
-            const msgResult = await messageRepository.getMessageById(messageId);
-            if (msgResult.isErr()) {
-                return err(
-                    appError(
-                        ERROR_CODES.DB_ERROR,
-                        "Не удалось получить сообщение для скрытия",
-                        msgResult.error.details,
-                    ),
-                );
-            }
+            // 3. Если чужое — скрываем только для себя через массив deleted_by в метаданных
+            const rawDeletedBy = msg.metadata?.deleted_by;
+            const deletedBy = Array.isArray(rawDeletedBy)
+                ? [...rawDeletedBy]
+                : [];
 
-            const msg = msgResult.value;
-            const currentMetadata = msg.metadata;
-            const deletedBy = [...currentMetadata.deleted_by];
+            // Если мы уже скрыли его локально, пропускаем лишний запрос
+            if (deletedBy.includes(currentUserId)) {
+                return ok(undefined);
+            }
 
             if (!deletedBy.includes(currentUserId)) {
                 deletedBy.push(currentUserId);
@@ -195,7 +214,7 @@ export const MessageService = {
 
             const result = await messageRepository.updateMessage(messageId, {
                 metadata: {
-                    ...currentMetadata,
+                    ...(msg.metadata || {}),
                     deleted_by: deletedBy,
                 },
             });
@@ -204,20 +223,37 @@ export const MessageService = {
                 return err(
                     appError(
                         ERROR_CODES.DB_ERROR,
-                        "Не удалось скрыть сообщение",
+                        "Не удалось скрыть сообщение локально",
                         result.error.details,
                     ),
                 );
             }
         }
+
+        // 4. Рекурсивно удаляем медиа из локального кэша (IndexedDB)
+        try {
+            await mediaDb.deleteByMessageId({
+                messageId,
+                userId: currentUserId,
+            });
+        } catch (e) {
+            logger.warn("Не удалось очистить медиа для сообщения", {
+                messageId,
+                error: e,
+            });
+        }
+
         return ok(undefined);
     },
 
     /**
      * Очистка комнаты — использует пакетное удаление в репозитории.
      */
-    async clearRoom(roomId: string): Promise<Result<void, MessageError>> {
-        const result = await messageRepository.clearRoom(roomId);
+    async clearRoom(
+        roomId: string,
+        userId: string,
+    ): Promise<Result<void, MessageError>> {
+        const result = await messageRepository.clearRoom(roomId, userId);
         if (result.isErr()) {
             return err(
                 appError(
@@ -227,6 +263,20 @@ export const MessageService = {
                 ),
             );
         }
+
+        // Рекурсивно удаляем медиа из локального кэша (IndexedDB)
+        try {
+            await mediaDb.deleteByRoomId({
+                roomId,
+                userId,
+            });
+        } catch (e) {
+            logger.warn("Не удалось очистить медиа при очистке комнаты", {
+                roomId,
+                error: e,
+            });
+        }
+
         return ok(undefined);
     },
 
@@ -264,9 +314,19 @@ export const MessageService = {
             msgResult.isOk() &&
             msgResult.value.status === MESSAGE_STATUS.SENT
         ) {
-            await messageRepository.updateMessage(messageId, {
-                status: MESSAGE_STATUS.DELIVERED,
-            });
+            const updateResult = await messageRepository.updateMessage(
+                messageId,
+                {
+                    status: MESSAGE_STATUS.DELIVERED,
+                },
+            );
+
+            if (updateResult.isErr()) {
+                logger.warn("Не удалось обновить статус доставки", {
+                    messageId,
+                    error: updateResult.error,
+                });
+            }
         }
         return ok(undefined);
     },

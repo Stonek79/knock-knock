@@ -14,6 +14,7 @@ import { Slider } from "@/components/ui/Slider";
 import { Text } from "@/components/ui/Text";
 import { TextArea } from "@/components/ui/TextArea";
 import { useToast } from "@/components/ui/Toast";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { RECORDING_LIMITS } from "@/lib/constants/storage";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useAudioRecording } from "../../hooks/useAudioRecording";
@@ -53,6 +54,7 @@ export function MessageInput({
 }: MessageInputProps) {
     const { t } = useTranslation();
     const toast = useToast();
+    const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
     const {
         message,
@@ -80,17 +82,18 @@ export function MessageInput({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Хук для записи аудио по долгому нажатию (Long Press)
-    const { onPointerDown, onPointerUp, onPointerLeave } = useAudioRecording({
-        onStartRecording: () => {
-            void startRecording();
-        },
-        onStopAndFinish: () => {
-            stopAndFinishRecording();
-        },
-        onCancelRecording: () => {
-            stopRecording();
-        },
-    });
+    const { onPointerDown, onPointerUp, onPointerLeave, onPointerCancel } =
+        useAudioRecording({
+            onStartRecording: () => {
+                void startRecording();
+            },
+            onStopAndFinish: () => {
+                stopAndFinishRecording();
+            },
+            onCancelRecording: () => {
+                stopRecording();
+            },
+        });
 
     const {
         attachments,
@@ -169,7 +172,10 @@ export function MessageInput({
                 </IconButton>
 
                 {/* Поле ввода — наш кастомный TextArea */}
-                <Box className={styles.textAreaContainer}>
+                <Box
+                    className={styles.textAreaContainer}
+                    data-replicated-value={message}
+                >
                     {isRecording ? (
                         (() => {
                             const remainingTime =
@@ -222,6 +228,7 @@ export function MessageInput({
                             disabled={disabled || sending}
                             className={styles.textArea}
                             data-testid="message-textarea"
+                            rows={isMobile ? 1 : 2}
                         />
                     )}
                 </Box>
@@ -277,7 +284,7 @@ export function MessageInput({
                         variant="ghost"
                         size="md"
                         shape="round"
-                        disabled={disabled || sending || isRecording}
+                        disabled={disabled || sending}
                         type="button"
                         className={clsx(
                             styles.actionButton,
@@ -287,16 +294,10 @@ export function MessageInput({
                             "chat.voiceMessage",
                             "Голосовое сообщение",
                         )}
-                        // Long Press для записи — запись начнётся только если держать >400мс
-                        onPointerDown={(e) => {
-                            e.currentTarget.setPointerCapture(e.pointerId);
-                            onPointerDown(e);
-                        }}
-                        onPointerUp={(e) => {
-                            e.currentTarget.releasePointerCapture(e.pointerId);
-                            onPointerUp();
-                        }}
+                        onPointerDown={onPointerDown}
+                        onPointerUp={onPointerUp}
                         onPointerLeave={onPointerLeave}
+                        onPointerCancel={onPointerCancel}
                     >
                         <Mic size={ICON_SIZE.md} />
                     </IconButton>

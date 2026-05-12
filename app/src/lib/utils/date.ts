@@ -40,7 +40,9 @@ export const formatChatTime = (dateString: string): string => {
         (today.getTime() - dateOnly.getTime()) / (1000 * 60 * 60 * 24),
     );
     if (diffDays === 0) {
-        return "common.today"; // Возвращаем ключ
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${hours}:${minutes}`;
     }
     if (diffDays === 1) {
         return "common.yesterday"; // Возвращаем ключ

@@ -30,7 +30,7 @@ export function AddMemberDialog({
 
     const { addMembers, isLoading } = useGroupActions({
         roomId,
-        myUserId,
+        myUserId: myUserId ?? "",
     });
 
     const handleAdd = async () => {

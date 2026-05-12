@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
 import { QUERY_KEYS, ROOM_TYPE, ROUTES, USER_ROLE } from "@/lib/constants";
 import { logger } from "@/lib/logger";
@@ -32,6 +33,7 @@ export function useChatActions({
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const toast = useToast();
+    const { t } = useTranslation();
     const [ending, setEnding] = useState(false);
 
     // Оптимистичная отправка через useSendMessage
@@ -70,15 +72,22 @@ export function useChatActions({
 
         setEnding(true);
         try {
-            const clearResult = await MessageService.clearRoom(roomId);
+            const clearResult = await MessageService.clearRoom(roomId, user.id);
             if (clearResult.isErr()) {
                 logger.error("Ошибка очистки комнаты", clearResult.error);
+            } else {
+                queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.rooms(user.id),
+                });
             }
 
             // Если чат эфемерный (временный), удаляем его полностью из базы
             if (room?.type === ROOM_TYPE.EPHEMERAL) {
                 logger.info(`Удаление эфемерной комнаты: ${roomId}`);
-                const deleteResult = await RoomService.deleteRoom(roomId);
+                const deleteResult = await RoomService.deleteRoom({
+                    roomId,
+                    userId: user.id,
+                });
                 if (deleteResult.isErr()) {
                     logger.error("Ошибка удаления комнаты", deleteResult.error);
                 } else {
@@ -130,7 +139,7 @@ export function useChatActions({
         } else {
             logger.error("Ошибка удаления сообщения", result.error);
             toast({
-                title: "Не удалось удалить сообщение",
+                title: t("chat.deleteFailed", "Не удалось удалить сообщение"),
                 variant: "error",
             });
         }
@@ -162,6 +171,15 @@ export function useChatActions({
             toast({
                 title: "Не удалось обновить сообщение",
                 variant: "error",
+            });
+        } else {
+            if (roomId) {
+                queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.messages(roomId),
+                });
+            }
+            queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.rooms(user?.id),
             });
         }
     };

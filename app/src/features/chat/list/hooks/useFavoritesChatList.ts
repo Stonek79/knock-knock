@@ -2,9 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { QUERY_KEYS } from "@/lib/constants";
 import { getFavoriteRooms } from "@/lib/services/room";
-import type { RoomWithMembers } from "@/lib/types";
+import type { ChatItem, ExtendedChatItem, RoomWithMembers } from "@/lib/types";
 import { useAuthStore } from "@/stores/auth";
-import type { ChatItem } from "../ChatList/ChatListItem";
 import { mapRoomToChatItem } from "../utils/roomUiMapper";
 
 /**
@@ -59,10 +58,7 @@ export function useFavoritesChatList() {
             });
 
             // 2. Убираем дубликаты (оставляем только одно "Избранное")
-            const uniqueChatsMap = new Map<
-                string,
-                (typeof processedChats)[0]
-            >();
+            const uniqueChatsMap = new Map<string, ExtendedChatItem>();
             let selfChatFound = false;
             for (const chat of processedChats) {
                 if (chat.isSavedMessages) {
@@ -80,26 +76,20 @@ export function useFavoritesChatList() {
             return (
                 Array.from(uniqueChatsMap.values())
                     .sort((a, b) => {
-                        if (a.isSavedMessages && !b.isSavedMessages) {
-                            return -1;
+                        if (a.isSavedMessages !== b.isSavedMessages) {
+                            return a.isSavedMessages ? -1 : 1;
                         }
-                        if (!a.isSavedMessages && b.isSavedMessages) {
-                            return 1;
-                        }
-                        return (
-                            new Date(b._rawDate).getTime() -
-                            new Date(a._rawDate).getTime()
-                        );
+                        return b._lastMsgTimestamp - a._lastMsgTimestamp;
                     })
                     // 4. Очищаем объект от сервисных полей для UI
                     .map(
                         ({
-                            _rawDate,
+                            _lastMsgTimestamp,
                             isSavedMessages,
                             isSelf,
                             isEphemeral,
                             ...item
-                        }) => item as ChatItem,
+                        }) => item,
                     )
             );
         },

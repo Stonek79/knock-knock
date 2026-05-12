@@ -16,6 +16,7 @@ export type ChatItem = {
     lastMessage?: string;
     time?: string;
     unread?: number;
+    pinPosition?: number | null;
 };
 
 interface ChatListItemProps {

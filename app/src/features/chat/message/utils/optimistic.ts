@@ -1,4 +1,4 @@
-import { MESSAGE_STATUS } from "@/lib/constants";
+import { DB_TABLES, MESSAGE_STATUS, MESSAGE_TYPE } from "@/lib/constants";
 import { CLIENT_MESSAGE_STATUS } from "@/lib/constants/ui";
 import type { Attachment, ChatMessage } from "@/lib/types";
 
@@ -40,21 +40,36 @@ export function createOptimisticMessage(
     const now = new Date().toISOString();
 
     return {
+        // --- Поля из BaseSystemFields (PocketBase) ---
         id: params.tempId,
-        room_id: params.roomId,
-        sender_id: params.senderId,
+        collectionId: "",
+        collectionName: DB_TABLES.MESSAGES,
+        created: now,
+        updated: now,
+
+        // --- Поля из MessagesRecord ---
+        room: params.roomId,
+        sender: params.senderId,
         sender_name: params.senderName,
         sender_avatar: params.senderAvatar,
         content: params.text || null,
         iv: "",
-        status: MESSAGE_STATUS.SENT, // Формальный серверный статус (не используется для UI)
+        type: MESSAGE_TYPE.TEXT,
+        status: MESSAGE_STATUS.SENT,
         is_edited: false,
         is_deleted: false,
         is_starred: false,
-        created_at: now,
-        updated_at: now,
+        is_system: false,
+        is_test: false,
+        deleted_by: [],
+        deleted_at: "",
+        reply_to: "",
+
+        // --- Переопределённые JSON-поля (MessageRow) ---
         metadata: { deleted_by: [] },
         attachments: params.attachments ?? null,
+        reactions_summary: null,
+
         // --- Клиентские мета-поля ---
         _uiStatus: CLIENT_MESSAGE_STATUS.SENDING,
         _tempId: params.tempId,

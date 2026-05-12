@@ -18,7 +18,6 @@ cronAdd("task_runner", DB_TOP.CONFIG.CRON_RUNNER, () => {
 	const nowStr = new Date().toISOString().replace("T", " ").split(".")[0];
 
 	const tasks = $app
-		.dao()
 		.findRecordsByFilter(
 			DB.TABLES.TASK_QUEUE,
 			`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_PENDING}' || (${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.ATTEMPTS} < 5 && ${DB.FIELDS.RUN_AT} <= {:now})`,
@@ -47,7 +46,7 @@ function processTask(task) {
 	const payload = task.get(DB.FIELDS.PAYLOAD);
 
 	task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_PROCESSING);
-	$app.dao().saveRecord(task);
+	$app.save(task);
 
 	try {
 		if (type === DB.VALUES.TASK_TYPE_PUSH) {
@@ -58,7 +57,7 @@ function processTask(task) {
 
 		task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_COMPLETED);
 		task.set(DB.FIELDS.LAST_ERROR, "");
-		$app.dao().saveRecord(task);
+		$app.save(task);
 	} catch (err) {
 		handleTaskError(task, err);
 	}
@@ -119,7 +118,7 @@ function handleTaskError(task, err) {
 		);
 	}
 
-	$app.dao().saveRecord(task);
+	$app.save(task);
 }
 
 /**
@@ -134,7 +133,6 @@ function handleCleanupTask() {
 		.replace("T", " ")
 		.split(".")[0];
 	const oldSuccessful = $app
-		.dao()
 		.findRecordsByFilter(
 			DB.TABLES.TASK_QUEUE,
 			`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_COMPLETED}' && ${DB.FIELDS.UPDATED} <= {:date}`,
@@ -145,7 +143,7 @@ function handleCleanupTask() {
 		);
 
 	for (const rec of oldSuccessful) {
-		$app.dao().deleteRecord(rec);
+		$app.delete(rec);
 	}
 
 	const lastWeek = new Date(now - 7 * 24 * 60 * 60 * 1000)
@@ -153,7 +151,6 @@ function handleCleanupTask() {
 		.replace("T", " ")
 		.split(".")[0];
 	const oldFailed = $app
-		.dao()
 		.findRecordsByFilter(
 			DB.TABLES.TASK_QUEUE,
 			`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.UPDATED} <= {:date}`,
@@ -164,7 +161,7 @@ function handleCleanupTask() {
 		);
 
 	for (const rec of oldFailed) {
-		$app.dao().deleteRecord(rec);
+		$app.delete(rec);
 	}
 }
 

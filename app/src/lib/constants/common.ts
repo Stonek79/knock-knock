@@ -1,3 +1,5 @@
+import type { RoomType } from "../types";
+
 /** Название приложения */
 export const APP_NAME = "KnokKnok";
 export const APP_NAME_RU = "Тук-Тук";
@@ -14,13 +16,13 @@ export const APP_VERSION = "0.1.0";
  * Типы создаваемых чатов.
  */
 export const CHAT_TYPE = {
-    /** Обычный чат */
-    PUBLIC: "public",
-    /** Приватный чат с E2E шифрованием */
-    PRIVATE: "private",
+    /** Прямой чат с пользователем */
+    DIRECT: "direct",
     /** Групповой чат */
     GROUP: "group",
-} as const;
+    /** Эфемерный чат */
+    EPHEMERAL: "ephemeral",
+} as const satisfies Record<string, RoomType>;
 
 /** Режим разработчика */
 /** Режим разработчика (заменяется Vite при сборке на true/false) */

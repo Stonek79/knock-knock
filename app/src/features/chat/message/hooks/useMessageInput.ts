@@ -1,10 +1,4 @@
-import {
-    type KeyboardEvent,
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
-} from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useAudioRecorder } from "./useAudioRecorder";
 
 // TODO: сложный хук, выглядит как костыль, подумать над декомпозицией и упрощением
@@ -16,10 +10,6 @@ interface UseMessageInputProps {
     initialValue?: string;
 }
 
-/** Минимальная высота текстового поля (px) */
-const TEXTAREA_MIN_HEIGHT = 40;
-/** Максимальная высота текстового поля (px) */
-const TEXTAREA_MAX_HEIGHT = 160;
 /** Порог мобильного экрана (px) — Enter на мобильных = перенос строки */
 const MOBILE_BREAKPOINT_PX = 768;
 
@@ -48,49 +38,22 @@ export function useMessageInput({
         disabled,
         sending,
         onRecordingComplete: (transcript, audioBlob, transcriptSuccess) => {
-            // Если транскрипция не удалась — audioBlob уже очищен в useAudioRecorder
-            // transcriptSuccess = false означает, что аудио не сохранено
-            if (transcriptSuccess && transcript) {
-                setMessage((prev) =>
-                    (prev ? `${prev} ${transcript}` : transcript).trim(),
-                );
+            if (transcriptSuccess) {
+                if (transcript) {
+                    setMessage((prev) =>
+                        (prev ? `${prev} ${transcript}` : transcript).trim(),
+                    );
+                }
                 setRecordedAudio(audioBlob);
             }
             setTimeout(() => {
                 textareaRef.current?.focus();
-                adjustHeight();
             }, 10);
         },
     });
 
     const hasText = message.trim().length > 0;
     const canSend = hasText || recordedAudio !== null;
-
-    const adjustHeight = useCallback(() => {
-        const textarea = textareaRef.current;
-
-        if (!textarea) {
-            return;
-        }
-
-        // Если текста нет — просто ставим минимальную высоту
-        if (!message?.trim()) {
-            textarea.style.height = `${TEXTAREA_MIN_HEIGHT}px`;
-            return;
-        }
-
-        // 3. Если текст есть — вычисляем на основе scrollHeight
-        const scrollHeight = textarea.scrollHeight;
-        const newHeight = Math.max(
-            TEXTAREA_MIN_HEIGHT,
-            Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT),
-        );
-        textarea.style.height = `${newHeight}px`;
-    }, [message]);
-
-    useEffect(() => {
-        adjustHeight();
-    }, [adjustHeight]);
 
     useEffect(() => {
         let focusTimer: ReturnType<typeof setTimeout> | null = null;

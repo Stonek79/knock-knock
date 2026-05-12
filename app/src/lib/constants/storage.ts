@@ -132,4 +132,5 @@ export const MEDIA_SYSTEM_CONSTANTS = {
     CANVAS_CONTEXT_2D: "2d",
     DEFAULT_ATTACHMENT_NAME: "attachment.bin",
     WORKER_TIMEOUT_MS: 30_000,
+    BLOB_PREFIX: "blob:",
 } as const;

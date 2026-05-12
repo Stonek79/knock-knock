@@ -1,6 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
-import { QUERY_KEYS } from "@/lib/constants";
+import { MEDIA_SYSTEM_CONSTANTS, QUERY_KEYS } from "@/lib/constants";
 import { mediaService } from "@/lib/services/media";
 import type { Attachment, RecordIdString } from "@/lib/types";
 
@@ -29,7 +29,7 @@ export function useLightboxSlides({
         queries: attachments.map((att) => ({
             queryKey: QUERY_KEYS.media(att.id as RecordIdString, userId),
             queryFn: async () => {
-                const result = await mediaService.ensureMedia({
+                const result = await mediaService.ensureOriginal({
                     id: att.id,
                     userId,
                     roomKey,
@@ -70,7 +70,7 @@ export function useLightboxSlides({
     useEffect(() => {
         return () => {
             for (const slide of slides) {
-                if (slide.src.startsWith("blob:")) {
+                if (slide.src.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX)) {
                     URL.revokeObjectURL(slide.src);
                 }
             }

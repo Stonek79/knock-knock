@@ -1,4 +1,10 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import type { DecryptedMessageWithProfile } from "@/lib/types/message";
 import { useAuthStore } from "@/stores/auth";
 
@@ -18,10 +24,14 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
     const user = useAuthStore((state) => state.profile);
     const viewportRef = useRef<HTMLDivElement>(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
-    const [isAtBottom, setIsAtBottom] = useState(true);
 
     const hasScrolledOnce = useRef(false);
     const prevMessagesLength = useRef(0);
+    const prevScrollTop = useRef(0);
+
+    const isAtBottomRef = useRef(true);
+    const isAutoScrollingRef = useRef(false);
+    const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const scrollToBottom = useCallback(
         (behavior: ScrollBehavior = "smooth") => {
@@ -30,14 +40,56 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
                 return;
             }
 
+            const targetScrollTop =
+                viewport.scrollHeight - viewport.clientHeight;
+
+            isAutoScrollingRef.current = true;
+
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+
+            scrollTimeoutRef.current = setTimeout(
+                () => {
+                    isAutoScrollingRef.current = false;
+                },
+                behavior === "smooth" ? 800 : 100,
+            );
+
             if (typeof viewport.scrollTo === "function") {
-                viewport.scrollTo({ top: viewport.scrollHeight, behavior });
+                viewport.scrollTo({ top: targetScrollTop, behavior });
             } else {
-                viewport.scrollTop = viewport.scrollHeight;
+                viewport.scrollTop = targetScrollTop;
             }
         },
         [],
     );
+
+    // Следим за изменением размера контента (например, при загрузке картинок)
+    useEffect(() => {
+        const viewport = viewportRef.current;
+        if (!viewport) {
+            return;
+        }
+
+        const resizeObserver = new ResizeObserver(() => {
+            // Если контент прыгнул (картинка загрузилась) И мы внизу экрана
+            // Или если прямо сейчас идет автоскролл
+            if (isAtBottomRef.current || isAutoScrollingRef.current) {
+                scrollToBottom("instant");
+            }
+        });
+
+        // Следим за самим контейнером (изменение высоты при открытии клавиатуры)
+        resizeObserver.observe(viewport);
+
+        const content = viewport.firstElementChild;
+        if (content) {
+            resizeObserver.observe(content);
+        }
+
+        return () => resizeObserver.disconnect();
+    }, [scrollToBottom]);
 
     // Управление скроллом (Первоначальный и Авто-скролл)
     useLayoutEffect(() => {
@@ -56,37 +108,54 @@ export function useChatScroll({ messages }: UseChatScrollProps) {
 
         // 2. Авто-скролл при новых сообщениях
         const newMessagesAdded = messages.length > prevMessagesLength.current;
-        if (newMessagesAdded) {
-            const lastMessage = messages[messages.length - 1];
-            const isOwnMessage = lastMessage?.sender_id === user?.id;
+        const messagesDeleted = messages.length < prevMessagesLength.current;
+        const lastMessage = messages[messages.length - 1];
+        const isOwnMessage = lastMessage?.sender === user?.id;
+        const isAtBottom = isAtBottomRef.current;
 
+        if (newMessagesAdded) {
             if (isOwnMessage || isAtBottom) {
-                // Используем requestAnimationFrame или короткий таймаут,
-                // чтобы убедиться, что DOM успел обновиться (scrollHeight актуален)
                 const frame = requestAnimationFrame(() => {
                     scrollToBottom("smooth");
                 });
                 prevMessagesLength.current = messages.length;
+
                 return () => cancelAnimationFrame(frame);
             }
+        } else if (messagesDeleted) {
+            const frame = requestAnimationFrame(() => {
+                scrollToBottom("instant");
+            });
+
+            return () => cancelAnimationFrame(frame);
         }
 
         prevMessagesLength.current = messages.length;
-    }, [messages, user?.id, isAtBottom, scrollToBottom]);
+    }, [messages, user?.id, scrollToBottom]);
 
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
         const viewport = viewportRef.current;
         if (!viewport) {
             return;
         }
 
         const { scrollTop, scrollHeight, clientHeight } = viewport;
-        const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-        const atBottom = distanceFromBottom < 100;
+        // Увеличили порог (150px = 2-3 строчки) для большей отзывчивости.
+        // Math.abs спасает от багов субпиксельного рендеринга (Chrome/Safari)
+        const distanceFromBottom = Math.abs(
+            scrollHeight - scrollTop - clientHeight,
+        );
+        const atBottom = distanceFromBottom < 150;
 
-        setIsAtBottom(atBottom);
+        // Если скролл пошел вверх (явное действие пользователя), прерываем автоскролл
+        if (scrollTop < prevScrollTop.current && distanceFromBottom > 150) {
+            isAutoScrollingRef.current = false;
+        }
+        prevScrollTop.current = scrollTop;
+
+        isAtBottomRef.current = atBottom;
         setShowScrollButton(!atBottom);
-    };
+    }, []);
 
     return {
         viewportRef,

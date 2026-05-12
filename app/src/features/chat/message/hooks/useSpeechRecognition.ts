@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
+import { SPEECH_CONFIG } from "@/lib/constants";
 
 /**
  * Интерфейс для результатов SpeechRecognition.
@@ -44,7 +45,7 @@ type WindowWithSpeech = Window &
 /**
  * Хук для транскрибации речи в текст с использованием Web Speech API.
  */
-export function useSpeechRecognition(lang = "ru-RU") {
+export function useSpeechRecognition(lang = SPEECH_CONFIG.DEFAULT_LANG) {
     const { t } = useTranslation();
     const toast = useToast();
     const [transcript, setTranscript] = useState("");
@@ -102,12 +103,35 @@ export function useSpeechRecognition(lang = "ru-RU") {
             };
 
             recognition.onerror = (event: unknown) => {
-                console.error("Speech recognition error", event);
+                const speechError = event as {
+                    error: string;
+                    message?: string;
+                };
+                console.error(
+                    "Speech recognition error:",
+                    speechError.error,
+                    speechError.message || "",
+                );
+
+                let errorMessage = t(
+                    "chat.speechError",
+                    "Произошла ошибка при распознавании речи.",
+                );
+
+                if (speechError.error === SPEECH_CONFIG.ERROR_NOT_ALLOWED) {
+                    errorMessage = t(
+                        "chat.speechNotAllowed",
+                        "Доступ к микрофону запрещен. Пожалуйста, разрешите доступ в настройках браузера.",
+                    );
+                } else if (
+                    speechError.error === SPEECH_CONFIG.ERROR_NO_SPEECH
+                ) {
+                    // Игнорируем ошибку 'no-speech', чтобы не спамить тостами
+                    return;
+                }
+
                 toast({
-                    title: t(
-                        "chat.speechError",
-                        "Произошла ошибка при распознавании речи.",
-                    ),
+                    title: errorMessage,
                     variant: "error",
                 });
             };

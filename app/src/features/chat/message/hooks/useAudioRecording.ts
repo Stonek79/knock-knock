@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { useLongPress } from "@/hooks/useLongPress";
+import { useCallback, useRef, useState } from "react";
+import { logger } from "@/lib/logger";
 
 interface UseAudioRecordingParams {
     /** Начало записи (срабатывает после 400мс удержания) */
@@ -12,81 +12,108 @@ interface UseAudioRecordingParams {
 
 interface UseAudioRecordingReturn {
     /** Обработчик нажатия на кнопку */
-    onPointerDown: (e: React.PointerEvent) => void;
+    onPointerDown: () => void;
     /** Обработчик отпускания кнопки */
     onPointerUp: () => void;
     /** Обработчик ухода курсора с кнопки */
     onPointerLeave: () => void;
+    /** Обработчик системной отмены (например, скролл на мобилке) */
+    onPointerCancel: () => void;
     /** Флаг: идёт ли запись */
     isRecording: boolean;
 }
 
 /**
  * Хук для записи аудио по долгому нажатию (Long Press).
- * Запись начинается только если держать кнопку >400мс.
- * Короткий клик игнорируется.
+ * Запись начинается мгновенно при касании (для обхода блокировок Safari).
+ * Если отпустить быстрее чем через 400мс - запись отменяется.
  */
 export function useAudioRecording({
     onStartRecording,
     onStopAndFinish,
+    onCancelRecording,
 }: UseAudioRecordingParams): UseAudioRecordingReturn {
     const [isRecording, setIsRecording] = useState(false);
     const isRecordingRef = useRef(false);
+    const startTimeRef = useRef<number>(0);
+    const isPreparingRef = useRef(false);
 
-    // Long Press для начала записи
-    const { onPointerDown, onPointerUp: onPointerUpFromHook } = useLongPress(
-        async () => {
-            console.log("[useAudioRecording] onStartRecording called");
-            // Long press сработал (>400мс) → начинаем запись
-            isRecordingRef.current = true;
-            setIsRecording(true);
-            try {
-                await onStartRecording();
-                console.log(
-                    "[useAudioRecording] recording started, isRecording:",
-                    isRecordingRef.current,
-                );
-            } catch (error) {
-                console.error(
-                    "[useAudioRecording] startRecording failed:",
-                    error,
-                );
-                isRecordingRef.current = false;
-                setIsRecording(false);
+    const handlePointerDown = useCallback(async () => {
+        isPreparingRef.current = true;
+
+        startTimeRef.current = Date.now();
+        isRecordingRef.current = true;
+        setIsRecording(true);
+        try {
+            await onStartRecording();
+
+            // Если пользователь отпустил кнопку, пока мы ждали права
+            if (!isPreparingRef.current) {
+                onCancelRecording?.();
+                return;
             }
-        },
-        { delay: 400 },
-    );
+
+            startTimeRef.current = Date.now();
+            isRecordingRef.current = true;
+            isPreparingRef.current = false;
+            setIsRecording(true);
+        } catch (error) {
+            logger.error(
+                "Error occurred while starting audio recording",
+                error,
+            );
+            isPreparingRef.current = false;
+            isRecordingRef.current = false;
+            setIsRecording(false);
+            onCancelRecording?.();
+        }
+    }, [onStartRecording, onCancelRecording]);
+
+    const handlePointerUp = useCallback(() => {
+        if (isPreparingRef.current) {
+            // Отпустили кнопку до получения прав
+            isPreparingRef.current = false;
+            return;
+        }
+
+        if (!isRecordingRef.current) {
+            return;
+        }
+
+        const duration = Date.now() - startTimeRef.current;
+        isRecordingRef.current = false;
+        setIsRecording(false);
+
+        if (duration < 400) {
+            // Слишком быстрый тап — отменяем (защита от случайных кликов)
+            onCancelRecording?.();
+        } else {
+            // Успешная запись
+            onStopAndFinish();
+        }
+    }, [onStopAndFinish, onCancelRecording]);
+
+    const handlePointerLeave = useCallback(() => {
+        if (isPreparingRef.current) {
+            isPreparingRef.current = false;
+            return;
+        }
+
+        if (!isRecordingRef.current) {
+            return;
+        }
+
+        // Увели палец с кнопки (Slide to cancel)
+        isRecordingRef.current = false;
+        setIsRecording(false);
+        onCancelRecording?.();
+    }, [onCancelRecording]);
 
     return {
-        onPointerDown,
-        onPointerUp: async () => {
-            console.log(
-                "[useAudioRecording] onPointerUp, isRecording:",
-                isRecordingRef.current,
-            );
-            // Сначала очищаем таймер из useLongPress
-            onPointerUpFromHook();
-            // Отпустили кнопку
-            if (isRecordingRef.current) {
-                isRecordingRef.current = false;
-                setIsRecording(false);
-                console.log("[useAudioRecording] onStopAndFinish called");
-                await onStopAndFinish();
-            } else {
-                console.log("[useAudioRecording] ignored (<400ms)");
-            }
-            // Если отпустили <400мс → запись не началась, игнорируем
-        },
-        onPointerLeave: async () => {
-            // НЕ отменяем запись при уходе курсора!
-            // Курсор может сместиться во время удержания
-            console.log(
-                "[useAudioRecording] onPointerLeave - ignored (recording:",
-                isRecordingRef.current,
-                ")",
-            );
-        },
+        onPointerDown: handlePointerDown,
+        onPointerUp: handlePointerUp,
+        onPointerLeave: handlePointerLeave,
+        onPointerCancel: handlePointerLeave,
         isRecording,
     };
 }

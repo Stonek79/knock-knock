@@ -10,4 +10,14 @@ export const userService = {
     ): Promise<Result<Profile, UserRepoError>> => {
         return userRepository.getUserById(userId);
     },
+
+    /**
+     * Обновление профиля пользователя
+     */
+    updateProfile: async (
+        userId: string,
+        data: { username?: string; display_name?: string },
+    ): Promise<Result<Profile, UserRepoError>> => {
+        return userRepository.updateProfile({ userId, data });
+    },
 };

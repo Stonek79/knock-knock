@@ -5,32 +5,33 @@ import {
     REALTIME_ACTIONS,
     USER_FIELDS,
     USER_WEB_STATUS,
-} from "@/lib/constants";
-import { arrayBufferToBase64, exportPublicKey } from "@/lib/crypto/keys";
-import { getKeyPair, hasKeys } from "@/lib/crypto/keystore";
-import { logger } from "@/lib/logger";
-import { MessageMapper } from "@/lib/repositories/mappers/messageMapper";
-import { messageRepository } from "@/lib/repositories/message.repository";
-import { presenceRepository } from "@/lib/repositories/presence.repository";
-import { roomRepository } from "@/lib/repositories/room.repository";
-import { userRepository } from "@/lib/repositories/user.repository";
-import { MessageService } from "@/lib/services/message";
+} from "../constants";
+import { arrayBufferToBase64, exportPublicKey } from "../crypto/keys";
+import { getKeyPair, hasKeys } from "../crypto/keystore";
+import { logger } from "../logger";
+import { MessageMapper } from "../repositories/mappers/messageMapper";
+import { messageRepository } from "../repositories/message.repository";
+import { presenceRepository } from "../repositories/presence.repository";
+import { roomRepository } from "../repositories/room.repository";
+import { userRepository } from "../repositories/user.repository";
 import type {
-    DecryptedMessageWithProfile,
-    MessageRecord,
+    ChatMessage,
+    MessageRow,
     PBPresenceStatus,
+    PBRealtimeAction,
     PBRealtimeEvent,
-    RoomMemberRecord,
     UnreadCount,
     UserRecord,
-} from "@/lib/types";
-import { decryptMessagePayload } from "@/lib/utils/decryptPayload";
+} from "../types";
+import { ensureISODate } from "../utils/date";
+import { decryptMessagePayload } from "../utils/decryptPayload";
+import { chatCryptoService } from "./chat-crypto";
+import { MessageService } from "./message";
 
 // --- Внутреннее состояние (инкапсулировано в файле) ---
 let _queryClient: QueryClient | null = null;
 let _currentUser: UserRecord | null = null;
 let _activeRoomId: string | null = null;
-let _activeRoomKey: CryptoKey | null = null;
 let _unsubs: Array<() => void> = [];
 let _heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let _presenceRecordId: string | null = null;
@@ -39,7 +40,7 @@ const _lastTypingState = new Map<string, boolean>();
 
 // --- Вспомогательные функции (не экспортируются) ---
 
-function incrementUnreadCount(roomId: string) {
+function incrementUnreadCount({ roomId }: { roomId: string }) {
     if (!_queryClient || !_currentUser) {
         return;
     }
@@ -48,7 +49,7 @@ function incrementUnreadCount(roomId: string) {
         QUERY_KEYS.unreadCounts(_currentUser.id),
         (old = []) => {
             return old.map((c) => {
-                if (c.room_id === roomId) {
+                if (c.room === roomId) {
                     return { ...c, count: (c.count || 0) + 1 };
                 }
                 return c;
@@ -57,7 +58,7 @@ function incrementUnreadCount(roomId: string) {
     );
 }
 
-function resetUnreadCount(roomId: string) {
+function resetUnreadCount({ roomId }: { roomId: string }) {
     if (!_queryClient || !_currentUser) {
         return;
     }
@@ -66,7 +67,7 @@ function resetUnreadCount(roomId: string) {
         QUERY_KEYS.unreadCounts(_currentUser.id),
         (old = []) => {
             return old.map((c) => {
-                if (c.room_id === roomId) {
+                if (c.room === roomId) {
                     return { ...c, count: 0 };
                 }
                 return c;
@@ -75,80 +76,96 @@ function resetUnreadCount(roomId: string) {
     );
 }
 
-async function handleMessageEvent(e: PBRealtimeEvent<MessageRecord>) {
+async function handleMessageEvent({
+    event,
+}: {
+    event: { action: PBRealtimeAction; record: MessageRow };
+}) {
     if (!_queryClient || !_currentUser) {
         return;
     }
 
+    const record = event.record;
     const qc = _queryClient;
     const userId = _currentUser.id;
-    const record = e.record;
 
-    // 1. При любом новом сообщении инвалидируем список комнат (для последнего сообщения)
-    if (e.action === REALTIME_ACTIONS.CREATE) {
+    // 1. Всегда обновляем список комнат (чат-лист), чтобы last_message и счетчики обновились
+    try {
         qc.invalidateQueries({ queryKey: QUERY_KEYS.rooms(userId) });
+    } catch (e) {
+        logger.error("ChatRealtimeService: Ошибка инвалидации комнат", e);
+    }
+
+    if (event.action === REALTIME_ACTIONS.CREATE) {
         if (record.sender !== userId) {
-            incrementUnreadCount(record.room);
+            incrementUnreadCount({ roomId: record.room });
         }
     }
 
     // 2. Если сообщение для активной комнаты — обновляем её кэш
-    if (_activeRoomId && record.room === _activeRoomId && _activeRoomKey) {
-        if (
-            e.action === REALTIME_ACTIONS.CREATE ||
-            e.action === REALTIME_ACTIONS.UPDATE
-        ) {
-            // 1. Используем маппер для подготовки данных для дешифровки
-            const row = MessageMapper.toRow(record);
-            const decryptedContent = await decryptMessagePayload(
-                row,
-                _activeRoomKey,
+    if (_activeRoomId && record.room === _activeRoomId) {
+        if (event.action === REALTIME_ACTIONS.DELETE) {
+            _queryClient.setQueryData<ChatMessage[]>(
+                QUERY_KEYS.messages(_activeRoomId),
+                (old = []) => old.filter((m) => m.id !== record.id),
             );
+            return; // Быстрый выход, ключи для удаления не нужны
+        }
 
-            const mapped: DecryptedMessageWithProfile = {
-                ...row,
-                content: decryptedContent,
+        if (
+            event.action === REALTIME_ACTIONS.CREATE ||
+            event.action === REALTIME_ACTIONS.UPDATE
+        ) {
+            const roomKey = await chatCryptoService.getRoomKey({
+                roomId: _activeRoomId,
+                userId,
+            });
+
+            let decryptedContent = "";
+            try {
+                decryptedContent =
+                    (await decryptMessagePayload(
+                        record,
+                        roomKey || undefined,
+                    )) || "";
+            } catch (e) {
+                logger.error(
+                    "ChatRealtimeService: Ошибка дешифровки сообщения",
+                    e,
+                );
+                // Не прерываем выполнение, выводим заглушку, чтобы сообщение хотя бы появилось
+                decryptedContent = "Ошибка дешифровки";
+            }
+
+            const mapped: ChatMessage = {
+                ...record,
+                content: decryptedContent || "",
             };
-            qc.setQueryData<DecryptedMessageWithProfile[]>(
+            qc.setQueryData<ChatMessage[]>(
                 QUERY_KEYS.messages(_activeRoomId),
                 (old = []) => {
-                    if (record.is_deleted && record.sender === userId) {
-                        return old.filter((m) => m.id !== record.id);
-                    }
-
-                    const deletedByArray = Array.isArray(
-                        row.metadata?.deleted_by,
-                    )
-                        ? row.metadata.deleted_by
+                    const deletedBy = Array.isArray(record.metadata?.deleted_by)
+                        ? record.metadata.deleted_by
                         : [];
 
-                    if (deletedByArray.includes(userId)) {
-                        return old.filter((m) => m.id !== row.id);
+                    if (deletedBy.includes(userId) || record.is_deleted) {
+                        return old.filter((m) => m.id !== record.id);
                     }
 
                     const idx = old.findIndex((m) => m.id === mapped.id);
 
                     if (idx > -1) {
-                        // Сообщение с таким ID уже есть (обновление или onSuccess уже заменил tempId)
                         const next = [...old];
                         next[idx] = { ...old[idx], ...mapped };
                         return next;
                     }
 
-                    // Де-дупликация с оптимистичными сообщениями:
-                    // Если это CREATE от текущего пользователя, возможно в кэше есть
-                    // оптимистичное сообщение с _tempId. Удаляем его перед добавлением серверного.
                     if (
-                        e.action === REALTIME_ACTIONS.CREATE &&
+                        event.action === REALTIME_ACTIONS.CREATE &&
                         record.sender === userId
                     ) {
-                        const withoutOptimistic = old.filter(
-                            (m) =>
-                                !(
-                                    "_tempId" in m &&
-                                    m._tempId &&
-                                    m.sender_id === userId
-                                ),
+                        const withoutOptimistic = (old as ChatMessage[]).filter(
+                            (m) => !(m._tempId && m.sender === userId),
                         );
                         return [...withoutOptimistic, mapped];
                     }
@@ -157,10 +174,9 @@ async function handleMessageEvent(e: PBRealtimeEvent<MessageRecord>) {
                 },
             );
 
-            // Пометка как доставленное
             if (
                 record.sender !== _currentUser.id &&
-                e.action === REALTIME_ACTIONS.CREATE
+                event.action === REALTIME_ACTIONS.CREATE
             ) {
                 MessageService.markMessageAsDelivered(record.id).catch(
                     (err) => {
@@ -171,20 +187,11 @@ async function handleMessageEvent(e: PBRealtimeEvent<MessageRecord>) {
                     },
                 );
             }
-        } else if (e.action === REALTIME_ACTIONS.DELETE) {
-            _queryClient.setQueryData<DecryptedMessageWithProfile[]>(
-                QUERY_KEYS.messages(_activeRoomId),
-                (old = []) => {
-                    return old.filter((m) => {
-                        return m.id !== record.id;
-                    });
-                },
-            );
         }
     }
 }
 
-async function syncPublicKeys(userId: string) {
+async function syncPublicKeys({ userId }: { userId: string }) {
     try {
         const keysExist = await hasKeys();
         if (!keysExist) {
@@ -192,52 +199,26 @@ async function syncPublicKeys(userId: string) {
         }
 
         const identity = await getKeyPair(KEYSTORE_TYPES.IDENTITY);
-        const prekey = await getKeyPair(KEYSTORE_TYPES.PREKEY);
-
-        if (!identity || !prekey) {
+        if (!identity) {
             return;
         }
 
-        // Экспортируем публичные части в Base64
-        const pubX25519 = arrayBufferToBase64(
-            await exportPublicKey(prekey.publicKey),
-        );
-        const pubSigning = arrayBufferToBase64(
+        const publicKeyBase64 = arrayBufferToBase64(
             await exportPublicKey(identity.publicKey),
         );
 
-        // Проверяем текущие ключи в БД через репозиторий
-        const result = await userRepository.getSecurityKeys(userId);
-        if (result.isErr()) {
-            logger.error(
-                "ChatRealtimeService: Ошибка при получении ключей из профиля",
-                result.error,
-            );
-            return;
-        }
-
-        const {
-            [USER_FIELDS.PUBLIC_KEY_X25519]: dbX25519,
-            [USER_FIELDS.PUBLIC_KEY_SIGNING]: dbSigning,
-        } = result.value;
-
-        // Если ключи не совпадают — обновляем через репозиторий
-        if (dbX25519 !== pubX25519 || dbSigning !== pubSigning) {
-            const updateRes = await userRepository.updateSecurityKeys(
-                userId,
-                pubX25519,
-                pubSigning,
-            );
-
-            if (updateRes.isOk()) {
+        const keysRes = await userRepository.getSecurityKeys(userId);
+        if (keysRes.isOk()) {
+            const keys = keysRes.value;
+            if (!keys[USER_FIELDS.PUBLIC_KEY_X25519]) {
                 logger.info(
-                    "ChatRealtimeService: Ключи безопасности успешно синхронизированы",
+                    "ChatRealtimeService: Публичный ключ отсутствует в профиле, синхронизируем...",
                 );
-            } else {
-                logger.error(
-                    "ChatRealtimeService: Ошибка при обновлении ключей в профиле",
-                    updateRes.error,
-                );
+                await userRepository.updateSecurityKeys({
+                    userId,
+                    x25519: publicKeyBase64,
+                    signing: keys[USER_FIELDS.PUBLIC_KEY_SIGNING] || "",
+                });
             }
         }
     } catch (error) {
@@ -252,18 +233,101 @@ async function syncPublicKeys(userId: string) {
 
 export const ChatRealtimeService = {
     async init({ qc, user }: { qc: QueryClient; user: UserRecord }) {
-        // Если сервис уже инициализирован для этого же пользователя или в процессе — выходим
         if (_currentUser?.id === user.id || _isInitializing) {
             return;
         }
 
         _isInitializing = true;
         try {
-            this.destroy();
             _queryClient = qc;
             _currentUser = user;
 
-            // Подготовка Presence
+            const unsubMsg = messageRepository.subscribeToMessages((event) => {
+                try {
+                    const mappedEvent = {
+                        action: event.action,
+                        record: MessageMapper.toRow(event.record),
+                    };
+                    handleMessageEvent({ event: mappedEvent }).catch(
+                        (error) => {
+                            logger.error(
+                                "ChatRealtimeService: Асинхронная ошибка handleMessageEvent",
+                                error,
+                            );
+                        },
+                    );
+                } catch (e) {
+                    logger.error(
+                        "ChatRealtimeService: Синхронная ошибка маппинга сообщения",
+                        e,
+                    );
+                }
+            });
+
+            const unsubMem = roomRepository.subscribeToMemberChanges((e) => {
+                if (
+                    _currentUser &&
+                    e.record.user === _currentUser.id &&
+                    e.action === REALTIME_ACTIONS.UPDATE
+                ) {
+                    resetUnreadCount({ roomId: e.record.room });
+                    _queryClient?.invalidateQueries({
+                        queryKey: QUERY_KEYS.rooms(_currentUser.id),
+                    });
+                }
+            });
+
+            // Подписка на изменения в коллекции rooms (метаданные: имя, аватар и т.д.)
+            const unsubRooms = roomRepository.subscribeToRooms(() => {
+                if (!_queryClient || !_currentUser) {
+                    return;
+                }
+                _queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.rooms(_currentUser.id),
+                });
+            });
+
+            const unsubPresence = presenceRepository.subscribeToPresence(
+                (e: PBRealtimeEvent<PBPresenceStatus>) => {
+                    if (!_queryClient) {
+                        return;
+                    }
+
+                    const record = e.record;
+                    const userId = record.user;
+
+                    _queryClient.setQueryData<Record<string, string>>(
+                        QUERY_KEYS.presence(),
+                        (old = {}) => {
+                            const lastPingTime = new Date(
+                                ensureISODate(record.last_ping || ""),
+                            ).getTime();
+                            const isStale = Date.now() - lastPingTime > 60000;
+                            const status =
+                                record.is_online && !isStale
+                                    ? USER_WEB_STATUS.ONLINE
+                                    : USER_WEB_STATUS.OFFLINE;
+                            return { ...old, [userId]: status };
+                        },
+                    );
+
+                    if (record.room_id) {
+                        const wasTyping = _lastTypingState.get(userId) || false;
+                        const isTyping = record.is_typing;
+
+                        if (wasTyping !== isTyping) {
+                            _lastTypingState.set(userId, isTyping);
+                            _queryClient.invalidateQueries({
+                                queryKey: QUERY_KEYS.typing(record.room_id),
+                            });
+                        }
+                    }
+                },
+            );
+
+            _unsubs.push(unsubMsg, unsubMem, unsubRooms, unsubPresence);
+
+            // --- 2. АСИНХРОННЫЕ ОПЕРАЦИИ (Presence и Ключи) ---
             const res = await presenceRepository.getPresenceByUserId(user.id);
             if (res.isOk()) {
                 _presenceRecordId = res.value.id;
@@ -280,99 +344,28 @@ export const ChatRealtimeService = {
                 }
             }
 
-            // Подписки
-            const unsubMsg = messageRepository.subscribeToMessages((e) => {
-                handleMessageEvent(e).catch((err) => {
-                    logger.error(
-                        "ChatRealtimeService: handleMessageEvent error",
-                        err,
-                    );
-                });
-            });
-            const unsubMem = roomRepository.subscribeToMemberChanges(
-                (e: PBRealtimeEvent<RoomMemberRecord>) => {
-                    if (
-                        _currentUser &&
-                        e.record.user === _currentUser.id &&
-                        e.action === REALTIME_ACTIONS.UPDATE
-                    ) {
-                        resetUnreadCount(e.record.room);
-                        _queryClient?.invalidateQueries({
-                            queryKey: QUERY_KEYS.rooms(_currentUser.id),
-                        });
-                    }
-                },
-            );
-            const unsubPresence = presenceRepository.subscribeToPresence(
-                (e: PBRealtimeEvent<PBPresenceStatus>) => {
-                    if (!_queryClient) {
-                        return;
-                    }
-
-                    const record = e.record;
-                    const userId = record.user;
-
-                    // 1. Оптимистичное обновление Presence Map
-                    _queryClient.setQueryData<Record<string, string>>(
-                        QUERY_KEYS.presence(),
-                        (old = {}) => {
-                            const lastPingTime = new Date(
-                                record.last_ping,
-                            ).getTime();
-                            const isStale = Date.now() - lastPingTime > 60000;
-                            const status =
-                                record.is_online && !isStale
-                                    ? USER_WEB_STATUS.ONLINE
-                                    : USER_WEB_STATUS.OFFLINE;
-                            return { ...old, [userId]: status };
-                        },
-                    );
-
-                    // 2. Инвалидируем typing только если статус РЕАЛЬНО изменился (убирает шум heartbeat)
-                    if (record.room_id) {
-                        const wasTyping = _lastTypingState.get(userId) || false;
-                        const isTyping = record.is_typing;
-
-                        if (wasTyping !== isTyping) {
-                            _lastTypingState.set(userId, isTyping);
-                            _queryClient.invalidateQueries({
-                                queryKey: QUERY_KEYS.typing(record.room_id),
-                            });
-                        }
-                    }
-                },
-            );
-
-            _unsubs.push(unsubMsg, unsubMem, unsubPresence);
-
-            // Запуск фоновой синхронизации ключей
-            syncPublicKeys(user.id).catch((err) => {
+            syncPublicKeys({ userId: user.id }).catch((err) => {
                 logger.error(
                     "ChatRealtimeService: Непредвиденная ошибка при запуске синхронизации",
                     err,
                 );
             });
 
-            // Heartbeat: обновляем статус каждые 20 секунд.
-            // При ошибке (например, запись удалена после logout) — сбрасываем ID,
-            // чтобы предотвратить бесконечный PATCH-спам на несуществующую запись.
             _heartbeatInterval = setInterval(async () => {
                 if (!_presenceRecordId) {
                     return;
                 }
-                const res = await presenceRepository.updatePresence(
+                const hbRes = await presenceRepository.updatePresence(
                     _presenceRecordId,
                     true,
                 );
-                if (res.isErr()) {
+                if (hbRes.isErr()) {
                     logger.warn(
                         "ChatRealtimeService: Heartbeat ошибка, сброс presence ID.",
                     );
                     _presenceRecordId = null;
                 }
             }, 20000);
-
-            logger.info("ChatRealtimeService: Инициализирован");
         } finally {
             _isInitializing = false;
         }
@@ -380,12 +373,11 @@ export const ChatRealtimeService = {
 
     setActiveRoom({ id, key }: { id: string; key: CryptoKey }) {
         _activeRoomId = id;
-        _activeRoomKey = key;
+        chatCryptoService.setRoomKey({ roomId: id, key });
     },
 
     clearActiveRoom() {
         _activeRoomId = null;
-        _activeRoomKey = null;
     },
 
     async setTypingStatus({
@@ -405,6 +397,7 @@ export const ChatRealtimeService = {
     },
 
     destroy() {
+        chatCryptoService.clearCache();
         _unsubs.forEach((u) => {
             u();
         });
@@ -414,7 +407,6 @@ export const ChatRealtimeService = {
         }
         _heartbeatInterval = null;
         _activeRoomId = null;
-        _activeRoomKey = null;
         _presenceRecordId = null;
         _currentUser = null;
         _queryClient = null;

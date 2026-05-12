@@ -42,7 +42,10 @@ export type WorkerProcessResult = z.infer<typeof mediaWorkerResponseSchema>;
 /**
  * ТИП ДАННЫХ ДЛЯ ПЕРЕДАЧИ ИЗ ВОРКЕРА
  */
-export type WorkerMediaPayload = z.infer<typeof mediaWorkerPayloadSchema>;
+export type WorkerMediaPayload = z.infer<typeof mediaWorkerPayloadSchema> & {
+    plainOriginal?: Blob;
+    plainThumbnail?: Blob;
+};
 
 /**
  * ТИП ДЛЯ ОБРАБОТАННЫХ ДАННЫХ (для UI компонентов)

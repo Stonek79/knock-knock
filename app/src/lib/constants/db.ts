@@ -13,6 +13,7 @@ import type {
     RoomMembersRoleOptions,
     RoomsResponse,
     RoomsTypeOptions,
+    RoomsVisibilityOptions,
     UserFoldersResponse,
     UsersResponse,
     UsersRoleOptions,
@@ -71,7 +72,6 @@ export const ROOM_FIELDS = {
     VISIBILITY: "visibility",
     AVATAR: "avatar",
     CREATED_BY: "created_by",
-    LAST_MESSAGE: "last_message",
     METADATA: "metadata",
     PERMISSIONS: "permissions",
     IS_TEST: "is_test",
@@ -139,7 +139,7 @@ export const ROOM_TYPE = {
 export const ROOM_VISIBILITY = {
     PUBLIC: "public",
     PRIVATE: "private",
-} as const;
+} as const satisfies Record<string, RoomsVisibilityOptions>;
 
 /** Роли участников комнаты */
 export const MEMBER_ROLE = {
@@ -244,6 +244,13 @@ export const MEDIA_CACHE_FIELDS = {
     LAST_ACCESSED_AT: "lastAccessedAt",
     CREATED_AT: "createdAt",
     OWNER_ID: "ownerId",
+    ROOM_ID: "roomId",
+} as const;
+
+/** Типы ключей, хранимых локально */
+export const LOCAL_KEY_TYPES = {
+    IDENTITY: "identity",
+    PREKEY: "prekey",
 } as const;
 
 /**
@@ -265,11 +272,16 @@ export const DB_EXPAND = {
     // user (поле в room_members)
     USER: ROOM_MEMBER_FIELDS.USER,
     // last_message (поле в rooms)
-    LAST_MESSAGE: ROOM_FIELDS.LAST_MESSAGE,
-    // sender (внутри последнего сообщения комнаты)
-    LAST_MESSAGE_SENDER: `${ROOM_FIELDS.LAST_MESSAGE}.${MESSAGE_FIELDS.SENDER}`,
 } as const;
-/** Общие поля, присутствующие в большинстве коллекций */
+
 export const DB_FIELDS = {
     IS_TEST: "is_test",
+} as const;
+
+/** Константы для Keystore (IndexedDB) */
+export const KEYSTORE_CONFIG = {
+    DB_NAME: "knock-knock-keystore",
+    TABLES: {
+        KEYS: "keys",
+    },
 } as const;

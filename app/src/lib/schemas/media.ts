@@ -9,7 +9,7 @@ import {
     MEDIA_SYNC_STATUS,
     MEDIA_WORKER_ACTIONS,
     MIME_PREFIXES,
-} from "@/lib/constants";
+} from "../constants";
 
 /**
  * Валидация Blob/File
@@ -104,6 +104,7 @@ export const mediaReferenceSchema = z.object({
         MEDIA_REFERENCE_TYPES.ROOM_AVATAR,
     ]),
     id: z.string(),
+    roomId: z.string().optional(),
     addedAt: z.number(),
 });
 
@@ -113,8 +114,8 @@ export const mediaReferenceSchema = z.object({
  */
 export const mediaCacheSchema = z.object({
     [MEDIA_CACHE_FIELDS.ID]: z.string(),
-    [MEDIA_CACHE_FIELDS.BLOB]: blobSchema,
-    [MEDIA_CACHE_FIELDS.THUMBNAIL]: blobSchema.optional(),
+    [MEDIA_CACHE_FIELDS.BLOB]: blobSchema.nullable().optional(),
+    [MEDIA_CACHE_FIELDS.THUMBNAIL]: blobSchema.nullable().optional(),
     [MEDIA_CACHE_FIELDS.METADATA]: mediaMetadataSchema,
     [MEDIA_CACHE_FIELDS.REFERENCES]: z.array(mediaReferenceSchema),
     [MEDIA_CACHE_FIELDS.SYNC_STATUS]: z.enum([
@@ -125,6 +126,7 @@ export const mediaCacheSchema = z.object({
     [MEDIA_CACHE_FIELDS.LAST_ACCESSED_AT]: z.number(),
     [MEDIA_CACHE_FIELDS.CREATED_AT]: z.number(),
     [MEDIA_CACHE_FIELDS.OWNER_ID]: z.string(),
+    [MEDIA_CACHE_FIELDS.ROOM_ID]: z.string().optional(),
 });
 
 /**

@@ -88,7 +88,7 @@ export function useChatRoomView(roomId: string) {
     const filteredMessages = useMemo(() => {
         const result = messages.filter((m) => {
             // Если я сам удалил свое сообщение — оно исчезает для меня
-            if (m.is_deleted && m.sender_id === user?.id) {
+            if (m.is_deleted && m.sender === user?.id) {
                 return false;
             }
             // Если я скрыл сообщение (любое) только для себя

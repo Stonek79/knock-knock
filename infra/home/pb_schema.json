@@ -525,12 +525,18 @@
 				"maxSelect": 1
 			},
 			{
-				"id": "room_lm_id",
-				"name": "last_message",
+				"id": "room_pinned_id",
+				"name": "pinned_message",
 				"type": "relation",
 				"system": false,
 				"collectionId": "pbc_messages_id",
 				"maxSelect": 1
+			},
+			{
+				"id": "room_desc_id",
+				"name": "description",
+				"type": "text",
+				"system": false
 			},
 			{
 				"id": "room_meta_id",
@@ -567,11 +573,11 @@
 				"onUpdate": true
 			}
 		],
-		"listRule": "@request.auth.id != ''",
-		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != ''",
-		"updateRule": "@request.auth.id != ''",
-		"deleteRule": "@request.auth.id != ''"
+		"listRule": "@request.auth.id != \"\" && (visibility = \"public\" || room_members_via_room.user ?= @request.auth.id)",
+		"viewRule": "@request.auth.id != \"\" && (visibility = \"public\" || room_members_via_room.user ?= @request.auth.id)",
+		"createRule": "@request.auth.id != \"\"",
+		"updateRule": "@request.auth.id != \"\" && room_members_via_room.user ?= @request.auth.id && (room_members_via_room.role = \"owner\" || room_members_via_room.role = \"admin\")",
+		"deleteRule": "@request.auth.id != \"\" && room_members_via_room.user ?= @request.auth.id && room_members_via_room.role = \"owner\""
 	},
 	{
 		"id": "pbc_members_id",
@@ -679,6 +685,18 @@
 				"system": false
 			},
 			{
+				"id": "rm_hc_id",
+				"name": "history_cutoff",
+				"type": "date",
+				"system": false
+			},
+			{
+				"id": "rm_muted_id",
+				"name": "is_muted",
+				"type": "bool",
+				"system": false
+			},
+			{
 				"id": "autodate2990389176",
 				"name": "created",
 				"type": "autodate",
@@ -699,11 +717,11 @@
 			"CREATE UNIQUE INDEX `idx_room_user` ON `room_members` (`room`, `user`)",
 			"CREATE INDEX `idx_rm_folder` ON `room_members` (`user`, `folder_id`)"
 		],
-		"listRule": "@request.auth.id != ''",
-		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != ''",
-		"updateRule": "@request.auth.id != ''",
-		"deleteRule": "@request.auth.id != ''"
+		"listRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
+		"viewRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
+		"createRule": "@request.auth.id != \"\"",
+		"updateRule": "user = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role = \"owner\" || room.room_members_via_room.role = \"admin\"))",
+		"deleteRule": "user = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role = \"owner\" || room.room_members_via_room.role = \"admin\"))"
 	},
 	{
 		"id": "pbc_messages_id",
@@ -799,6 +817,26 @@
 				"system": false
 			},
 			{
+				"id": "msg_db_id",
+				"name": "deleted_by",
+				"type": "relation",
+				"system": false,
+				"collectionId": "_pb_users_auth_",
+				"maxSelect": 999
+			},
+			{
+				"id": "msg_da_id",
+				"name": "deleted_at",
+				"type": "date",
+				"system": false
+			},
+			{
+				"id": "msg_sys_id",
+				"name": "is_system",
+				"type": "bool",
+				"system": false
+			},
+			{
 				"id": "msg_star_id",
 				"name": "is_starred",
 				"type": "bool",
@@ -842,13 +880,14 @@
 			}
 		],
 		"indexes": [
-			"CREATE INDEX `idx_msg_room_created` ON `messages` (`room`, `created`)"
+			"CREATE INDEX `idx_msg_room_created` ON `messages` (`room`, `created`)",
+			"CREATE INDEX `idx_msg_vis_room` ON `messages` (`room`, `is_deleted`, `created`)"
 		],
-		"listRule": "@request.auth.id != ''",
-		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != ''",
-		"updateRule": null,
-		"deleteRule": null
+		"listRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
+		"viewRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
+		"createRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
+		"updateRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
+		"deleteRule": "@request.auth.id != \"\" && (sender = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role = \"owner\" || room.room_members_via_room.role = \"admin\")))"
 	},
 	{
 		"id": "pbc_keys_id",
@@ -1099,7 +1138,8 @@
 				"system": false,
 				"required": true,
 				"collectionId": "_pb_users_auth_",
-				"maxSelect": 1
+				"maxSelect": 1,
+				"cascadeDelete": true
 			},
 			{
 				"id": "reac_emoji_id",
@@ -1424,6 +1464,16 @@
 				"system": false
 			},
 			{
+				"id": "med_room_id",
+				"name": "room",
+				"type": "relation",
+				"system": false,
+				"required": false,
+				"collectionId": "pbc_rooms_id",
+				"maxSelect": 1,
+				"cascadeDelete": false
+			},
+			{
 				"id": "med_is_test",
 				"name": "is_test",
 				"type": "bool",
@@ -1570,5 +1620,123 @@
 		"createRule": "",
 		"updateRule": "",
 		"deleteRule": ""
+	},
+	{
+		"id": "pbc_call_logs_id",
+		"name": "call_logs",
+		"type": "base",
+		"system": false,
+		"fields": [
+			{
+				"id": "text3208210256",
+				"name": "id",
+				"type": "text",
+				"system": true,
+				"primaryKey": true,
+				"required": true,
+				"autogeneratePattern": "[a-z0-9]{15}"
+			},
+			{
+				"id": "cl_room_id",
+				"name": "room",
+				"type": "relation",
+				"system": false,
+				"required": true,
+				"collectionId": "pbc_rooms_id",
+				"maxSelect": 1,
+				"cascadeDelete": true
+			},
+			{
+				"id": "cl_init_id",
+				"name": "initiator",
+				"type": "relation",
+				"system": false,
+				"required": true,
+				"collectionId": "_pb_users_auth_",
+				"maxSelect": 1,
+				"cascadeDelete": false
+			},
+			{
+				"id": "cl_parts_id",
+				"name": "participants",
+				"type": "relation",
+				"system": false,
+				"required": false,
+				"collectionId": "_pb_users_auth_",
+				"maxSelect": 99,
+				"cascadeDelete": false
+			},
+			{
+				"id": "cl_type_id",
+				"name": "type",
+				"type": "select",
+				"system": false,
+				"required": true,
+				"values": ["audio", "video"]
+			},
+			{
+				"id": "cl_status_id",
+				"name": "status",
+				"type": "select",
+				"system": false,
+				"required": true,
+				"values": ["ringing", "ongoing", "ended", "missed", "rejected"]
+			},
+			{
+				"id": "cl_started_id",
+				"name": "started_at",
+				"type": "date",
+				"system": false
+			},
+			{
+				"id": "cl_ended_id",
+				"name": "ended_at",
+				"type": "date",
+				"system": false
+			},
+			{
+				"id": "cl_dur_id",
+				"name": "duration_sec",
+				"type": "number",
+				"system": false
+			},
+			{
+				"id": "cl_lkroom_id",
+				"name": "livekit_room_name",
+				"type": "text",
+				"system": false
+			},
+			{
+				"id": "cl_is_test",
+				"name": "is_test",
+				"type": "bool",
+				"system": false
+			},
+			{
+				"id": "autodate2990389176",
+				"name": "created",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": false
+			},
+			{
+				"id": "autodate3332085495",
+				"name": "updated",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": true
+			}
+		],
+		"indexes": [
+			"CREATE INDEX `idx_cl_room` ON `call_logs` (`room`, `created`)",
+			"CREATE INDEX `idx_cl_initiator` ON `call_logs` (`initiator`)"
+		],
+		"listRule": "@request.auth.id != '' && room.room_members_via_room.user ?= @request.auth.id",
+		"viewRule": "@request.auth.id != '' && room.room_members_via_room.user ?= @request.auth.id",
+		"createRule": "@request.auth.id != '' && room.room_members_via_room.user ?= @request.auth.id",
+		"updateRule": null,
+		"deleteRule": null
 	}
 ]

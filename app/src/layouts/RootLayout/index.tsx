@@ -17,10 +17,6 @@ export function RootLayout() {
 
     useAuthRefresh();
 
-    console.log(
-        "ПРОВЕРКА на проблемы с рендером, если сообщений много, то надо рефакторить",
-    );
-
     // Инициализация авторизации при первом рендере
     useEffect(() => {
         initialize();

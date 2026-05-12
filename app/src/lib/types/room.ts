@@ -1,60 +1,29 @@
 import type { z } from "zod";
+import type { ERROR_CODES, ROOM_TYPE, ROOM_VISIBILITY } from "../constants";
 import type {
-    chatTypeSchema,
     expandedMemberSchema,
-    memberRoleSchema,
     peerUserSchema,
-    roomKeySchema,
-    roomMemberSchema,
-    roomSchema,
-    roomTypeSchema,
     roomWithMembersSchema,
-    unreadCountSchema,
-} from "@/lib/schemas/room";
-import type {
-    metadataSchema,
-    roomMemberSettingsSchema,
-} from "@/lib/schemas/settings";
-import type { ERROR_CODES } from "../constants";
+} from "../schemas/room";
+import type { PBRoom, PBRoomMember } from "./pocketbase";
 import type { AppError } from "./result";
 
-/** Тип чата для создания: public | private | group */
-export type ChatType = z.infer<typeof chatTypeSchema>;
+/** Тип комнаты */
+export type RoomType = (typeof ROOM_TYPE)[keyof typeof ROOM_TYPE];
 
-/** Тип комнаты: личный чат или группа */
-export type RoomType = z.infer<typeof roomTypeSchema>;
+/** Видимость комнаты */
+export type RoomVisibility =
+    (typeof ROOM_VISIBILITY)[keyof typeof ROOM_VISIBILITY];
 
-/** Роль участника: админ или обычный участник */
-export type MemberRole = z.infer<typeof memberRoleSchema>;
+/** Тип комнаты напрямую из БД */
+export type Room = PBRoom;
 
-/**
- * Структура таблицы rooms (Комнаты)
- */
-export type Room = z.infer<typeof roomSchema>;
-
-/**
- * Структура таблицы room_members (Участники)
- */
-export type RoomMember = z.infer<typeof roomMemberSchema>;
+/** Тип участника напрямую из БД */
+export type RoomMember = PBRoomMember;
 
 /**
- * Настройки участника комнаты (room_members.settings)
- */
-export type RoomMemberSettings = z.infer<typeof roomMemberSettingsSchema>;
-
-/**
- * Метаданные (metadata)
- */
-export type Metadata = z.infer<typeof metadataSchema>;
-
-/**
- * Структура таблицы room_keys (Ключи шифрования)
- */
-export type RoomKey = z.infer<typeof roomKeySchema>;
-
-/**
- * Расширенная структура комнаты.
- * Тип полностью выводится из Zod-схемы.
+ * Расширенная структура комнаты (доменная модель).
+ * Тип выводится из Zod-схемы для обеспечения рантайм-валидации в мапперах.
  */
 export type RoomWithMembers = z.infer<typeof roomWithMembersSchema>;
 
@@ -64,7 +33,7 @@ export type RoomWithMembers = z.infer<typeof roomWithMembersSchema>;
 export type ExpandedRoomMember = z.infer<typeof expandedMemberSchema>;
 
 /**
- * Расширенная структура комнаты с вложенными участниками
+ * Расширенная структура комнаты с вложенными участниками и ключом
  */
 export type RoomDataWithKey = {
     room: RoomWithMembers;
@@ -86,7 +55,34 @@ export type RoomError =
     | AppError<typeof ERROR_CODES.CRYPTO_ERROR, Error>
     | AppError<typeof ERROR_CODES.NOT_FOUND>;
 
+/** Алиас для обратной совместимости (ChatType === RoomType) */
+export type ChatType = RoomType;
+
 /**
- * Счет непрочитанных сообщений в комнате.
+ * Элемент списка чатов для UI (без сервисных полей сортировки).
  */
-export type UnreadCount = z.infer<typeof unreadCountSchema>;
+export type ChatItem = {
+    id: string;
+    name: string;
+    avatar?: string;
+    lastMessage: string;
+    time: string;
+    unread: number;
+    pinPosition: number | null;
+};
+
+/**
+ * Расширенный элемент списка чатов.
+ * Содержит сервисные поля для сортировки и фильтрации,
+ * которые очищаются перед рендером.
+ */
+export type ExtendedChatItem = ChatItem & {
+    /** Является ли чат «Избранным» (self-chat) */
+    isSavedMessages: boolean;
+    /** Является ли чат self-chat */
+    isSelf: boolean;
+    /** Является ли чат эфемерным */
+    isEphemeral: boolean;
+    /** Timestamp для сортировки (вычисляется) */
+    _lastMsgTimestamp: number;
+};

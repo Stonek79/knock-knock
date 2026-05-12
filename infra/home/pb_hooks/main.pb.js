@@ -59,6 +59,8 @@ onRecordAfterCreateSuccess((e) => {
 	} catch (err) {
 		console.error(`❌ [REG_ERROR]: ${err.message || err}`);
 	}
+
+	e.next();
 }, "users");
 
 /**
@@ -109,6 +111,8 @@ onRecordAfterDeleteSuccess((e) => {
 	} catch (err) {
 		console.error(`❌ [CLEANUP_ERROR] Комнаты: ${err}`);
 	}
+
+	e.next();
 }, "users");
 
 /**
@@ -172,6 +176,7 @@ onRecordAfterCreateSuccess((e) => {
 
 	// Игнорируем сервисные сообщения
 	if (message.get(DB.FIELDS.TYPE) === DB.VALUES.TYPE_SYSTEM) {
+		e.next();
 		return;
 	}
 
@@ -190,6 +195,7 @@ onRecordAfterCreateSuccess((e) => {
 		);
 
 		if (members.length === 0) {
+			e.next();
 			return;
 		}
 
@@ -210,6 +216,7 @@ onRecordAfterCreateSuccess((e) => {
 		);
 
 		if (subscriptions.length === 0) {
+			e.next();
 			return;
 		}
 
@@ -225,9 +232,7 @@ onRecordAfterCreateSuccess((e) => {
 		};
 
 		// Сохранение задачи в task_queue
-		const taskCollection = $app
-			.dao()
-			.findCollectionByNameOrId(DB.TABLES.TASK_QUEUE);
+		const taskCollection = $app.findCollectionByNameOrId(DB.TABLES.TASK_QUEUE);
 		const task = new Record(taskCollection, {
 			[DB.FIELDS.TASK_KEY]: `push:msg:${message.id}`,
 			[DB.FIELDS.TYPE]: DB.VALUES.TASK_TYPE_PUSH,
@@ -242,8 +247,9 @@ onRecordAfterCreateSuccess((e) => {
 				.split(".")[0],
 		});
 
-		$app.dao().saveRecord(task);
+		$app.save(task);
 	} catch (err) {
 		console.error(`❌ [PUSH_QUEUE_ERROR]: ${err}`);
 	}
+	e.next();
 }, "messages");

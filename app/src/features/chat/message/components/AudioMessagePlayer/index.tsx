@@ -31,6 +31,8 @@ export type AudioMessagePlayerProps = {
     roomKey?: CryptoKey;
     /** MIME тип аудио (по умолчанию audio/webm) */
     mimeType?: string;
+    /** Начальный URL (для оптимистичных сообщений) */
+    initialUrl?: string;
 };
 
 /**
@@ -46,12 +48,14 @@ export function AudioMessagePlayer({
     onToggleTranscript,
     roomKey,
     mimeType,
+    initialUrl,
 }: AudioMessagePlayerProps) {
     const { state, controls, audioRef } = useAudioPlayer({
         mediaId,
         userId,
         roomKey,
         mimeType,
+        initialUrl,
     });
 
     const { currentTime, duration, isPlaying, decryptedSrc } = state;

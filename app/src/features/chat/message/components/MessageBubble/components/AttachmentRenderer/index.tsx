@@ -1,9 +1,15 @@
 import clsx from "clsx";
 import { ImageOff, Paperclip, Play } from "lucide-react";
-import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
+import {
+    type Dispatch,
+    type SetStateAction,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 import { Flex } from "@/components/layout/Flex";
 import { Text } from "@/components/ui/Text";
-import { ATTACHMENT_TYPES } from "@/lib/constants";
+import { ATTACHMENT_TYPES, MEDIA_SYSTEM_CONSTANTS } from "@/lib/constants";
 import { useMedia } from "@/lib/mediadb/useMedia";
 import type { Attachment } from "@/lib/types";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
@@ -50,6 +56,7 @@ function CachedImage({
         roomKey,
         isVault,
         userId,
+        initialUrl: att.url,
     });
     const hasError = imageErrors[att.id] || !!error;
 
@@ -116,6 +123,7 @@ function CachedVideo({
         roomKey,
         isVault,
         userId,
+        initialUrl: att.url,
     });
     const hasError = !!error;
 
@@ -171,6 +179,7 @@ function CachedDocument({
         roomKey,
         isVault,
         userId,
+        initialUrl: att.url,
     });
 
     return (
@@ -217,6 +226,20 @@ export function AttachmentRenderer({
     );
 
     const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        return () => {
+            if (attachments) {
+                for (const att of attachments) {
+                    if (
+                        att.url?.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX)
+                    ) {
+                        URL.revokeObjectURL(att.url);
+                    }
+                }
+            }
+        };
+    }, [attachments]);
 
     if (!attachments || attachments.length === 0) {
         return null;
@@ -268,6 +291,7 @@ export function AttachmentRenderer({
                             roomKey={roomKey}
                             mimeType={att.content_type}
                             userId={userId}
+                            initialUrl={att.url}
                         />
                     );
                 }

@@ -47,7 +47,7 @@ export const createChatRoomStore = () => {
             const id = Array.from(selectedMessageIds)[0];
             const msg = messages.find((m) => m.id === id);
 
-            if (msg && msg.sender_id === userId) {
+            if (msg && msg.sender === userId) {
                 set({
                     editingId: id,
                     editingContent: msg.content,
@@ -70,7 +70,7 @@ export const createChatRoomStore = () => {
 
             const id = Array.from(selectedMessageIds)[0];
             const msg = messages.find((m) => m.id === id);
-            const canEdit = msg?.sender_id === userId;
+            const canEdit = msg?.sender === userId;
 
             set({ canEditSelected: !!canEdit });
         },

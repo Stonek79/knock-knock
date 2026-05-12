@@ -84,7 +84,7 @@ export function useChatRoomActions(roomId: string) {
             const msg = messages.find((m) => m.id === id);
             return deleteMessage({
                 messageId: id,
-                isOwnMessage: msg?.sender_id === user?.id,
+                isOwnMessage: msg?.sender === user?.id,
             });
         });
         await Promise.allSettled(promises);

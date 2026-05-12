@@ -43,3 +43,10 @@ export const MEDIA_DEFAULTS = {
     /** Фоллбэк-имя файла, если имя не определено */
     FALLBACK_FILE_NAME: "file",
 } as const;
+
+/** Настройки распознавания речи */
+export const SPEECH_CONFIG = {
+    DEFAULT_LANG: "ru-RU",
+    ERROR_NOT_ALLOWED: "not-allowed",
+    ERROR_NO_SPEECH: "no-speech",
+} as const;

@@ -1,7 +1,7 @@
 import { ERROR_CODES, STORAGE_CONFIG } from "../constants";
 import { pb } from "../pocketbase";
 import type { MediaRepoError, MediaResponse } from "../types";
-import { appError, fromPromise, type Result } from "../utils/result";
+import { appError, err, fromPromise, ok, type Result } from "../utils/result";
 
 /**
  * РЕПОЗИТОРИЙ МЕДИА-ФАЙЛОВ
@@ -66,5 +66,56 @@ export const mediaRepository = {
         filename: string;
     }): string => {
         return pb.files.getURL(record, filename);
+    },
+
+    /**
+     * Скачивание файла с авторизацией (PocketBase).
+     * @param url Полный URL файла
+     * @returns Result с Blob или Error
+     */
+    downloadFile: async (url: string): Promise<Result<Blob, Error>> => {
+        try {
+            const token = pb.authStore.token;
+            const headers: Record<string, string> = {};
+            if (token) {
+                headers.Authorization = token;
+            }
+            const response = await fetch(url, { headers });
+            if (!response.ok) {
+                return err(
+                    new Error(
+                        `Ошибка скачивания файла: ${response.status} ${response.statusText}`,
+                    ),
+                );
+            }
+            const blob = await response.blob();
+            return ok(blob);
+        } catch (error) {
+            return err(
+                error instanceof Error
+                    ? error
+                    : new Error("Неизвестная ошибка при скачивании файла"),
+            );
+        }
+    },
+
+    /**
+     * Удаление записи медиа по ID.
+     * @param id ID записи в PocketBase
+     * @returns Result без значения (успех) или AppError
+     */
+    deleteMediaRecord: async (
+        id: string,
+    ): Promise<Result<boolean, MediaRepoError>> => {
+        return fromPromise(
+            pb.collection(STORAGE_CONFIG.MEDIA_COLLECTION).delete(id),
+            (e: unknown) => {
+                return appError(
+                    ERROR_CODES.NETWORK_ERROR,
+                    "Не удалось удалить медиафайл из хранилища",
+                    e,
+                );
+            },
+        );
     },
 };

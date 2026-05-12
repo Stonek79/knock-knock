@@ -1,12 +1,17 @@
 import type { z } from "zod";
-import type { ERROR_CODES, MESSAGE_STATUS } from "@/lib/constants";
-import type { CLIENT_MESSAGE_STATUS } from "@/lib/constants/ui";
+import type {
+    CLIENT_MESSAGE_STATUS,
+    ERROR_CODES,
+    MESSAGE_FIELDS,
+    MESSAGE_POSITION,
+    MESSAGE_STATUS,
+} from "../constants";
 import type {
     messageAttachmentSchema,
-    messagePositionSchema,
+    messageMetadataSchema,
     messageReactionSchema,
-    messageSchema,
-} from "@/lib/schemas/message";
+} from "../schemas/message";
+import type { PBMessage } from "./pocketbase";
 import type { AppError } from "./result";
 
 /**
@@ -17,19 +22,52 @@ export type MessageError =
     | AppError<typeof ERROR_CODES.CRYPTO_ERROR, unknown>;
 
 /**
- * Структура таблицы messages (Сообщения)
+ * Структура таблицы messages (Сообщения) напрямую из PocketBase
  */
-export type Message = z.infer<typeof messageSchema>;
+export type Message = PBMessage;
 
 /**
- * Тип позиции сообщения в группе (single, start, middle, end)
+ * Тип метаданных сообщения
  */
-export type MessagePosition = z.infer<typeof messagePositionSchema>;
+export type MessageMetadata = z.infer<typeof messageMetadataSchema> & {
+    deleted_at?: string;
+};
+
+/** Поля PBMessage, которые мы переопределяем в доменной модели */
+type MessageOmitKeys =
+    | typeof MESSAGE_FIELDS.METADATA
+    | typeof MESSAGE_FIELDS.ATTACHMENTS
+    | typeof MESSAGE_FIELDS.REACTIONS_SUMMARY;
 
 /**
- * Структура сообщения в БД (до расшифровки)
+ * Структура вложения сообщения
  */
-export type MessageRow = Message;
+export type Attachment = z.infer<typeof messageAttachmentSchema>;
+
+/**
+ * Тип вложения (image, video, audio, document)
+ */
+export type AttachmentType = Attachment["type"];
+
+/**
+ * Структура записи реакции (message_reactions)
+ */
+export type MessageReaction = z.infer<typeof messageReactionSchema>;
+
+/**
+ * Доменная модель сообщения в БД (MessageRow).
+ * Расширяет PBMessage типизированными JSON-полями и денормализованными данными.
+ */
+export type MessageRow = Omit<PBMessage, MessageOmitKeys> & {
+    [MESSAGE_FIELDS.METADATA]: MessageMetadata;
+    [MESSAGE_FIELDS.ATTACHMENTS]: Attachment[] | null;
+    [MESSAGE_FIELDS.REACTIONS_SUMMARY]: Record<string, number> | null;
+    /** Денормализованные данные профиля отправителя (для UI) */
+    profiles?: {
+        display_name: string;
+        avatar_url: string;
+    };
+};
 
 /**
  * Статус сообщения
@@ -53,7 +91,7 @@ export type UIMessageStatus = MessageStatus | ClientMessageStatus;
  * Расшифрованное сообщение.
  * Теперь профиль отправителя уже "вшит" в само сообщение через денормализацию.
  */
-export type DecryptedMessage = Omit<Message, "content"> & {
+export type DecryptedMessage = Omit<MessageRow, "content"> & {
     content: string | null;
 };
 
@@ -77,16 +115,8 @@ export type ChatMessage = DecryptedMessageWithProfile & {
 };
 
 /**
- * Структура вложения сообщения
+ * Позиция сообщения в визуальной группе (single, start, middle, end).
+ * Выводится из константы MESSAGE_POSITION.
  */
-export type Attachment = z.infer<typeof messageAttachmentSchema>;
-
-/**
- * Тип вложения (image, video, audio, document)
- */
-export type AttachmentType = Attachment["type"];
-
-/**
- * Структура записи реакции (message_reactions)
- */
-export type MessageReaction = z.infer<typeof messageReactionSchema>;
+export type MessagePosition =
+    (typeof MESSAGE_POSITION)[keyof typeof MESSAGE_POSITION];

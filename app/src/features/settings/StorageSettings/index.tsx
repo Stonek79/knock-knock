@@ -8,28 +8,39 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
-import { clearMediaCache, getMediaCacheSize } from "@/lib/cache/media";
+import { mediaDb } from "@/lib/mediadb/media-db";
 import { formatBytes } from "@/lib/utils/format";
 import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { useAuthStore } from "@/stores/auth";
 import styles from "./storage-settings.module.css";
 
 export function StorageSettings() {
     const { t } = useTranslation();
+    const pbUser = useAuthStore((state) => state.pbUser);
+    const userId = pbUser?.id;
+
     const [cacheSize, setCacheSize] = useState<number | null>(null);
     const [isClearing, setIsClearing] = useState(false);
 
     const loadCacheSize = useCallback(async () => {
-        const size = await getMediaCacheSize();
+        if (!userId) {
+            setCacheSize(0);
+            return;
+        }
+        const size = await mediaDb.getCacheSize(userId);
         setCacheSize(size);
-    }, []);
+    }, [userId]);
 
     useEffect(() => {
         loadCacheSize();
     }, [loadCacheSize]);
 
     const handleClearCache = async () => {
+        if (!userId) {
+            return;
+        }
         setIsClearing(true);
-        await clearMediaCache();
+        await mediaDb.clearAll(userId);
         await loadCacheSize();
         setIsClearing(false);
     };

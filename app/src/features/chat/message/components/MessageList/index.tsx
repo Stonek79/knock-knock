@@ -123,7 +123,7 @@ export function MessageList({
                 <Flex direction="column" gap="3">
                     {messages?.map(
                         (msg: DecryptedMessageWithProfile, index) => {
-                            const isOwn = userId === msg.sender_id;
+                            const isOwn = userId === msg.sender;
                             const isEditing = editingId === msg.id && isOwn;
                             const isFirstUnread = msg.id === firstUnreadId;
 
@@ -148,9 +148,8 @@ export function MessageList({
                                         userId={userId}
                                         timestamp={
                                             (msg.is_deleted
-                                                ? msg.updated_at
-                                                : msg.created_at) ||
-                                            msg.created_at
+                                                ? msg.updated
+                                                : msg.created) || msg.created
                                         }
                                         senderName={msg.profiles?.display_name}
                                         senderAvatar={

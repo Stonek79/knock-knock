@@ -1,14 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { QUERY_KEYS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 import { getUserRooms } from "@/lib/services/room";
-import type { RoomWithMembers } from "@/lib/types";
+import type { ExtendedChatItem, RoomWithMembers } from "@/lib/types";
 import { useAuthStore } from "@/stores/auth";
-import type { ChatItem } from "../ChatList/ChatListItem/index";
 import { mapRoomToChatItem } from "../utils/roomUiMapper";
 
 /**
- * Хук для получения списка чатов текущего пользователя.
+ * Хук для получения и обработки списка чатов текущего пользователя.
+ *
+ * Выполняет следующие задачи:
+ * 1. Получает сырые данные комнат из PocketBase.
+ * 2. Маппит их в формат ChatItem для UI.
+ * 3. Локализует названия и системные сообщения.
+ * 4. Сортирует список согласно правилам:
+ *    - "Избранное" (Saved Messages) всегда на первом месте.
+ *    - Закрепленные чаты следуют далее, сортируясь по времени закрепления (pinPosition).
+ *    - Все остальные чаты сортируются по дате последнего обновления/сообщения.
+ *
+ * @returns {UseQueryResult<ChatItem[]>} Объект с данными чатов, статусом загрузки и ошибками.
  */
 export function useChatList() {
     const { t } = useTranslation();
@@ -24,24 +35,22 @@ export function useChatList() {
             const result = await getUserRooms(pbUser.id);
 
             if (result.isErr()) {
+                logger.error("Failed to fetch rooms", result.error);
                 throw result.error;
             }
 
             return result.value;
         },
-        select: (data: RoomWithMembers[]): ChatItem[] => {
-            if (!data) {
+        select: (data: RoomWithMembers[]): ExtendedChatItem[] => {
+            if (!data || !pbUser) {
                 return [];
             }
 
-            if (!pbUser) {
-                return [];
-            }
-
-            // 1. Просто маппим каждую комнату (фильтрация по expand.room больше не нужна!)
+            // 1. Маппим комнаты в формат элементов списка чатов (ExtendedChatItem)
             const processedChats = data.map((room) => {
                 const mapped = mapRoomToChatItem(room, pbUser.id);
-                // Применяем локализацию
+
+                // Применяем локализацию и спец. оформление
                 let displayName = t(mapped.name);
                 if (mapped.isEphemeral) {
                     displayName = `🔒 ${displayName}`;
@@ -50,18 +59,41 @@ export function useChatList() {
                 return {
                     ...mapped,
                     name: displayName,
-                    lastMessage: mapped.lastMessage || t("chat.noMessages"),
-                    time: mapped.time ? t(mapped.time) : "",
+                    time:
+                        mapped.time === "common.yesterday"
+                            ? t(mapped.time)
+                            : mapped.time || "",
                 };
             });
 
-            // 2. Сортируем список по дате последнего сообщения (сначала новые)
-            // localeCompare отлично работает для строк формата ISO
-            return processedChats.sort((a, b) => {
-                return b._rawDate.localeCompare(a._rawDate);
+            // 2. Выполняем многоуровневую сортировку
+            return [...processedChats].sort((a, b) => {
+                // Приоритет 1: "Saved Messages" (Избранное) всегда на вершине
+                if (a.isSavedMessages !== b.isSavedMessages) {
+                    return a.isSavedMessages ? -1 : 1;
+                }
+
+                // Приоритет 2: Закрепленные чаты
+                const aPinned = Number(a.pinPosition || 0) > 0;
+                const bPinned = Number(b.pinPosition || 0) > 0;
+
+                if (aPinned !== bPinned) {
+                    return aPinned ? -1 : 1;
+                }
+
+                // Если оба закреплены, сортируем по времени закрепления (desc)
+                if (aPinned && bPinned) {
+                    const pinDiff =
+                        Number(b.pinPosition || 0) - Number(a.pinPosition || 0);
+                    if (pinDiff !== 0) {
+                        return pinDiff;
+                    }
+                }
+
+                // Приоритет 3: По дате последнего сообщения (сначала свежие)
+                return b._lastMsgTimestamp - a._lastMsgTimestamp;
             });
         },
-
         enabled: !!pbUser,
         staleTime: 1000 * 30, // 30 секунд
     });

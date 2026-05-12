@@ -15,6 +15,7 @@ import type {
     RoomKeysResponse,
     RoomMemberRecord,
     RoomMembersResponse,
+    RoomRecord,
     RoomRepoError,
     RoomsResponse,
     RoomWithMembers,
@@ -32,11 +33,7 @@ export const roomRepository = {
      */
     getRoomById: async (
         roomId: string,
-        expand: RoomExpand[] = [
-            ROOM_FIELDS.CREATED_BY,
-            ROOM_FIELDS.LAST_MESSAGE,
-            DB_EXPAND.MEMBERS,
-        ],
+        expand: RoomExpand[] = [ROOM_FIELDS.CREATED_BY, DB_EXPAND.MEMBERS],
     ): Promise<Result<RoomWithMembers, RoomRepoError>> => {
         return fromPromise(
             pb.collection(DB_TABLES.ROOMS).getOne<PBRoomExpanded>(roomId, {
@@ -184,6 +181,26 @@ export const roomRepository = {
     },
 
     /**
+     * Подписка на изменения в коллекции комнат (rooms).
+     */
+    subscribeToRooms: (
+        callback: (event: PBRealtimeEvent<RoomRecord>) => void,
+    ): (() => void) => {
+        const unsubscribePromise = pb
+            .collection(DB_TABLES.ROOMS)
+            .subscribe<RoomRecord>("*", (e) => {
+                callback({
+                    action: e.action as PBRealtimeAction,
+                    record: e.record,
+                });
+            });
+
+        return () => {
+            unsubscribePromise.then((unsub) => unsub());
+        };
+    },
+
+    /**
      * Найти приватный чат (direct) с конкретным пользователем
      */
     findDirectRoomWith: async (
@@ -270,7 +287,7 @@ export const roomRepository = {
                         { ownerId, name },
                     ),
                     {
-                        expand: `${DB_EXPAND.MEMBERS},${DB_EXPAND.LAST_MESSAGE}`,
+                        expand: `${DB_EXPAND.MEMBERS}`,
                         $autoCancel: false,
                     },
                 ),
@@ -334,7 +351,7 @@ export const roomRepository = {
     getRoomsWithMembers: async (
         filter: string,
     ): Promise<Result<RoomWithMembers[], RoomRepoError>> => {
-        const expandPath = `${DB_EXPAND.MEMBERS},${DB_EXPAND.LAST_MESSAGE}`;
+        const expandPath = `${DB_EXPAND.MEMBERS}`;
 
         return fromPromise(
             pb.collection(DB_TABLES.ROOMS).getFullList<PBRoomExpanded>({

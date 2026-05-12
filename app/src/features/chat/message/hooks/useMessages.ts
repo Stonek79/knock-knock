@@ -51,12 +51,16 @@ export function useMessages({ roomId, roomKey }: UseMessagesProps) {
             const decrypted: DecryptedMessageWithProfile[] = [];
 
             for (const record of records) {
-                // 1. Физически удаленные из БД (мягкое удаление для всех)
-                // Если is_deleted: true, сообщение остается в списке, но с пустым контентом (если нужно)
+                // 1. Глобально удаленные (старые артефакты Soft Delete из прошлых версий)
+                if (record.is_deleted) {
+                    continue;
+                }
 
                 // 2. Локальное скрытие (Local Hide) - если пользователь сам скрыл сообщение
-                const metadata = record.metadata;
-                const deletedBy = metadata.deleted_by;
+                const rawDeletedBy = record.metadata?.deleted_by;
+                const deletedBy = Array.isArray(rawDeletedBy)
+                    ? rawDeletedBy
+                    : [];
                 if (deletedBy.includes(pbUser.id)) {
                     continue;
                 }
@@ -74,8 +78,8 @@ export function useMessages({ roomId, roomKey }: UseMessagesProps) {
             // Сортируем по дате, так как getRoomMessages может вернуть в обратном порядке (getList)
             return decrypted.sort(
                 (a, b) =>
-                    new Date(a.created_at).getTime() -
-                    new Date(b.created_at).getTime(),
+                    new Date(a.created).getTime() -
+                    new Date(b.created).getTime(),
             );
         },
         enabled: !!roomId && !!roomKey && !!pbUser,

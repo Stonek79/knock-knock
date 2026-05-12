@@ -1,4 +1,4 @@
-import type { KeyType } from "@/lib/crypto/keystore";
+import type { KeyType } from "@/lib/types";
 
 export const AUTH_MODES = {
     PASSWORD: "password",

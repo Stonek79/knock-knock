@@ -32,7 +32,7 @@ export function useUnreadTracking(
 
         const lastReadTime = new Date(lastReadAt).getTime();
         const firstUnread = messages.find(
-            (m) => new Date(m.created_at).getTime() > lastReadTime,
+            (m) => new Date(m.created).getTime() > lastReadTime,
         );
 
         return firstUnread?.id || null;
@@ -55,7 +55,7 @@ export function useUnreadTracking(
         const lastMessage = currentMessages[currentMessages.length - 1];
         if (currentLastReadAt && lastMessage) {
             const dbTime = new Date(currentLastReadAt).getTime();
-            const msgTime = new Date(lastMessage.created_at).getTime();
+            const msgTime = new Date(lastMessage.created).getTime();
             if (dbTime >= msgTime) {
                 return;
             }

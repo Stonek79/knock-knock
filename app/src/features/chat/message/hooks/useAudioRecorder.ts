@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
-import { DEFAULT_MIME_TYPES, RECORDING_LIMITS } from "@/lib/constants/storage";
+import { DEFAULT_MIME_TYPES, RECORDING_LIMITS } from "@/lib/constants";
 import { useSpeechRecognition } from "./useSpeechRecognition";
 
 const RECORDER_STATE = {
@@ -35,6 +35,7 @@ export function useAudioRecorder({
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const stopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const {
         getTranscript,
@@ -60,37 +61,26 @@ export function useAudioRecorder({
                 tracks[i].stop();
             }
 
+            const actualMimeType =
+                mediaRecorderRef.current?.mimeType ||
+                DEFAULT_MIME_TYPES.WEBM_AUDIO;
+
             const audioBlob = new Blob(audioChunksRef.current, {
-                type: DEFAULT_MIME_TYPES.WEBM_AUDIO,
+                type: actualMimeType,
             });
 
             if (audioBlob.size > 0) {
                 const finalTranscript = getTranscript().trim();
 
-                // Если транскрипция пустая — не сохраняем аудио, предлагаем записать заново
-                if (!finalTranscript) {
-                    toast({
-                        title: t(
-                            "chat.transcriptionFailed",
-                            "Не удалось распознать речь",
-                        ),
-                        description: t(
-                            "chat.transcriptionFailedDescription",
-                            "Попробуйте записать сообщение ещё раз",
-                        ),
-                        variant: "error",
-                    });
-                    audioChunksRef.current = [];
-                    return;
-                }
-
+                // Даже если транскрипция пустая, мы все равно передаем аудио-блоб.
+                // transcriptSuccess = true означает, что аудио успешно записано.
                 onRecordingComplete(finalTranscript, audioBlob, true);
             }
             audioChunksRef.current = [];
         };
 
         // Задержка перед остановкой для захвата хвоста речи
-        setTimeout(() => {
+        stopTimeoutRef.current = setTimeout(() => {
             if (
                 mediaRecorderRef.current &&
                 mediaRecorderRef.current.state !== RECORDER_STATE.INACTIVE
@@ -99,19 +89,14 @@ export function useAudioRecorder({
             }
             if (timerRef.current) {
                 clearInterval(timerRef.current);
+                timerRef.current = null;
             }
             stopRecognition();
             setIsRecording(false);
             setRecordingTime(0);
+            stopTimeoutRef.current = null;
         }, RECORDING_LIMITS.STOP_DELAY_MS);
-    }, [
-        isRecording,
-        onRecordingComplete,
-        getTranscript,
-        stopRecognition,
-        t,
-        toast,
-    ]);
+    }, [isRecording, onRecordingComplete, getTranscript, stopRecognition]);
 
     const startRecording = async () => {
         if (disabled || sending) {
@@ -122,6 +107,7 @@ export function useAudioRecorder({
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
             });
+
             const mediaRecorder = new MediaRecorder(stream);
             mediaRecorderRef.current = mediaRecorder;
             audioChunksRef.current = [];
@@ -132,8 +118,7 @@ export function useAudioRecorder({
                 }
             };
 
-            // Запускаем с timeslice для периодического сбора данных
-            mediaRecorder.start(RECORDING_LIMITS.DATA_TIMESLICE_MS);
+            mediaRecorder.start();
             setIsRecording(true);
             setRecordingTime(0);
             resetTranscript();
@@ -141,6 +126,9 @@ export function useAudioRecorder({
             // Начинаем распознавание речи только после того, как получен доступ к микрофону
             startRecognition();
 
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
             timerRef.current = setInterval(() => {
                 setRecordingTime((prev) => {
                     // Останавливаем, если достигнут максимальный лимит включительно
@@ -164,11 +152,14 @@ export function useAudioRecorder({
     };
 
     const stopRecording = useCallback(() => {
-        if (
-            mediaRecorderRef.current &&
-            mediaRecorderRef.current.state === RECORDER_STATE.RECORDING
-        ) {
-            mediaRecorderRef.current.stop();
+        if (mediaRecorderRef.current) {
+            if (mediaRecorderRef.current.state !== RECORDER_STATE.INACTIVE) {
+                mediaRecorderRef.current.stop();
+            }
+            const tracks = mediaRecorderRef.current.stream.getTracks() || [];
+            for (let i = 0; i < tracks.length; i++) {
+                tracks[i].stop();
+            }
         }
         if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -186,11 +177,20 @@ export function useAudioRecorder({
             if (timerRef.current) {
                 clearInterval(timerRef.current);
             }
-            if (
-                mediaRecorderRef.current &&
-                mediaRecorderRef.current.state === RECORDER_STATE.RECORDING
-            ) {
-                mediaRecorderRef.current.stop();
+            if (stopTimeoutRef.current) {
+                clearTimeout(stopTimeoutRef.current);
+            }
+            if (mediaRecorderRef.current) {
+                if (
+                    mediaRecorderRef.current.state !== RECORDER_STATE.INACTIVE
+                ) {
+                    mediaRecorderRef.current.stop();
+                }
+                const tracks =
+                    mediaRecorderRef.current.stream.getTracks() || [];
+                for (let i = 0; i < tracks.length; i++) {
+                    tracks[i].stop();
+                }
             }
         };
     }, []);

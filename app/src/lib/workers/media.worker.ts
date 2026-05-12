@@ -93,9 +93,13 @@ async function compressImage({
     }
     ctx.drawImage(bitmap, 0, 0);
 
-    const compressedBlob = await canvas.convertToBlob({
+    const rawCompressed = await canvas.convertToBlob({
         type: COMPRESSION_OPTIONS.FORMAT_WEBP,
         quality: COMPRESSION_OPTIONS.QUALITY,
+    });
+
+    const compressedBlob = new Blob([await rawCompressed.arrayBuffer()], {
+        type: rawCompressed.type,
     });
 
     // 3. Создание превью
@@ -115,9 +119,13 @@ async function compressImage({
     }
     thumbCtx.drawImage(bitmap, 0, 0, thumbWidth, thumbHeight);
 
-    const thumbBlob = await thumbCanvas.convertToBlob({
+    const rawThumb = await thumbCanvas.convertToBlob({
         type: COMPRESSION_OPTIONS.FORMAT_WEBP,
         quality: COMPRESSION_OPTIONS.THUMB_QUALITY,
+    });
+
+    const thumbBlob = new Blob([await rawThumb.arrayBuffer()], {
+        type: rawThumb.type,
     });
 
     // 4. Шифрование (если ключ передан)
@@ -129,6 +137,8 @@ async function compressImage({
         return {
             original: encOriginal,
             thumbnail: encThumb,
+            plainOriginal: compressedBlob,
+            plainThumbnail: thumbBlob,
             metadata: { width, height },
         };
     }
@@ -136,6 +146,8 @@ async function compressImage({
     return {
         original: compressedBlob,
         thumbnail: thumbBlob,
+        plainOriginal: compressedBlob,
+        plainThumbnail: thumbBlob,
         metadata: { width, height },
     };
 }
@@ -151,10 +163,10 @@ async function encryptBlob({
     key?: CryptoKey;
 }): Promise<WorkerMediaPayload> {
     if (!key) {
-        return { original: blob };
+        return { original: blob, plainOriginal: blob };
     }
     const encrypted = await encryptData({ blob, key });
-    return { original: encrypted };
+    return { original: encrypted, plainOriginal: blob };
 }
 
 /**

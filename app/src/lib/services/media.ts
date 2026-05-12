@@ -12,6 +12,7 @@ import {
     MEDIA_WORKER_ACTIONS,
     MIME_PREFIXES,
 } from "../constants";
+import { logger } from "../logger";
 import { mediaDb } from "../mediadb/media-db";
 import { mediaRepository } from "../repositories/media.repository";
 import type {
@@ -45,30 +46,67 @@ type DownloadParams = {
 
 export const mediaService = {
     /**
-     * Единая точка входа для получения медиа (Проверка кэша -> Загрузка -> Расшифровка).
+     * Получение превью для ленты сообщений.
+     * Умная логика: если файл Аудио или Документ, качаем оригинал.
      */
-    ensureMedia: async (
+    ensureThumbnail: async (
         params: GetMediaParams,
     ): Promise<Result<ProcessedMediaData, AppError<string>>> => {
         const { id, userId, roomKey, isVault } = params;
 
-        // 1. Пытаемся взять из кэша
+        // 1. Проверяем кэш
         const cached = await mediaService.getMedia({ id, userId });
         if (
             cached.isOk() &&
-            (cached.value.original || cached.value.thumbnail)
+            (cached.value.thumbnail || cached.value.original)
         ) {
             return ok(cached.value);
         }
 
-        // 2. Если в кэше нет, запрашиваем запись из репозитория
+        // 2. Нет в кэше, запрашиваем запись
+        const recordResult = await mediaRepository.getMediaRecord(id);
+        if (recordResult.isErr()) {
+            return err(recordResult.error);
+        }
+        const record = recordResult.value;
+
+        // 3. Умная логика
+        const type = record[MEDIA_FIELDS.TYPE];
+        if (
+            type === ATTACHMENT_TYPES.AUDIO ||
+            type === ATTACHMENT_TYPES.DOCUMENT
+        ) {
+            return mediaService.ensureOriginal(params);
+        }
+
+        // 4. Скачиваем только превью
+        return mediaService._downloadAndCacheThumbnail({
+            record,
+            userId,
+            roomKey,
+            isVault,
+        });
+    },
+
+    /**
+     * Получение оригинального файла по клику.
+     */
+    ensureOriginal: async (
+        params: GetMediaParams,
+    ): Promise<Result<ProcessedMediaData, AppError<string>>> => {
+        const { id, userId, roomKey, isVault } = params;
+
+        const cached = await mediaService.getMedia({ id, userId });
+        if (cached.isOk() && cached.value.original) {
+            return ok(cached.value);
+        }
+
         const recordResult = await mediaRepository.getMediaRecord(id);
         if (recordResult.isErr()) {
             return err(recordResult.error);
         }
 
-        // 3. Скачиваем и кэшируем
-        return mediaService.downloadAndCache({
+        return mediaService._downloadAndCacheOriginal({
             record: recordResult.value,
             userId,
             roomKey,
@@ -101,7 +139,13 @@ export const mediaService = {
                 cryptoKey,
             });
 
-            const { original, thumbnail, metadata } = workerData;
+            const {
+                original,
+                thumbnail,
+                plainOriginal,
+                plainThumbnail,
+                metadata,
+            } = workerData;
 
             // 2. Подготовка FormData через константы
             const formData = new FormData();
@@ -165,27 +209,40 @@ export const mediaService = {
             const record = uploadResult.value;
 
             // 4. Кеширование в IndexedDB
+            const safeMetadata = metadata
+                ? Object.fromEntries(
+                      Object.entries(metadata).filter(
+                          ([_, v]) => v !== undefined,
+                      ),
+                  )
+                : {};
+
+            const finalCacheBlob = plainOriginal || file;
+            const finalCacheThumb = plainThumbnail || null;
+
             const cacheItem: MediaCacheItem = {
                 [MEDIA_CACHE_FIELDS.ID]: record.id,
                 [MEDIA_CACHE_FIELDS.OWNER_ID]: userId,
-                [MEDIA_CACHE_FIELDS.BLOB]: original,
-                [MEDIA_CACHE_FIELDS.THUMBNAIL]: thumbnail,
+                [MEDIA_CACHE_FIELDS.BLOB]: finalCacheBlob,
+                [MEDIA_CACHE_FIELDS.THUMBNAIL]: finalCacheThumb,
                 [MEDIA_CACHE_FIELDS.METADATA]: {
                     name: originalName,
                     size: original.size,
                     mimeType: file.type,
-                    ...metadata,
+                    ...safeMetadata,
                 },
                 [MEDIA_CACHE_FIELDS.REFERENCES]: [
                     {
                         type: MEDIA_REFERENCE_TYPES.MESSAGE,
                         id: roomId,
+                        roomId,
                         addedAt: Date.now(),
                     },
                 ],
                 [MEDIA_CACHE_FIELDS.SYNC_STATUS]: MEDIA_SYNC_STATUS.SYNCED,
                 [MEDIA_CACHE_FIELDS.LAST_ACCESSED_AT]: Date.now(),
                 [MEDIA_CACHE_FIELDS.CREATED_AT]: Date.now(),
+                [MEDIA_CACHE_FIELDS.ROOM_ID]: roomId,
             };
 
             await fromPromise(mediaDb.put({ item: cacheItem, userId }), (e) =>
@@ -221,7 +278,7 @@ export const mediaService = {
         if (cachedResult.isOk() && cachedResult.value) {
             const item = cachedResult.value;
             return ok({
-                original: item[MEDIA_CACHE_FIELDS.BLOB],
+                original: item[MEDIA_CACHE_FIELDS.BLOB] || null,
                 thumbnail: item[MEDIA_CACHE_FIELDS.THUMBNAIL] || null,
             });
         }
@@ -230,9 +287,60 @@ export const mediaService = {
     },
 
     /**
-     * Скачивание и расшифровка.
+     * Вспомогательный метод для создания объекта кэша.
      */
-    downloadAndCache: async (
+    _createCacheItem: (
+        record: MediaResponse,
+        userId: string,
+        original: Blob | null,
+        thumbnail: Blob | null,
+    ): MediaCacheItem => {
+        const remoteRefs = record[MEDIA_FIELDS.REFERENCES] as {
+            roomId?: string;
+        } | null;
+        const roomId = remoteRefs?.roomId;
+
+        const recordMetadata = record[MEDIA_FIELDS.METADATA];
+        const safeMetadata = recordMetadata
+            ? Object.fromEntries(
+                  Object.entries(recordMetadata).filter(
+                      ([_, v]) => v !== undefined,
+                  ),
+              )
+            : {};
+
+        return {
+            [MEDIA_CACHE_FIELDS.ID]: record.id,
+            [MEDIA_CACHE_FIELDS.OWNER_ID]: userId,
+            [MEDIA_CACHE_FIELDS.BLOB]: original,
+            [MEDIA_CACHE_FIELDS.THUMBNAIL]: thumbnail,
+            [MEDIA_CACHE_FIELDS.METADATA]: {
+                name: record[MEDIA_FIELDS.FILE],
+                size: original?.size || record[MEDIA_FIELDS.SIZE] || 0,
+                mimeType: record[MEDIA_FIELDS.MIME_TYPE],
+                ...safeMetadata,
+            },
+            [MEDIA_CACHE_FIELDS.REFERENCES]: roomId
+                ? [
+                      {
+                          type: MEDIA_REFERENCE_TYPES.MESSAGE,
+                          id: roomId,
+                          roomId,
+                          addedAt: Date.now(),
+                      },
+                  ]
+                : [],
+            [MEDIA_CACHE_FIELDS.SYNC_STATUS]: MEDIA_SYNC_STATUS.SYNCED,
+            [MEDIA_CACHE_FIELDS.LAST_ACCESSED_AT]: Date.now(),
+            [MEDIA_CACHE_FIELDS.CREATED_AT]: Date.now(),
+            [MEDIA_CACHE_FIELDS.ROOM_ID]: roomId,
+        };
+    },
+
+    /**
+     * Скачивание и расшифровка только превью.
+     */
+    _downloadAndCacheThumbnail: async (
         params: DownloadParams,
     ): Promise<Result<ProcessedMediaData, AppError<string>>> => {
         const { record, userId, roomKey, isVault } = params;
@@ -247,74 +355,141 @@ export const mediaService = {
         }
 
         try {
-            // 1. Скачивание оригинала
+            if (!record[MEDIA_FIELDS.THUMBNAIL]) {
+                return ok({ original: null, thumbnail: null });
+            }
+
+            const thumbUrl = mediaRepository.getFileUrl({
+                record,
+                filename: record[MEDIA_FIELDS.THUMBNAIL],
+            });
+            const thumbDownloadResult =
+                await mediaRepository.downloadFile(thumbUrl);
+            if (thumbDownloadResult.isErr()) {
+                return err(
+                    appError(
+                        ERROR_CODES.DOWNLOAD_ERROR,
+                        MEDIA_ERROR_MESSAGES.DOWNLOAD_FAIL(500),
+                    ),
+                );
+            }
+
+            const thumbDecrypt = await mediaWorkerClient.postTask({
+                taskId: crypto.randomUUID(),
+                action: MEDIA_WORKER_ACTIONS.DECRYPT_BLOB,
+                payload: thumbDownloadResult.value,
+                cryptoKey: roomKey,
+            });
+
+            const existing = await mediaDb.getWithAccessUpdate({
+                id: record.id,
+                userId,
+            });
+            if (existing) {
+                await mediaDb.update({
+                    id: record.id,
+                    userId,
+                    changes: {
+                        [MEDIA_CACHE_FIELDS.THUMBNAIL]: thumbDecrypt.original,
+                    },
+                });
+            } else {
+                const cacheItem = mediaService._createCacheItem(
+                    record,
+                    userId,
+                    null,
+                    thumbDecrypt.original,
+                );
+                await mediaDb.put({ item: cacheItem, userId });
+            }
+
+            return ok({ original: null, thumbnail: thumbDecrypt.original });
+        } catch (error) {
+            return err(
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    error instanceof Error
+                        ? error.message
+                        : "Ошибка при расшифровке превью",
+                ),
+            );
+        }
+    },
+
+    /**
+     * Скачивание и расшифровка оригинала.
+     */
+    _downloadAndCacheOriginal: async (
+        params: DownloadParams,
+    ): Promise<Result<ProcessedMediaData, AppError<string>>> => {
+        const { record, userId, roomKey, isVault } = params;
+
+        if (!roomKey && !isVault) {
+            return err(
+                appError(
+                    ERROR_CODES.CRYPTO_ERROR,
+                    MEDIA_ERROR_MESSAGES.MISSING_KEY,
+                ),
+            );
+        }
+
+        try {
             const originalUrl = mediaRepository.getFileUrl({
                 record,
                 filename: record[MEDIA_FIELDS.FILE],
             });
-            const originalResp = await fetch(originalUrl);
-            if (!originalResp.ok) {
+            const originalDownloadResult =
+                await mediaRepository.downloadFile(originalUrl);
+            if (originalDownloadResult.isErr()) {
                 return err(
                     appError(
                         ERROR_CODES.DOWNLOAD_ERROR,
-                        MEDIA_ERROR_MESSAGES.DOWNLOAD_FAIL(originalResp.status),
+                        MEDIA_ERROR_MESSAGES.DOWNLOAD_FAIL(500),
                     ),
                 );
             }
-            const encryptedBlob = await originalResp.blob();
 
-            // 2. Расшифровка через воркер
             const decryptResult = await mediaWorkerClient.postTask({
                 taskId: crypto.randomUUID(),
                 action: MEDIA_WORKER_ACTIONS.DECRYPT_BLOB,
-                payload: encryptedBlob,
+                payload: originalDownloadResult.value,
                 cryptoKey: roomKey,
             });
 
-            const decryptedOriginal = decryptResult.original;
+            const originalMime = record[MEDIA_FIELDS.MIME_TYPE] || "";
+            const typedOriginalBlob = new Blob([decryptResult.original], {
+                type: originalMime,
+            });
 
-            // 3. Обработка превью
-            let decryptedThumbnail: Blob | null = null;
-            if (record[MEDIA_FIELDS.THUMBNAIL]) {
-                const thumbUrl = mediaRepository.getFileUrl({
-                    record,
-                    filename: record[MEDIA_FIELDS.THUMBNAIL],
+            const existing = await mediaDb.getWithAccessUpdate({
+                id: record.id,
+                userId,
+            });
+            if (existing) {
+                await mediaDb.update({
+                    id: record.id,
+                    userId,
+                    changes: {
+                        [MEDIA_CACHE_FIELDS.BLOB]: typedOriginalBlob,
+                        [MEDIA_CACHE_FIELDS.METADATA]: {
+                            ...existing[MEDIA_CACHE_FIELDS.METADATA],
+                            size: typedOriginalBlob.size,
+                        },
+                    },
                 });
-                const thumbResp = await fetch(thumbUrl);
-                if (thumbResp.ok) {
-                    const encThumb = await thumbResp.blob();
-                    const thumbDecrypt = await mediaWorkerClient.postTask({
-                        taskId: crypto.randomUUID(),
-                        action: MEDIA_WORKER_ACTIONS.DECRYPT_BLOB,
-                        payload: encThumb,
-                        cryptoKey: roomKey,
-                    });
-                    decryptedThumbnail = thumbDecrypt.original;
-                }
+            } else {
+                const cacheItem = mediaService._createCacheItem(
+                    record,
+                    userId,
+                    typedOriginalBlob,
+                    null,
+                );
+                await mediaDb.put({ item: cacheItem, userId });
             }
 
-            // 4. Кеширование
-            const cacheItem: MediaCacheItem = {
-                [MEDIA_CACHE_FIELDS.ID]: record.id,
-                [MEDIA_CACHE_FIELDS.OWNER_ID]: userId,
-                [MEDIA_CACHE_FIELDS.BLOB]: decryptedOriginal,
-                [MEDIA_CACHE_FIELDS.THUMBNAIL]: decryptedThumbnail || undefined,
-                [MEDIA_CACHE_FIELDS.METADATA]: {
-                    name: record[MEDIA_FIELDS.FILE],
-                    size: decryptedOriginal.size,
-                    mimeType: record[MEDIA_FIELDS.MIME_TYPE],
-                },
-                [MEDIA_CACHE_FIELDS.REFERENCES]: [],
-                [MEDIA_CACHE_FIELDS.SYNC_STATUS]: MEDIA_SYNC_STATUS.SYNCED,
-                [MEDIA_CACHE_FIELDS.LAST_ACCESSED_AT]: Date.now(),
-                [MEDIA_CACHE_FIELDS.CREATED_AT]: Date.now(),
-            };
-
-            await mediaDb.put({ item: cacheItem, userId });
-
             return ok({
-                original: decryptedOriginal,
-                thumbnail: decryptedThumbnail,
+                original: typedOriginalBlob,
+                thumbnail: existing?.thumbnail || null,
             });
         } catch (error) {
             return err(
@@ -322,7 +497,7 @@ export const mediaService = {
                     ERROR_CODES.CRYPTO_ERROR,
                     error instanceof Error
                         ? error.message
-                        : "Ошибка при расшифровке",
+                        : "Ошибка при расшифровке оригинала",
                 ),
             );
         }
@@ -337,6 +512,40 @@ export const mediaService = {
      */
     getFileUrl: (record: MediaResponse, filename: string): string => {
         return mediaRepository.getFileUrl({ record, filename });
+    },
+
+    /**
+     * Удаление медиа-записи из облака и локального кэша.
+     */
+    deleteMedia: async (
+        params: Pick<GetMediaParams, "id" | "userId">,
+    ): Promise<Result<void, AppError<string>>> => {
+        const { id, userId } = params;
+
+        // Удаляем из локального IndexedDB
+        try {
+            await mediaDb.delete({ id, userId });
+        } catch (e) {
+            // Ошибка в IndexedDB не должна блокировать удаление из облака
+            logger.warn("Не удалось удалить медиа из локального кэша", {
+                id,
+                error: e,
+            });
+        }
+
+        // Удаляем физически из облака
+        const deleteResult = await mediaRepository.deleteMediaRecord(id);
+        if (deleteResult.isErr()) {
+            return err(
+                appError(
+                    ERROR_CODES.NETWORK_ERROR,
+                    "Не удалось удалить файл из облака",
+                    deleteResult.error,
+                ),
+            );
+        }
+
+        return ok(undefined);
     },
 
     /**

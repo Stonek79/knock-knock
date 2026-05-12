@@ -23,7 +23,8 @@ export type CollectionName =
     | "message_reports"
     | "push_subscriptions"
     | "media"
-    | "task_queue";
+    | "task_queue"
+    | "call_logs";
 
 // Вспомогательные типы
 export type RecordIdString = string;
@@ -88,6 +89,15 @@ export type TaskQueueStatusOptions =
     | "processing"
     | "completed"
     | "failed";
+
+export type CallLogsTypeOptions = "audio" | "video";
+
+export type CallLogsStatusOptions =
+    | "ringing"
+    | "ongoing"
+    | "ended"
+    | "missed"
+    | "rejected";
 
 // ---------------------------------------------------------------------------
 // Коллекция: _mfas
@@ -188,7 +198,8 @@ export type RoomsRecord = {
     visibility: RoomsVisibilityOptions;
     avatar?: string;
     created_by: RecordIdString;
-    last_message?: RecordIdString;
+    pinned_message?: RecordIdString;
+    description?: string;
     metadata?: null | unknown;
     permissions?: null | unknown;
     is_test?: boolean;
@@ -215,6 +226,8 @@ export type RoomMembersRecord = {
     is_hidden?: boolean;
     last_read_at?: string;
     is_test?: boolean;
+    history_cutoff?: string;
+    is_muted?: boolean;
 };
 
 export type RoomMembersResponse<Texpand = unknown> =
@@ -237,6 +250,9 @@ export type MessagesRecord = {
     reactions_summary?: null | unknown;
     is_deleted?: boolean;
     is_edited?: boolean;
+    deleted_by?: RecordIdString[];
+    deleted_at?: string;
+    is_system?: boolean;
     is_starred?: boolean;
     attachments?: null | unknown;
     reply_to?: RecordIdString;
@@ -357,6 +373,7 @@ export type MediaRecord = {
     size?: number;
     mime_type?: string;
     metadata?: null | unknown;
+    room?: RecordIdString;
     is_test?: boolean;
     is_vault?: boolean;
     references?: null | unknown;
@@ -383,6 +400,26 @@ export type TaskQueueRecord = {
 export type TaskQueueResponse<Texpand = unknown> = Required<TaskQueueRecord> &
     BaseSystemFields<Texpand>;
 
+// ---------------------------------------------------------------------------
+// Коллекция: call_logs
+// ---------------------------------------------------------------------------
+
+export type CallLogsRecord = {
+    room: RecordIdString;
+    initiator: RecordIdString;
+    participants?: RecordIdString[];
+    type: CallLogsTypeOptions;
+    status: CallLogsStatusOptions;
+    started_at?: string;
+    ended_at?: string;
+    duration_sec?: number;
+    livekit_room_name?: string;
+    is_test?: boolean;
+};
+
+export type CallLogsResponse<Texpand = unknown> = Required<CallLogsRecord> &
+    BaseSystemFields<Texpand>;
+
 export type CollectionRecords = {
     _mfas: MfasRecord;
     _otps: OtpsRecord;
@@ -402,6 +439,7 @@ export type CollectionRecords = {
     push_subscriptions: PushSubscriptionsRecord;
     media: MediaRecord;
     task_queue: TaskQueueRecord;
+    call_logs: CallLogsRecord;
 };
 
 export type CollectionResponses = {
@@ -423,6 +461,7 @@ export type CollectionResponses = {
     push_subscriptions: PushSubscriptionsResponse;
     media: MediaResponse;
     task_queue: TaskQueueResponse;
+    call_logs: CallLogsResponse;
 };
 
 export type TypedPocketBase = PocketBase & {
@@ -455,4 +494,5 @@ export type TypedPocketBase = PocketBase & {
     ): RecordService<PushSubscriptionsResponse>;
     collection(idOrName: "media"): RecordService<MediaResponse>;
     collection(idOrName: "task_queue"): RecordService<TaskQueueResponse>;
+    collection(idOrName: "call_logs"): RecordService<CallLogsResponse>;
 };

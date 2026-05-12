@@ -29,6 +29,11 @@ export function useMessageSelection({
             return;
         }
 
+        const msg = messages?.find((m) => m.id === id);
+        if (msg?.is_deleted) {
+            return; // Запрещаем выделять уже удаленные сообщения (артефакты)
+        }
+
         const newSet = new Set(selectedMessageIds);
         if (newSet.has(id)) {
             newSet.delete(id);
@@ -54,7 +59,7 @@ export function useMessageSelection({
         handleAction(async () => {
             const promises = Array.from(selectedMessageIds).map((id) => {
                 const msg = messages.find((m) => m.id === id);
-                const isOwn = msg?.sender_id === user?.id; // Determine ownership
+                const isOwn = msg?.sender === user?.id; // Determine ownership
                 return deleteMessage(id, isOwn);
             });
             await Promise.allSettled(promises);
@@ -122,7 +127,7 @@ export function useMessageSelection({
         ? messages.find((m) => m.id === selectedMsgId)
         : null;
     const canEditSelected =
-        selectedMessageIds.size === 1 && selectedMsg?.sender_id === user?.id;
+        selectedMessageIds.size === 1 && selectedMsg?.sender === user?.id;
 
     return {
         selectedMessageIds,

@@ -153,9 +153,15 @@ export function useGroupActions({
 
     // Удаление группы целиком (для создателя)
     const deleteGroup = async () => {
+        if (!myUserId) {
+            return;
+        }
         setIsLoading(true);
         try {
-            const result = await RoomService.deleteRoom(roomId);
+            const result = await RoomService.deleteRoom({
+                roomId,
+                userId: myUserId,
+            });
 
             if (result.isErr()) {
                 throw new Error(result.error.message);

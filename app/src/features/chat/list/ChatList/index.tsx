@@ -42,6 +42,7 @@ export function ChatList() {
     const [searchQuery, setSearchQuery] = useState("");
 
     const { data: chats = [], isLoading } = useChatList();
+
     const { getCount } = useUnreadCounts();
 
     // Фильтрация чатов по строке поиска
@@ -68,7 +69,7 @@ export function ChatList() {
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
                             <DropdownMenu.Item
-                                onSelect={() => setOpenDialog(CHAT_TYPE.PUBLIC)}
+                                onSelect={() => setOpenDialog(CHAT_TYPE.DIRECT)}
                                 data-testid="menu-item-new-chat"
                             >
                                 <Flex align="center" gap="2">
@@ -79,7 +80,7 @@ export function ChatList() {
 
                             <DropdownMenu.Item
                                 onSelect={() =>
-                                    setOpenDialog(CHAT_TYPE.PRIVATE)
+                                    setOpenDialog(CHAT_TYPE.EPHEMERAL)
                                 }
                             >
                                 <Flex align="center" gap="2">
@@ -142,7 +143,7 @@ export function ChatList() {
                               )}
                     </span>
                     <Button
-                        onClick={() => setOpenDialog(CHAT_TYPE.PUBLIC)}
+                        onClick={() => setOpenDialog(CHAT_TYPE.DIRECT)}
                         variant="outline"
                     >
                         {t("chat.createChat", "Создать чат")}
@@ -154,7 +155,7 @@ export function ChatList() {
                         {t("chat.createGroup", "Создать группу")}
                     </Button>
                     <Button
-                        onClick={() => setOpenDialog(CHAT_TYPE.PRIVATE)}
+                        onClick={() => setOpenDialog(CHAT_TYPE.EPHEMERAL)}
                         variant="outline"
                     >
                         {t("chat.createPrivateChat", "Создать приватный чат")}
@@ -177,12 +178,12 @@ export function ChatList() {
 
             {/* Диалоги ... */}
             <CreateChatDialog
-                open={openDialog === CHAT_TYPE.PUBLIC}
+                open={openDialog === CHAT_TYPE.DIRECT}
                 onOpenChange={(open) => !open && setOpenDialog(null)}
                 isPrivate={false}
             />
             <CreateChatDialog
-                open={openDialog === CHAT_TYPE.PRIVATE}
+                open={openDialog === CHAT_TYPE.EPHEMERAL}
                 onOpenChange={(open) => !open && setOpenDialog(null)}
                 isPrivate
             />

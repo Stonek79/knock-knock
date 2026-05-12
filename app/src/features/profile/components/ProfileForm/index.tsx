@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { QUERY_KEYS, VALIDATION } from "@/lib/constants";
 import { COMPONENT_INTENT } from "@/lib/constants/ui";
-import { userRepository } from "@/lib/repositories/user.repository";
 import { profileSchema } from "@/lib/schemas/profile";
+import { userService } from "@/lib/services/user";
 import type { ComponentIntent } from "@/lib/types/ui";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./profileform.module.css";
@@ -35,7 +35,7 @@ export function ProfileForm() {
                 return null;
             }
 
-            const result = await userRepository.getUserById(pbUser.id);
+            const result = await userService.getUserProfile(pbUser.id);
 
             if (result.isErr()) {
                 return null;
@@ -57,7 +57,7 @@ export function ProfileForm() {
             }
             setStatusMessage(null);
 
-            const result = await userRepository.updateProfile(pbUser.id, {
+            const result = await userService.updateProfile(pbUser.id, {
                 username: value.username,
                 display_name: value.display_name,
             });

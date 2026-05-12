@@ -6,13 +6,22 @@ import styles from "./textarea.module.css";
 export interface TextAreaProps
     extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "size"> {
     size?: ComponentSize;
+    rows?: number;
 }
 
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
-    ({ size = "sm", className, ...props }, ref) => {
+    ({ size = "sm", className, rows = 1, ...props }, ref) => {
         const classes = clsx(styles.textArea, styles[size], className);
 
-        return <textarea ref={ref} className={classes} {...props} />;
+        return (
+            <textarea
+                ref={ref}
+                className={classes}
+                {...props}
+                minLength={1}
+                rows={rows}
+            />
+        );
     },
 );
 

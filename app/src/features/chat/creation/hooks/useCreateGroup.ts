@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { CHAT_TYPE, QUERY_KEYS, ROUTES } from "@/lib/constants";
 import { logger } from "@/lib/logger";
-import { MOCK_GROUP_AVATARS } from "@/lib/mock/data";
 import { RoomService } from "@/lib/services/room";
 import { useAuthStore } from "@/stores/auth";
 
@@ -23,7 +22,7 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
     const user = useAuthStore((state) => state.profile);
 
     const [groupName, setGroupName] = useState("");
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [avatarUrl, setAvatarUrl] = useState<string>("");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isCreating, setIsCreating] = useState(false);
 
@@ -33,19 +32,15 @@ export function useCreateGroup({ onOpenChange }: UseCreateGroupProps) {
     const resetState = useCallback(() => {
         setGroupName("");
         setSelectedIds([]);
-        setAvatarUrl(null);
+        setAvatarUrl("");
     }, []);
 
     /**
      * Симуляция выбора аватара (заглушка для dev-режима, заменить на загрузку файла)
      */
     const handleAvatarClick = useCallback(() => {
-        const random =
-            MOCK_GROUP_AVATARS[
-                Math.floor(Math.random() * MOCK_GROUP_AVATARS.length)
-            ];
-        setAvatarUrl(random);
-    }, []);
+        setAvatarUrl(avatarUrl);
+    }, [avatarUrl]);
 
     /**
      * Создание группы через RoomService

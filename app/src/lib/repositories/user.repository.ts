@@ -256,11 +256,15 @@ export const userRepository = {
     /**
      * Обновить публичные ключи пользователя
      */
-    updateSecurityKeys: async (
-        userId: string,
-        x25519: string,
-        signing: string,
-    ): Promise<Result<void, UserRepoError>> => {
+    updateSecurityKeys: async ({
+        userId,
+        x25519,
+        signing,
+    }: {
+        userId: string;
+        x25519: string;
+        signing: string;
+    }): Promise<Result<void, UserRepoError>> => {
         return fromPromise(
             pb.collection(DB_TABLES.USERS).update(userId, {
                 [USER_FIELDS.PUBLIC_KEY_X25519]: x25519,
@@ -278,10 +282,13 @@ export const userRepository = {
     /**
      * Обновить профиль пользователя (username, display_name)
      */
-    updateProfile: async (
-        userId: string,
-        data: { username?: string; display_name?: string },
-    ): Promise<Result<Profile, UserRepoError>> => {
+    updateProfile: async ({
+        userId,
+        data,
+    }: {
+        userId: string;
+        data: { username?: string; display_name?: string };
+    }): Promise<Result<Profile, UserRepoError>> => {
         return fromPromise(
             pb.collection(DB_TABLES.USERS).update<UserRecord>(userId, data),
             (e: unknown) =>

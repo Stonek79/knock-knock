@@ -203,54 +203,47 @@ export function MessageBubble({
                             {senderName}
                         </span>
                     )}
-                <Flex>
-                    <Box>
-                        <AttachmentRenderer
-                            attachments={attachments || []}
-                            setLightboxIndex={setLightboxIndex}
-                            isOwn={isOwn}
-                            hasTranscript={!!content && hasAudioAttachment}
-                            isTranscriptExpanded={isTranscriptExpanded}
-                            onToggleTranscript={() =>
-                                setIsTranscriptExpanded((prev) => !prev)
-                            }
-                            roomKey={roomKey}
-                            userId={userId}
-                        />
-                        {isDeleted ? (
-                            <Text className={styles.deletedContent}>
-                                {t("chat.messageDeleted", "Сообщение удалено")}
-                            </Text>
-                        ) : content && hasAudioAttachment ? (
-                            isTranscriptExpanded ? (
-                                <TranscriptBlock content={content} />
-                            ) : null
-                        ) : content ? (
-                            <Text
-                                className={styles.content}
-                                data-testid="message-text"
-                            >
-                                {content}
-                            </Text>
-                        ) : null}
-                    </Box>
-
-                    {isImageOnly ? (
-                        <Box
-                            className={clsx(
-                                styles.metadata,
-                                styles.metadataOverlay,
-                            )}
-                        >
-                            {metadataContent}
-                        </Box>
-                    ) : (
+                {!isDeleted && (
+                    <AttachmentRenderer
+                        attachments={attachments || []}
+                        setLightboxIndex={setLightboxIndex}
+                        isOwn={isOwn}
+                        hasTranscript={!!content && hasAudioAttachment}
+                        isTranscriptExpanded={isTranscriptExpanded}
+                        onToggleTranscript={() =>
+                            setIsTranscriptExpanded((prev) => !prev)
+                        }
+                        roomKey={roomKey}
+                        userId={userId}
+                    />
+                )}
+                {isDeleted ? (
+                    <Text className={styles.deletedContent}>
+                        {t("chat.messageDeleted", "Сообщение удалено")}
+                    </Text>
+                ) : content && hasAudioAttachment ? (
+                    isTranscriptExpanded ? (
+                        <TranscriptBlock content={content} />
+                    ) : null
+                ) : content ? (
+                    <Text className={styles.content} data-testid="message-text">
                         <Box className={styles.metadata}>{metadataContent}</Box>
-                    )}
-                </Flex>
+                        {content}
+                    </Text>
+                ) : null}
+                {isImageOnly && (
+                    <Box
+                        className={clsx(
+                            styles.metadata,
+                            styles.metadataOverlay,
+                        )}
+                    >
+                        {metadataContent}
+                    </Box>
+                )}
             </Box>
 
-            {imageAttachments.length > 0 && (
+            {!isDeleted && imageAttachments.length > 0 && (
                 <Lightbox
                     open={lightboxIndex >= 0}
                     close={() => setLightboxIndex(-1)}

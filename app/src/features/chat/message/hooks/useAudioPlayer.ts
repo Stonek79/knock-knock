@@ -33,6 +33,8 @@ export type UseAudioPlayerParams = {
     roomKey?: CryptoKey;
     /** MIME тип аудио */
     mimeType?: string;
+    /** Начальный URL */
+    initialUrl?: string;
 };
 
 /**
@@ -42,6 +44,7 @@ export function useAudioPlayer({
     mediaId,
     userId,
     roomKey,
+    initialUrl,
 }: UseAudioPlayerParams): {
     state: AudioPlayerState;
     controls: AudioPlayerControls;
@@ -53,12 +56,17 @@ export function useAudioPlayer({
     const [duration, setDuration] = useState(0);
 
     // Используем новый хук для прозрачной расшифровки и кеширования
-    const { objectUrl: decryptedSrc } = useMedia({ mediaId, userId, roomKey });
+    const { objectUrl: decryptedSrc } = useMedia({
+        mediaId,
+        userId,
+        roomKey,
+        initialUrl,
+    });
 
     // Подписка на события аудио
     useEffect(() => {
         const audio = audioRef.current;
-        if (!audio) {
+        if (!audio || !decryptedSrc) {
             return;
         }
 
@@ -83,17 +91,28 @@ export function useAudioPlayer({
             setIsPlaying(false);
             setCurrentTime(0);
         };
+        const onPlay = () => setIsPlaying(true);
+        const onPause = () => setIsPlaying(false);
 
         audio.addEventListener("timeupdate", onTimeUpdate);
         audio.addEventListener("loadedmetadata", onLoadedMetadata);
         audio.addEventListener("ended", onEnded);
+        audio.addEventListener("play", onPlay);
+        audio.addEventListener("pause", onPause);
 
         return () => {
             audio.removeEventListener("timeupdate", onTimeUpdate);
             audio.removeEventListener("loadedmetadata", onLoadedMetadata);
             audio.removeEventListener("ended", onEnded);
+            audio.removeEventListener("play", onPlay);
+            audio.removeEventListener("pause", onPause);
+
+            // Очищаем источник, чтобы браузер перестал буферизовать удаленный (revoked) Blob
+            audio.pause();
+            audio.removeAttribute("src");
+            audio.load();
         };
-    }, []);
+    }, [decryptedSrc]);
 
     const togglePlay = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -106,7 +125,6 @@ export function useAudioPlayer({
         } else {
             audioRef.current.play().catch(console.error);
         }
-        setIsPlaying(!isPlaying);
     };
 
     const seek = (time: number) => {

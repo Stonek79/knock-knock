@@ -99,7 +99,7 @@ export function MobileHeader({
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
                             <DropdownMenu.Item
-                                onSelect={() => setOpenDialog(CHAT_TYPE.PUBLIC)}
+                                onSelect={() => setOpenDialog(CHAT_TYPE.DIRECT)}
                             >
                                 <Flex align="center" gap="2">
                                     <MessageSquarePlus size={ICON_SIZE.sm} />
@@ -109,7 +109,7 @@ export function MobileHeader({
 
                             <DropdownMenu.Item
                                 onSelect={() =>
-                                    setOpenDialog(CHAT_TYPE.PRIVATE)
+                                    setOpenDialog(CHAT_TYPE.EPHEMERAL)
                                 }
                             >
                                 <Flex align="center" gap="2">

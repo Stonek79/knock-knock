@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { ChatType } from "@/lib/types";
+import type { RoomType } from "@/lib/types";
 
-export type ChatDialogType = ChatType | null;
+export type ChatDialogType = RoomType | null;
 
 interface ChatDialogsState {
     openDialog: ChatDialogType;

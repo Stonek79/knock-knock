@@ -31,14 +31,14 @@ export function TestTools() {
                     </Button>
                     <Button
                         variant="soft"
-                        onClick={() => setOpenDialog(CHAT_TYPE.PUBLIC)}
+                        onClick={() => setOpenDialog(CHAT_TYPE.DIRECT)}
                     >
                         <MessageSquarePlus />{" "}
                         {t("admin.createPublicChat", "Create Public Chat")}
                     </Button>
                     <Button
                         variant="soft"
-                        onClick={() => setOpenDialog(CHAT_TYPE.PRIVATE)}
+                        onClick={() => setOpenDialog(CHAT_TYPE.EPHEMERAL)}
                     >
                         <MessageSquarePlus />{" "}
                         {t("admin.createPrivateChat", "Create Private Chat")}

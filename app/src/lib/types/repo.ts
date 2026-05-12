@@ -48,3 +48,12 @@ export type UserSort =
     | `-${Extract<keyof PBUser, string>}`
     | `+${Extract<keyof PBUser, string>}`
     | Extract<keyof PBUser, string>;
+
+/**
+ * Счётчик непрочитанных сообщений для комнаты.
+ * Поле `room` соответствует нативному полю PocketBase (relation → rooms).
+ */
+export type UnreadCount = {
+    room: string;
+    count: number;
+};

@@ -1,23 +1,22 @@
 import { z } from "zod";
-import {
-    ATTACHMENT_TYPES,
-    MESSAGE_POSITION,
-    MESSAGE_STATUS,
-} from "@/lib/constants";
+import { ATTACHMENT_TYPES, MESSAGE_POSITION } from "@/lib/constants";
 
 /**
- * Схема метаданных сообщения
+ * Схема метаданных сообщения.
+ * Описывает структуру внутри JSON-поля 'metadata'.
  */
 export const messageMetadataSchema = z
     .object({
-        deleted_by: z.array(z.string()).default([]),
-        moderation: z.boolean().optional(),
+        deleted_by: z.array(z.string()).default([]), // Список ID пользователей, скрывших сообщение для себя
+        moderated_by: z.string().optional(), // ID пользователя (админа/владельца), удалившего сообщение для всех
+        moderation: z.boolean().optional(), // Флаг модерации
     })
-    .catchall(z.unknown())
+    .strict()
     .default({ deleted_by: [] });
 
 /**
- * Схема вложения сообщения (медиа или файл)
+ * Схема вложения сообщения (медиа или файл).
+ * Описывает структуру объекта в массиве 'attachments' (JSON).
  */
 export const messageAttachmentSchema = z.object({
     id: z.string(),
@@ -35,35 +34,7 @@ export const messageAttachmentSchema = z.object({
 });
 
 /**
- * Схема сообщения (messages)
- */
-export const messageSchema = z.object({
-    id: z.string(),
-    room_id: z.string(),
-    sender_id: z.string().nullable(),
-    sender_name: z.string().optional(),
-    sender_avatar: z.string().optional(),
-    content: z.string().nullable(),
-    iv: z.string().nullable(),
-    metadata: messageMetadataSchema,
-    attachments: z.array(messageAttachmentSchema).nullable().optional(),
-    reactions_summary: z.record(z.string(), z.number()).nullable().optional(),
-    created_at: z.string(),
-    updated_at: z.string().optional(),
-    status: z.enum(MESSAGE_STATUS).default(MESSAGE_STATUS.SENT),
-    is_edited: z.boolean().default(false),
-    is_deleted: z.boolean().default(false),
-    is_starred: z.boolean().default(false),
-    profiles: z
-        .object({
-            display_name: z.string().optional(),
-            avatar_url: z.string().optional(),
-        })
-        .optional(),
-});
-
-/**
- * Схема позиции сообщения в группе
+ * Схема позиции сообщения в группе (UI логика)
  */
 export const messagePositionSchema = z.enum([
     MESSAGE_POSITION.SINGLE,
@@ -79,5 +50,9 @@ export const messageReactionSchema = z.object({
     message_id: z.string(),
     user_id: z.string(),
     emoji: z.string(),
-    created_at: z.string(),
+    created: z.string(),
 });
+/** Схема для валидации reactions_summary (JSON-поле в БД) */
+export const reactionsSummarySchema = z
+    .record(z.string(), z.number())
+    .nullable();

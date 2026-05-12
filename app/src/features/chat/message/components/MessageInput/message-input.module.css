@@ -16,34 +16,62 @@
     width: 100%;
 }
 
-/* Контейнер текстового поля */
+/* Контейнер текстового поля с CSS Grid для авто-высоты */
 .textAreaContainer {
+    display: grid;
     flex: 1;
     min-width: 0;
-    display: flex;
+    /* position: relative; */
     align-items: center;
-    padding: 0;
+    max-height: var(--max-h-textarea);
 }
 
-/* Текстовое поле */
+.textAreaContainer::after,
 .textArea {
+    grid-area: 1 / 1;
     width: 100%;
-    min-height: var(--size-touch);
+    height: 100%;
+    font-family: var(--font-family);
+    font-size: var(--text-base);
     line-height: var(--line-height-normal);
-    max-height: 50vh;
+    padding: var(--space-2) var(--space-3);
+    min-height: var(--size-btn-h-1);
+    max-height: var(--max-h-textarea);
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    /* pointer-events: none; */
+    border-radius: var(--kk-radius-md);
+    margin: 0;
+}
+
+/* УНИКАЛЬНЫЕ СТИЛИ РЕПЛИКИ (Невидимый каркас) */
+.textAreaContainer::after {
+    content: attr(data-replicated-value) " ";
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    visibility: hidden;
+    pointer-events: none;
+    overflow-y: hidden;
+}
+
+/* УНИКАЛЬНЫЕ СТИЛИ ИНПУТА (Видимое поле) */
+.textArea {
     resize: none;
     outline: none;
     color: var(--foreground);
-    border-radius: var(--kk-radius-md);
-    font-family: var(--font-family);
+    background: transparent;
+    overflow-y: auto; /* Скролл появится только если текст > 160px */
     scrollbar-width: thin;
-    margin: 0;
-    box-sizing: border-box;
+    transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
 .textArea:focus-within {
     background: var(--glass-bg);
-    border: 1px solid var(--accent-primary);
+    border-color: var(--accent-primary);
+
     box-shadow:
         0 0 15px var(--glow-soft),
         inset 0 0 10px var(--glow-soft);
@@ -84,6 +112,7 @@
         height: var(--size-btn-h-2);
     }
 
+    .textAreaContainer::after,
     .textArea {
         min-height: var(--size-btn-h-3);
         padding: var(--space-1) var(--space-3);
@@ -124,6 +153,8 @@
 
 .recordingBtnActive {
     color: var(--color-error);
+    touch-action: "none";
+    -ms-touch-action: "none";
 }
 
 .recordingSlider {

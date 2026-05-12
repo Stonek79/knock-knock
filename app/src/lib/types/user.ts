@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { USER_FIELDS, USER_ROLE } from "@/lib/constants";
+import type { LOCAL_KEY_TYPES, USER_FIELDS, USER_ROLE } from "@/lib/constants";
 import type { folderSchema } from "@/lib/schemas/folder";
 import type { userSettingsSchema } from "@/lib/schemas/settings";
 
@@ -27,3 +27,6 @@ export type UserSecurityKeys = {
         | typeof USER_FIELDS.PUBLIC_KEY_X25519
         | typeof USER_FIELDS.PUBLIC_KEY_SIGNING]: string;
 };
+
+/** Типы ключей, хранимых локально (identity | prekey) */
+export type KeyType = (typeof LOCAL_KEY_TYPES)[keyof typeof LOCAL_KEY_TYPES];
