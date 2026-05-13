@@ -2,8 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { QUERY_KEYS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { chatCryptoService } from "@/lib/services/chat-crypto";
 import { getUserRooms } from "@/lib/services/room";
-import type { ExtendedChatItem, RoomWithMembers } from "@/lib/types";
+import type {
+    ExtendedChatItem,
+    MessageRow,
+    RoomWithMembers,
+} from "@/lib/types";
 import { useAuthStore } from "@/stores/auth";
 import { mapRoomToChatItem } from "../utils/roomUiMapper";
 
@@ -39,7 +44,30 @@ export function useChatList() {
                 throw result.error;
             }
 
-            return result.value;
+            const rooms = result.value;
+
+            // Параллельно расшифровываем контент последних сообщений для превью
+            await Promise.all(
+                rooms.map(async (room) => {
+                    if (
+                        room.last_message &&
+                        !room.last_message.is_deleted &&
+                        room.last_message.content
+                    ) {
+                        const { content } =
+                            await chatCryptoService.decryptPreview({
+                                message: {
+                                    ...room.last_message,
+                                    room: room.id,
+                                } as unknown as MessageRow,
+                                userId: pbUser.id,
+                            });
+                        room.last_message.content = content;
+                    }
+                }),
+            );
+
+            return rooms;
         },
         select: (data: RoomWithMembers[]): ExtendedChatItem[] => {
             if (!data || !pbUser) {
@@ -59,6 +87,12 @@ export function useChatList() {
                 return {
                     ...mapped,
                     name: displayName,
+                    lastMessage:
+                        mapped.lastMessage === "chat.noMessages" ||
+                        mapped.lastMessage === "chat.messageDeleted" ||
+                        mapped.lastMessage?.startsWith("chat.attachment.")
+                            ? t(mapped.lastMessage)
+                            : mapped.lastMessage,
                     time:
                         mapped.time === "common.yesterday"
                             ? t(mapped.time)

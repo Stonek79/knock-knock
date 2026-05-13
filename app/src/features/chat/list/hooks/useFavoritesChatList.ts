@@ -52,7 +52,12 @@ export function useFavoritesChatList() {
                     ...mapped,
                     name: displayName,
                     // Переводим заглушку если сообщений нет
-                    lastMessage: mapped.lastMessage || t("chat.noMessages"),
+                    lastMessage:
+                        mapped.lastMessage === "chat.noMessages" ||
+                        mapped.lastMessage === "chat.messageDeleted" ||
+                        mapped.lastMessage?.startsWith("chat.attachment.")
+                            ? t(mapped.lastMessage)
+                            : mapped.lastMessage,
                     time: mapped.time ? t(mapped.time) : "",
                 };
             });

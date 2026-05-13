@@ -20,6 +20,7 @@ import type {
     PBPresenceStatus,
     PBRealtimeAction,
     PBRealtimeEvent,
+    RoomWithMembers,
     UnreadCount,
     UserRecord,
 } from "../types";
@@ -89,11 +90,83 @@ async function handleMessageEvent({
     const qc = _queryClient;
     const userId = _currentUser.id;
 
-    // 1. Всегда обновляем список комнат (чат-лист), чтобы last_message и счетчики обновились
-    try {
-        qc.invalidateQueries({ queryKey: QUERY_KEYS.rooms(userId) });
-    } catch (e) {
-        logger.error("ChatRealtimeService: Ошибка инвалидации комнат", e);
+    // 1. Расшифровываем сообщение на лету (нужно и для чата, и для превью в списке комнат)
+    let decryptedContent = "";
+    if (
+        event.action === REALTIME_ACTIONS.CREATE ||
+        event.action === REALTIME_ACTIONS.UPDATE
+    ) {
+        const roomKey = await chatCryptoService.getRoomKey({
+            roomId: record.room,
+            userId,
+        });
+
+        try {
+            decryptedContent =
+                (await decryptMessagePayload(record, roomKey || undefined)) ||
+                "";
+        } catch (e) {
+            logger.error("ChatRealtimeService: Ошибка дешифровки сообщения", e);
+            decryptedContent = "Ошибка дешифровки";
+        }
+    }
+
+    const mapped: ChatMessage = {
+        ...record,
+        content: decryptedContent || "",
+    };
+
+    // 2. Хирургическое обновление списка чатов (Сайдбар) БЕЗ запросов к серверу
+    if (event.action === REALTIME_ACTIONS.CREATE) {
+        if (record.sender !== userId) {
+            incrementUnreadCount({ roomId: record.room });
+        }
+
+        qc.setQueryData<RoomWithMembers[]>(
+            QUERY_KEYS.rooms(userId),
+            (old = []) => {
+                return old.map((room) => {
+                    if (room.id === record.room) {
+                        const me = room.room_members?.find(
+                            (m) => m.user_id === userId,
+                        );
+                        const isOwn = record.sender === userId;
+                        const newUnread = !isOwn
+                            ? (me?.unread_count || 0) + 1
+                            : me?.unread_count || 0;
+
+                        const newMembers =
+                            room.room_members?.map((m) =>
+                                m.user_id === userId
+                                    ? { ...m, unread_count: newUnread }
+                                    : m,
+                            ) || [];
+
+                        return {
+                            ...room,
+                            last_message: mapped,
+                            room_members: newMembers,
+                        };
+                    }
+                    return room;
+                });
+            },
+        );
+    } else if (event.action === REALTIME_ACTIONS.UPDATE) {
+        qc.setQueryData<RoomWithMembers[]>(
+            QUERY_KEYS.rooms(userId),
+            (old = []) => {
+                return old.map((room) => {
+                    if (
+                        room.id === record.room &&
+                        room.last_message?.id === record.id
+                    ) {
+                        return { ...room, last_message: mapped };
+                    }
+                    return room;
+                });
+            },
+        );
     }
 
     if (event.action === REALTIME_ACTIONS.CREATE) {
@@ -102,13 +175,29 @@ async function handleMessageEvent({
         }
     }
 
-    // 2. Если сообщение для активной комнаты — обновляем её кэш
+    // 3. Обновляем окно самого чата, если оно сейчас открыто
     if (_activeRoomId && record.room === _activeRoomId) {
         if (event.action === REALTIME_ACTIONS.DELETE) {
             _queryClient.setQueryData<ChatMessage[]>(
                 QUERY_KEYS.messages(_activeRoomId),
                 (old = []) => old.filter((m) => m.id !== record.id),
             );
+
+            // Если удалили последнее сообщение — дергаем сервер за списком, так как локально мы не знаем предыдущего
+            const rooms =
+                qc.getQueryData<RoomWithMembers[]>(QUERY_KEYS.rooms(userId)) ||
+                [];
+            const room = rooms.find((r) => r.id === record.room);
+            if (room && room.last_message?.id === record.id) {
+                setTimeout(
+                    () =>
+                        qc.invalidateQueries({
+                            queryKey: QUERY_KEYS.rooms(userId),
+                        }),
+                    10,
+                );
+            }
+
             return; // Быстрый выход, ключи для удаления не нужны
         }
 
@@ -116,31 +205,6 @@ async function handleMessageEvent({
             event.action === REALTIME_ACTIONS.CREATE ||
             event.action === REALTIME_ACTIONS.UPDATE
         ) {
-            const roomKey = await chatCryptoService.getRoomKey({
-                roomId: _activeRoomId,
-                userId,
-            });
-
-            let decryptedContent = "";
-            try {
-                decryptedContent =
-                    (await decryptMessagePayload(
-                        record,
-                        roomKey || undefined,
-                    )) || "";
-            } catch (e) {
-                logger.error(
-                    "ChatRealtimeService: Ошибка дешифровки сообщения",
-                    e,
-                );
-                // Не прерываем выполнение, выводим заглушку, чтобы сообщение хотя бы появилось
-                decryptedContent = "Ошибка дешифровки";
-            }
-
-            const mapped: ChatMessage = {
-                ...record,
-                content: decryptedContent || "",
-            };
             qc.setQueryData<ChatMessage[]>(
                 QUERY_KEYS.messages(_activeRoomId),
                 (old = []) => {

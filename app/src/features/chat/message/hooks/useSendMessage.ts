@@ -391,9 +391,6 @@ export function useSendMessage({
             queryClient.invalidateQueries({
                 queryKey: QUERY_KEYS.messages(roomId),
             });
-            queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.rooms(user.id),
-            });
         },
     });
 }

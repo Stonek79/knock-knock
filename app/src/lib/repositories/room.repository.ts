@@ -22,6 +22,7 @@ import type {
 } from "../types";
 import { appError, err, fromPromise, ok } from "../utils/result";
 import { type PBRoomExpanded, RoomMapper } from "./mappers/roomMapper";
+import { messageRepository } from "./message.repository";
 
 /**
  * FUNCTIONAL ROOM REPOSITORY
@@ -91,7 +92,23 @@ export const roomRepository = {
             return ok([]);
         }
         // 2. Вызываем наш метод, чтобы получить комнаты с участниками по этим ID
-        return roomRepository.getRoomsWithMembersByIds(roomIds);
+        const roomsResult =
+            await roomRepository.getRoomsWithMembersByIds(roomIds);
+        if (roomsResult.isErr()) {
+            return err(roomsResult.error);
+        }
+
+        const lastMsgsResult =
+            await messageRepository.getLastVisibleMessageBatch(roomIds, userId);
+        const lastMsgs = lastMsgsResult.isOk()
+            ? lastMsgsResult.value
+            : new Map();
+        return ok(
+            roomsResult.value.map((room) => ({
+                ...room,
+                last_message: lastMsgs.get(room.id) ?? null,
+            })),
+        );
     },
 
     /**

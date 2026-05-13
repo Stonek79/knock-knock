@@ -97,6 +97,79 @@ export const messageRepository = {
     },
 
     /**
+     * Получить последнее сообщение по ID
+     */
+    getLatestVisibleMessage: async (
+        roomId: string,
+        userId: string,
+    ): Promise<Result<MessageRow | null, MessageRepoError>> => {
+        return fromPromise(
+            pb.collection(DB_TABLES.MESSAGES).getList<PBMessage>(1, 10, {
+                filter: pb.filter(
+                    `${MESSAGE_FIELDS.ROOM} = {:roomId} && ${MESSAGE_FIELDS.IS_DELETED} = false`,
+                    { roomId },
+                ),
+                sort: `-${MESSAGE_FIELDS.CREATED}`,
+                $autoCancel: false,
+            }),
+            (e: unknown) => {
+                return appError(
+                    ERROR_CODES.NETWORK_ERROR,
+                    "Не удалось получить последнее сообщение",
+                    e,
+                );
+            },
+        ).map((res) => {
+            // Ищем первое сообщение, которое не скрыто текущим пользователем
+            const visibleMsg = res.items.find((m) => {
+                const metadataObj =
+                    typeof m.metadata === "object" && m.metadata !== null
+                        ? m.metadata
+                        : {};
+
+                const rawDeletedBy =
+                    "deleted_by" in metadataObj
+                        ? metadataObj.deleted_by
+                        : undefined;
+
+                const deletedBy = Array.isArray(rawDeletedBy)
+                    ? rawDeletedBy
+                    : [];
+                return !deletedBy.includes(userId);
+            });
+            return visibleMsg ? MessageMapper.toRow(visibleMsg) : null;
+        });
+    },
+
+    /**
+     * Получить последнее видимое сообщение для списка комнат (пакетный режим).
+     */
+    getLastVisibleMessageBatch: async (
+        roomIds: string[],
+        userId: string,
+    ): Promise<Result<Map<string, MessageRow>, MessageRepoError>> => {
+        if (roomIds.length === 0) {
+            return ok(new Map());
+        }
+
+        const entries = await Promise.all(
+            roomIds.map(async (roomId) => {
+                const result = await messageRepository.getLatestVisibleMessage(
+                    roomId,
+                    userId,
+                );
+                const msg = result.isOk() ? result.value : null;
+                return [roomId, msg] as const;
+            }),
+        );
+
+        const map = new Map<string, MessageRow>(
+            entries.filter((e): e is [string, MessageRow] => e[1] !== null),
+        );
+        return ok(map);
+    },
+
+    /**
      * Отправить сообщение
      */
     sendMessage: async (

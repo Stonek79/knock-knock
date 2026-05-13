@@ -3,6 +3,7 @@
  * Централизованное хранилище типов для работы с базой данных PocketBase.
  */
 
+import type { ErrorCode } from "./errors";
 import type { PBMessage, PBRoom, PBRoomMember, PBUser } from "./pocketbase";
 import type { AppError } from "./result";
 
@@ -14,8 +15,6 @@ export type MessageRecord = PBMessage;
 /**
  * ОШИБКИ РЕПОЗИТОРИЕВ
  */
-
-import type { ErrorCode } from "./errors";
 
 export type UserRepoError = AppError<ErrorCode>;
 export type AuthRepoError = AppError<ErrorCode>;
