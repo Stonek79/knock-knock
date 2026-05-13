@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { logger } from "@/lib/logger";
 
 interface UseAudioRecordingParams {
     /** Начало записи (срабатывает после 400мс удержания) */
@@ -36,46 +35,16 @@ export function useAudioRecording({
     const [isRecording, setIsRecording] = useState(false);
     const isRecordingRef = useRef(false);
     const startTimeRef = useRef<number>(0);
-    const isPreparingRef = useRef(false);
 
     const handlePointerDown = useCallback(async () => {
-        isPreparingRef.current = true;
-
         startTimeRef.current = Date.now();
         isRecordingRef.current = true;
         setIsRecording(true);
-        try {
-            await onStartRecording();
 
-            // Если пользователь отпустил кнопку, пока мы ждали права
-            if (!isPreparingRef.current) {
-                onCancelRecording?.();
-                return;
-            }
-
-            startTimeRef.current = Date.now();
-            isRecordingRef.current = true;
-            isPreparingRef.current = false;
-            setIsRecording(true);
-        } catch (error) {
-            logger.error(
-                "Error occurred while starting audio recording",
-                error,
-            );
-            isPreparingRef.current = false;
-            isRecordingRef.current = false;
-            setIsRecording(false);
-            onCancelRecording?.();
-        }
-    }, [onStartRecording, onCancelRecording]);
+        onStartRecording();
+    }, [onStartRecording]);
 
     const handlePointerUp = useCallback(() => {
-        if (isPreparingRef.current) {
-            // Отпустили кнопку до получения прав
-            isPreparingRef.current = false;
-            return;
-        }
-
         if (!isRecordingRef.current) {
             return;
         }
@@ -94,11 +63,6 @@ export function useAudioRecording({
     }, [onStopAndFinish, onCancelRecording]);
 
     const handlePointerLeave = useCallback(() => {
-        if (isPreparingRef.current) {
-            isPreparingRef.current = false;
-            return;
-        }
-
         if (!isRecordingRef.current) {
             return;
         }

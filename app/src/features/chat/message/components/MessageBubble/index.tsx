@@ -222,9 +222,12 @@ export function MessageBubble({
                         {t("chat.messageDeleted", "Сообщение удалено")}
                     </Text>
                 ) : content && hasAudioAttachment ? (
-                    isTranscriptExpanded ? (
-                        <TranscriptBlock content={content} />
-                    ) : null
+                    <>
+                        {isTranscriptExpanded ? (
+                            <TranscriptBlock content={content} />
+                        ) : null}
+                        <Box className={styles.metadata}>{metadataContent}</Box>
+                    </>
                 ) : content ? (
                     <Text className={styles.content} data-testid="message-text">
                         <Box className={styles.metadata}>{metadataContent}</Box>
