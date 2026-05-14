@@ -9,34 +9,6 @@
 const DB_TOP = require(`${__hooks}/db.js`);
 
 /**
- * 1. ОСНОВНОЙ ЦИКЛ ОБРАБОТКИ
- * Выполняется каждую минуту согласно конфигурации в db.js.
- */
-cronAdd("task_runner", DB_TOP.CONFIG.CRON_RUNNER, () => {
-	// Внутренний импорт для изоляции обработчика
-	const DB = require(`${__hooks}/db.js`);
-	const nowStr = new Date().toISOString().replace("T", " ").split(".")[0];
-
-	const tasks = $app
-		.findRecordsByFilter(
-			DB.TABLES.TASK_QUEUE,
-			`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_PENDING}' || (${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.ATTEMPTS} < 5 && ${DB.FIELDS.RUN_AT} <= {:now})`,
-			`+${DB.FIELDS.RUN_AT}`,
-			20,
-			0,
-			{ now: nowStr },
-		);
-
-	if (tasks.length === 0) {
-		return;
-	}
-
-	for (const task of tasks) {
-		processTask(task);
-	}
-});
-
-/**
  * РАСПРЕДЕЛИТЕЛЬ ЗАДАЧ
  * @param {Record} task - Объект записи из task_queue
  */
@@ -132,15 +104,14 @@ function handleCleanupTask() {
 		.toISOString()
 		.replace("T", " ")
 		.split(".")[0];
-	const oldSuccessful = $app
-		.findRecordsByFilter(
-			DB.TABLES.TASK_QUEUE,
-			`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_COMPLETED}' && ${DB.FIELDS.UPDATED} <= {:date}`,
-			"",
-			500,
-			0,
-			{ date: yesterday },
-		);
+	const oldSuccessful = $app.findRecordsByFilter(
+		DB.TABLES.TASK_QUEUE,
+		`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_COMPLETED}' && ${DB.FIELDS.UPDATED} <= {:date}`,
+		"",
+		500,
+		0,
+		{ date: yesterday },
+	);
 
 	for (const rec of oldSuccessful) {
 		$app.delete(rec);
@@ -150,22 +121,50 @@ function handleCleanupTask() {
 		.toISOString()
 		.replace("T", " ")
 		.split(".")[0];
-	const oldFailed = $app
-		.findRecordsByFilter(
-			DB.TABLES.TASK_QUEUE,
-			`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.UPDATED} <= {:date}`,
-			"",
-			500,
-			0,
-			{ date: lastWeek },
-		);
+	const oldFailed = $app.findRecordsByFilter(
+		DB.TABLES.TASK_QUEUE,
+		`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.UPDATED} <= {:date}`,
+		"",
+		500,
+		0,
+		{ date: lastWeek },
+	);
 
 	for (const rec of oldFailed) {
 		$app.delete(rec);
 	}
 }
 
-// Запуск очистки по расписанию
+/**
+ * 1. ОСНОВНОЙ ЦИКЛ ОБРАБОТКИ
+ * Выполняется каждую минуту согласно конфигурации в db.js.
+ */
+cronAdd("task_runner", DB_TOP.CONFIG.CRON_RUNNER, () => {
+	// Внутренний импорт для изоляции обработчика
+	const DB = require(`${__hooks}/db.js`);
+	const nowStr = new Date().toISOString().replace("T", " ").split(".")[0];
+
+	const tasks = $app.findRecordsByFilter(
+		DB.TABLES.TASK_QUEUE,
+		`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_PENDING}' || (${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.ATTEMPTS} < 5 && ${DB.FIELDS.RUN_AT} <= {:now})`,
+		`+${DB.FIELDS.RUN_AT}`,
+		20,
+		0,
+		{ now: nowStr },
+	);
+
+	if (tasks.length === 0) {
+		return;
+	}
+
+	for (const task of tasks) {
+		processTask(task);
+	}
+});
+
+/**
+ * 2. ОЧИСТКА ПО РАСПИСАНИЮ
+ */
 cronAdd("task_cleanup", DB_TOP.CONFIG.CRON_CLEANUP, () => {
 	handleCleanupTask();
 });
