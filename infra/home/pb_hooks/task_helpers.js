@@ -1,0 +1,138 @@
+/**
+ * @module TaskHelpers
+ * @description Изолированные функции для обработки задач.
+ * Подгружаются через require() внутри изолированных VM cron-задач PocketBase.
+ */
+
+/**
+ * ОБРАБОТЧИК PUSH-УВЕДОМЛЕНИЙ
+ * @param {Object} payload - Полезная нагрузка задачи
+ */
+function handlePushTask(payload) {
+	const DB = require(`${__hooks}/db.js`);
+	const pushGatewayUrl =
+		$os.getenv("PB_PUSH_GATEWAY_URL") || DB.CONFIG.PUSH_GATEWAY_DEFAULT_URL;
+
+	if (!payload.subscriptions || payload.subscriptions.length === 0) {
+		return;
+	}
+
+	const res = $http.send({
+		url: `${pushGatewayUrl}${DB.CONFIG.PUSH_GATEWAY_ENDPOINT}`,
+		method: DB.VALUES.METHOD_POST,
+		headers: { "Content-Type": DB.VALUES.CONTENT_TYPE_JSON },
+		body: JSON.stringify({
+			subscriptions: payload.subscriptions,
+			payload: payload.data,
+		}),
+		timeout: 10,
+	});
+
+	if (res.statusCode < 200 || res.statusCode >= 300) {
+		throw new Error(
+			`Push Gateway error (Status: ${res.statusCode}): ${res.raw}`,
+		);
+	}
+}
+
+/**
+ * ЛОГИКА ОШИБОК И РЕТРАЕВ
+ */
+function handleTaskError(task, err) {
+	const DB = require(`${__hooks}/db.js`);
+	const attempts = task.getInt(DB.FIELDS.ATTEMPTS) + 1;
+	const maxAttempts = 5;
+
+	task.set(DB.FIELDS.ATTEMPTS, attempts);
+	task.set(DB.FIELDS.LAST_ERROR, err.message || String(err));
+
+	if (attempts >= maxAttempts) {
+		task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_FAILED);
+	} else {
+		const backoffMinutes = [1, 5, 15, 60][attempts - 1] || 60;
+		const nextRun = new Date(Date.now() + backoffMinutes * 60000);
+
+		task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_FAILED);
+		task.set(
+			DB.FIELDS.RUN_AT,
+			nextRun.toISOString().replace("T", " ").split(".")[0],
+		);
+	}
+
+	$app.save(task);
+}
+
+/**
+ * ОЧИСТКА СТАРЫХ ЗАДАЧ
+ */
+function handleCleanupTask() {
+	const DB = require(`${__hooks}/db.js`);
+	const now = Date.now();
+
+	const yesterday = new Date(now - 24 * 60 * 60 * 1000)
+		.toISOString()
+		.replace("T", " ")
+		.split(".")[0];
+	const oldSuccessful = $app.findRecordsByFilter(
+		DB.TABLES.TASK_QUEUE,
+		`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_COMPLETED}' && ${DB.FIELDS.UPDATED} <= {:date}`,
+		"",
+		500,
+		0,
+		{ date: yesterday },
+	);
+
+	for (const rec of oldSuccessful) {
+		$app.delete(rec);
+	}
+
+	const lastWeek = new Date(now - 7 * 24 * 60 * 60 * 1000)
+		.toISOString()
+		.replace("T", " ")
+		.split(".")[0];
+	const oldFailed = $app.findRecordsByFilter(
+		DB.TABLES.TASK_QUEUE,
+		`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.UPDATED} <= {:date}`,
+		"",
+		500,
+		0,
+		{ date: lastWeek },
+	);
+
+	for (const rec of oldFailed) {
+		$app.delete(rec);
+	}
+}
+
+/**
+ * РАСПРЕДЕЛИТЕЛЬ ЗАДАЧ
+ * @param {Record} task - Объект записи из task_queue
+ */
+function processTask(task) {
+	const DB = require(`${__hooks}/db.js`);
+	const type = task.get(DB.FIELDS.TYPE);
+	const payload = task.get(DB.FIELDS.PAYLOAD);
+
+	task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_PROCESSING);
+	$app.save(task);
+
+	try {
+		if (type === DB.VALUES.TASK_TYPE_PUSH) {
+			handlePushTask(payload);
+		} else if (type === DB.VALUES.TASK_TYPE_CLEANUP) {
+			handleCleanupTask();
+		}
+
+		task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_COMPLETED);
+		task.set(DB.FIELDS.LAST_ERROR, "");
+		$app.save(task);
+	} catch (err) {
+		handleTaskError(task, err);
+	}
+}
+
+// Экспортируем функции для использования внутри cron-обработчиков
+module.exports = {
+	processTask,
+	handleCleanupTask,
+};
