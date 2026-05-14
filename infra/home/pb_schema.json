@@ -719,7 +719,7 @@
 		],
 		"listRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
 		"viewRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
-		"createRule": "@request.auth.id != \"\"",
+		"createRule": "@request.auth.id != \"\" && user = @request.auth.id",
 		"updateRule": "user = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role = \"owner\" || room.room_members_via_room.role = \"admin\"))",
 		"deleteRule": "user = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role = \"owner\" || room.room_members_via_room.role = \"admin\"))"
 	},
@@ -885,9 +885,9 @@
 		],
 		"listRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
 		"viewRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
-		"createRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
-		"updateRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
-		"deleteRule": "@request.auth.id != \"\" && (sender = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role = \"owner\" || room.room_members_via_room.role = \"admin\")))"
+		"createRule": "@request.auth.id != \"\" && sender = @request.auth.id && room.room_members_via_room.user ?= @request.auth.id",
+		"updateRule": "@request.auth.id != \"\" && sender = @request.auth.id",
+		"deleteRule": "@request.auth.id != \"\" && (sender = @request.auth.id || @request.auth.role = \"admin\")"
 	},
 	{
 		"id": "pbc_keys_id",
@@ -959,7 +959,7 @@
 		],
 		"listRule": "@request.auth.id != '' && user = @request.auth.id",
 		"viewRule": "@request.auth.id != '' && user = @request.auth.id",
-		"createRule": "@request.auth.id != ''",
+		"createRule": "@request.auth.id != '' && user = @request.auth.id",
 		"updateRule": null,
 		"deleteRule": "@request.auth.id != '' && user = @request.auth.id"
 	},
@@ -1020,9 +1020,9 @@
 		],
 		"listRule": "@request.auth.id != '' && user = @request.auth.id",
 		"viewRule": "@request.auth.id != '' && user = @request.auth.id",
-		"createRule": "@request.auth.id != ''",
-		"updateRule": "@request.auth.id != ''",
-		"deleteRule": "@request.auth.id != ''"
+		"createRule": "@request.auth.id != '' && user = @request.auth.id",
+		"updateRule": "@request.auth.id != '' && user = @request.auth.id",
+		"deleteRule": "@request.auth.id != '' && user = @request.auth.id"
 	},
 	{
 		"id": "pbc_pres_id",
@@ -1102,9 +1102,9 @@
 		],
 		"listRule": "@request.auth.id != ''",
 		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != ''",
-		"updateRule": "@request.auth.id != ''",
-		"deleteRule": "@request.auth.id != ''"
+		"createRule": "@request.auth.id != '' && user = @request.auth.id",
+		"updateRule": "@request.auth.id != '' && user = @request.auth.id",
+		"deleteRule": "@request.auth.id != '' && user = @request.auth.id"
 	},
 	{
 		"id": "pbc_reac_tab_id",
@@ -1176,7 +1176,7 @@
 		],
 		"listRule": "@request.auth.id != ''",
 		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != ''",
+		"createRule": "@request.auth.id != '' && user = @request.auth.id",
 		"updateRule": "@request.auth.id = user",
 		"deleteRule": "@request.auth.id = user"
 	},
@@ -1328,7 +1328,7 @@
 		],
 		"listRule": "@request.auth.role = 'admin' || @request.auth.id = reporter",
 		"viewRule": "@request.auth.role = 'admin' || @request.auth.id = reporter",
-		"createRule": "@request.auth.id != ''",
+		"createRule": "@request.auth.id != '' && reporter = @request.auth.id",
 		"updateRule": "@request.auth.role = 'admin'",
 		"deleteRule": "@request.auth.role = 'admin'"
 	},
@@ -1527,7 +1527,7 @@
 		],
 		"listRule": "@request.auth.id != ''",
 		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != ''",
+		"createRule": "@request.auth.id != '' && created_by = @request.auth.id",
 		"updateRule": "@request.auth.id = created_by",
 		"deleteRule": "@request.auth.id = created_by"
 	},
@@ -1615,11 +1615,11 @@
 			"CREATE INDEX `idx_task_queue_status_run_at` ON `task_queue` (`status`, `run_at`)",
 			"CREATE UNIQUE INDEX `idx_task_queue_key` ON `task_queue` (`task_key`) WHERE task_key != ''"
 		],
-		"listRule": "",
-		"viewRule": "",
-		"createRule": "",
-		"updateRule": "",
-		"deleteRule": ""
+		"listRule": null,
+		"viewRule": null,
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null
 	},
 	{
 		"id": "pbc_call_logs_id",
@@ -1735,7 +1735,7 @@
 		],
 		"listRule": "@request.auth.id != '' && room.room_members_via_room.user ?= @request.auth.id",
 		"viewRule": "@request.auth.id != '' && room.room_members_via_room.user ?= @request.auth.id",
-		"createRule": "@request.auth.id != '' && room.room_members_via_room.user ?= @request.auth.id",
+		"createRule": "@request.auth.id != '' && initiator = @request.auth.id && room.room_members_via_room.user ?= @request.auth.id",
 		"updateRule": null,
 		"deleteRule": null
 	}

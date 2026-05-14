@@ -157,6 +157,23 @@ export const MessageService = {
         // 1. Получаем сообщение для проверки прав и вложений
         const msgResult = await messageRepository.getMessageById(messageId);
         if (msgResult.isErr()) {
+            if (msgResult.error.kind === ERROR_CODES.NOT_FOUND_ERROR) {
+                try {
+                    await mediaDb.deleteByMessageId({
+                        messageId,
+                        userId: currentUserId,
+                    });
+                } catch (e) {
+                    logger.warn(
+                        "Не удалось очистить медиа для несуществующего сообщения",
+                        {
+                            messageId,
+                            error: e,
+                        },
+                    );
+                }
+                return ok(undefined);
+            }
             return err(
                 appError(
                     ERROR_CODES.DB_ERROR,

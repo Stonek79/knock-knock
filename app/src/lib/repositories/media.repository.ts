@@ -76,6 +76,7 @@ export const mediaRepository = {
     downloadFile: async (url: string): Promise<Result<Blob, Error>> => {
         try {
             const token = pb.authStore.token;
+
             const headers: Record<string, string> = {};
             if (token) {
                 headers.Authorization = token;

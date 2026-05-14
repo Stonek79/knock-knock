@@ -97,8 +97,37 @@ class ChatCryptoService {
             };
         }
 
+        if (decrypted !== null && decrypted !== undefined) {
+            let finalContent = decrypted;
+
+            // Если текст пустой, но есть вложения — формируем красивый плейсхолдер
+            if (
+                finalContent.trim() === "" &&
+                message.attachments &&
+                message.attachments.length > 0
+            ) {
+                const type = message.attachments[0].type || "";
+
+                if (type.startsWith("image")) {
+                    finalContent = "📷 Фото";
+                } else if (type.startsWith("video")) {
+                    finalContent = "🎥 Видео";
+                } else if (type.startsWith("audio")) {
+                    finalContent = "🎤 Голосовое";
+                } else {
+                    finalContent = "📎 Файл";
+                }
+            }
+
+            return {
+                content: finalContent || "...", // Защита от абсолютно пустого пузыря
+                isDecrypted: !!key, // Считаем расшифрованным, если был ключ
+            };
+        }
+
+        // Фолбэк, если decrypted === null (не удалось расшифровать)
         return {
-            content: "chat.encryptedMessage",
+            content: "",
             isDecrypted: false,
         };
     }
