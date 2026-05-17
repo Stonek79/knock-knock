@@ -14,7 +14,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Text } from "@/components/ui/Text";
 import { TextArea } from "@/components/ui/TextArea";
 import { VisuallyHidden } from "@/components/ui/VisuallyHidden";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import styles from "./attachment-preview-modal.module.css";
 
 interface AttachmentPreviewModalProps {

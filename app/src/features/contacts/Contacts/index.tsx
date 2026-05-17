@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import styles from "./contactspage.module.css";
 
 /**

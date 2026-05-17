@@ -651,7 +651,7 @@ import { Flex } from '@/components/layout/Flex';
 import { Button } from '@/components/ui/Button';
 import { CallRoom } from '@/features/calls/CallRoom';
 import { useCallStore } from '@/stores/call/callStore';
-import { ICON_SIZE } from '@/lib/utils/iconSize';
+import { ICON_SIZE } from '@/lib/constants';
 import styles from './callspage.module.css';
 
 export function CallsPage() {

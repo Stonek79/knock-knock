@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Grid } from "@/components/layout/Grid";
 import { IconButton } from "@/components/ui/IconButton";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import { NUMPAD_KEYS } from "./pin.constants";
 import styles from "./pin.module.css";
 

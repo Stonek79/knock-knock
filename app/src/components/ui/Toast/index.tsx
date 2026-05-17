@@ -16,7 +16,7 @@ import {
     useContext,
     useState,
 } from "react";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import styles from "./toast.module.css";
 
 /** Варианты отображения тоста */

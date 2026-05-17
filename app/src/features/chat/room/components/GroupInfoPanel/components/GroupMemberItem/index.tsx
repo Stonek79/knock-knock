@@ -6,9 +6,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { IconButton } from "@/components/ui/IconButton";
 import { Text } from "@/components/ui/Text";
-import { MEMBER_ROLE } from "@/lib/constants";
+import { ICON_SIZE, MEMBER_ROLE } from "@/lib/constants";
 import type { ExpandedRoomMember } from "@/lib/types";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import styles from "./groupmemberitem.module.css";
 
 interface GroupMemberItemProps {

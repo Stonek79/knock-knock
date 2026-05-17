@@ -12,9 +12,12 @@ import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
 import { usePresence } from "@/features/presence";
-import { USER_CONTACTS_MODES, USER_WEB_STATUS } from "@/lib/constants";
+import {
+    ICON_SIZE,
+    USER_CONTACTS_MODES,
+    USER_WEB_STATUS,
+} from "@/lib/constants";
 import type { Profile } from "@/lib/types/profile";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { SidebarHeader } from "../../navigation/components/SidebarHeader";
 import styles from "./contactlist.module.css";
 

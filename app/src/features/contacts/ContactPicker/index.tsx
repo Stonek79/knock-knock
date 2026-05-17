@@ -9,10 +9,9 @@ import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Search } from "@/components/ui/Search";
 import { Spinner } from "@/components/ui/Spinner";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
-import { CONTACT_PICKER_MODE } from "@/lib/constants";
+import { CONTACT_PICKER_MODE, ICON_SIZE } from "@/lib/constants";
 import type { Profile } from "@/lib/types/profile";
 import type { ContactPickerMode } from "@/lib/types/ui";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./contactpicker.module.css";
 

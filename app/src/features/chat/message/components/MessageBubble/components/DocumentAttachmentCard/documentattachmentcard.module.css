@@ -1,0 +1,68 @@
+.card {
+    /* Пробрасываем глобальные токены в локальные переменные компонента */
+    --card-bg: var(--surface-1);
+    --card-border: var(--border);
+
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--card-border);
+    min-width: var(--size-preview-width-wide);
+    max-width: var(--max-w-card);
+    padding: var(--space-2) var(--space-3);
+    transition: background-color var(--transition-base);
+}
+
+.card:hover {
+    --card-bg: var(--surface-2);
+}
+
+.iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-btn-h-4);
+    height: var(--size-btn-h-4);
+    border-radius: var(--kk-radius-sm);
+    background-color: var(--surface);
+}
+
+.pdfIcon {
+    color: var(--doc-color-pdf, var(--color-error, #ef4444));
+}
+.zipIcon {
+    color: var(--doc-color-zip, var(--color-warning, #f59e0b));
+}
+.docIcon {
+    color: var(--doc-color-doc, var(--color-info, #3b82f6));
+}
+.xlsIcon {
+    color: var(--doc-color-xls, var(--color-success, #10b981));
+}
+.defaultIcon {
+    color: var(--doc-color-default, var(--muted-foreground, var(--muted)));
+}
+
+.infoWrapper {
+    overflow: hidden;
+}
+
+.fileName {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.downloadBtn {
+    flex-shrink: 0;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}

@@ -1,7 +1,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { type ComponentPropsWithoutRef, forwardRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import { TextField } from "../TextField";
 import styles from "./styles.module.css";
 

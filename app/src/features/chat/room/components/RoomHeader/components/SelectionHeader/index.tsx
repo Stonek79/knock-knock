@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import rootStyles from "../../roomheader.module.css";
 import styles from "./selection-header.module.css";
 

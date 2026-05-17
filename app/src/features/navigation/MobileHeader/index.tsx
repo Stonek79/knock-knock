@@ -16,8 +16,7 @@ import { Flex } from "@/components/layout/Flex";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { IconButton } from "@/components/ui/IconButton";
 import { useChatDialogs } from "@/hooks/chatDialogs";
-import { APP_NAME, CHAT_TYPE, ROUTES } from "@/lib/constants";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { APP_NAME, CHAT_TYPE, ICON_SIZE, ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./mobileheader.module.css";
 

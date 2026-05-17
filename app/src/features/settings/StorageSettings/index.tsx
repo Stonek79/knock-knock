@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
+import { ICON_SIZE } from "@/lib/constants";
 import { mediaDb } from "@/lib/mediadb/media-db";
 import { formatBytes } from "@/lib/utils/format";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./storage-settings.module.css";
 

@@ -2,7 +2,7 @@ import { MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ChatList } from "@/features/chat/list";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import styles from "./chat-placeholder.module.css";
 
 /**

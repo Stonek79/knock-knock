@@ -14,6 +14,7 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import {
     ATTACHMENT_TYPES,
+    ICON_SIZE,
     MESSAGE_POSITION,
     MESSAGE_STATUS,
     ROOM_TYPE,
@@ -25,7 +26,6 @@ import type {
     UIMessageStatus,
 } from "@/lib/types";
 import { getUserColor } from "@/lib/utils/colors";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useLightboxSlides } from "../../hooks/useLightboxSlides";
 import { AttachmentRenderer } from "./components/AttachmentRenderer";
 import { StatusIcon } from "./components/StatusIcon";

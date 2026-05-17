@@ -33,3 +33,23 @@ export const DESIGN_THEMES = [
 ] as const;
 
 export const THEME_MODES = [THEME_MODE.LIGHT, THEME_MODE.DARK] as const;
+
+/**
+ * Числовые значения размеров иконок (в пикселях).
+ * Соответствуют CSS-токенам при scale-factor = 1.
+ */
+export const ICON_SIZE = {
+    /** 14px — мелкие элементы, чипы, бейджи */
+    xs: 14,
+    /** 18px — навигация, кнопки, поля ввода */
+    sm: 18,
+    /** 24px — основные иконки действий */
+    md: 24,
+    /** 32px — пустые состояния, заглушки */
+    lg: 32,
+    /** 48px — крупные иллюстративные иконки */
+    xl: 48,
+    /** 64px — hero-иконки */
+    "2xl": 64,
+    xxl: 64,
+} as const;

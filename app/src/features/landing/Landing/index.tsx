@@ -5,8 +5,7 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { AppLogo } from "@/components/ui/AppLogo";
 import { Button } from "@/components/ui/Button";
-import { ROUTES } from "@/lib/constants";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE, ROUTES } from "@/lib/constants";
 import styles from "./landing.module.css";
 
 /**

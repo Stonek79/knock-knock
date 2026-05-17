@@ -4,8 +4,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
-import { ROUTES } from "@/lib/constants";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE, ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./sidebar-header.module.css";
 

@@ -5,8 +5,11 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
-import { AUDIO_PLAYER, AUDIO_PLAYER_CONSTANTS } from "@/lib/constants";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import {
+    AUDIO_PLAYER,
+    AUDIO_PLAYER_CONSTANTS,
+    ICON_SIZE,
+} from "@/lib/constants";
 import { formatTime } from "@/lib/utils/time";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 import styles from "./AudioMessagePlayer.module.css";

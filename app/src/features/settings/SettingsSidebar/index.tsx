@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { SETTINGS_ITEMS } from "@/config/settings";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import { SidebarHeader } from "../../navigation/components/SidebarHeader";
 import styles from "./settingssidebar.module.css";
 

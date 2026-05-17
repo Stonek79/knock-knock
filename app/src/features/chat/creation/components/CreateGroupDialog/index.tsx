@@ -10,8 +10,7 @@ import {
     ContactPicker,
     useSelectedContacts,
 } from "@/features/contacts/ContactPicker";
-import { CONTACT_PICKER_MODE } from "@/lib/constants";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { CONTACT_PICKER_MODE, ICON_SIZE } from "@/lib/constants";
 import { useCreateGroup } from "../../hooks/useCreateGroup";
 import styles from "./creategroupdialog.module.css";
 

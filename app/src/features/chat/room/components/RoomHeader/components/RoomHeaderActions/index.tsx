@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
+import { ICON_SIZE } from "@/lib/constants";
 import styles from "./room-header-actions.module.css";
 
 interface RoomHeaderActionsProps {

@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Text } from "@/components/ui/Text";
+import { ICON_SIZE } from "@/lib/constants";
 import type { ExpandedRoomMember } from "@/lib/types";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { GroupMemberItem } from "../GroupMemberItem";
 import styles from "./groupmemberslist.module.css";
 

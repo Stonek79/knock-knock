@@ -1,5 +1,4 @@
-import clsx from "clsx";
-import { ImageOff, Paperclip, Play } from "lucide-react";
+import { ImageOff, Play } from "lucide-react";
 import {
     type Dispatch,
     type SetStateAction,
@@ -8,12 +7,15 @@ import {
     useState,
 } from "react";
 import { Flex } from "@/components/layout/Flex";
-import { Text } from "@/components/ui/Text";
-import { ATTACHMENT_TYPES, MEDIA_SYSTEM_CONSTANTS } from "@/lib/constants";
+import {
+    ATTACHMENT_TYPES,
+    ICON_SIZE,
+    MEDIA_SYSTEM_CONSTANTS,
+} from "@/lib/constants";
 import { useMedia } from "@/lib/mediadb/useMedia";
 import type { Attachment } from "@/lib/types";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { AudioMessagePlayer } from "../../../AudioMessagePlayer";
+import { DocumentAttachmentCard } from "../DocumentAttachmentCard";
 import styles from "./attachment-renderer.module.css";
 
 interface AttachmentRendererProps {
@@ -163,48 +165,48 @@ function CachedVideo({
 /**
  * Компонент для отображения документа.
  */
-function CachedDocument({
-    att,
-    roomKey,
-    isVault,
-    userId,
-}: {
-    att: Attachment;
-    roomKey?: CryptoKey;
-    isVault?: boolean;
-    userId: string;
-}) {
-    const { objectUrl, isLoading, error } = useMedia({
-        mediaId: att.id,
-        roomKey,
-        isVault,
-        userId,
-        initialUrl: att.url,
-    });
+// function CachedDocument({
+// 	att,
+// 	roomKey,
+// 	isVault,
+// 	userId,
+// }: {
+// 	att: Attachment;
+// 	roomKey?: CryptoKey;
+// 	isVault?: boolean;
+// 	userId: string;
+// }) {
+// 	const { objectUrl, isLoading, error } = useMedia({
+// 		mediaId: att.id,
+// 		roomKey,
+// 		isVault,
+// 		userId,
+// 		initialUrl: att.url,
+// 	});
 
-    return (
-        <a
-            key={att.id}
-            href={objectUrl || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={clsx(styles.attachmentDoc, {
-                [styles.loading]: isLoading,
-                [styles.error]: !!error,
-            })}
-            onClick={(e) => {
-                if (!objectUrl) {
-                    e.preventDefault();
-                }
-                e.stopPropagation();
-            }}
-            download={att.file_name}
-        >
-            <Paperclip size={ICON_SIZE.sm} />
-            <Text size="sm">{att.file_name}</Text>
-        </a>
-    );
-}
+// 	return (
+// 		<a
+// 			key={att.id}
+// 			href={objectUrl || "#"}
+// 			target="_blank"
+// 			rel="noopener noreferrer"
+// 			className={clsx(styles.attachmentDoc, {
+// 				[styles.loading]: isLoading,
+// 				[styles.error]: !!error,
+// 			})}
+// 			onClick={(e) => {
+// 				if (!objectUrl) {
+// 					e.preventDefault();
+// 				}
+// 				e.stopPropagation();
+// 			}}
+// 			download={att.file_name}
+// 		>
+// 			<Paperclip size={ICON_SIZE.sm} />
+// 			<Text size="sm">{att.file_name}</Text>
+// 		</a>
+// 	);
+// }
 
 /**
  * Компонент рендера вложений сообщения.
@@ -297,12 +299,19 @@ export function AttachmentRenderer({
                 }
 
                 return (
-                    <CachedDocument
+                    // <CachedDocument
+                    // 	key={att.id}
+                    // 	att={att}
+                    // 	roomKey={roomKey}
+                    // 	isVault={isVault}
+                    // 	userId={userId}
+                    // />
+                    <DocumentAttachmentCard
                         key={att.id}
-                        att={att}
+                        attachment={att}
+                        userId={userId}
                         roomKey={roomKey}
                         isVault={isVault}
-                        userId={userId}
                     />
                 );
             })}

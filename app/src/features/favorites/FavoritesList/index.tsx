@@ -6,9 +6,8 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { useToast } from "@/components/ui/Toast";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import { ROUTES } from "@/lib/constants";
+import { ICON_SIZE, ROUTES } from "@/lib/constants";
 import { RoomService } from "@/lib/services/room";
-import { ICON_SIZE } from "@/lib/utils/iconSize";
 import { useAuthStore } from "@/stores/auth";
 import styles from "./favoriteslist.module.css";
 
