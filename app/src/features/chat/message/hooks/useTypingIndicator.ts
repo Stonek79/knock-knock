@@ -29,6 +29,7 @@ export function useTypingIndicator({
     const { t } = useTranslation();
     const pbUser = useAuthStore((state) => state.pbUser);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isTypingRef = useRef(false);
 
     // Получаем список печатающих через React Query
     // ChatRealtimeService будет инвалидировать этот ключ при событиях Presence
@@ -81,9 +82,32 @@ export function useTypingIndicator({
             }
 
             if (isTyping) {
+                // Если еще не отправляли статус "печатает" на сервер — отправляем
+                if (!isTypingRef.current) {
+                    isTypingRef.current = true;
+                    ChatRealtimeService.setTypingStatus({
+                        roomId,
+                        isTyping: true,
+                    }).catch(() => {});
+                }
+
+                // Заводим новый таймер тишины (Debounce)
                 timeoutRef.current = setTimeout(() => {
-                    setTyping(false);
+                    isTypingRef.current = false;
+                    ChatRealtimeService.setTypingStatus({
+                        roomId,
+                        isTyping: false,
+                    }).catch(() => {});
                 }, TYPING_CONFIG.TIMEOUT_MS);
+            } else {
+                // Принудительная остановка (например, при отправке сообщения)
+                if (isTypingRef.current) {
+                    isTypingRef.current = false;
+                    ChatRealtimeService.setTypingStatus({
+                        roomId,
+                        isTyping: false,
+                    }).catch(() => {});
+                }
             }
         },
         [pbUser, roomId],

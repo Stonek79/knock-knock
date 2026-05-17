@@ -29,7 +29,7 @@ export function usePresence() {
             for (const r of result.value) {
                 // Если пинг был более 60 секунд назад — считаем оффлайн (защита от 'зависших' рекордов)
                 const lastPing = new Date(r.last_ping).getTime();
-                const isStale = now - lastPing > 60000;
+                const isStale = now - lastPing > 90000;
 
                 initialMap[r.user] =
                     r.is_online && !isStale

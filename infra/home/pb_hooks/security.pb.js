@@ -88,3 +88,48 @@ onRecordDeleteRequest((e) => {
 		);
 	}
 }, "room_members");
+
+// 4. ЗАЩИТА ОТ ИЗМЕНЕНИЯ ЧУЖИХ СООБЩЕНИЙ
+onRecordUpdateRequest((e) => {
+	const authRecord = e.requestInfo().authRecord;
+	if (!authRecord || authRecord.collection().name !== "users") return;
+
+	const isGlobalAdmin = authRecord.get("role") === "admin";
+	if (isGlobalAdmin) return;
+
+	const oldRecord = $app.findRecordById("messages", e.record.id);
+
+	if (oldRecord.get("sender") !== authRecord.id) {
+		// Запрещаем менять критические поля чужого сообщения (разрешено только status и metadata)
+		const protectedStringFields = ["content", "iv", "type", "sender", "room"];
+		for (const field of protectedStringFields) {
+			if (oldRecord.get(field) !== e.record.get(field)) {
+				throw new BadRequestError(
+					`Security Policy: You cannot modify the '${field}' field of someone else's message.`,
+				);
+			}
+		}
+
+		const protectedBoolFields = [
+			"is_edited",
+			"is_deleted",
+			"is_system",
+			"is_starred",
+		];
+		for (const field of protectedBoolFields) {
+			if (oldRecord.getBool(field) !== e.record.getBool(field)) {
+				throw new BadRequestError(
+					`Security Policy: You cannot modify the '${field}' field of someone else's message.`,
+				);
+			}
+		}
+
+		const oldAttachments = JSON.stringify(oldRecord.get("attachments") || []);
+		const newAttachments = JSON.stringify(e.record.get("attachments") || []);
+		if (oldAttachments !== newAttachments) {
+			throw new BadRequestError(
+				"Security Policy: You cannot modify attachments of someone else's message.",
+			);
+		}
+	}
+}, "messages");

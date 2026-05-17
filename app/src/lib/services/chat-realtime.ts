@@ -429,7 +429,7 @@ export const ChatRealtimeService = {
                     );
                     _presenceRecordId = null;
                 }
-            }, 20000);
+            }, 60000);
         } finally {
             _isInitializing = false;
         }

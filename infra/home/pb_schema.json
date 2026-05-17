@@ -886,7 +886,7 @@
 		"listRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
 		"viewRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
 		"createRule": "@request.auth.id != \"\" && sender = @request.auth.id && room.room_members_via_room.user ?= @request.auth.id",
-		"updateRule": "@request.auth.id != \"\" && sender = @request.auth.id",
+		"updateRule": "@request.auth.id != \"\" && (sender = @request.auth.id || room.room_members_via_room.user ?= @request.auth.id)",
 		"deleteRule": "@request.auth.id != \"\" && (sender = @request.auth.id || @request.auth.role = \"admin\")"
 	},
 	{
