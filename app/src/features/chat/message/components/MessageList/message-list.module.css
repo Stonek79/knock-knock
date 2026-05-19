@@ -1,6 +1,7 @@
 .listWrapper {
     height: 100%;
     width: 100%;
+    min-height: 0;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -8,9 +9,11 @@
 
 .scrollContainer {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
+    overflow-anchor: none;
     padding: var(--space-2);
     touch-action: pan-y;
     overscroll-behavior: contain;

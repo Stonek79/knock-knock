@@ -1,17 +1,13 @@
 import clsx from "clsx";
-import { Forward, Star } from "lucide-react";
-import { useState } from "react";
+import { Star } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import Lightbox from "yet-another-react-lightbox";
-import DownloadPlugin from "yet-another-react-lightbox/plugins/download";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
 import { Text } from "@/components/ui/Text";
 import { useLongPress } from "@/hooks/useLongPress";
-import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import {
     ATTACHMENT_TYPES,
     ICON_SIZE,
@@ -26,10 +22,10 @@ import type {
     UIMessageStatus,
 } from "@/lib/types";
 import { getUserColor } from "@/lib/utils/colors";
-import { useLightboxSlides } from "../../hooks/useLightboxSlides";
 import { AttachmentRenderer } from "./components/AttachmentRenderer";
 import { StatusIcon } from "./components/StatusIcon";
 import { TranscriptBlock } from "./components/TranscriptBlock";
+import { ZoomBlock } from "./components/ZoomBlock";
 import styles from "./message-bubble.module.css";
 
 interface MessageBubbleProps {
@@ -43,6 +39,7 @@ interface MessageBubbleProps {
     isDeleted?: boolean;
     isSelected?: boolean;
     onToggleSelection?: () => void;
+    isSelectionMode?: boolean;
     isEditing?: boolean;
     isStarred?: boolean;
     groupPosition?: MessagePosition;
@@ -67,6 +64,7 @@ export function MessageBubble({
     isDeleted = false,
     isSelected = false,
     onToggleSelection,
+    isSelectionMode = false,
     isEditing = false,
     isStarred = false,
     groupPosition = MESSAGE_POSITION.SINGLE,
@@ -78,19 +76,17 @@ export function MessageBubble({
     const { t } = useTranslation();
     const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
     const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
+    const hasLongPressedRef = useRef(false);
 
-    const hasAudioAttachment = attachments?.some(
-        (a) => a.type === ATTACHMENT_TYPES.AUDIO,
-    );
-    const imageAttachments =
-        attachments?.filter((a) => a.type === ATTACHMENT_TYPES.IMAGE) || [];
+    const hasAudioAttachment = useMemo(() => {
+        return attachments?.some((a) => a.type === ATTACHMENT_TYPES.AUDIO);
+    }, [attachments]);
 
-    const { slides } = useLightboxSlides({
-        attachments: imageAttachments,
-        userId,
-        roomKey,
-        enabled: lightboxIndex >= 0,
-    });
+    const imageAttachments = useMemo(() => {
+        return (
+            attachments?.filter((a) => a.type === ATTACHMENT_TYPES.IMAGE) || []
+        );
+    }, [attachments]);
 
     // Проверяем, состоит ли сообщение ИСКЛЮЧИТЕЛЬНО из ОДНОЙ картинки
     const isImageOnly =
@@ -107,13 +103,11 @@ export function MessageBubble({
     // Отмечаем цветом разных пользователей
     const userColor = senderName ? getUserColor(senderName) : undefined;
 
-    // Определяем мобильное устройство
-    const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
-
     // Long Press для выделения сообщения (мобилка)
     const { onPointerDown, onPointerUp, onPointerLeave } = useLongPress(
         () => {
             if (!isEditing) {
+                hasLongPressedRef.current = true;
                 onToggleSelection?.();
             }
         },
@@ -157,22 +151,39 @@ export function MessageBubble({
             data-testid="message-bubble"
             // Гибридный подход: мобилка = Long Press, десктоп = клик
             onPointerDown={(e) => {
-                // Игнорируем если клик по интерактивному элементу
                 const target = e.target as HTMLElement;
-                if (
-                    target.closest(
-                        "button, a, img, [data-interactive], .imageButton, .transcriptToggle",
-                    )
-                ) {
+
+                // Медиа-элементы: картинки, видео, или кастомные медиа-контейнеры (data-media)
+                const isMedia = target.closest("img, video, [data-media]");
+
+                // Интерактивные: нативные кнопки, ссылки, инпуты и кастомные контролы (data-interactive)
+                const isInteractive = target.closest(
+                    "button, a, input, textarea, select, [data-interactive]",
+                );
+
+                // Блокируем лонг-пресс только если это "чистый" интерактивный элемент (без медиа внутри)
+                if (isInteractive && !isMedia) {
                     return;
                 }
                 onPointerDown(e);
             }}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerLeave}
-            onClick={() => {
-                // На десктопе — выделение кликом
-                if (!isMobile && !isEditing && onToggleSelection) {
+            onClickCapture={(e) => {
+                // 1. Блокируем "фантомный" клик, который браузер генерирует сразу после отпускания пальца
+                if (hasLongPressedRef.current) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setTimeout(() => {
+                        hasLongPressedRef.current = false;
+                    }, 50);
+                    return;
+                }
+
+                // 2. Если режим выделения УЖЕ активен, перехватываем любой клик (даже по фото или файлу)
+                if (isSelectionMode && !isEditing && onToggleSelection) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     onToggleSelection();
                 }
             }}
@@ -246,54 +257,16 @@ export function MessageBubble({
                 )}
             </Box>
 
-            {!isDeleted && imageAttachments.length > 0 && (
-                <Lightbox
-                    open={lightboxIndex >= 0}
-                    close={() => setLightboxIndex(-1)}
-                    index={lightboxIndex}
-                    slides={slides}
-                    plugins={[Zoom, DownloadPlugin]}
-                    carousel={{ finite: imageAttachments.length === 1 }}
-                    render={{
-                        buttonPrev:
-                            imageAttachments.length <= 1
-                                ? () => null
-                                : undefined,
-                        buttonNext:
-                            imageAttachments.length <= 1
-                                ? () => null
-                                : undefined,
-                    }}
-                    toolbar={{
-                        buttons: [
-                            <button
-                                key="star"
-                                type="button"
-                                className="yarl__button"
-                                onClick={() => {
-                                    // Кнопка в разработке
-                                }}
-                                title={t("chat.star", "В избранное")}
-                            >
-                                <Star size={24} />
-                            </button>,
-                            <button
-                                key="forward"
-                                type="button"
-                                className="yarl__button"
-                                onClick={() => {
-                                    // Кнопка в разработке
-                                }}
-                                title={t("chat.forward", "Переслать")}
-                            >
-                                <Forward size={24} />
-                            </button>,
-                            "download",
-                            "close",
-                        ],
-                    }}
-                />
-            )}
+            <ZoomBlock
+                imageAttachments={imageAttachments}
+                roomKey={roomKey}
+                roomType={roomType}
+                userId={userId}
+                isDeleted={isDeleted}
+                open={lightboxIndex >= 0}
+                close={() => setLightboxIndex(-1)}
+                index={lightboxIndex}
+            />
         </Flex>
     );
 }

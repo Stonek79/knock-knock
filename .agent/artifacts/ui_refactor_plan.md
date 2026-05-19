@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Карточки документов (File/Document Attachments)
+## ✅ 1. Карточки документов (File/Document Attachments)
 **Проблема:** Сейчас не-медиа файлы (PDF, DOCX, ZIP) отображаются неприглядно или как обычные ссылки.
 **Решение:**
 - Создать компонент `DocumentAttachmentCard`.

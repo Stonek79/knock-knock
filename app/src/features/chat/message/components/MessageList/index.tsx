@@ -4,21 +4,17 @@
  * Поддерживает режим выделения (Selection Mode) и редактирования.
  */
 
-import clsx from "clsx";
-import { ArrowDown } from "lucide-react";
-import { type RefObject, useImperativeHandle } from "react";
+import { type RefObject, useImperativeHandle, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
-import { IconButton } from "@/components/ui/IconButton";
-import { useUserActivity } from "@/hooks/useUserActivity";
-import { ICON_SIZE } from "@/lib/constants";
 import type { DecryptedMessageWithProfile, RoomType } from "@/lib/types";
 import { getMessageGroupPosition } from "@/lib/utils/messageGrouping";
 import { useChatScroll } from "../../../room/hooks/useChatScroll";
 import { MessageBubble } from "../../components/MessageBubble";
 import { UnreadDivider } from "../../components/UnreadDivider";
 import styles from "./message-list.module.css";
+import { ScrollButton } from "./ScrollButton";
 
 interface MessageListProps {
     /** Список сообщений */
@@ -69,18 +65,68 @@ export function MessageList({
         messages: messages || [],
     });
 
-    // Логика авто-скрытия кнопки прокрутки
-    const { isActive: isUserActive, triggerActivity } = useUserActivity(2000);
-
-    // Общий обработчик прокрутки
-    const handleScroll = () => {
-        handleChatScroll();
-        triggerActivity();
-    };
-
     // Expose scrollToBottom to parent via ref
     useImperativeHandle(scrollRef, () => ({ scrollToBottom }), [
         scrollToBottom,
+    ]);
+
+    // Архитектурная оптимизация: мемоизируем маппинг элементов сообщений.
+    const renderedMessages = useMemo(() => {
+        // Режим выделения активируется, если выбрано хотя бы одно сообщение
+        const isSelectionMode = (selectedMessageIds?.size ?? 0) > 0;
+
+        return messages?.map((msg: DecryptedMessageWithProfile, index) => {
+            const isOwn = userId === msg.sender;
+            const isEditing = editingId === msg.id && isOwn;
+            const isFirstUnread = msg.id === firstUnreadId;
+
+            const prevMsg = messages[index - 1];
+            const nextMsg = messages[index + 1];
+
+            const groupPosition = getMessageGroupPosition(
+                msg,
+                prevMsg,
+                nextMsg,
+            );
+
+            return (
+                <Box key={msg.id} className={styles.messageWrapper}>
+                    {isFirstUnread && <UnreadDivider />}
+                    <MessageBubble
+                        content={msg.content}
+                        isOwn={isOwn}
+                        userId={userId}
+                        timestamp={
+                            (msg.is_deleted ? msg.updated : msg.created) ||
+                            msg.created
+                        }
+                        senderName={msg.profiles?.display_name}
+                        senderAvatar={msg.profiles?.avatar_url ?? undefined}
+                        status={msg.status}
+                        isEdited={msg.is_edited}
+                        isDeleted={msg.is_deleted}
+                        isStarred={msg.is_starred}
+                        isSelected={selectedMessageIds?.has(msg.id)}
+                        onToggleSelection={() => onToggleSelection?.(msg.id)}
+                        isSelectionMode={isSelectionMode}
+                        isEditing={isEditing}
+                        groupPosition={groupPosition}
+                        attachments={msg.attachments}
+                        roomKey={roomKey}
+                        roomType={roomType}
+                    />
+                </Box>
+            );
+        });
+    }, [
+        messages,
+        userId,
+        editingId,
+        firstUnreadId,
+        selectedMessageIds,
+        onToggleSelection,
+        roomKey,
+        roomType,
     ]);
 
     // Состояние загрузки
@@ -117,83 +163,17 @@ export function MessageList({
             {/* Скроллируемый контейнер */}
             <div
                 ref={viewportRef}
-                onScroll={handleScroll}
+                onScroll={handleChatScroll}
                 className={styles.scrollContainer}
             >
                 <Flex direction="column" gap="3">
-                    {messages?.map(
-                        (msg: DecryptedMessageWithProfile, index) => {
-                            const isOwn = userId === msg.sender;
-                            const isEditing = editingId === msg.id && isOwn;
-                            const isFirstUnread = msg.id === firstUnreadId;
-
-                            const prevMsg = messages[index - 1];
-                            const nextMsg = messages[index + 1];
-
-                            const groupPosition = getMessageGroupPosition(
-                                msg,
-                                prevMsg,
-                                nextMsg,
-                            );
-
-                            return (
-                                <Box
-                                    key={msg.id}
-                                    className={styles.messageWrapper}
-                                >
-                                    {isFirstUnread && <UnreadDivider />}
-                                    <MessageBubble
-                                        content={msg.content}
-                                        isOwn={isOwn}
-                                        userId={userId}
-                                        timestamp={
-                                            (msg.is_deleted
-                                                ? msg.updated
-                                                : msg.created) || msg.created
-                                        }
-                                        senderName={msg.profiles?.display_name}
-                                        senderAvatar={
-                                            msg.profiles?.avatar_url ??
-                                            undefined
-                                        }
-                                        status={msg.status}
-                                        isEdited={msg.is_edited}
-                                        isDeleted={msg.is_deleted}
-                                        isStarred={msg.is_starred}
-                                        isSelected={selectedMessageIds?.has(
-                                            msg.id,
-                                        )}
-                                        onToggleSelection={() =>
-                                            onToggleSelection?.(msg.id)
-                                        }
-                                        isEditing={isEditing}
-                                        groupPosition={groupPosition}
-                                        attachments={msg.attachments}
-                                        roomKey={roomKey}
-                                        roomType={roomType}
-                                    />
-                                </Box>
-                            );
-                        },
-                    )}
+                    {renderedMessages}
                 </Flex>
             </div>
-            {showScrollButton && (
-                <Box className={styles.scrollButtonWrapper}>
-                    <IconButton
-                        size="lg"
-                        shape="round"
-                        variant="solid"
-                        onClick={() => scrollToBottom()}
-                        className={clsx(
-                            styles.scrollButton,
-                            !isUserActive && styles.scrollButtonHidden,
-                        )}
-                    >
-                        <ArrowDown size={ICON_SIZE.sm} />
-                    </IconButton>
-                </Box>
-            )}
+            <ScrollButton
+                scrollToBottom={scrollToBottom}
+                showScrollButton={showScrollButton}
+            />
         </Box>
     );
 }

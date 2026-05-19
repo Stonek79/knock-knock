@@ -45,7 +45,6 @@ export function DocumentAttachmentCard({
     roomKey,
     isVault,
 }: DocumentAttachmentCardProps) {
-    // Используем существующую мощную утилиту, которая сама управляет кэшем и воркером расшифровки
     const { objectUrl, isLoading, error } = useMedia({
         mediaId: attachment.id,
         roomKey,
