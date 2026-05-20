@@ -42,10 +42,32 @@ export const MessageMapper = {
      * Теперь мы просто расширяем нативный тип, не переименовывая поля.
      */
     toRow(record: PBMessage): MessageRow {
-        const metadata = messageMetadataSchema.parse(record.metadata || {});
+        // Безопасный парсинг с логированием расхождений схемы
+        const metadataResult = messageMetadataSchema.safeParse(
+            record.metadata || {},
+        );
+        if (!metadataResult.success) {
+            console.warn(
+                `⚠️ [MessageMapper] Ошибка валидации metadata (ID: ${record.id}):`,
+                metadataResult.error.format(),
+            );
+        }
+        const metadata = metadataResult.success
+            ? metadataResult.data
+            : { deleted_by: [] };
 
-        const reactions_summary =
-            reactionsSummarySchema.parse(record.reactions_summary) ?? {};
+        const reactionsResult = reactionsSummarySchema.safeParse(
+            record.reactions_summary || {},
+        );
+        if (!reactionsResult.success) {
+            console.warn(
+                `⚠️ [MessageMapper] Ошибка валидации reactions_summary (ID: ${record.id}):`,
+                reactionsResult.error.format(),
+            );
+        }
+        const reactions_summary = reactionsResult.success
+            ? reactionsResult.data
+            : {};
 
         return {
             ...record,
@@ -80,7 +102,6 @@ export const MessageMapper = {
      * Маппинг данных для обновления сообщения из доменной модели в поля PocketBase.
      */
     toUpdateRecord(data: Partial<MessageRow>): Partial<PBMessage> {
-        // В новом подходе маппинг почти не нужен, так как имена полей совпадают
         return { ...data };
     },
 };

@@ -53,13 +53,13 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  Домашний сервер (Ubuntu + Docker)                         │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  LiveKit Server (SFU)                                │   │
+│  │  LiveKit Server (SFU)                               │   │
 │  │  ├─ Маршрутизация медиапотоков (WebRTC)             │   │
 │  │  ├─ Групповые звонки                                │   │
 │  │  ├─ E2E шифрование (DTLS-SRTP)                      │   │
 │  │  └─ Token-based аутентификация                      │   │
 │  ├─────────────────────────────────────────────────────┤   │
-│  │  Supabase (Docker)                                   │   │
+│  │  Pocketbase (Docker)                                │   │
 │  │  ├─ Пользователи и аутентификация                   │   │
 │  │  ├─ История звонков (call_logs)                     │   │
 │  │  └─ Edge Functions (генерация токенов LiveKit)      │   │
@@ -69,11 +69,11 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  VPS (Public Access)                                        │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  Nginx (Reverse Proxy)                               │   │
+│  │  Nginx (Reverse Proxy)                              │   │
 │  │  ├─ Проксирование WebSocket на домашний сервер      │   │
 │  │  └─ TLS termination (HTTPS/WSS)                     │   │
 │  ├─────────────────────────────────────────────────────┤   │
-│  │  Coturn (TURN/STUN)                                  │   │
+│  │  Coturn (TURN/STUN)                                 │   │
 │  │  └─ NAT traversal для клиентов                      │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
@@ -84,7 +84,7 @@
 ### Поток звонка (Call Flow)
 
 ```
-Caller                              Supabase LiveKit Server                      Callee
+Caller                              Pocketbase LiveKit Server                      Callee
   │                                       │                                       │
   │─── Get Token (Edge Function) ────────>│                                       │
   │                                       │                                       │
@@ -404,7 +404,7 @@ log-file=stdout
   # .env.local (фронтенд)
   VITE_LIVEKIT_URL=wss://calls.yourdomain.com
   
-  # .env (Supabase Edge Functions)
+  # .env (Pocketbase hooks)
   LIVEKIT_API_KEY=your-api-key
   LIVEKIT_API_SECRET=your-api-secret
   ```
@@ -423,7 +423,7 @@ npm install -D @livekit/components-styles
 
 #### 1.2: Создание Edge Function для токенов (1-2 часа)
 
-Создать файл `/app/supabase/functions/generate-livekit-token/index.ts`:
+Создать файл `/app/WebRTC/generate-livekit-token/index.ts`:
 
 ```typescript
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -508,7 +508,7 @@ import {
   ControlBar,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
-import { supabase } from '@/lib/supabase';
+import { calls } from '@/lib/services/calls';
 import { useCallStore } from '@/stores/call/callStore';
 
 interface CallRoomProps {
@@ -725,13 +725,25 @@ export function CallsPage() {
 
 ### Этап 2: История звонков (3-5 часов)
 
-#### 2.1: Создание таблицы в Supabase
-
-Создать файл `/infra/migrations/create_call_logs_table.sql`:
+#### 2.1: Создание таблицы в packetbase
+Добавить в схему таблицы:
+call_logs
+call_type
+callee_id
+caller_id
+created_at
+duration_seconds
+ended_at
+error_message
+id
+room_id
+status
+started_at
+updated_at
 
 ```sql
 -- Таблица для истории звонков
-CREATE TABLE IF NOT EXISTS call_logs (
+CREATE TABLE IF NOT EXISTS  (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   caller_id UUID REFERENCES auth.users(id),
   callee_id UUID REFERENCES auth.users(id),
@@ -796,19 +808,15 @@ CREATE POLICY "Users can update own calls"
   );
 ```
 
-Применить миграцию:
+Применить миграцию
 
-```bash
-# Через Supabase CLI
-supabase db push --db-url "postgresql://postgres:password@HOME_SERVER_IP:5432/postgres"
-```
 
 #### 2.2: Логирование звонков
 
 Создать файл `/app/src/lib/services/call-logger.ts`:
 
 ```typescript
-import { supabase } from '@/lib/supabase';
+import { calls } from '@/lib/repository/calls';
 
 export async function logCall(
   callerId: string,
@@ -819,7 +827,7 @@ export async function logCall(
   durationSeconds?: number,
   errorMessage?: string
 ) {
-  const { error } = await supabase
+  const { error } = await calls
     .from('call_logs')
     .insert({
       caller_id: callerId,
@@ -843,7 +851,7 @@ export async function updateCallStatus(
   status: 'connected' | 'ended' | 'missed' | 'rejected',
   durationSeconds?: number
 ) {
-  const { error } = await supabase
+  const { error } = await calls
     .from('call_logs')
     .update({
       status,
@@ -867,7 +875,7 @@ export async function updateCallStatus(
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Box } from '@/components/layout/Box';
-import { supabase } from '@/lib/supabase';
+import { calls } from '@/lib/serces/calls';
 import { useAuthStore } from '@/stores/auth/authStore';
 
 interface CallLog {
@@ -887,7 +895,7 @@ export function CallHistory() {
   const { data: calls, isLoading } = useQuery({
     queryKey: ['calls', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await calls
         .from('call_logs')
         .select('*')
         .or(`caller_id.eq.${user?.id},callee_id.eq.${user?.id}`)
@@ -954,14 +962,12 @@ export function CallHistory() {
 ### A. Переменные окружения
 
 ```env
-# .env.local (фронтенд)
+# .env
 VITE_LIVEKIT_URL=wss://calls.yourdomain.com
 
-# .env (Supabase Edge Functions)
 LIVEKIT_API_KEY=your-api-key
 LIVEKIT_API_SECRET=your-api-secret
 
-# .env (Supabase, опционально)
 VITE_TURN_SERVER=turn:yourdomain.com:3478
 VITE_TURN_USERNAME=privmessenger
 VITE_TURN_PASSWORD=your-turn-secret

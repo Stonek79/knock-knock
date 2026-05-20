@@ -9,12 +9,14 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from .env.test for staging
 dotenv.config({ path: path.resolve(__dirname, ".env.test") });
 
+// TODO передалать с учетом переезда на pocketbase и новых переменных окружения
+
 /**
  * Playwright конфигурация для Knock-Knock
  *
  * Поддерживает три среды тестирования:
  * - mock: локальные тесты с mock-данными
- * - staging: E2E тесты на удаленном тестовом Supabase
+ * - staging: E2E тесты на удаленном тестовом pocketbase
  * - production: ручное тестирование на production (осторожно!)
  */
 
@@ -81,10 +83,10 @@ export default defineConfig({
                 ...devices["iPhone 14"],
                 // Это адрес вашего фронтенда (локально или удаленно)
                 baseURL: "http://localhost:5173",
-                // Данные для обхода окна авторизации на staging-api
+                // Данные для обхода окна авторизации на dev-api
                 httpCredentials: {
-                    username: "supabase",
-                    password: "this_password_is_insecure_and_should_be_updated",
+                    username: "брать из .env.test или .env.local",
+                    password: "брать из .env.test или .env.local",
                 },
             },
         },

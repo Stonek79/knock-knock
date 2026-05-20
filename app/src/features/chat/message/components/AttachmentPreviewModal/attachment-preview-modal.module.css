@@ -72,12 +72,20 @@
     width: 100%;
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-content: flex-start;
     justify-content: center;
     background: transparent;
     padding: 0 var(--space-3) var(--space-3);
+}
+
+/* Для одиночного элемента нужно центрировать по вертикали */
+.mediaArea:has(.mediaItem:only-child) {
+    align-content: center;
 }
 
 /* Элемент медиа (обёртка) */
@@ -93,20 +101,40 @@
     justify-content: center;
 }
 
+/* Если вложений несколько — выстраиваем в аккуратную сетку 2 колонки */
+.mediaItem:not(:only-child) {
+    width: calc(50% - (var(--space-2) / 2));
+    height: auto;
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+    background: var(--glass-bg);
+}
+
 /* Превью изображения/видео — ограничено высотой родителя (mediaArea) */
 .mediaPreview {
     width: 100%;
+    height: 100%;
     max-height: 100%;
     object-fit: contain;
     border-radius: var(--kk-radius-lg);
     display: block;
 }
 
+/* Если вложений несколько — обрезаем, чтобы картинка красиво заполнила квадрат */
+.mediaItem:not(:only-child) .mediaPreview {
+    object-fit: cover;
+}
+
 /* Превью документа */
 .docPreview {
     width: 100%;
     height: var(--space-48);
+    max-height: 100%;
     padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     background: var(--glass-hover-bg);
     border-radius: var(--kk-radius-lg);

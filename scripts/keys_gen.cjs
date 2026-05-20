@@ -15,7 +15,7 @@ function generateKey(role) {
 		app_metadata: {
 			role: role,
 		},
-		iss: "supabase",
+		iss: "pocketbase",
 		iat: now - 60, // 60 секунд задержки на рассинхрон времени
 		exp: now + 60 * 60 * 24 * 365 * 10, // 10 лет
 	};
@@ -23,6 +23,6 @@ function generateKey(role) {
 }
 
 console.log("--- НОВЫЕ КЛЮЧИ ДЛЯ ВАШЕГО СЕКРЕТА ---");
-console.log(`VITE_SUPABASE_ANON_KEY=${generateKey("anon")}`);
-console.log(`SUPABASE_SERVICE_ROLE_KEY=${generateKey("service_role")}`);
+console.log(`VITE_POCKETBASE_ANON_KEY=${generateKey("anon")}`);
+console.log(`POCKETBASE_SERVICE_ROLE_KEY=${generateKey("service_role")}`);
 console.log("--------------------------------------");

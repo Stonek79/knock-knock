@@ -53,6 +53,12 @@ self.onmessage = async (e: MessageEvent<unknown>) => {
                     key: cryptoKey,
                 });
                 break;
+            case MEDIA_WORKER_ACTIONS.MUX_VIDEO:
+                processResult = await encryptBlob({
+                    blob: payload as Blob,
+                    key: cryptoKey,
+                });
+                break;
             default:
                 throw new Error(`Неподдерживаемое действие: ${action}`);
         }

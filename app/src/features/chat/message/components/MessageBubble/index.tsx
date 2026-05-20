@@ -1,11 +1,12 @@
 import clsx from "clsx";
-import { Star } from "lucide-react";
+import { RefreshCw, Star } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "yet-another-react-lightbox/styles.css";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
 import { useLongPress } from "@/hooks/useLongPress";
 import {
@@ -42,6 +43,8 @@ interface MessageBubbleProps {
     isSelectionMode?: boolean;
     isEditing?: boolean;
     isStarred?: boolean;
+    isFailed?: boolean;
+    onRetry?: () => void;
     groupPosition?: MessagePosition;
     attachments?: Attachment[] | null;
     roomKey?: CryptoKey;
@@ -67,6 +70,8 @@ export function MessageBubble({
     isSelectionMode = false,
     isEditing = false,
     isStarred = false,
+    isFailed = false,
+    onRetry,
     groupPosition = MESSAGE_POSITION.SINGLE,
     attachments = null,
     roomKey,
@@ -77,6 +82,9 @@ export function MessageBubble({
     const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
     const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
     const hasLongPressedRef = useRef(false);
+
+    const [hasMediaError, setHasMediaError] = useState(false);
+    const showError = isFailed || hasMediaError;
 
     const hasAudioAttachment = useMemo(() => {
         return attachments?.some((a) => a.type === ATTACHMENT_TYPES.AUDIO);
@@ -133,14 +141,27 @@ export function MessageBubble({
                 {timeString}
                 {isEdited && !isDeleted && ` • ${t("chat.edited", "изм.")}`}
             </span>
-            <StatusIcon
-                status={status}
-                isOwn={isOwn}
-                isDeleted={isDeleted}
-                iconClassName={styles.iconSmall}
-                sentClassName={styles.statusIconSent}
-                readClassName={styles.statusIconRead}
-            />
+            {showError ? (
+                <Button
+                    className={styles.retryBtn}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onRetry?.();
+                    }}
+                    title={t("chat.retry", "Повторить")}
+                >
+                    <RefreshCw size={ICON_SIZE.xs} />
+                </Button>
+            ) : (
+                <StatusIcon
+                    status={status}
+                    isOwn={isOwn}
+                    isDeleted={isDeleted}
+                    iconClassName={styles.iconSmall}
+                    sentClassName={styles.statusIconSent}
+                    readClassName={styles.statusIconRead}
+                />
+            )}
         </>
     );
 
@@ -226,6 +247,7 @@ export function MessageBubble({
                         }
                         roomKey={roomKey}
                         userId={userId}
+                        onMediaError={setHasMediaError}
                     />
                 )}
                 {isDeleted ? (

@@ -123,8 +123,6 @@ const FilePreview = memo(function FilePreview({
 
 /**
  * Модальное окно предпросмотра выбранных медиафайлов перед отправкой.
- * Использует Dialog.Content, который уже создаёт Portal + Overlay внутри себя.
- * CSS-класс .content.content переопределяет стандартную ширину и отступы.
  */
 export function AttachmentPreviewModal({
     attachments,

@@ -186,3 +186,14 @@
     position: relative;
     border: none;
 }
+
+.retryBtn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    color: var(--error, #ef4444);
+    width: var(--size-icon-xs);
+    height: var(--size-icon-xs);
+}
