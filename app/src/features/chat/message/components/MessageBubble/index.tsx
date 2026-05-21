@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { RefreshCw, Star } from "lucide-react";
+import { Forward, RefreshCw, Star } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "yet-another-react-lightbox/styles.css";
@@ -24,6 +24,7 @@ import type {
 } from "@/lib/types";
 import { getUserColor } from "@/lib/utils/colors";
 import { AttachmentRenderer } from "./components/AttachmentRenderer";
+import { ReplyBlock, type ReplyBlockData } from "./components/ReplyBlock";
 import { StatusIcon } from "./components/StatusIcon";
 import { TranscriptBlock } from "./components/TranscriptBlock";
 import { ZoomBlock } from "./components/ZoomBlock";
@@ -44,8 +45,12 @@ interface MessageBubbleProps {
     isEditing?: boolean;
     isStarred?: boolean;
     isFailed?: boolean;
+    onReply?: () => void;
     onRetry?: () => void;
     groupPosition?: MessagePosition;
+    replyTo?: ReplyBlockData | null;
+    forwardFromName?: string;
+    onReplyClick?: (messageId: string) => void;
     attachments?: Attachment[] | null;
     roomKey?: CryptoKey;
     roomType?: RoomType;
@@ -54,7 +59,6 @@ interface MessageBubbleProps {
 
 /**
  * Основной компонент пузыря сообщения.
- * Декомпозирован: AttachmentRenderer, StatusIcon, TranscriptBlock вынесены в подпапки.
  */
 export function MessageBubble({
     content,
@@ -71,8 +75,12 @@ export function MessageBubble({
     isEditing = false,
     isStarred = false,
     isFailed = false,
+    onReply,
     onRetry,
     groupPosition = MESSAGE_POSITION.SINGLE,
+    replyTo = null,
+    forwardFromName,
+    onReplyClick,
     attachments = null,
     roomKey,
     roomType,
@@ -110,6 +118,55 @@ export function MessageBubble({
 
     // Отмечаем цветом разных пользователей
     const userColor = senderName ? getUserColor(senderName) : undefined;
+
+    // Логика Swipe-to-Reply (мобильные устройства)
+    const [swipeOffset, setSwipeOffset] = useState(0);
+    const touchStartX = useRef<number | null>(null);
+    const touchStartY = useRef<number | null>(null);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (isEditing || isSelectionMode) {
+            return;
+        }
+
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (touchStartX.current === null || touchStartY.current === null) {
+            return;
+        }
+
+        if (isEditing || isSelectionMode) {
+            return;
+        }
+
+        const deltaX = e.touches[0].clientX - touchStartX.current;
+        const deltaY = e.touches[0].clientY - touchStartY.current;
+
+        // Определяем, что это именно горизонтальный свайп, а не вертикальный скролл
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+            if (deltaX < 0) {
+                // Разрешаем свайп только влево
+                setSwipeOffset(Math.max(deltaX, -60)); // Ограничиваем максимальное натяжение
+            }
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (swipeOffset <= -40) {
+            onReply?.();
+            // Легкая вибрация, если поддерживается браузером
+            if (typeof navigator !== "undefined" && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        setSwipeOffset(0);
+        touchStartX.current = null;
+        touchStartY.current = null;
+    };
 
     // Long Press для выделения сообщения (мобилка)
     const { onPointerDown, onPointerUp, onPointerLeave } = useLongPress(
@@ -170,6 +227,9 @@ export function MessageBubble({
             className={wrapper}
             data-group-position={groupPosition}
             data-testid="message-bubble"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             // Гибридный подход: мобилка = Long Press, десктоп = клик
             onPointerDown={(e) => {
                 const target = e.target as HTMLElement;
@@ -229,12 +289,29 @@ export function MessageBubble({
                     (groupPosition === MESSAGE_POSITION.SINGLE ||
                         groupPosition === MESSAGE_POSITION.START) && (
                         <span
-                            className={styles.senderName}
-                            style={{ color: userColor }}
+                            className={clsx(styles.senderName, {
+                                color: userColor,
+                            })}
                         >
                             {senderName}
                         </span>
                     )}
+                {forwardFromName && (
+                    <Flex
+                        align="center"
+                        gap="1"
+                        className={styles.forwardBlock}
+                    >
+                        <Forward size={ICON_SIZE.xs} />
+                        <Text className={styles.forwardText}>
+                            {t("chat.forwardedFrom", "Переслано от:")}{" "}
+                            <span>{forwardFromName}</span>
+                        </Text>
+                    </Flex>
+                )}
+                {replyTo && (
+                    <ReplyBlock replyData={replyTo} onClick={onReplyClick} />
+                )}
                 {!isDeleted && (
                     <AttachmentRenderer
                         attachments={attachments || []}

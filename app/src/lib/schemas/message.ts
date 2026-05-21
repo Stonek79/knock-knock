@@ -10,6 +10,9 @@ export const messageMetadataSchema = z
         deleted_by: z.array(z.string()).default([]), // Список ID пользователей, скрывших сообщение для себя
         moderated_by: z.string().optional(), // ID пользователя (админа/владельца), удалившего сообщение для всех
         moderation: z.boolean().optional(), // Флаг модерации
+        reply_to_id: z.string().optional(), // ID сообщения, на которое дан ответ (для цитирования)
+        forward_from_name: z.string().optional(), // Имя оригинального автора при пересылке
+        forward_from_id: z.string().optional(), // ID оригинального автора при пересылке
     })
     .strict()
     .default({ deleted_by: [] });

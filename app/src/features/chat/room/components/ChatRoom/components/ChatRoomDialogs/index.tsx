@@ -1,5 +1,5 @@
-import { useChatRoomActions } from "../../hooks/useChatRoomActions";
-import { useChatRoomStore } from "../../store";
+import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
+import { useChatRoomStore } from "../../../../store";
 import { DeleteConfirmDialog } from "../DeleteConfirmDialog";
 import { EndSessionDialog } from "../EndSessionDialog";
 

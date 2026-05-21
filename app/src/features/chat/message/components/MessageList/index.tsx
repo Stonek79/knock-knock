@@ -12,6 +12,7 @@ import type { DecryptedMessageWithProfile, RoomType } from "@/lib/types";
 import { getMessageGroupPosition } from "@/lib/utils/messageGrouping";
 import { useChatScroll } from "../../../room/hooks/useChatScroll";
 import { MessageBubble } from "../../components/MessageBubble";
+import type { ReplyBlockData } from "../../components/MessageBubble/components/ReplyBlock";
 import { UnreadDivider } from "../../components/UnreadDivider";
 import styles from "./message-list.module.css";
 import { ScrollButton } from "./ScrollButton";
@@ -27,6 +28,8 @@ interface MessageListProps {
     selectedMessageIds?: Set<string>;
     /** Обработчик выбора сообщения */
     onToggleSelection?: (id: string) => void;
+    /** Обработчик для ответа на сообщение (через меню или свайп) */
+    onReplyMessage?: (id: string) => void;
     /** ID редактируемого сообщения */
     editingId?: string | null;
     /** Ref для внешнего управления скроллом */
@@ -47,6 +50,7 @@ export function MessageList({
     userId,
     selectedMessageIds,
     onToggleSelection,
+    onReplyMessage,
     editingId,
     scrollRef,
     firstUnreadId,
@@ -70,6 +74,8 @@ export function MessageList({
         scrollToBottom,
     ]);
 
+    const unknownMessage = t("chat.unknownUser", "Неизвестный");
+
     // Архитектурная оптимизация: мемоизируем маппинг элементов сообщений.
     const renderedMessages = useMemo(() => {
         // Режим выделения активируется, если выбрано хотя бы одно сообщение
@@ -89,8 +95,32 @@ export function MessageList({
                 nextMsg,
             );
 
+            let replyToData: ReplyBlockData | null = null;
+
+            // Получаем данные цитируемого сообщения
+            if (msg.metadata?.reply_to_id) {
+                const originalMsg = messages.find(
+                    (m) => m.id === msg.metadata?.reply_to_id,
+                );
+                if (originalMsg) {
+                    replyToData = {
+                        id: originalMsg.id,
+                        senderName:
+                            originalMsg.profiles?.display_name ||
+                            unknownMessage,
+                        content: originalMsg.content,
+                        attachments: originalMsg.attachments,
+                        isDeleted: originalMsg.is_deleted,
+                    };
+                }
+            }
+
             return (
-                <Box key={msg.id} className={styles.messageWrapper}>
+                <Box
+                    key={msg.id}
+                    className={styles.messageWrapper}
+                    data-message-id={msg.id}
+                >
                     {isFirstUnread && <UnreadDivider />}
                     <MessageBubble
                         content={msg.content}
@@ -108,9 +138,27 @@ export function MessageList({
                         isStarred={msg.is_starred}
                         isSelected={selectedMessageIds?.has(msg.id)}
                         onToggleSelection={() => onToggleSelection?.(msg.id)}
+                        onReply={
+                            onReplyMessage
+                                ? () => onReplyMessage(msg.id)
+                                : undefined
+                        }
                         isSelectionMode={isSelectionMode}
                         isEditing={isEditing}
                         groupPosition={groupPosition}
+                        replyTo={replyToData}
+                        forwardFromName={msg.metadata?.forward_from_name}
+                        onReplyClick={(id) => {
+                            const element = document.querySelector(
+                                `[data-message-id="${id}"]`,
+                            );
+                            if (element) {
+                                element.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center",
+                                });
+                            }
+                        }}
                         attachments={msg.attachments}
                         roomKey={roomKey}
                         roomType={roomType}
@@ -125,8 +173,10 @@ export function MessageList({
         firstUnreadId,
         selectedMessageIds,
         onToggleSelection,
+        onReplyMessage,
         roomKey,
         roomType,
+        unknownMessage,
     ]);
 
     // Состояние загрузки

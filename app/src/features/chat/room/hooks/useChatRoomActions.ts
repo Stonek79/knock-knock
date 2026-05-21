@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
-import { useChatActions, useMessages } from "@/features/chat/message";
+import {
+    useChatActions,
+    useMessages,
+    useSendMessage,
+} from "@/features/chat/message";
 import { useChatRoomData } from "@/features/chat/room/hooks/useChatRoomData";
 import { ClipboardService } from "@/lib/services/clipboard";
 import { useAuthStore } from "@/stores/auth";
@@ -32,9 +36,13 @@ export function useChatRoomActions(roomId: string) {
     // --- Текущие сообщения (нужны для копирования / удаления) ---
     const { data: messages = [] } = useMessages({ roomId, roomKey });
 
-    // --- Низкоуровневые действия (отправка, удаление, завершение сессии) ---
-    const { sendMessage, endSession, deleteMessage, updateMessage, ending } =
-        useChatActions({ roomId, roomKey, user, room });
+    // --- Низкоуровневые действия (удаление, завершение сессии, обновление) ---
+    const { endSession, deleteMessage, updateMessage, ending } = useChatActions(
+        { roomId, roomKey, user, room },
+    );
+
+    // --- Мутация отправки сообщений ---
+    const sendMutation = useSendMessage({ roomId, roomKey, user });
 
     // --- Состояния из стора ---
     const editingId = useChatRoomStore((s) => s.editingId);
@@ -47,6 +55,12 @@ export function useChatRoomActions(roomId: string) {
     const setShowEndSessionDialog = useChatRoomStore(
         (s) => s.setShowEndSessionDialog,
     );
+    const replyingToId = useChatRoomStore((s) => s.replyingToId);
+    const clearReplyingTo = useChatRoomStore((s) => s.clearReplyingTo);
+    const forwardingMessageIds = useChatRoomStore(
+        (s) => s.forwardingMessageIds,
+    );
+    const clearForwarding = useChatRoomStore((s) => s.clearForwarding);
 
     /**
      * Обработчик отправки / редактирования сообщения.
@@ -63,7 +77,40 @@ export function useChatRoomActions(roomId: string) {
                 await updateMessage({ messageId: editingId, newContent: text });
                 cancelEdit();
             } else {
-                await sendMessage({ text, files, audioBlob });
+                // 1. Отправляем пересылаемые сообщения
+                if (forwardingMessageIds.size > 0) {
+                    Array.from(forwardingMessageIds)
+                        .map((id) => messages.find((m) => m.id === id))
+                        .filter((msg) => msg !== undefined)
+                        .forEach((originalMsg) => {
+                            sendMutation.mutate({
+                                text: originalMsg.content || "",
+                                forwardFromName:
+                                    originalMsg.profiles?.display_name ||
+                                    t("chat.unknownUser", "Неизвестный"),
+                                forwardFromId: originalMsg.sender,
+                            });
+                        });
+                }
+
+                // 2. Отправляем текущее сообщение (если есть текст, файлы или это реплай)
+                const hasContent =
+                    text.trim().length > 0 ||
+                    (files && files.length > 0) ||
+                    !!audioBlob;
+
+                if (hasContent || replyingToId) {
+                    sendMutation.mutate({
+                        text,
+                        files,
+                        audioBlob,
+                        replyToId: replyingToId,
+                    });
+                }
+
+                // 3. Очищаем UI-состояния
+                clearReplyingTo();
+                clearForwarding();
             }
         } catch (e) {
             toast({

@@ -8,7 +8,6 @@ import { logger } from "@/lib/logger";
 import { MessageService } from "@/lib/services/message";
 import { RoomService } from "@/lib/services/room";
 import type { Profile, RoomWithMembers } from "@/lib/types";
-import { useSendMessage } from "./useSendMessage";
 
 type UseChatActionsProps = {
     roomId?: string;
@@ -21,8 +20,6 @@ type UseChatActionsProps = {
 /**
  * Хук действий чата (отправка, удаление, завершение сессии).
  * Инкапсулирует вызовы RoomService/MessageService и навигацию.
- *
- * Отправка сообщений делегирована в useSendMessage для оптимистичного UI.
  */
 export function useChatActions({
     roomId,
@@ -35,31 +32,6 @@ export function useChatActions({
     const toast = useToast();
     const { t } = useTranslation();
     const [ending, setEnding] = useState(false);
-
-    // Оптимистичная отправка через useSendMessage
-    const sendMutation = useSendMessage({ roomId, roomKey, user });
-
-    /**
-     * Отправка зашифрованного сообщения с оптимистичным обновлением UI.
-     */
-    const sendMessage = async ({
-        text,
-        files,
-        audioBlob,
-    }: {
-        text: string;
-        files?: File[];
-        audioBlob?: Blob;
-    }) => {
-        if (!roomId || !roomKey || !user) {
-            logger.warn(
-                "Невозможно отправить: отсутствуют ключи или ID комнаты",
-            );
-            return;
-        }
-
-        sendMutation.mutate({ text, files, audioBlob });
-    };
 
     /**
      * Завершение сессии чата.
@@ -185,7 +157,6 @@ export function useChatActions({
     };
 
     return {
-        sendMessage,
         endSession,
         deleteMessage,
         updateMessage,

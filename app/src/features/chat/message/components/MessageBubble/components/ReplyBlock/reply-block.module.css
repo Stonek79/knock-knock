@@ -1,0 +1,56 @@
+.replyWrapper {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: var(--space-1) var(--space-2);
+    margin-bottom: var(--space-1);
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: var(--kk-radius-sm);
+    background: transparent;
+    transition: background-color var(--transition-fast);
+}
+
+.replyWrapper:hover {
+    background: var(--glass-hover-bg);
+}
+
+.replyLine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--border-width-focus, 3px);
+    background-color: var(--accent-primary);
+    border-radius: var(--kk-radius-full);
+}
+
+.senderName {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--accent-primary);
+    margin-bottom: var(--space-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contentWrapper {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    min-width: 0;
+}
+
+.mediaIcon {
+    flex-shrink: 0;
+    color: var(--accent-primary);
+}
+
+.textContent {
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}

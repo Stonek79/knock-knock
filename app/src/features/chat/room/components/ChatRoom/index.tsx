@@ -2,17 +2,17 @@ import { useTranslation } from "react-i18next";
 import { Container } from "@/components/layout/Container";
 import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
-import { useChatRoomData } from "@/features/chat/room/hooks/useChatRoomData";
 import { ROOM_TYPE } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/utils/result";
+import { RoomHeader } from "../..";
+import { useChatRoomData } from "../../hooks/useChatRoomData";
+import { ChatRoomProvider } from "../../store";
 import { ChatRoomDialogs } from "./components/ChatRoomDialogs";
 import { ChatRoomGroupInfo } from "./components/ChatRoomGroupInfo";
-import { ChatRoomHeader } from "./components/ChatRoomHeader";
 import { ChatRoomInputArea } from "./components/ChatRoomInputArea";
 import { ChatRoomLayout } from "./components/ChatRoomLayout";
 import { ChatRoomMessages } from "./components/ChatRoomMessages";
 import { PrivacyBanner } from "./components/PrivacyBanner";
-import { ChatRoomProvider } from "./store";
 
 interface ChatRoomProps {
     roomId: string;
@@ -69,7 +69,7 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
 
     return (
         <ChatRoomLayout
-            header={<ChatRoomHeader roomId={roomId} />}
+            header={<RoomHeader roomId={roomId} />}
             banner={
                 room.type === ROOM_TYPE.EPHEMERAL ? (
                     <PrivacyBanner />

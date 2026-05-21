@@ -4,34 +4,46 @@ import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ICON_SIZE } from "@/lib/constants";
+import { useAuthStore } from "@/stores/auth";
+import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
+import { useChatRoomView } from "../../../../hooks/useChatRoomView";
+import { useChatRoomStore } from "../../../../store";
 import rootStyles from "../../roomheader.module.css";
 import styles from "./selection-header.module.css";
 
 interface SelectionHeaderProps {
-    selectedCount: number;
-    canEditSelected?: boolean;
-    onClearSelection?: () => void;
-    onDeleteSelected?: () => void;
-    onCopySelected?: () => void;
-    onReplySelected?: () => void;
-    onForwardSelected?: () => void;
-    onEditSelected?: () => void;
+    /** ID комнаты */
+    roomId: string;
 }
 
 /**
  * Заголовок режима выбора сообщений.
  */
-export function SelectionHeader({
-    selectedCount,
-    canEditSelected,
-    onClearSelection,
-    onDeleteSelected,
-    onCopySelected,
-    onReplySelected,
-    onForwardSelected,
-    onEditSelected,
-}: SelectionHeaderProps) {
+export function SelectionHeader({ roomId }: SelectionHeaderProps) {
     const { t } = useTranslation();
+    const user = useAuthStore((state) => state.profile);
+
+    // --- Данные для редактирования ---
+    const { messages } = useChatRoomView(roomId);
+
+    // --- Стейты из стора ---
+    const selectedMessageIds = useChatRoomStore((s) => s.selectedMessageIds);
+    const selectedCount = selectedMessageIds.size;
+    const canEditSelected = useChatRoomStore((s) => s.canEditSelected);
+
+    // --- Экшены из стора ---
+    const clearSelection = useChatRoomStore((s) => s.clearSelection);
+    const setShowDeleteConfirmDialog = useChatRoomStore(
+        (s) => s.setShowDeleteConfirmDialog,
+    );
+    const setEditingSelected = useChatRoomStore((s) => s.setEditingSelected);
+
+    // --- Экшены Reply/Forward ---
+    const setReplyingTo = useChatRoomStore((s) => s.setReplyingTo);
+    const setForwarding = useChatRoomStore((s) => s.setForwarding);
+
+    // --- Бизнес-логика (Копирование) ---
+    const { handleCopySelected } = useChatRoomActions(roomId);
 
     return (
         <header className={rootStyles.roomHeader}>
@@ -40,7 +52,7 @@ export function SelectionHeader({
                     variant="ghost"
                     size="md"
                     shape="round"
-                    onClick={onClearSelection}
+                    onClick={clearSelection}
                     aria-label={t("common.close", "Закрыть")}
                 >
                     <X size={ICON_SIZE.md} />
@@ -50,24 +62,35 @@ export function SelectionHeader({
 
             <Flex align="center" gap="5">
                 <Flex gap="5">
-                    <Tooltip content={t("common.reply", "Ответить")}>
-                        <IconButton
-                            variant="ghost"
-                            size="md"
-                            shape="round"
-                            onClick={onReplySelected}
-                            aria-label={t("common.reply", "Ответить")}
-                        >
-                            <Reply size={ICON_SIZE.md} />
-                        </IconButton>
-                    </Tooltip>
+                    {/* Ответить можно только на 1 сообщение */}
+                    {selectedCount === 1 && (
+                        <Tooltip content={t("common.reply", "Ответить")}>
+                            <IconButton
+                                variant="ghost"
+                                size="md"
+                                shape="round"
+                                onClick={() => {
+                                    const messageId =
+                                        Array.from(selectedMessageIds)[0];
+                                    setReplyingTo?.(messageId);
+                                    clearSelection();
+                                }}
+                                aria-label={t("common.reply", "Ответить")}
+                            >
+                                <Reply size={ICON_SIZE.md} />
+                            </IconButton>
+                        </Tooltip>
+                    )}
 
                     <Tooltip content={t("common.forward", "Переслать")}>
                         <IconButton
                             variant="ghost"
                             size="md"
                             shape="round"
-                            onClick={onForwardSelected}
+                            onClick={() => {
+                                setForwarding?.(selectedMessageIds);
+                                // clearSelection(); // Вызовем позже, если откроем модалку
+                            }}
                             aria-label={t("common.forward", "Переслать")}
                         >
                             <Forward size={ICON_SIZE.md} />
@@ -82,7 +105,9 @@ export function SelectionHeader({
                                 variant="ghost"
                                 size="md"
                                 shape="round"
-                                onClick={onEditSelected}
+                                onClick={() =>
+                                    setEditingSelected(messages, user?.id)
+                                }
                                 aria-label={t("common.edit", "Редактировать")}
                             >
                                 <Pencil size={ICON_SIZE.md} />
@@ -95,7 +120,7 @@ export function SelectionHeader({
                             variant="ghost"
                             size="md"
                             shape="round"
-                            onClick={onCopySelected}
+                            onClick={handleCopySelected}
                             aria-label={t("common.copy", "Копировать")}
                         >
                             <Copy size={ICON_SIZE.md} />
@@ -108,7 +133,7 @@ export function SelectionHeader({
                             intent="danger"
                             size="md"
                             shape="round"
-                            onClick={onDeleteSelected}
+                            onClick={() => setShowDeleteConfirmDialog(true)}
                             aria-label={t("common.delete", "Удалить")}
                         >
                             <Trash2 size={ICON_SIZE.md} />

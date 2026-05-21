@@ -41,6 +41,12 @@ type SendMessageVariables = {
     files?: File[];
     /** Голосовое сообщение (аудио blob) */
     audioBlob?: Blob;
+    /** ID цитируемого сообщения */
+    replyToId?: string | null;
+    /** Имя оригинального автора (для пересылки) */
+    forwardFromName?: string;
+    /** ID оригинального автора (для пересылки) */
+    forwardFromId?: string;
 };
 
 /**
@@ -76,7 +82,14 @@ export function useSendMessage({
         /**
          * Основная функция отправки: загрузка медиа + шифрование + отправка.
          */
-        mutationFn: async ({ text, files, audioBlob }) => {
+        mutationFn: async ({
+            text,
+            files,
+            audioBlob,
+            replyToId,
+            forwardFromName,
+            forwardFromId,
+        }) => {
             if (!roomId || !roomKey || !user) {
                 throw new Error(
                     "Невозможно отправить: параметры не инициализированы",
@@ -164,6 +177,11 @@ export function useSendMessage({
                 content: text,
                 roomKey,
                 attachments: attachments.length > 0 ? attachments : undefined,
+                metadata: {
+                    reply_to_id: replyToId ?? undefined,
+                    forward_from_name: forwardFromName ?? undefined,
+                    forward_from_id: forwardFromId ?? undefined,
+                },
             });
 
             if (result.isErr()) {
@@ -236,41 +254,35 @@ export function useSendMessage({
                 }
             }
 
+            // Создаем единый объект оптимистичного сообщения с полной метадатой
+            const optimisticMsg: ChatMessage = {
+                ...createOptimisticMessage({
+                    tempId,
+                    text: variables.text,
+                    senderId: user.id,
+                    senderName: user.display_name,
+                    senderAvatar: user.avatar_url || "",
+                    roomId,
+                    attachments:
+                        optimisticAttachments.length > 0
+                            ? optimisticAttachments
+                            : undefined,
+                    blobUrls,
+                }),
+                metadata: {
+                    deleted_by: [],
+                    reply_to_id: variables.replyToId ?? undefined,
+                    forward_from_name: variables.forwardFromName ?? undefined,
+                    forward_from_id: variables.forwardFromId ?? undefined,
+                },
+            };
+
             queryClient.setQueryData<ChatMessage[]>(
                 QUERY_KEYS.messages(roomId),
-                (old = []) => [
-                    ...old,
-                    createOptimisticMessage({
-                        tempId,
-                        text: variables.text,
-                        senderId: user.id,
-                        senderName: user.display_name,
-                        senderAvatar: user.avatar_url || "",
-                        roomId,
-                        attachments:
-                            optimisticAttachments.length > 0
-                                ? optimisticAttachments
-                                : undefined,
-                        blobUrls,
-                    }),
-                ],
+                (old = []) => [...old, optimisticMsg],
             );
 
             // --- Оптимистичное обновление списка чатов ---
-            const optimisticMsg = createOptimisticMessage({
-                tempId,
-                text: variables.text,
-                senderId: user.id,
-                senderName: user.display_name,
-                senderAvatar: user.avatar_url || "",
-                roomId,
-                attachments:
-                    optimisticAttachments.length > 0
-                        ? optimisticAttachments
-                        : undefined,
-                blobUrls,
-            });
-
             queryClient.setQueryData<RoomWithMembers[]>(
                 QUERY_KEYS.rooms(user.id),
                 (old = []) => {

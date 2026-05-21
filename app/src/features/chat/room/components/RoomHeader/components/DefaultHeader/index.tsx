@@ -1,13 +1,18 @@
+import { useRouter } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
 import { useToast } from "@/components/ui/Toast";
+import { useTypingIndicator } from "@/features/chat/message";
 import { useGroupPresence } from "@/features/presence/hooks/useGroupPresence";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { ROOM_TYPE } from "@/lib/constants";
-import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
+import { useChatPeer } from "../../../../hooks/useChatPeer";
+import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
+import { useChatRoomData } from "../../../../hooks/useChatRoomData";
+import { useChatRoomStore } from "../../../../store";
 import { useRoomHeaderInfo } from "../../hooks/useRoomHeaderInfo";
 import rootStyles from "../../roomheader.module.css";
 import { RoomHeaderActions } from "../RoomHeaderActions";
@@ -15,38 +20,36 @@ import { RoomHeaderTitle } from "../RoomHeaderTitle";
 import styles from "./default-header.module.css";
 
 interface DefaultHeaderProps {
-    /** Данные комнаты */
-    room?: RoomWithMembers;
     /** ID комнаты */
     roomId: string;
-    /** Данные собеседника (для личных чатов) */
-    peerUser?: PeerUser | null;
-    /** Колбэк завершения сессии (для эфемерных чатов) */
-    onEndSession?: () => void;
-    /** Флаг процесса завершения сессии */
-    ending?: boolean;
-    /** Колбэк возврата назад */
-    onBack: () => void;
-    /** Список печатающих пользователей */
-    typingUsers?: string[];
-    /** Обработчик клика по заголовку (инфо) */
-    onInfoClick?: () => void;
 }
 
 /**
  * Базовый заголовок комнаты чата.
+ * Запрашивает необходимые данные по roomId.
  */
-export function DefaultHeader({
-    room,
-    peerUser,
-    onEndSession,
-    ending,
-    onBack,
-    typingUsers = [],
-    onInfoClick,
-}: DefaultHeaderProps) {
+export function DefaultHeader({ roomId }: DefaultHeaderProps) {
     const { t } = useTranslation();
+    const router = useRouter();
     const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
+
+    // 1. Запрашиваем данные комнаты
+    const { data: roomInfo } = useChatRoomData(roomId);
+    const room = roomInfo?.room;
+    const otherUserId = roomInfo?.otherUserId;
+    const { data: peerUser } = useChatPeer(otherUserId, room?.type);
+
+    // 2. Индикатор печати
+    const { typingUsers } = useTypingIndicator({ roomId });
+
+    // 3. Состояние и экшены из стора
+    const setShowEndSessionDialog = useChatRoomStore(
+        (s) => s.setShowEndSessionDialog,
+    );
+    const setShowGroupInfoPanel = useChatRoomStore(
+        (s) => s.setShowGroupInfoPanel,
+    );
+    const { ending } = useChatRoomActions(roomId);
 
     const { isDM, resolvedPeer, displayName, avatarUrl, isGroup } =
         useRoomHeaderInfo({ room, peerUser });
@@ -55,6 +58,10 @@ export function DefaultHeader({
     const presence = useGroupPresence(isGroup ? memberIds : []);
 
     const toast = useToast();
+
+    const handleBack = () => {
+        router.history.back();
+    };
 
     const handleInfoClick = () => {
         if (isDM && resolvedPeer?.id) {
@@ -66,7 +73,7 @@ export function DefaultHeader({
                 variant: "info",
             });
         } else if (!isDM) {
-            onInfoClick?.();
+            setShowGroupInfoPanel(true);
         }
     };
 
@@ -97,7 +104,7 @@ export function DefaultHeader({
                 {isMobile && (
                     <Box
                         className={`${styles.iconButton} ${styles.backButton}`}
-                        onClick={onBack}
+                        onClick={handleBack}
                     >
                         <ChevronLeft className={styles.backIcon} />
                     </Box>
@@ -107,7 +114,7 @@ export function DefaultHeader({
                     align="center"
                     gap="2"
                     onClick={handleInfoClick}
-                    style={{ cursor: "pointer", minWidth: 0 }}
+                    className={styles.infoWrapper}
                 >
                     <Avatar size="sm" src={avatarUrl} name={displayName} />
 
@@ -128,7 +135,7 @@ export function DefaultHeader({
 
             <RoomHeaderActions
                 isEphemeral={room?.type === ROOM_TYPE.EPHEMERAL}
-                onEndSession={onEndSession}
+                onEndSession={() => setShowEndSessionDialog(true)}
                 ending={ending}
                 onInfoClick={isGroup ? handleInfoClick : undefined}
             />

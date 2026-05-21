@@ -197,3 +197,14 @@
     width: var(--size-icon-xs);
     height: var(--size-icon-xs);
 }
+
+.forwardBlock {
+    margin-bottom: var(--space-1);
+    color: var(--muted);
+}
+.forwardText {
+    font-size: var(--text-sm);
+}
+.forwardText span {
+    font-weight: var(--font-weight-medium);
+}

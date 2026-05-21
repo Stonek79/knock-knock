@@ -11,6 +11,8 @@ export const createChatRoomStore = () => {
         editingId: null,
         canEditSelected: false,
         editingContent: null,
+        replyingToId: null,
+        forwardingMessageIds: new Set(),
 
         // --- Начальные значения UI-состояний диалогов ---
         showEndSessionDialog: false,
@@ -37,6 +39,12 @@ export const createChatRoomStore = () => {
         clearSelection: () => {
             set({ selectedMessageIds: new Set(), canEditSelected: false });
         },
+
+        setReplyingTo: (id) => set({ replyingToId: id }),
+        clearReplyingTo: () => set({ replyingToId: null }),
+
+        setForwarding: (ids) => set({ forwardingMessageIds: new Set(ids) }),
+        clearForwarding: () => set({ forwardingMessageIds: new Set() }),
 
         setEditingSelected: (messages, userId) => {
             const { selectedMessageIds } = get();

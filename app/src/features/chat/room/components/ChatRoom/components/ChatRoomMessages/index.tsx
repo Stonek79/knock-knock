@@ -2,8 +2,8 @@ import { Box } from "@/components/layout/Box";
 import { MessageList } from "@/features/chat/message";
 import { useAuthStore } from "@/stores/auth";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";
-import { useChatRoomView } from "../../hooks/useChatRoomView";
-import { useChatRoomStore } from "../../store";
+import { useChatRoomView } from "../../../../hooks/useChatRoomView";
+import { useChatRoomStore } from "../../../../store";
 import styles from "./chatroom-messages.module.css";
 
 interface ChatRoomMessagesProps {

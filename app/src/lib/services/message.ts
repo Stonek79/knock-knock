@@ -18,6 +18,7 @@ export interface SendMessageOptions {
     content: string;
     roomKey: CryptoKey;
     attachments?: Attachment[];
+    metadata?: Record<string, unknown>;
 }
 
 /**
@@ -55,6 +56,7 @@ export const MessageService = {
         content,
         roomKey,
         attachments,
+        metadata: customMetadata,
     }: SendMessageOptions): Promise<Result<string, MessageError>> {
         let ciphertext = content;
         let iv = "";
@@ -83,7 +85,7 @@ export const MessageService = {
             iv,
             attachments: attachments ?? null,
             status: MESSAGE_STATUS.SENT,
-            metadata: { deleted_by: [] },
+            metadata: { deleted_by: [], ...customMetadata },
         });
 
         if (result.isErr()) {

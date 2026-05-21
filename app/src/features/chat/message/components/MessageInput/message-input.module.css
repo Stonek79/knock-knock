@@ -167,6 +167,41 @@
     --glass-border: var(--color-error-alpha);
 }
 
+/* Превью цитаты и пересылки */
+.previewBanner {
+    padding: var(--space-2) var(--space-3);
+    background: var(--glass-bg);
+    border-radius: var(--kk-radius-md) var(--kk-radius-md) 0 0;
+    border-bottom: 1px solid var(--glass-border);
+    margin-bottom: -1px; /* Чтобы визуально слиться с полем ввода */
+}
+
+.previewIcon {
+    color: var(--accent-primary);
+    flex-shrink: 0;
+}
+
+.previewContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.previewTitle {
+    font-weight: var(--font-weight-medium);
+    color: var(--accent-primary);
+    font-size: var(--text-sm);
+}
+
+.previewText {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 @keyframes pulse {
     from {
         opacity: var(--opacity-muted);

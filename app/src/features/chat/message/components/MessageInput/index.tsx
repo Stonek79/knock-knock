@@ -4,7 +4,15 @@
  */
 
 import clsx from "clsx";
-import { Mic, Paperclip, SendHorizontal, Smile, X } from "lucide-react";
+import {
+    Forward,
+    Mic,
+    Paperclip,
+    Reply,
+    SendHorizontal,
+    Smile,
+    X,
+} from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
@@ -21,6 +29,7 @@ import { useAudioRecording } from "../../hooks/useAudioRecording";
 import { useFileAttachments } from "../../hooks/useFileAttachments";
 import { useMessageInput } from "../../hooks/useMessageInput";
 import { AttachmentPreviewModal } from "./../AttachmentPreviewModal";
+import type { ReplyBlockData } from "../MessageBubble/components/ReplyBlock";
 import styles from "./message-input.module.css";
 
 // TODO: большой и сложный компонент, надо подумать над декомпозицией и вынесением логики в отдельные хуки и утилиты.
@@ -38,6 +47,14 @@ interface MessageInputProps {
     onInputChange?: () => void;
     /** Коллбэк уведомления о печати (typing indicator) */
     onTyping?: (isTyping: boolean) => void;
+    /** Данные цитируемого сообщения */
+    replyToData?: ReplyBlockData | null;
+    /** Коллбэк отмены цитирования (крестик) */
+    onClearReply?: () => void;
+    /** Количество пересылаемых сообщений */
+    forwardingCount?: number;
+    /** Коллбэк отмены пересылки (крестик) */
+    onClearForward?: () => void;
 }
 
 /**
@@ -51,6 +68,10 @@ export function MessageInput({
     initialValue,
     onInputChange,
     onTyping,
+    replyToData,
+    onClearReply,
+    forwardingCount,
+    onClearForward,
 }: MessageInputProps) {
     const { t } = useTranslation();
     const toast = useToast();
@@ -120,6 +141,20 @@ export function MessageInput({
         }
     };
 
+    const handleSendAction = () => {
+        // При пересылке без добавления своего текста — отправляем напрямую пустую строку
+        if (
+            !hasText &&
+            attachments.length === 0 &&
+            forwardingCount &&
+            forwardingCount > 0
+        ) {
+            void onSend("", []);
+            return;
+        }
+        handleSend();
+    };
+
     return (
         <Flex direction="column" className={styles.inputContainer}>
             {/* Модальное окно предпросмотра вложений */}
@@ -133,6 +168,60 @@ export function MessageInput({
                 onSend={handleSendAttachments}
                 isSending={sending}
             />
+
+            {/* Плашка цитирования (Reply) */}
+            {replyToData && (
+                <Flex align="center" gap="3" className={styles.previewBanner}>
+                    <Reply size={ICON_SIZE.md} className={styles.previewIcon} />
+                    <Box className={styles.previewContent}>
+                        <Text className={styles.previewTitle} as="span">
+                            {replyToData.senderName}
+                        </Text>
+                        <Text className={styles.previewText} as="span">
+                            {replyToData.isDeleted
+                                ? t("chat.messageDeleted", "Сообщение удалено")
+                                : replyToData.content ||
+                                  t("chat.attachment", "Вложение")}
+                        </Text>
+                    </Box>
+                    <IconButton
+                        variant="ghost"
+                        size="sm"
+                        shape="round"
+                        onClick={onClearReply}
+                    >
+                        <X size={ICON_SIZE.sm} />
+                    </IconButton>
+                </Flex>
+            )}
+
+            {/* Плашка пересылки (Forward) */}
+            {!!forwardingCount && forwardingCount > 0 && (
+                <Flex align="center" gap="3" className={styles.previewBanner}>
+                    <Forward
+                        size={ICON_SIZE.md}
+                        className={styles.previewIcon}
+                    />
+                    <Box className={styles.previewContent}>
+                        <Text className={styles.previewTitle} as="span">
+                            {t("chat.forwardTitle", "Пересылка")}
+                        </Text>
+                        <Text className={styles.previewText} as="span">
+                            {t("chat.forwardCount", "{{count}} сообщений", {
+                                count: forwardingCount,
+                            })}
+                        </Text>
+                    </Box>
+                    <IconButton
+                        variant="ghost"
+                        size="sm"
+                        shape="round"
+                        onClick={onClearForward}
+                    >
+                        <X size={ICON_SIZE.sm} />
+                    </IconButton>
+                </Flex>
+            )}
 
             <Flex align="center" gap="2" className={styles.inputWrapper}>
                 {/* Скрытый input для файлов */}
@@ -266,12 +355,14 @@ export function MessageInput({
                             <SendHorizontal size={ICON_SIZE.sm} />
                         </IconButton>
                     </Flex>
-                ) : hasText || attachments.length > 0 ? (
+                ) : hasText ||
+                  attachments.length > 0 ||
+                  (forwardingCount && forwardingCount > 0) ? (
                     <IconButton
                         size="md"
                         shape="round"
                         variant="ghost"
-                        onClick={handleSend}
+                        onClick={handleSendAction}
                         disabled={disabled || sending}
                         className={clsx(styles.actionButton, styles.sendButton)}
                         aria-label={t("chat.send", "Отправить")}

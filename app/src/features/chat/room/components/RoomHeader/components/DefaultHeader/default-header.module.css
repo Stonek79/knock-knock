@@ -24,3 +24,8 @@
     height: var(--size-icon-md);
     color: var(--foreground);
 }
+
+.infoWrapper {
+    cursor: pointer;
+    min-width: 0;
+}

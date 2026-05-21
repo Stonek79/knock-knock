@@ -52,6 +52,13 @@ export interface ChatRoomState {
     setShowDeleteConfirmDialog: (open: boolean) => void;
     /** Установить видимость панели информации о группе */
     setShowGroupInfoPanel: (open: boolean) => void;
+
+    replyingToId: string | null;
+    forwardingMessageIds: Set<string>;
+    setReplyingTo: (id: string | null) => void;
+    clearReplyingTo: () => void;
+    setForwarding: (ids: Set<string>) => void;
+    clearForwarding: () => void;
 }
 
 export type ChatRoomStore = ChatRoomState;

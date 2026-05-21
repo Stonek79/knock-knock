@@ -1,34 +1,63 @@
+import { useTranslation } from "react-i18next";
 import { MessageInput, useTypingIndicator } from "@/features/chat/message";
+import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";
-import { useChatRoomActions } from "../../hooks/useChatRoomActions";
-import { useChatRoomStore } from "../../store";
+import { useChatRoomView } from "../../../../hooks/useChatRoomView";
+import { useChatRoomStore } from "../../../../store";
 import styles from "./chatroom-input-area.module.css";
 
 interface ChatRoomInputAreaProps {
-    /** ID комнаты — единственный необходимый prop после рефакторинга */
+    /** ID комнаты */
     roomId: string;
 }
 
 /**
  * Зона ввода сообщений.
- *
- * Принимает только `roomId` вместо ранее передаваемых 3 props.
+ * Оркестратор: получает состояния комнаты, выделения, цитирования и передает их в MessageInput.
  */
 export function ChatRoomInputArea({ roomId }: ChatRoomInputAreaProps) {
+    const { t } = useTranslation();
+
     // --- Данные комнаты (нужен roomKey для disabled-guard) ---
     const { data: roomInfo } = useChatRoomData(roomId);
     const roomKey = roomInfo?.roomKey;
 
+    // --- Сообщения (нужны для поиска данных цитируемого сообщения) ---
+    const { messages } = useChatRoomView(roomId);
+
     // --- Бизнес-действия ---
     const { handleSend } = useChatRoomActions(roomId);
 
-    // --- Индикатор печати (только setTyping, typingUsers здесь не нужен) ---
+    // --- Индикатор печати ---
     const { setTyping } = useTypingIndicator({ roomId });
 
     // --- UI-состояние из стора ---
     const editingContent = useChatRoomStore((s) => s.editingContent);
     const cancelEdit = useChatRoomStore((s) => s.cancelEdit);
     const selectedCount = useChatRoomStore((s) => s.selectedMessageIds.size);
+
+    // --- Состояния Reply / Forward ---
+    const replyingToId = useChatRoomStore((s) => s.replyingToId);
+    const clearReplyingTo = useChatRoomStore((s) => s.clearReplyingTo);
+
+    const forwardingMessageIds = useChatRoomStore(
+        (s) => s.forwardingMessageIds,
+    );
+    const clearForwarding = useChatRoomStore((s) => s.clearForwarding);
+
+    // --- Подготовка данных для превью цитаты ---
+    const replyMessage = messages?.find((m) => m.id === replyingToId);
+    const replyToData = replyMessage
+        ? {
+              id: replyMessage.id,
+              senderName:
+                  replyMessage.profiles?.display_name ||
+                  t("chat.unknownUser", "Неизвестный"),
+              content: replyMessage.content,
+              attachments: replyMessage.attachments,
+              isDeleted: replyMessage.is_deleted,
+          }
+        : null;
 
     return (
         <div className={styles.inputArea}>
@@ -38,6 +67,10 @@ export function ChatRoomInputArea({ roomId }: ChatRoomInputAreaProps) {
                 disabled={!roomKey || selectedCount > 0}
                 initialValue={editingContent || ""}
                 onTyping={setTyping}
+                replyToData={replyToData}
+                onClearReply={clearReplyingTo}
+                forwardingCount={forwardingMessageIds.size}
+                onClearForward={clearForwarding}
             />
         </div>
     );

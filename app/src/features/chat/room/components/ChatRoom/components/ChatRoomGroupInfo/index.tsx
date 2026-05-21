@@ -2,8 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useChatRoomData } from "@/features/chat/room/hooks/useChatRoomData";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
+import { useChatRoomStore } from "../../../../store";
 import { GroupInfoPanel } from "../../../GroupInfoPanel";
-import { useChatRoomStore } from "../../store";
 
 interface ChatRoomGroupInfoProps {
     /** ID комнаты — единственный необходимый prop */
