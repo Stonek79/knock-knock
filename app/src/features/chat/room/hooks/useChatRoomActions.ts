@@ -7,6 +7,7 @@ import {
 } from "@/features/chat/message";
 import { useChatRoomData } from "@/features/chat/room/hooks/useChatRoomData";
 import { ClipboardService } from "@/lib/services/clipboard";
+import type { ChatMessage } from "@/lib/types";
 import { useAuthStore } from "@/stores/auth";
 import { useChatRoomStore } from "../store";
 
@@ -163,11 +164,19 @@ export function useChatRoomActions(roomId: string) {
         setShowEndSessionDialog(false);
     };
 
+    /**
+     * Повторяет отправку упавшего сообщения.
+     */
+    const handleRetry = (message: ChatMessage) => {
+        sendMutation.retryMessage(message);
+    };
+
     return {
         handleSend,
         handleDeleteSelected,
         handleCopySelected,
         confirmEndSession,
+        handleRetry,
         ending,
     };
 }

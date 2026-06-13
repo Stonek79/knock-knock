@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/auth";
 import styles from "./accountsettings.module.css";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { DeleteAccountModal } from "./DeleteAccountModal";
+import { SignOutConfirmModal } from "./SignOutConfirmModal";
 
 /**
  * Страница настроек аккаунта.
@@ -25,6 +26,7 @@ export function AccountSettings() {
 
     const [isPasswordExpanded, setIsPasswordExpanded] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
 
     const handleSignOut = async () => {
         await signOut();
@@ -96,7 +98,7 @@ export function AccountSettings() {
                             <Button
                                 variant="ghost"
                                 intent="neutral"
-                                onClick={handleSignOut}
+                                onClick={() => setIsSignOutModalOpen(true)}
                                 className={styles.actionButton}
                             >
                                 <LogOut size={ICON_SIZE.sm} />
@@ -114,6 +116,13 @@ export function AccountSettings() {
                         </Flex>
                     </Flex>
                 </Card>
+
+                {/* Модальное окно подтверждения выхода */}
+                <SignOutConfirmModal
+                    isOpen={isSignOutModalOpen}
+                    onClose={() => setIsSignOutModalOpen(false)}
+                    onConfirm={handleSignOut}
+                />
 
                 {/* Модальное окно подтверждения удаления */}
                 <DeleteAccountModal

@@ -11,9 +11,6 @@ import {
     MIME_PREFIXES,
 } from "../constants";
 
-/**
- * Валидация Blob/File
- */
 const blobSchema = z.custom<Blob | File>(
     (val) => val instanceof Blob || val instanceof File,
     { message: "validation.fileTypeInvalid" },
@@ -172,3 +169,42 @@ export const mediaWorkerResponseSchema = z.object({
     data: mediaWorkerPayloadSchema.optional(),
     error: z.string().optional(),
 });
+
+/**
+ * Схема валидации источника видео для слайдов видео
+ */
+export const videoSourceSchema = z.object({
+    src: z.string(),
+    type: z.string(),
+    media: z.string().optional(),
+});
+
+/**
+ * Схема слайда видео в Lightbox (ZoomBlock)
+ */
+export const lightboxVideoSlideSchema = z.object({
+    type: z.literal(ATTACHMENT_TYPES.VIDEO),
+    sources: z.array(videoSourceSchema),
+    poster: z.string().optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+});
+
+/**
+ * Схема слайда изображения в Lightbox (ZoomBlock)
+ */
+export const lightboxImageSlideSchema = z.object({
+    type: z.literal(ATTACHMENT_TYPES.IMAGE),
+    src: z.string(),
+    download: z.string().optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+});
+
+/**
+ * Объединенная схема слайда для нашего Lightbox (ZoomBlock)
+ */
+export const lightboxSlideSchema = z.union([
+    lightboxImageSlideSchema,
+    lightboxVideoSlideSchema,
+]);

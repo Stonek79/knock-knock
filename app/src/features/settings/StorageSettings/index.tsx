@@ -40,7 +40,8 @@ export function StorageSettings() {
             return;
         }
         setIsClearing(true);
-        await mediaDb.clearAll(userId);
+        // Используем умную очистку кэша, сохраняя важные файлы (избранное и аватары)
+        await mediaDb.clearUnusedCache(userId);
         await loadCacheSize();
         setIsClearing(false);
     };

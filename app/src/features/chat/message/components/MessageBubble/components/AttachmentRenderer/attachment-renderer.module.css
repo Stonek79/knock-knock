@@ -101,11 +101,11 @@
 .moreOverlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: color-mix(in srgb, var(--color-black) 50%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: var(--color-white);
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-medium);
     pointer-events: none;
@@ -233,4 +233,28 @@
 
 .videoThumbnailContainer:hover .playOverlay {
     background: var(--glass-hover-bg);
+}
+
+.loadingOverlay {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--color-black) 40%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-white);
+    z-index: 5;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }

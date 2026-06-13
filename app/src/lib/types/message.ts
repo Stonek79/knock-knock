@@ -112,6 +112,10 @@ export type ChatMessage = DecryptedMessageWithProfile & {
     _tempId?: string;
     /** Blob URLs для медиа-превью (нужны для revokeObjectURL при очистке) */
     _blobUrls?: string[];
+    /** Файлы для повторной отправки при ошибке */
+    _retryFiles?: File[];
+    /** Голосовое сообщение для повторной отправки при ошибке */
+    _retryAudioBlob?: Blob;
 };
 
 /**

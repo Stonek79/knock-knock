@@ -104,6 +104,16 @@ export function MessageBubble({
         );
     }, [attachments]);
 
+    const mediaAttachments = useMemo(() => {
+        return (
+            attachments?.filter(
+                (a) =>
+                    a.type === ATTACHMENT_TYPES.IMAGE ||
+                    a.type === ATTACHMENT_TYPES.VIDEO,
+            ) || []
+        );
+    }, [attachments]);
+
     // Проверяем, состоит ли сообщение ИСКЛЮЧИТЕЛЬНО из ОДНОЙ картинки
     const isImageOnly =
         !content &&
@@ -325,6 +335,7 @@ export function MessageBubble({
                         roomKey={roomKey}
                         userId={userId}
                         onMediaError={setHasMediaError}
+                        isFailed={showError}
                     />
                 )}
                 {isDeleted ? (
@@ -357,7 +368,7 @@ export function MessageBubble({
             </Box>
 
             <ZoomBlock
-                imageAttachments={imageAttachments}
+                mediaAttachments={mediaAttachments}
                 roomKey={roomKey}
                 roomType={roomType}
                 userId={userId}

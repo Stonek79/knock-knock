@@ -82,6 +82,7 @@ export const mediaRepository = {
                 headers.Authorization = token;
             }
             const response = await fetch(url, { headers });
+
             if (!response.ok) {
                 return err(
                     new Error(

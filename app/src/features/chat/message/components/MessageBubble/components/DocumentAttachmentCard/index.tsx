@@ -51,6 +51,7 @@ export function DocumentAttachmentCard({
         isVault,
         userId,
         initialUrl: attachment.url,
+        downloadOriginal: true,
     });
 
     const handleDownload = (e: React.MouseEvent) => {

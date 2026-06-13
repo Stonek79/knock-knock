@@ -3,11 +3,18 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
-import { QUERY_KEYS, ROOM_TYPE, ROUTES, USER_ROLE } from "@/lib/constants";
+import {
+    CLIENT_MESSAGE_STATUS,
+    OPTIMISTIC_ID_PREFIX,
+    QUERY_KEYS,
+    ROOM_TYPE,
+    ROUTES,
+    USER_ROLE,
+} from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { MessageService } from "@/lib/services/message";
 import { RoomService } from "@/lib/services/room";
-import type { Profile, RoomWithMembers } from "@/lib/types";
+import type { ChatMessage, Profile, RoomWithMembers } from "@/lib/types";
 
 type UseChatActionsProps = {
     roomId?: string;
@@ -93,6 +100,52 @@ export function useChatActions({
         if (!user) {
             return;
         }
+
+        const isTemporary = messageId.startsWith(OPTIMISTIC_ID_PREFIX);
+        let isFailed = false;
+        let blobUrlsToRevoke: string[] = [];
+
+        if (roomId) {
+            const currentMessages =
+                queryClient.getQueryData<ChatMessage[]>(
+                    QUERY_KEYS.messages(roomId),
+                ) ?? [];
+            const foundMsg = currentMessages.find((m) => {
+                return m.id === messageId;
+            });
+            if (foundMsg) {
+                if (foundMsg._uiStatus === CLIENT_MESSAGE_STATUS.FAILED) {
+                    isFailed = true;
+                }
+                if (foundMsg._blobUrls) {
+                    blobUrlsToRevoke = foundMsg._blobUrls;
+                }
+            }
+        }
+
+        if (isTemporary || isFailed) {
+            if (blobUrlsToRevoke.length > 0) {
+                for (const url of blobUrlsToRevoke) {
+                    URL.revokeObjectURL(url);
+                }
+            }
+
+            if (roomId) {
+                queryClient.setQueryData<ChatMessage[]>(
+                    QUERY_KEYS.messages(roomId),
+                    (old = []) => {
+                        return old.filter((m) => {
+                            return m.id !== messageId;
+                        });
+                    },
+                );
+                queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.rooms(user.id),
+                });
+            }
+            return;
+        }
+
         const result = await MessageService.deleteMessage({
             messageId,
             currentUserId: user.id,

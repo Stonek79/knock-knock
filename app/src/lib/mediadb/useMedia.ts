@@ -1,6 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { QUERY_KEYS } from "../constants";
+import {
+    MEDIA_SYSTEM_CONSTANTS,
+    OPTIMISTIC_ID_PREFIX,
+    QUERY_KEYS,
+} from "../constants";
 import { logger } from "../logger";
 import { mediaService } from "../services/media";
 import type { RecordIdString } from "../types";
@@ -16,6 +20,8 @@ type UseMediaProps = {
     isVault?: boolean;
     /** Начальный URL (например, временный blob URL для оптимистичных обновлений) */
     initialUrl?: string;
+    /** Флаг принудительной загрузки оригинала (например, для автоплея видео или скачивания документов) */
+    downloadOriginal?: boolean;
 };
 
 type UseMediaResult = {
@@ -41,18 +47,41 @@ export function useMedia({
     roomKey,
     isVault = false,
     initialUrl,
+    downloadOriginal = false,
 }: UseMediaProps): UseMediaResult {
-    const isOptimistic = mediaId?.startsWith("temp-");
+    const isOptimistic = mediaId?.startsWith(OPTIMISTIC_ID_PREFIX) || false;
+
+    const queryEnabled =
+        !!mediaId && !!userId && (!!roomKey || !!isVault) && !isOptimistic;
 
     const {
         data: mediaContent,
-        isLoading,
+        isLoading: queryLoading,
         error: queryError,
     } = useQuery({
         queryKey: QUERY_KEYS.media(mediaId, userId),
         queryFn: async () => {
             if (!mediaId || !userId || isOptimistic) {
                 return null;
+            }
+
+            if (downloadOriginal) {
+                const result = await mediaService.ensureOriginal({
+                    id: mediaId,
+                    userId,
+                    roomKey,
+                    isVault,
+                });
+
+                if (result.isErr()) {
+                    logger.error(
+                        `useMedia [${mediaId}] (original): ошибка загрузки`,
+                        result.error,
+                    );
+                    throw new Error(result.error.message);
+                }
+
+                return result.value;
             }
 
             // Единая точка входа для получения превью медиа через сервис
@@ -74,70 +103,26 @@ export function useMedia({
             return result.value;
         },
         // Активируем запрос только если есть ID, доступ к ключам и это не временный ID
-        enabled:
-            !!mediaId && !!userId && (!!roomKey || !!isVault) && !isOptimistic,
+        enabled: queryEnabled,
         // Кешируем результат
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
         retry: 2,
     });
 
-    /**
-     * Храним сгенерированные URL в стейте, чтобы они гарантированно
-     * создавались заново при монтировании компонента (решает проблему React Query кэша).
-     */
-    // const urls = useMemo(() => {
-    // 	// Если это оптимистичное сообщение, просто возвращаем переданный URL
-    // 	if (isOptimistic && initialUrl) {
-    // 		return {
-    // 			objectUrl: initialUrl,
-    // 			thumbnailUrl: undefined,
-    // 			isFromInitial: true,
-    // 		};
-    // 	}
-
-    // 	if (!mediaContent) {
-    // 		return {
-    // 			objectUrl: undefined,
-    // 			thumbnailUrl: undefined,
-    // 			isFromInitial: false,
-    // 		};
-    // 	}
-
-    // 	const objectUrl = mediaContent.original
-    // 		? URL.createObjectURL(mediaContent.original)
-    // 		: undefined;
-    // 	const thumbnailUrl = mediaContent.thumbnail
-    // 		? URL.createObjectURL(mediaContent.thumbnail)
-    // 		: undefined;
-
-    // 	return { objectUrl, thumbnailUrl, isFromInitial: false };
-    // }, [mediaContent, isOptimistic, initialUrl]);
-
-    /**
-     * Очистка созданных Blob URL при смене контента или размонтировании.
-     * Очищаем только те, что создали сами (не initialUrl).
-     */
-    // useEffect(() => {
-    // 	return () => {
-    // 		if (!urls.isFromInitial) {
-    // 			if (urls.objectUrl) {
-    // 				URL.revokeObjectURL(urls.objectUrl);
-    // 			}
-    // 			if (urls.thumbnailUrl) {
-    // 				URL.revokeObjectURL(urls.thumbnailUrl);
-    // 			}
-    // 		}
-    // 	};
-    // }, [urls]);
-
     const [urls, setUrls] = useState<{
         objectUrl: string | undefined;
         thumbnailUrl: string | undefined;
     }>({
-        objectUrl: isOptimistic ? initialUrl : undefined,
+        objectUrl:
+            isOptimistic ||
+            initialUrl?.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX)
+                ? initialUrl
+                : undefined,
         thumbnailUrl: undefined,
     });
+
+    const isLoading = queryEnabled ? queryLoading : false;
 
     useEffect(() => {
         if (isOptimistic && initialUrl) {
@@ -146,7 +131,17 @@ export function useMedia({
         }
 
         if (!mediaContent) {
-            setUrls({ objectUrl: undefined, thumbnailUrl: undefined });
+            setUrls((prev) => {
+                if (
+                    isLoading &&
+                    prev.objectUrl?.startsWith(
+                        MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX,
+                    )
+                ) {
+                    return prev;
+                }
+                return { objectUrl: undefined, thumbnailUrl: undefined };
+            });
             return;
         }
 
@@ -167,7 +162,7 @@ export function useMedia({
                 URL.revokeObjectURL(thumbnailUrl);
             }
         };
-    }, [mediaContent, isOptimistic, initialUrl]);
+    }, [mediaContent, isOptimistic, initialUrl, isLoading]);
 
     return {
         objectUrl: urls.objectUrl,

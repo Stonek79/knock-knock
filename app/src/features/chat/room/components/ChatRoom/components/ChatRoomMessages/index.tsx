@@ -1,6 +1,7 @@
 import { Box } from "@/components/layout/Box";
 import { MessageList } from "@/features/chat/message";
 import { useAuthStore } from "@/stores/auth";
+import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";
 import { useChatRoomView } from "../../../../hooks/useChatRoomView";
 import { useChatRoomStore } from "../../../../store";
@@ -38,6 +39,9 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
     const editingId = useChatRoomStore((s) => s.editingId);
     const toggleSelection = useChatRoomStore((s) => s.toggleSelection);
 
+    // --- Действия чата ---
+    const { handleRetry } = useChatRoomActions(roomId);
+
     const room = roomInfo?.room;
 
     if (!roomKey || !roomId) {
@@ -60,6 +64,7 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
                 roomKey={roomKey}
                 scrollRef={scrollRef}
                 roomType={room?.type}
+                onRetry={handleRetry}
             />
         </Box>
     );

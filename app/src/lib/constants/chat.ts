@@ -50,3 +50,6 @@ export const SPEECH_CONFIG = {
     ERROR_NOT_ALLOWED: "not-allowed",
     ERROR_NO_SPEECH: "no-speech",
 } as const;
+
+/** Префикс временных ID для оптимистичных сообщений */
+export const OPTIMISTIC_ID_PREFIX = "temp-" as const;

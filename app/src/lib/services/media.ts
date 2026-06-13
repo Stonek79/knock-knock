@@ -6,6 +6,7 @@ import {
     MEDIA_ERROR_MESSAGES,
     MEDIA_FIELDS,
     MEDIA_FILE_PREFIXES,
+    MEDIA_LIMITS,
     MEDIA_REFERENCE_TYPES,
     MEDIA_SYNC_STATUS,
     MEDIA_SYSTEM_CONSTANTS,
@@ -44,6 +45,115 @@ type DownloadParams = {
     isVault?: boolean;
 };
 
+/**
+ * Генерирует превью-изображение первого кадра видео (на отметке 0.5с) и извлекает его физические размеры.
+ */
+const generateVideoThumbnail = (
+    file: Blob,
+): Promise<{ blob: Blob; width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement("video");
+        video.preload = "auto";
+        video.playsInline = true;
+        video.muted = true;
+
+        // Временное добавление в DOM для активации декодирования в Safari
+        video.style.position = "fixed";
+        video.style.top = "0";
+        video.style.left = "0";
+        video.style.width = "1px";
+        video.style.height = "1px";
+        video.style.opacity = "0";
+        video.style.pointerEvents = "none";
+        document.body.appendChild(video);
+
+        let isCompleted = false;
+
+        const cleanup = () => {
+            if (isCompleted) {
+                return;
+            }
+            isCompleted = true;
+            clearTimeout(timeoutId);
+            if (video.parentNode) {
+                video.parentNode.removeChild(video);
+            }
+            try {
+                URL.revokeObjectURL(video.src);
+            } catch {
+                // Игнорируем ошибку при очистке
+            }
+        };
+
+        // Защитный таймаут на 3 секунды
+        const timeoutId = setTimeout(() => {
+            cleanup();
+            reject(
+                new Error("Превышен таймаут ожидания создания превью видео"),
+            );
+        }, 3000);
+
+        const objectUrl = URL.createObjectURL(file);
+        video.src = objectUrl;
+
+        video.onloadeddata = () => {
+            video.currentTime = 0.5; // Смещение, чтобы первый кадр не был черным
+        };
+
+        video.onseeked = () => {
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(
+                        (blob) => {
+                            cleanup();
+                            if (blob) {
+                                resolve({
+                                    blob,
+                                    width: video.videoWidth,
+                                    height: video.videoHeight,
+                                });
+                            } else {
+                                reject(
+                                    new Error(
+                                        "Не удалось создать Blob из Canvas",
+                                    ),
+                                );
+                            }
+                        },
+                        COMPRESSION_OPTIONS.FORMAT_WEBP,
+                        COMPRESSION_OPTIONS.THUMB_QUALITY,
+                    );
+                } else {
+                    cleanup();
+                    reject(new Error("Не удалось получить 2D контекст Canvas"));
+                }
+            } catch (e) {
+                cleanup();
+                reject(e);
+            }
+        };
+
+        video.onerror = (e) => {
+            cleanup();
+            reject(
+                e instanceof ErrorEvent
+                    ? e.error
+                    : new Error("Ошибка загрузки видео при создании превью"),
+            );
+        };
+
+        // Запускаем принудительную загрузку видео
+        video.load();
+    });
+};
+
+let hasCleanedUp = false;
+
 export const mediaService = {
     /**
      * Получение превью для ленты сообщений.
@@ -74,7 +184,8 @@ export const mediaService = {
         const type = record[MEDIA_FIELDS.TYPE];
         if (
             type === ATTACHMENT_TYPES.AUDIO ||
-            type === ATTACHMENT_TYPES.DOCUMENT
+            type === ATTACHMENT_TYPES.DOCUMENT ||
+            type === ATTACHMENT_TYPES.VIDEO
         ) {
             return mediaService.ensureOriginal(params);
         }
@@ -125,6 +236,67 @@ export const mediaService = {
         const { file, userId, roomId, cryptoKey, isVault = false } = params;
 
         try {
+            const fileType = file.type;
+            const fileSizeMB = file.size / (1024 * 1024);
+
+            if (fileType.startsWith(MIME_PREFIXES.IMAGE)) {
+                if (fileSizeMB > MEDIA_LIMITS.MAX_IMAGE_SIZE_MB) {
+                    return err(
+                        appError(
+                            ERROR_CODES.VALIDATION_ERROR,
+                            MEDIA_ERROR_MESSAGES.LIMIT_IMAGE_SIZE(
+                                MEDIA_LIMITS.MAX_IMAGE_SIZE_MB,
+                            ),
+                        ),
+                    );
+                }
+            } else if (fileType.startsWith(MIME_PREFIXES.VIDEO)) {
+                if (fileSizeMB > MEDIA_LIMITS.MAX_VIDEO_SIZE_MB) {
+                    return err(
+                        appError(
+                            ERROR_CODES.VALIDATION_ERROR,
+                            MEDIA_ERROR_MESSAGES.LIMIT_VIDEO_SIZE(
+                                MEDIA_LIMITS.MAX_VIDEO_SIZE_MB,
+                            ),
+                        ),
+                    );
+                }
+            } else if (fileType.startsWith(MIME_PREFIXES.AUDIO)) {
+                if (fileSizeMB > MEDIA_LIMITS.MAX_AUDIO_SIZE_MB) {
+                    return err(
+                        appError(
+                            ERROR_CODES.VALIDATION_ERROR,
+                            `Аудиофайл слишком большой (макс. ${MEDIA_LIMITS.MAX_AUDIO_SIZE_MB}МБ)`,
+                        ),
+                    );
+                }
+            } else {
+                if (fileSizeMB > MEDIA_LIMITS.MAX_DOCUMENT_SIZE_MB) {
+                    return err(
+                        appError(
+                            ERROR_CODES.VALIDATION_ERROR,
+                            `Документ слишком большой (макс. ${MEDIA_LIMITS.MAX_DOCUMENT_SIZE_MB}МБ)`,
+                        ),
+                    );
+                }
+            }
+
+            // Генерируем превью видео, если это видео
+            let localThumbnail: Blob | null = null;
+            let videoWidth: number | undefined;
+            let videoHeight: number | undefined;
+
+            if (file.type.startsWith(MIME_PREFIXES.VIDEO)) {
+                try {
+                    const thumbResult = await generateVideoThumbnail(file);
+                    localThumbnail = thumbResult.blob;
+                    videoWidth = thumbResult.width;
+                    videoHeight = thumbResult.height;
+                } catch (e) {
+                    logger.warn("Не удалось сгенерировать превью для видео", e);
+                }
+            }
+
             // 1. Выбор действия воркера (сжатие, шифрование или просто шифрование)
             const action = file.type.startsWith(MIME_PREFIXES.IMAGE)
                 ? MEDIA_WORKER_ACTIONS.COMPRESS_IMAGE
@@ -147,6 +319,18 @@ export const mediaService = {
                 metadata,
             } = workerData;
 
+            // Шифруем сгенерированное превью видео в воркере
+            let encryptedThumb: Blob | undefined = thumbnail;
+            if (localThumbnail) {
+                const thumbData = await mediaWorkerClient.postTask({
+                    taskId: crypto.randomUUID(),
+                    action: MEDIA_WORKER_ACTIONS.ENCRYPT_BLOB,
+                    payload: localThumbnail,
+                    cryptoKey,
+                });
+                encryptedThumb = thumbData.original;
+            }
+
             // 2. Подготовка FormData через константы
             const formData = new FormData();
             const originalName =
@@ -164,14 +348,14 @@ export const mediaService = {
                 }),
             );
 
-            if (thumbnail) {
+            if (encryptedThumb) {
                 const thumbPrefix = isVault
                     ? MEDIA_FILE_PREFIXES.VAULT_THUMB
                     : MEDIA_FILE_PREFIXES.THUMBNAIL;
                 formData.append(
                     MEDIA_FIELDS.THUMBNAIL,
                     new File(
-                        [thumbnail],
+                        [encryptedThumb],
                         `${thumbPrefix}${originalName}.webp`,
                         {
                             type: COMPRESSION_OPTIONS.FORMAT_WEBP,
@@ -193,10 +377,24 @@ export const mediaService = {
                 JSON.stringify({ roomId }),
             );
 
-            if (metadata) {
+            // Объединяем метаданные от воркера и метаданные видео
+            const safeMetadata = {
+                ...(metadata || {}),
+                ...(videoWidth
+                    ? { width: videoWidth, height: videoHeight }
+                    : {}),
+            };
+
+            const safeMetadataFiltered = Object.fromEntries(
+                Object.entries(safeMetadata).filter(
+                    ([_, v]) => v !== undefined,
+                ),
+            );
+
+            if (Object.keys(safeMetadataFiltered).length > 0) {
                 formData.append(
                     MEDIA_FIELDS.METADATA,
-                    JSON.stringify(metadata),
+                    JSON.stringify(safeMetadataFiltered),
                 );
             }
 
@@ -209,16 +407,14 @@ export const mediaService = {
             const record = uploadResult.value;
 
             // 4. Кеширование в IndexedDB
-            const safeMetadata = metadata
-                ? Object.fromEntries(
-                      Object.entries(metadata).filter(
-                          ([_, v]) => v !== undefined,
-                      ),
-                  )
-                : {};
-
-            const finalCacheBlob = plainOriginal || file;
-            const finalCacheThumb = plainThumbnail || null;
+            const finalCacheBlob = plainOriginal
+                ? new Blob([plainOriginal], { type: plainOriginal.type })
+                : new Blob([file], { type: file.type });
+            const finalCacheThumb =
+                localThumbnail ||
+                (plainThumbnail
+                    ? new Blob([plainThumbnail], { type: plainThumbnail.type })
+                    : null);
 
             const cacheItem: MediaCacheItem = {
                 [MEDIA_CACHE_FIELDS.ID]: record.id,
@@ -229,7 +425,7 @@ export const mediaService = {
                     name: originalName,
                     size: original.size,
                     mimeType: file.type,
-                    ...safeMetadata,
+                    ...safeMetadataFiltered,
                 },
                 [MEDIA_CACHE_FIELDS.REFERENCES]: [
                     {
@@ -269,6 +465,19 @@ export const mediaService = {
         params: Pick<GetMediaParams, "id" | "userId">,
     ): Promise<Result<ProcessedMediaData, AppError<string>>> => {
         const { id, userId } = params;
+
+        // Запуск фоновой очистки старого кэша раз за сессию
+        if (!hasCleanedUp) {
+            hasCleanedUp = true;
+            mediaDb
+                .cleanupExpiredCache({
+                    userId,
+                    ttlMs: 30 * 24 * 60 * 60 * 1000, // 30 дней
+                })
+                .catch((e) => {
+                    logger.error("Ошибка при фоновой очистке кэша медиа", e);
+                });
+        }
 
         const cachedResult = await fromPromise(
             mediaDb.getWithAccessUpdate({ id, userId }),
@@ -359,9 +568,14 @@ export const mediaService = {
                 return ok({ original: null, thumbnail: null });
             }
 
+            const thumbField = record[MEDIA_FIELDS.THUMBNAIL];
+            const thumbFilename = Array.isArray(thumbField)
+                ? thumbField[0]
+                : thumbField;
+
             const thumbUrl = mediaRepository.getFileUrl({
                 record,
-                filename: record[MEDIA_FIELDS.THUMBNAIL],
+                filename: thumbFilename,
             });
             const thumbDownloadResult =
                 await mediaRepository.downloadFile(thumbUrl);
@@ -369,7 +583,8 @@ export const mediaService = {
                 return err(
                     appError(
                         ERROR_CODES.DOWNLOAD_ERROR,
-                        MEDIA_ERROR_MESSAGES.DOWNLOAD_FAIL(500),
+                        thumbDownloadResult.error.message ||
+                            MEDIA_ERROR_MESSAGES.DOWNLOAD_FAIL(500),
                     ),
                 );
             }
@@ -381,6 +596,14 @@ export const mediaService = {
                 cryptoKey: roomKey,
             });
 
+            // Обходим баг Safari с IndexedDB, перечитывая Blob из Web Worker'а в ArrayBuffer на главном потоке
+            const thumbBuffer = await thumbDecrypt.original.arrayBuffer();
+            const cleanThumb = new Blob([thumbBuffer], {
+                type:
+                    thumbDecrypt.original.type ||
+                    COMPRESSION_OPTIONS.FORMAT_WEBP,
+            });
+
             const existing = await mediaDb.getWithAccessUpdate({
                 id: record.id,
                 userId,
@@ -390,7 +613,7 @@ export const mediaService = {
                     id: record.id,
                     userId,
                     changes: {
-                        [MEDIA_CACHE_FIELDS.THUMBNAIL]: thumbDecrypt.original,
+                        [MEDIA_CACHE_FIELDS.THUMBNAIL]: cleanThumb,
                     },
                 });
             } else {
@@ -398,12 +621,12 @@ export const mediaService = {
                     record,
                     userId,
                     null,
-                    thumbDecrypt.original,
+                    cleanThumb,
                 );
                 await mediaDb.put({ item: cacheItem, userId });
             }
 
-            return ok({ original: null, thumbnail: thumbDecrypt.original });
+            return ok({ original: null, thumbnail: cleanThumb });
         } catch (error) {
             return err(
                 appError(
@@ -434,9 +657,14 @@ export const mediaService = {
         }
 
         try {
+            const fileField = record[MEDIA_FIELDS.FILE];
+            const fileFilename = Array.isArray(fileField)
+                ? fileField[0]
+                : fileField;
+
             const originalUrl = mediaRepository.getFileUrl({
                 record,
-                filename: record[MEDIA_FIELDS.FILE],
+                filename: fileFilename,
             });
             const originalDownloadResult =
                 await mediaRepository.downloadFile(originalUrl);
@@ -444,7 +672,8 @@ export const mediaService = {
                 return err(
                     appError(
                         ERROR_CODES.DOWNLOAD_ERROR,
-                        MEDIA_ERROR_MESSAGES.DOWNLOAD_FAIL(500),
+                        originalDownloadResult.error.message ||
+                            MEDIA_ERROR_MESSAGES.DOWNLOAD_FAIL(500),
                     ),
                 );
             }
@@ -456,8 +685,10 @@ export const mediaService = {
                 cryptoKey: roomKey,
             });
 
+            // Обходим баг Safari с IndexedDB, перечитывая Blob из Web Worker'а в ArrayBuffer на главном потоке
+            const originalBuffer = await decryptResult.original.arrayBuffer();
             const originalMime = record[MEDIA_FIELDS.MIME_TYPE] || "";
-            const typedOriginalBlob = new Blob([decryptResult.original], {
+            const typedOriginalBlob = new Blob([originalBuffer], {
                 type: originalMime,
             });
 
@@ -510,8 +741,12 @@ export const mediaService = {
      * @param filename - Имя файла
      * @returns Прямой URL к файлу на сервере
      */
-    getFileUrl: (record: MediaResponse, filename: string): string => {
-        return mediaRepository.getFileUrl({ record, filename });
+    getFileUrl: (
+        record: MediaResponse,
+        filename: string | string[],
+    ): string => {
+        const actualFilename = Array.isArray(filename) ? filename[0] : filename;
+        return mediaRepository.getFileUrl({ record, filename: actualFilename });
     },
 
     /**

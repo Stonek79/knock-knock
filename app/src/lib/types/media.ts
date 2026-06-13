@@ -1,5 +1,8 @@
 import type { z } from "zod";
 import type {
+    lightboxImageSlideSchema,
+    lightboxSlideSchema,
+    lightboxVideoSlideSchema,
     mediaCacheSchema,
     mediaMetadataSchema,
     mediaReferenceSchema,
@@ -65,3 +68,10 @@ export type MediaUploadParams = {
     cryptoKey: CryptoKey;
     isVault?: boolean;
 };
+
+/**
+ * ТИПЫ СЛАЙДОВ ДЛЯ LIGHTBOX (ZoomBlock)
+ */
+export type LightboxSlide = z.infer<typeof lightboxSlideSchema>;
+export type LightboxImageSlide = z.infer<typeof lightboxImageSlideSchema>;
+export type LightboxVideoSlide = z.infer<typeof lightboxVideoSlideSchema>;

@@ -6,6 +6,7 @@ import {
     CLIENT_MESSAGE_STATUS,
     DEFAULT_MIME_TYPES,
     MIME_PREFIXES,
+    OPTIMISTIC_ID_PREFIX,
     QUERY_KEYS,
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
@@ -73,7 +74,7 @@ export function useSendMessage({
     const toast = useToast();
     const { t } = useTranslation();
 
-    return useMutation<
+    const mutation = useMutation<
         { serverId: string; serverAttachments: Attachment[] | null },
         Error,
         SendMessageVariables,
@@ -223,7 +224,7 @@ export function useSendMessage({
                 const extension = isMp4 ? "m4a" : "webm";
 
                 optimisticAttachments.push({
-                    id: `temp-audio-${tempId}`,
+                    id: `${OPTIMISTIC_ID_PREFIX}audio-${tempId}`,
                     file_name: `voice-message.${extension}`,
                     file_size: variables.audioBlob.size,
                     content_type: DEFAULT_MIME_TYPES.WEBM_AUDIO,
@@ -244,7 +245,7 @@ export function useSendMessage({
                           : ATTACHMENT_TYPES.DOCUMENT;
 
                     optimisticAttachments.push({
-                        id: `temp-file-${tempId}-${file.name}`,
+                        id: `${OPTIMISTIC_ID_PREFIX}file-${tempId}-${file.name}`,
                         file_name: file.name,
                         file_size: file.size,
                         content_type: file.type,
@@ -275,6 +276,8 @@ export function useSendMessage({
                     forward_from_name: variables.forwardFromName ?? undefined,
                     forward_from_id: variables.forwardFromId ?? undefined,
                 },
+                _retryFiles: variables.files,
+                _retryAudioBlob: variables.audioBlob,
             };
 
             queryClient.setQueryData<ChatMessage[]>(
@@ -310,6 +313,13 @@ export function useSendMessage({
                 return;
             }
 
+            // Очищаем временные Blob URL после успешной загрузки на сервер
+            if (context.blobUrls && context.blobUrls.length > 0) {
+                for (const url of context.blobUrls) {
+                    URL.revokeObjectURL(url);
+                }
+            }
+
             queryClient.setQueryData<ChatMessage[]>(
                 QUERY_KEYS.messages(roomId),
                 (old = []) => {
@@ -329,6 +339,8 @@ export function useSendMessage({
                                 attachments: serverAttachments,
                                 _uiStatus: undefined,
                                 _tempId: undefined,
+                                _retryFiles: undefined,
+                                _retryAudioBlob: undefined,
                             };
                         }
                         return m;
@@ -405,4 +417,40 @@ export function useSendMessage({
             });
         },
     });
+
+    const retryMessage = (message: ChatMessage) => {
+        if (!roomId) {
+            return;
+        }
+
+        // Очищаем старые blob URL
+        if (message._blobUrls && message._blobUrls.length > 0) {
+            for (const url of message._blobUrls) {
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Удаляем упавшее сообщение из кэша
+        queryClient.setQueryData<ChatMessage[]>(
+            QUERY_KEYS.messages(roomId),
+            (old = []) => {
+                return old.filter((m) => {
+                    return m.id !== message.id;
+                });
+            },
+        );
+
+        // Повторяем мутацию
+        mutation.mutate({
+            text: message.content || "",
+            files: message._retryFiles,
+            audioBlob: message._retryAudioBlob,
+            replyToId: message.metadata?.reply_to_id,
+        });
+    };
+
+    return {
+        ...mutation,
+        retryMessage,
+    };
 }

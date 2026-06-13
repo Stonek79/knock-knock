@@ -1,5 +1,6 @@
 import { Lightbox } from "yet-another-react-lightbox";
 import DownloadPlugin from "yet-another-react-lightbox/plugins/download";
+import VideoPlugin from "yet-another-react-lightbox/plugins/video";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { useLightboxSlides } from "../../../../hooks/useLightboxSlides";
 import "yet-another-react-lightbox/styles.css";
@@ -9,7 +10,8 @@ import { useTranslation } from "react-i18next";
 import type { Attachment, RoomType } from "@/lib/types";
 
 interface ZoomBlockProps {
-    imageAttachments: Attachment[];
+    /** Список медиа-вложений (изображения и видео) */
+    mediaAttachments: Attachment[];
     roomKey?: CryptoKey;
     roomType?: RoomType;
     userId: string;
@@ -19,8 +21,11 @@ interface ZoomBlockProps {
     isDeleted: boolean;
 }
 
+/**
+ * Компонент полноэкранного просмотра медиафайлов (картинок и видео) с зумом и скачиванием.
+ */
 export const ZoomBlock = ({
-    imageAttachments,
+    mediaAttachments,
     userId,
     roomKey,
     isDeleted,
@@ -31,7 +36,7 @@ export const ZoomBlock = ({
     const { t } = useTranslation();
 
     const { slides } = useLightboxSlides({
-        attachments: imageAttachments,
+        attachments: mediaAttachments,
         userId,
         roomKey,
         enabled: index >= 0,
@@ -39,7 +44,10 @@ export const ZoomBlock = ({
 
     // Мемоизируем конфигурации Lightbox, чтобы плагины не сбрасывали состояние
     // при каждом ререндере компонента из-за изменения ссылочной идентичности (Reference Identity)
-    const lightboxPlugins = useMemo(() => [Zoom, DownloadPlugin], []);
+    const lightboxPlugins = useMemo(
+        () => [Zoom, DownloadPlugin, VideoPlugin],
+        [],
+    );
 
     const lightboxZoom = useMemo(
         () => ({
@@ -52,16 +60,25 @@ export const ZoomBlock = ({
     );
 
     const lightboxCarousel = useMemo(
-        () => ({ finite: imageAttachments.length === 1 }),
-        [imageAttachments.length],
+        () => ({ finite: mediaAttachments.length === 1 }),
+        [mediaAttachments.length],
     );
 
     const lightboxRender = useMemo(
         () => ({
-            buttonPrev: imageAttachments.length <= 1 ? () => null : undefined,
-            buttonNext: imageAttachments.length <= 1 ? () => null : undefined,
+            buttonPrev: mediaAttachments.length <= 1 ? () => null : undefined,
+            buttonNext: mediaAttachments.length <= 1 ? () => null : undefined,
         }),
-        [imageAttachments.length],
+        [mediaAttachments.length],
+    );
+
+    const lightboxVideo = useMemo(
+        () => ({
+            controls: true,
+            autoPlay: true,
+            playsInline: true,
+        }),
+        [],
     );
 
     const starBtnTitle = t("chat.star", "В избранное");
@@ -100,7 +117,7 @@ export const ZoomBlock = ({
         [starBtnTitle, forwardBtnTitle],
     );
 
-    if (isDeleted || imageAttachments.length <= 0) {
+    if (isDeleted || mediaAttachments.length <= 0) {
         return null;
     }
 
@@ -115,6 +132,7 @@ export const ZoomBlock = ({
             carousel={lightboxCarousel}
             render={lightboxRender}
             toolbar={lightboxToolbar}
+            video={lightboxVideo}
         />
     );
 };

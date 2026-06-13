@@ -7,16 +7,18 @@
 - Добавлены лимиты и списки `MEDIA_WORKER_ACTIONS` в константы.
 - Настроен `app/src/lib/types/media.ts` с выведением интерфейсов задач Воркера и связи с БД (`MediaTypeOptions`).
 
-### [ ] Этап 2: Web Worker (Media Processor)
+### [x] Этап 2: Web Worker (Media Processor)
 - Сжатие изображений (OffscreenCanvas).
 - Шифрование AES-GCM (Zero Knowledge).
 - Паковка/компрессия видео (mp4-muxer) если возможно, либо проброс.
 - Настройка `postMessage` для взаимодействия с `media.service`.
 
-### [ ] Этап 3: База данных (Dexie)
+### [x] Этап 3: База данных (Dexie)
 - Миграция с idb-keyval на IndexedDB.
 - Логика очистки старого кэша (TTL + Favorites protection).
+- Ошибки типизации Dexie при подсчете размера кэша исправлены в `mediaDb.getCacheSize`.
 
-### [ ] Этап 4: Интеграция
+### [x] Этап 4: Интеграция
 - Перенос `uploadMedia.ts` из фич в `lib/services/media.service.ts`.
 - Обновление хука `useSendMessage` для использования сервиса.
+- Добавлено беззвучное автовоспроизведение видео при попадании в зону видимости (IntersectionObserver) и полноэкранный плеер в Лайтбоксе (VideoPlugin).

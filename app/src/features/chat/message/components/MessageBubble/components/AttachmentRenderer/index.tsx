@@ -1,4 +1,4 @@
-import { ImageOff, Play } from "lucide-react";
+import { ImageOff, Loader2, Play } from "lucide-react";
 import {
     type Dispatch,
     type ReactNode,
@@ -10,11 +10,11 @@ import {
     useState,
 } from "react";
 import { Flex } from "@/components/layout/Flex";
-import { Button } from "@/components/ui/Button";
 import {
     ATTACHMENT_TYPES,
     ICON_SIZE,
     MEDIA_SYSTEM_CONSTANTS,
+    OPTIMISTIC_ID_PREFIX,
 } from "@/lib/constants";
 import { useMedia } from "@/lib/mediadb/useMedia";
 import type { Attachment } from "@/lib/types";
@@ -33,6 +33,7 @@ interface AttachmentRendererProps {
     isVault?: boolean;
     userId: string;
     onMediaError?: (hasError: boolean) => void;
+    isFailed?: boolean;
 }
 
 /**
@@ -127,16 +128,22 @@ function CachedImage({
  */
 function CachedVideo({
     att,
+    index,
+    setLightboxIndex,
     roomKey,
     isVault,
     userId,
     onErrorStateChange,
+    isFailed,
 }: {
     att: Attachment;
+    index: number;
+    setLightboxIndex: Dispatch<SetStateAction<number>>;
     roomKey?: CryptoKey;
     isVault?: boolean;
     userId: string;
     onErrorStateChange?: (id: string, hasError: boolean) => void;
+    isFailed?: boolean;
 }) {
     const { objectUrl, thumbnailUrl, isLoading, error } = useMedia({
         mediaId: att.id,
@@ -144,6 +151,7 @@ function CachedVideo({
         isVault,
         userId,
         initialUrl: att.url,
+        downloadOriginal: true,
     });
 
     useEffect(() => {
@@ -154,30 +162,53 @@ function CachedVideo({
     const isBlob =
         typeof att.url === "string" &&
         att.url.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX);
-    const displayUrl = isBlob ? att.url : thumbnailUrl || objectUrl;
+    const displayUrl = isBlob ? att.url : objectUrl;
 
-    // Если мы используем сам видеофайл (оптимистичный blob или скачанный objectUrl),
-    // браузер не покажет его в теге <img>. Обязательно используем <video>.
-    const renderAsVideo = !!displayUrl && displayUrl !== thumbnailUrl;
-
-    const showPlaceholder = !displayUrl && (!!error || isLoading);
+    const isVideoLoading =
+        (isLoading || att.id.startsWith(OPTIMISTIC_ID_PREFIX)) && !isFailed;
+    const showPlaceholder =
+        !displayUrl && !thumbnailUrl && (!!error || isLoading);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
 
-    const handlePlay = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (videoRef.current) {
-            videoRef.current.muted = false;
-            videoRef.current.play().catch(console.error);
-            setIsPlaying(true);
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || !displayUrl) {
+            return;
         }
-    }, []);
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    video.muted = true;
+                    video.play().catch((err) => {
+                        console.debug("Autoplay blocked or interrupted:", err);
+                    });
+                } else {
+                    video.pause();
+                }
+            },
+            { threshold: 0.5 },
+        );
+
+        observer.observe(video);
+
+        return () => {
+            observer.unobserve(video);
+        };
+    }, [displayUrl]);
 
     return (
-        <Button
+        <button
+            type="button"
             className={styles.videoThumbnailContainer}
-            onClick={renderAsVideo && !isPlaying ? handlePlay : undefined}
+            onClick={(e) => {
+                e.stopPropagation();
+                if (!showPlaceholder && !isVideoLoading) {
+                    setLightboxIndex(index);
+                }
+            }}
         >
             {showPlaceholder ? (
                 <Flex
@@ -192,35 +223,39 @@ function CachedVideo({
                 </Flex>
             ) : (
                 <>
-                    {renderAsVideo ? (
-                        <video
-                            ref={videoRef}
-                            src={displayUrl}
-                            className={styles.attachmentImage}
-                            controls={isPlaying}
-                            muted={!isPlaying}
-                            playsInline
-                            preload="metadata"
-                            onPlay={() => setIsPlaying(true)}
-                            onPause={() => setIsPlaying(false)}
-                            onEnded={() => setIsPlaying(false)}
-                        />
-                    ) : (
-                        <img
-                            src={displayUrl}
-                            alt={att.file_name}
-                            className={styles.attachmentImage}
-                            loading="lazy"
-                        />
-                    )}
-                    {!isPlaying && (
+                    <video
+                        ref={videoRef}
+                        src={
+                            displayUrl
+                                ? thumbnailUrl
+                                    ? displayUrl
+                                    : `${displayUrl}#t=0.001`
+                                : undefined
+                        }
+                        poster={thumbnailUrl || undefined}
+                        className={styles.attachmentImage}
+                        muted
+                        playsInline
+                        loop
+                        preload="metadata"
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                    />
+                    {isVideoLoading ? (
+                        <div className={styles.loadingOverlay}>
+                            <Loader2
+                                size={ICON_SIZE.md}
+                                className={styles.spinner}
+                            />
+                        </div>
+                    ) : !isPlaying ? (
                         <div className={styles.playOverlay}>
                             <Play size={ICON_SIZE.md} fill="currentColor" />
                         </div>
-                    )}
+                    ) : null}
                 </>
             )}
-        </Button>
+        </button>
     );
 }
 
@@ -238,12 +273,8 @@ export function AttachmentRenderer({
     isVault,
     userId,
     onMediaError,
+    isFailed = false,
 }: AttachmentRendererProps) {
-    const imageAttachments = useMemo(
-        () => attachments.filter((a) => a.type === ATTACHMENT_TYPES.IMAGE),
-        [attachments],
-    );
-
     const mediaAttachments = useMemo(
         () =>
             attachments.filter(
@@ -314,15 +345,15 @@ export function AttachmentRenderer({
                     const isLast = idx === 3;
 
                     let content: ReactNode;
+                    const mediaIndex = mediaAttachments.findIndex(
+                        (m) => m.id === att.id,
+                    );
                     if (isImage) {
-                        const imageIndex = imageAttachments.findIndex(
-                            (i) => i.id === att.id,
-                        );
                         content = (
                             <CachedImage
                                 key={att.id}
                                 att={att}
-                                index={imageIndex}
+                                index={mediaIndex}
                                 setLightboxIndex={setLightboxIndex}
                                 imageErrors={imageErrors}
                                 setImageErrors={setImageErrors}
@@ -337,10 +368,13 @@ export function AttachmentRenderer({
                             <CachedVideo
                                 key={att.id}
                                 att={att}
+                                index={mediaIndex}
+                                setLightboxIndex={setLightboxIndex}
                                 roomKey={roomKey}
                                 isVault={isVault}
                                 userId={userId}
                                 onErrorStateChange={handleMediaErrorStateChange}
+                                isFailed={isFailed}
                             />
                         );
                     }

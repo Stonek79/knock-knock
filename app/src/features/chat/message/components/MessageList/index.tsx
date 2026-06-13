@@ -8,7 +8,12 @@ import { type RefObject, useImperativeHandle, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
-import type { DecryptedMessageWithProfile, RoomType } from "@/lib/types";
+import { CLIENT_MESSAGE_STATUS } from "@/lib/constants";
+import type {
+    ChatMessage,
+    DecryptedMessageWithProfile,
+    RoomType,
+} from "@/lib/types";
 import { getMessageGroupPosition } from "@/lib/utils/messageGrouping";
 import { useChatScroll } from "../../../room/hooks/useChatScroll";
 import { MessageBubble } from "../../components/MessageBubble";
@@ -42,6 +47,8 @@ interface MessageListProps {
     roomKey?: CryptoKey;
     /** Тип комнаты */
     roomType?: RoomType;
+    /** Обработчик повторной отправки сообщения */
+    onRetry?: (message: ChatMessage) => void;
 }
 
 export function MessageList({
@@ -57,6 +64,7 @@ export function MessageList({
     isFavoritesView,
     roomKey,
     roomType,
+    onRetry,
 }: MessageListProps) {
     const { t } = useTranslation();
 
@@ -162,6 +170,15 @@ export function MessageList({
                         attachments={msg.attachments}
                         roomKey={roomKey}
                         roomType={roomType}
+                        isFailed={
+                            (msg as ChatMessage)._uiStatus ===
+                            CLIENT_MESSAGE_STATUS.FAILED
+                        }
+                        onRetry={() => {
+                            if (onRetry) {
+                                onRetry(msg as ChatMessage);
+                            }
+                        }}
                     />
                 </Box>
             );
@@ -177,6 +194,7 @@ export function MessageList({
         roomKey,
         roomType,
         unknownMessage,
+        onRetry,
     ]);
 
     // Состояние загрузки
