@@ -92,18 +92,25 @@ onRecordDeleteRequest((e) => {
 // 4. ЗАЩИТА ОТ ИЗМЕНЕНИЯ ЧУЖИХ СООБЩЕНИЙ
 onRecordUpdateRequest((e) => {
 	const authRecord = e.requestInfo().authRecord;
-	if (!authRecord || authRecord.collection().name !== "users") return;
+	if (!authRecord || authRecord.collection().name !== "users") {
+		return;
+	}
 
 	const isGlobalAdmin = authRecord.get("role") === "admin";
-	if (isGlobalAdmin) return;
+	if (isGlobalAdmin) {
+		return;
+	}
 
 	const oldRecord = $app.findRecordById("messages", e.record.id);
 
 	if (oldRecord.get("sender") !== authRecord.id) {
+		console.log(`🛡️ [RLS_DEBUG] Проверка обновления чужого сообщения ID: ${e.record.id} пользователем: ${authRecord.id} (Отправитель сообщения: ${oldRecord.get("sender")})`);
+
 		// Запрещаем менять критические поля чужого сообщения (разрешено только status и metadata)
 		const protectedStringFields = ["content", "iv", "type", "sender", "room"];
 		for (const field of protectedStringFields) {
 			if (oldRecord.get(field) !== e.record.get(field)) {
+				console.error(`🛡️ [RLS_DEBUG_BLOCKED] Попытка изменения строкового поля '${field}': '${oldRecord.get(field)}' -> '${e.record.get(field)}'`);
 				throw new BadRequestError(
 					`Security Policy: You cannot modify the '${field}' field of someone else's message.`,
 				);
@@ -118,6 +125,7 @@ onRecordUpdateRequest((e) => {
 		];
 		for (const field of protectedBoolFields) {
 			if (oldRecord.getBool(field) !== e.record.getBool(field)) {
+				console.error(`🛡️ [RLS_DEBUG_BLOCKED] Попытка изменения булевого поля '${field}': ${oldRecord.getBool(field)} -> ${e.record.getBool(field)}`);
 				throw new BadRequestError(
 					`Security Policy: You cannot modify the '${field}' field of someone else's message.`,
 				);
@@ -127,9 +135,12 @@ onRecordUpdateRequest((e) => {
 		const oldAttachments = JSON.stringify(oldRecord.get("attachments") || []);
 		const newAttachments = JSON.stringify(e.record.get("attachments") || []);
 		if (oldAttachments !== newAttachments) {
+			console.error(`🛡️ [RLS_DEBUG_BLOCKED] Попытка изменения вложений (attachments)`);
 			throw new BadRequestError(
 				"Security Policy: You cannot modify attachments of someone else's message.",
 			);
 		}
+
+		console.log(`🛡️ [RLS_DEBUG_ALLOWED] Разрешено обновление чужого сообщения ${e.record.id} (новое состояние статуса: ${e.record.get("status")})`);
 	}
 }, "messages");

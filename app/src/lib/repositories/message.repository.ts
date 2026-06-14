@@ -361,9 +361,15 @@ export const messageRepository = {
     ): Promise<Result<void, MessageRepoError>> => {
         try {
             const filter = pb.filter(
-                `${MESSAGE_FIELDS.ROOM} = {:roomId} && ${MESSAGE_FIELDS.SENDER} != {:currentUserId} && (${MESSAGE_FIELDS.STATUS} != {:status} || ${MESSAGE_FIELDS.STATUS} = null || ${MESSAGE_FIELDS.STATUS} = "")`,
+                `${MESSAGE_FIELDS.ROOM} = {:roomId} && ${MESSAGE_FIELDS.SENDER} != {:currentUserId} && ${MESSAGE_FIELDS.STATUS} != {:status}`,
                 { roomId, currentUserId, status: MESSAGE_STATUS.READ },
             );
+
+            console.log(
+                `[DB_DEBUG] markMessagesAsRead: Запуск для комнаты ${roomId}. Фильтр:`,
+                filter,
+            );
+
             const records = await pb
                 .collection(DB_TABLES.MESSAGES)
                 .getFullList({
@@ -371,6 +377,10 @@ export const messageRepository = {
                     fields: MESSAGE_FIELDS.ID,
                     $autoCancel: false,
                 });
+
+            console.log(
+                `[DB_DEBUG] markMessagesAsRead: Найдено сообщений для обновления: ${records.length}`,
+            );
 
             if (records.length === 0) {
                 return ok(undefined);
@@ -384,10 +394,20 @@ export const messageRepository = {
                 });
             }
 
+            console.log(
+                `[DB_DEBUG] markMessagesAsRead: Отправка batch-запроса на обновление ${records.length} сообщений...`,
+            );
             await batch.send();
+            console.log(
+                `[DB_DEBUG] markMessagesAsRead: Batch-запрос успешно выполнен.`,
+            );
 
             return ok(undefined);
         } catch (e) {
+            console.error(
+                `[DB_DEBUG_ERROR] markMessagesAsRead: Сбой выполнения:`,
+                e,
+            );
             return err(
                 appError(
                     ERROR_CODES.NETWORK_ERROR,
