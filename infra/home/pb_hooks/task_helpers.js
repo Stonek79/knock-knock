@@ -14,24 +14,34 @@ function handlePushTask(payload) {
 		$os.getenv("PB_PUSH_GATEWAY_URL") || DB.CONFIG.PUSH_GATEWAY_DEFAULT_URL;
 
 	if (!payload.subscriptions || payload.subscriptions.length === 0) {
+		console.log("📡 [PUSH_DEBUG] Нет активных подписок для отправки push-уведомлений. Пропускаем.");
 		return;
 	}
 
-	const res = $http.send({
-		url: `${pushGatewayUrl}${DB.CONFIG.PUSH_GATEWAY_ENDPOINT}`,
-		method: DB.VALUES.METHOD_POST,
-		headers: { "Content-Type": DB.VALUES.CONTENT_TYPE_JSON },
-		body: JSON.stringify({
-			subscriptions: payload.subscriptions,
-			payload: payload.data,
-		}),
-		timeout: 10,
-	});
+	console.log(`📡 [PUSH_DEBUG] Отправка push-уведомления на шлюз: ${pushGatewayUrl}${DB.CONFIG.PUSH_GATEWAY_ENDPOINT} для ${payload.subscriptions.length} подписок...`);
 
-	if (res.statusCode < 200 || res.statusCode >= 300) {
-		throw new Error(
-			`Push Gateway error (Status: ${res.statusCode}): ${res.raw}`,
-		);
+	try {
+		const res = $http.send({
+			url: `${pushGatewayUrl}${DB.CONFIG.PUSH_GATEWAY_ENDPOINT}`,
+			method: DB.VALUES.METHOD_POST,
+			headers: { "Content-Type": DB.VALUES.CONTENT_TYPE_JSON },
+			body: JSON.stringify({
+				subscriptions: payload.subscriptions,
+				payload: payload.data,
+			}),
+			timeout: 10,
+		});
+
+		console.log(`📡 [PUSH_DEBUG] Ответ push-шлюза: статус ${res.statusCode}`);
+
+		if (res.statusCode < 200 || res.statusCode >= 300) {
+			throw new Error(
+				`Push Gateway error (Status: ${res.statusCode}): ${res.raw}`,
+			);
+		}
+	} catch (httpErr) {
+		console.error(`❌ [PUSH_DEBUG_ERROR] Сбой сети при отправке push-запроса: ${httpErr.message || httpErr}`);
+		throw httpErr;
 	}
 }
 
@@ -42,6 +52,8 @@ function handleTaskError(task, err) {
 	const DB = require(`${__hooks}/db.js`);
 	const attempts = task.getInt(DB.FIELDS.ATTEMPTS) + 1;
 	const maxAttempts = 5;
+
+	console.error(`❌ [TASK_ERROR] Задача ID: ${task.id} завершилась с ошибкой: ${err.message || String(err)} (Попытка: ${attempts}/${maxAttempts})`);
 
 	task.set(DB.FIELDS.ATTEMPTS, attempts);
 	task.set(DB.FIELDS.LAST_ERROR, err.message || String(err));
@@ -59,7 +71,12 @@ function handleTaskError(task, err) {
 		);
 	}
 
-	$app.save(task);
+	try {
+		$app.save(task);
+		console.log(`💾 [TASK_DEBUG] Состояние задачи ${task.id} обновлено после ошибки.`);
+	} catch (saveErr) {
+		console.error(`❌ [TASK_DEBUG_ERROR] Не удалось сохранить состояние ошибки для задачи ${task.id}: ${saveErr.message || saveErr}`);
+	}
 }
 
 /**
