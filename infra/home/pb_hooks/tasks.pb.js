@@ -29,6 +29,37 @@ cronAdd("task_runner", DB_TOP.CONFIG.CRON_RUNNER, () => {
 		const nowStr = new Date().toISOString().replace("T", " ").split(".")[0];
 		console.log(`⏰ [CRON_DEBUG] Запуск task_runner в ${nowStr}`);
 
+		// Самолечение: перевод задач, зависших в статусе processing более 10 минут, в статус failed
+		try {
+			const timeoutTime = new Date(Date.now() - 10 * 60000)
+				.toISOString()
+				.replace("T", " ")
+				.split(".")[0];
+			const cleanupResult = $app
+				.db()
+				.newQuery(
+					`UPDATE ${DB.TABLES.TASK_QUEUE} 
+					 SET ${DB.FIELDS.STATUS} = {:failed}, 
+					     ${DB.FIELDS.LAST_ERROR} = {:error_msg},
+					     ${DB.FIELDS.ATTEMPTS} = ${DB.FIELDS.ATTEMPTS} + 1
+					 WHERE ${DB.FIELDS.STATUS} = {:processing} AND ${DB.FIELDS.UPDATED} <= {:timeout_time}`,
+				)
+				.bind({
+					failed: DB.VALUES.STATUS_FAILED,
+					error_msg: "Task timeout (stuck in processing for > 10 minutes)",
+					processing: DB.VALUES.STATUS_PROCESSING,
+					timeout_time: timeoutTime,
+				})
+				.execute();
+
+			const affectedRows = cleanupResult.rowsAffected() || 0;
+			if (affectedRows > 0) {
+				console.log(`⏰ [CRON_DEBUG] Самолечение: обнаружено и сброшено зависших задач: ${affectedRows}`);
+			}
+		} catch (cleanupErr) {
+			console.error(`❌ [CRON_DEBUG] Ошибка при самолечении зависших задач: ${cleanupErr.message || cleanupErr}`);
+		}
+
 		let tasks = [];
 		try {
 			tasks = $app.findRecordsByFilter(

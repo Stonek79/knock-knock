@@ -45,44 +45,42 @@ onRecordAfterCreateSuccess((e) => {
 	console.log(`📦 [REG_DEBUG] Комната Избранного не найдена. Создаем новую...`);
 
 	try {
-		e.app.runInTransaction((tx) => {
-			const roomCollection = tx.findCollectionByNameOrId(DB.TABLES.ROOMS);
-			const memberCollection = tx.findCollectionByNameOrId(DB.TABLES.MEMBERS);
+		const roomCollection = e.app.findCollectionByNameOrId(DB.TABLES.ROOMS);
+		const memberCollection = e.app.findCollectionByNameOrId(DB.TABLES.MEMBERS);
 
-			console.log(`🔐 [REG_DEBUG_TX] Открыта транзакция. Создаем комнату...`);
+		console.log(`🔐 [REG_DEBUG] Создаем комнату...`);
 
-			// Создание комнаты
-			const room = new Record(roomCollection, {
-				[DB.FIELDS.ID]: deterministicId,
-				[DB.FIELDS.TYPE]: DB.VALUES.ROOM_TYPE_DIRECT,
-				[DB.FIELDS.NAME]: DB.VALUES.FAVORITES_NAME,
-				[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
-				[DB.FIELDS.CREATED_BY]: user.id,
-			});
-			tx.saveNoValidate(room);
-
-			console.log(`🔐 [REG_DEBUG_TX] Комната создана. Добавляем участника...`);
-
-			// Добавление единственного участника (себя)
-			const member = new Record(memberCollection, {
-				[DB.FIELDS.ROOM]: room.id,
-				[DB.FIELDS.USER]: user.id,
-				[DB.FIELDS.ROLE]: DB.VALUES.ROLE_OWNER,
-				[DB.FIELDS.UNREAD_COUNT]: 0,
-			});
-			tx.saveNoValidate(member);
-
-			console.log(`⭐ [REG] Избранное успешно создано и записано для: ${user.email()}`);
+		// Создание комнаты
+		const room = new Record(roomCollection, {
+			[DB.FIELDS.ID]: deterministicId,
+			[DB.FIELDS.TYPE]: DB.VALUES.ROOM_TYPE_DIRECT,
+			[DB.FIELDS.NAME]: DB.VALUES.FAVORITES_NAME,
+			[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
+			[DB.FIELDS.CREATED_BY]: user.id,
 		});
+		e.app.saveNoValidate(room);
+
+		console.log(`🔐 [REG_DEBUG] Комната создана. Добавляем участника...`);
+
+		// Добавление единственного участника (себя)
+		const member = new Record(memberCollection, {
+			[DB.FIELDS.ROOM]: room.id,
+			[DB.FIELDS.USER]: user.id,
+			[DB.FIELDS.ROLE]: DB.VALUES.ROLE_OWNER,
+			[DB.FIELDS.UNREAD_COUNT]: 0,
+		});
+		e.app.saveNoValidate(member);
+
+		console.log(`⭐ [REG] Избранное успешно создано и записано для: ${user.email()}`);
 	} catch (err) {
-		console.error(`❌ [REG_ERROR] Ошибка в транзакции создания Избранного: ${err.message || err}`);
+		console.error(`❌ [REG_ERROR] Ошибка при создании Избранного: ${err.message || err}`);
 	}
 
 	e.next();
 }, "users");
 
 /**
- * 2. КАШКАДНОЕ УДАЛЕНИЕ ДАННЫХ
+ * 2. КАСКАДНОЕ УДАЛЕНИЕ ДАННЫХ
  * Удаляет связанные файлы и личные чаты при удалении пользователя.
  */
 onRecordAfterDeleteSuccess((e) => {
@@ -269,5 +267,32 @@ onRecordAfterCreateSuccess((e) => {
 	} catch (err) {
 		console.error(`❌ [PUSH_QUEUE_ERROR]: ${err}`);
 	}
-	e.next();
 }, "messages");
+
+/**
+ * 5. АВТОМАТИЧЕСКИЙ СБРОС ЗАВИСШИХ ЗАДАЧ ПРИ СТАРТЕ
+ * Сбрасывает статус всех задач, оставшихся в состоянии 'processing' после перезапуска сервера, обратно в 'pending'.
+ */
+onAfterBootstrap((e) => {
+	const DB = require(`${__hooks}/db.js`);
+	try {
+		console.log("🧹 [BOOTSTRAP] Проверка и сброс зависших задач в очереди...");
+
+		const result = e.app
+			.db()
+			.newQuery(
+				`UPDATE ${DB.TABLES.TASK_QUEUE} SET ${DB.FIELDS.STATUS} = {:pending} WHERE ${DB.FIELDS.STATUS} = {:processing}`,
+			)
+			.bind({
+				pending: DB.VALUES.STATUS_PENDING,
+				processing: DB.VALUES.STATUS_PROCESSING,
+			})
+			.execute();
+
+		const rowsAffected = result.rowsAffected() || 0;
+		console.log(`🧹 [BOOTSTRAP] Очередь задач проверена. Восстановлено задач: ${rowsAffected}`);
+	} catch (err) {
+		console.error(`❌ [BOOTSTRAP_ERROR] Ошибка при автосбросе задач: ${err.message || err}`);
+	}
+});
+
