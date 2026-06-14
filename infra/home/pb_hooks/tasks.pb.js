@@ -18,22 +18,36 @@ cronAdd("task_runner", DB_TOP.CONFIG.CRON_RUNNER, () => {
 	const helpers = require(`${__hooks}/task_helpers.js`);
 
 	const nowStr = new Date().toISOString().replace("T", " ").split(".")[0];
+	console.log(`⏰ [CRON_DEBUG] Запуск task_runner в ${nowStr}`);
 
-	const tasks = $app.findRecordsByFilter(
-		DB.TABLES.TASK_QUEUE,
-		`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_PENDING}' || (${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.ATTEMPTS} < 5 && ${DB.FIELDS.RUN_AT} <= {:now})`,
-		`+${DB.FIELDS.RUN_AT}`,
-		20,
-		0,
-		{ now: nowStr },
-	);
+	let tasks = [];
+	try {
+		tasks = $app.findRecordsByFilter(
+			DB.TABLES.TASK_QUEUE,
+			`${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_PENDING}' || (${DB.FIELDS.STATUS} = '${DB.VALUES.STATUS_FAILED}' && ${DB.FIELDS.ATTEMPTS} < 5 && ${DB.FIELDS.RUN_AT} <= {:now})`,
+			`+${DB.FIELDS.RUN_AT}`,
+			20,
+			0,
+			{ now: nowStr },
+		);
+	} catch (findErr) {
+		console.error(`❌ [CRON_DEBUG] Ошибка при поиске задач в очереди: ${findErr.message || findErr}`);
+		return;
+	}
 
 	if (tasks.length === 0) {
 		return;
 	}
 
+	console.log(`⏰ [CRON_DEBUG] Найдено задач для обработки: ${tasks.length}`);
+
 	for (const task of tasks) {
-		helpers.processTask(task);
+		try {
+			console.log(`⏰ [CRON_DEBUG] Обработка задачи ID: ${task.id}, Тип: ${task.get(DB.FIELDS.TYPE)}, Статус: ${task.get(DB.FIELDS.STATUS)}`);
+			helpers.processTask(task);
+		} catch (taskErr) {
+			console.error(`❌ [CRON_DEBUG] Сбой при обработке задачи ${task.id}: ${taskErr.message || taskErr}`);
+		}
 	}
 });
 

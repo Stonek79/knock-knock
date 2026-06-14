@@ -14,27 +14,42 @@ onRecordAfterCreateSuccess((e) => {
 	const DB = require(`${__hooks}/db.js`);
 	const user = e.record;
 
+	console.log(`🚀 [REG_DEBUG] Начало инициализации Избранного для пользователя: ${user.email()} (ID: ${user.id})`);
+
 	// Генерация детерминированного ID для комнаты на основе ID пользователя
 	const rawHash = $security.md5(`"${DB.VALUES.PREFIX_SELF_CHAT}" ${user.id}`);
 	const deterministicId = rawHash.slice(0, 15);
 
-	let roomExists = false;
+	console.log(`🔍 [REG_DEBUG] Сгенерированный ID комнаты Избранного: ${deterministicId}`);
+
+	// Безопасная проверка существования комнаты без генерации исключений в БД
+	let rooms = [];
 	try {
-		$app.findRecordById(DB.TABLES.ROOMS, deterministicId);
-		roomExists = true;
-	} catch (_findErr) {
-		// Запись не найдена — продолжаем создание
+		rooms = $app.findRecordsByFilter(
+			DB.TABLES.ROOMS,
+			`id = '${deterministicId}'`,
+			"",
+			1,
+			0,
+		);
+	} catch (filterErr) {
+		console.error(`❌ [REG_DEBUG_ERROR] Ошибка при проверке существования комнаты: ${filterErr.message || filterErr}`);
 	}
 
-	if (roomExists) {
+	if (rooms.length > 0) {
+		console.log(`ℹ️ [REG_DEBUG] Избранное уже существует для пользователя: ${user.email()} (Room ID: ${deterministicId}). Создание не требуется.`);
 		e.next();
 		return;
 	}
+
+	console.log(`📦 [REG_DEBUG] Комната Избранного не найдена. Создаем новую...`);
 
 	try {
 		$app.runInTransaction((tx) => {
 			const roomCollection = tx.findCollectionByNameOrId(DB.TABLES.ROOMS);
 			const memberCollection = tx.findCollectionByNameOrId(DB.TABLES.MEMBERS);
+
+			console.log(`🔐 [REG_DEBUG_TX] Открыта транзакция. Создаем комнату...`);
 
 			// Создание комнаты
 			const room = new Record(roomCollection, {
@@ -46,6 +61,8 @@ onRecordAfterCreateSuccess((e) => {
 			});
 			tx.saveNoValidate(room);
 
+			console.log(`🔐 [REG_DEBUG_TX] Комната создана. Добавляем участника...`);
+
 			// Добавление единственного участника (себя)
 			const member = new Record(memberCollection, {
 				[DB.FIELDS.ROOM]: room.id,
@@ -55,10 +72,10 @@ onRecordAfterCreateSuccess((e) => {
 			});
 			tx.saveNoValidate(member);
 
-			console.log(`⭐ [REG] Создано Избранное для: ${user.email()}`);
+			console.log(`⭐ [REG] Избранное успешно создано и записано для: ${user.email()}`);
 		});
 	} catch (err) {
-		console.error(`❌ [REG_ERROR]: ${err.message || err}`);
+		console.error(`❌ [REG_ERROR] Ошибка в транзакции создания Избранного: ${err.message || err}`);
 	}
 
 	e.next();
