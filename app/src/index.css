@@ -171,6 +171,8 @@
     --max-w-card: 320px;
     --max-w-media-modal: 480px;
     --max-h-attachment-img: 250px;
+    --max-w-attachment-single: 280px;
+    --max-h-attachment-single: 320px;
     --min-w-audio-player: 250px;
     --max-h-textarea: 160px;
     --audio-play-btn-size: 40px;
@@ -717,4 +719,19 @@ body {
 
 .yarl__button {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Адаптивность для одиночных вложений в чате */
+@media (min-width: 768px) {
+    :root {
+        --max-w-attachment-single: 360px;
+        --max-h-attachment-single: 400px;
+    }
+}
+
+@media (min-width: 1024px) {
+    :root {
+        --max-w-attachment-single: 400px;
+        --max-h-attachment-single: 450px;
+    }
 }

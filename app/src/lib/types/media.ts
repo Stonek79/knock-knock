@@ -56,6 +56,7 @@ export type WorkerMediaPayload = z.infer<typeof mediaWorkerPayloadSchema> & {
 export type ProcessedMediaData = {
     original: Blob | null;
     thumbnail: Blob | null;
+    metadata?: MediaMetadata | null;
 };
 
 /**

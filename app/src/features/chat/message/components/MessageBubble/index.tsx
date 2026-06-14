@@ -98,12 +98,6 @@ export function MessageBubble({
         return attachments?.some((a) => a.type === ATTACHMENT_TYPES.AUDIO);
     }, [attachments]);
 
-    const imageAttachments = useMemo(() => {
-        return (
-            attachments?.filter((a) => a.type === ATTACHMENT_TYPES.IMAGE) || []
-        );
-    }, [attachments]);
-
     const mediaAttachments = useMemo(() => {
         return (
             attachments?.filter(
@@ -114,11 +108,12 @@ export function MessageBubble({
         );
     }, [attachments]);
 
-    // Проверяем, состоит ли сообщение ИСКЛЮЧИТЕЛЬНО из ОДНОЙ картинки
-    const isImageOnly =
+    // Проверяем, состоит ли сообщение ИСКЛЮЧИТЕЛЬНО из ОДНОГО изображения или видео
+    const isMediaOnly =
         !content &&
         attachments?.length === 1 &&
-        imageAttachments.length === 1 &&
+        (attachments[0].type === ATTACHMENT_TYPES.IMAGE ||
+            attachments[0].type === ATTACHMENT_TYPES.VIDEO) &&
         !isDeleted;
 
     const timeString = new Date(timestamp).toLocaleTimeString([], {
@@ -198,7 +193,7 @@ export function MessageBubble({
     const bubble = clsx(styles.bubble, {
         [styles.bubbleOwn]: isOwn,
         [styles.bubblePeer]: !isOwn,
-        [styles.bubbleImageOnly]: isImageOnly,
+        [styles.bubbleImageOnly]: isMediaOnly,
     });
 
     const metadataContent = (
@@ -355,7 +350,7 @@ export function MessageBubble({
                         {content}
                     </Text>
                 ) : null}
-                {isImageOnly && (
+                {isMediaOnly && (
                     <Box
                         className={clsx(
                             styles.metadata,
@@ -364,6 +359,9 @@ export function MessageBubble({
                     >
                         {metadataContent}
                     </Box>
+                )}
+                {!isDeleted && !content && !isMediaOnly && (
+                    <Box className={styles.metadata}>{metadataContent}</Box>
                 )}
             </Box>
 

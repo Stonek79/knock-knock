@@ -1,8 +1,10 @@
 import type { QueryClient } from "@tanstack/react-query";
 import {
     KEYSTORE_TYPES,
+    MEMBER_ROLE,
     QUERY_KEYS,
     REALTIME_ACTIONS,
+    ROOM_MEMBER_FIELDS,
     USER_FIELDS,
     USER_WEB_STATUS,
 } from "../constants";
@@ -242,14 +244,56 @@ async function handleMessageEvent({
                 record.sender !== _currentUser.id &&
                 event.action === REALTIME_ACTIONS.CREATE
             ) {
-                MessageService.markMessageAsDelivered(record.id).catch(
-                    (err) => {
+                if (_activeRoomId === record.room) {
+                    // Если чат сейчас открыт, сразу помечаем как прочитанные
+                    MessageService.markMessagesAsRead(
+                        record.room,
+                        userId,
+                    ).catch((err) => {
                         logger.error(
-                            "ChatRealtimeService: Ошибка при пометке сообщения как доставленного",
+                            "ChatRealtimeService: Ошибка автопрочтения нового сообщения в активном чате",
                             err,
                         );
-                    },
-                );
+                    });
+                    // Обновляем last_read_at нашего участника в БД, чтобы синхронизировать время
+                    roomRepository
+                        .getMemberByRoomAndUser(record.room, userId)
+                        .then((res) => {
+                            if (res.isOk()) {
+                                roomRepository
+                                    .updateMember(res.value.id, {
+                                        [ROOM_MEMBER_FIELDS.LAST_READ_AT]:
+                                            new Date().toISOString(),
+                                        [ROOM_MEMBER_FIELDS.UNREAD_COUNT]: 0,
+                                        [ROOM_MEMBER_FIELDS.ROLE]:
+                                            res.value.role ||
+                                            MEMBER_ROLE.MEMBER,
+                                    })
+                                    .catch((e) => {
+                                        logger.error(
+                                            "ChatRealtimeService: Ошибка обновления last_read_at при автопрочтении",
+                                            e,
+                                        );
+                                    });
+                            }
+                        })
+                        .catch((e) => {
+                            logger.error(
+                                "ChatRealtimeService: Ошибка получения участника при автопрочтении",
+                                e,
+                            );
+                        });
+                } else {
+                    // Если чат закрыт, просто помечаем как доставленное
+                    MessageService.markMessageAsDelivered(record.id).catch(
+                        (err) => {
+                            logger.error(
+                                "ChatRealtimeService: Ошибка при пометке сообщения как доставленного",
+                                err,
+                            );
+                        },
+                    );
+                }
             }
         }
     }

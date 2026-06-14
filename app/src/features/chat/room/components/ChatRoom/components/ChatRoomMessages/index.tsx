@@ -32,6 +32,7 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
         firstUnreadId,
         isFavoritesView,
         scrollRef,
+        markMessageAsRead,
     } = useChatRoomView(roomId);
 
     // --- UI-состояние из стора ---
@@ -51,6 +52,7 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
     return (
         <Box className={styles.messageArea}>
             <MessageList
+                roomId={roomId}
                 messages={messages}
                 messagesLoading={messagesLoading}
                 userId={user?.id ?? ""}
@@ -65,6 +67,7 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
                 scrollRef={scrollRef}
                 roomType={room?.type}
                 onRetry={handleRetry}
+                onMarkMessageAsRead={markMessageAsRead}
             />
         </Box>
     );

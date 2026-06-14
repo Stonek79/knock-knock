@@ -52,6 +52,14 @@
     border-radius: 0;
 }
 
+.mediaGallery[data-count="1"] .imageButton,
+.mediaGallery[data-count="1"] .videoThumbnailContainer {
+    width: 100%;
+    max-width: var(--max-w-attachment-single);
+    max-height: var(--max-h-attachment-single);
+    height: auto;
+}
+
 /* Отменяем эффект увеличения для плиток, чтобы не ломать сетку */
 .mediaGallery:not([data-count="1"]) .imageButton:hover,
 .mediaGallery:not([data-count="1"]) .videoThumbnailContainer:hover {
@@ -68,9 +76,10 @@
 
 /* Пропорции для разных сеток */
 .mediaGallery[data-count="1"] .attachmentImage {
-    max-height: var(--max-h-attachment-img);
-    aspect-ratio: auto;
-    height: auto;
+    width: 100%;
+    height: 100%;
+    max-height: var(--max-h-attachment-single);
+    object-fit: cover;
 }
 
 .mediaGallery[data-count="2"] .attachmentImage {
@@ -188,6 +197,14 @@
     border: none;
 }
 
+.mediaGallery[data-count="1"] .imagePlaceholder {
+    width: 100%;
+    max-width: var(--max-w-attachment-single);
+    max-height: var(--max-h-attachment-single);
+    aspect-ratio: 16 / 9;
+    height: auto;
+}
+
 .placeholderIcon {
     opacity: 0.5;
 }
@@ -257,4 +274,29 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+.ratio_1_2 {
+    aspect-ratio: 1 / 2;
+}
+.ratio_2_3 {
+    aspect-ratio: 2 / 3;
+}
+.ratio_3_4 {
+    aspect-ratio: 3 / 4;
+}
+.ratio_1_1 {
+    aspect-ratio: 1 / 1;
+}
+.ratio_4_3 {
+    aspect-ratio: 4 / 3;
+}
+.ratio_3_2 {
+    aspect-ratio: 3 / 2;
+}
+.ratio_16_9 {
+    aspect-ratio: 16 / 9;
+}
+.ratio_2_1 {
+    aspect-ratio: 2 / 1;
 }

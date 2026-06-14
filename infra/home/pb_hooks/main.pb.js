@@ -18,20 +18,21 @@ onRecordAfterCreateSuccess((e) => {
 	const rawHash = $security.md5(`"${DB.VALUES.PREFIX_SELF_CHAT}" ${user.id}`);
 	const deterministicId = rawHash.slice(0, 15);
 
+	let roomExists = false;
+	try {
+		$app.findRecordById(DB.TABLES.ROOMS, deterministicId);
+		roomExists = true;
+	} catch (_findErr) {
+		// Запись не найдена — продолжаем создание
+	}
+
+	if (roomExists) {
+		e.next();
+		return;
+	}
+
 	try {
 		$app.runInTransaction((tx) => {
-			let roomExists = false;
-			try {
-				tx.findRecordById(DB.TABLES.ROOMS, deterministicId);
-				roomExists = true;
-			} catch (_findErr) {
-				// Запись не найдена — продолжаем создание
-			}
-
-			if (roomExists) {
-				return;
-			}
-
 			const roomCollection = tx.findCollectionByNameOrId(DB.TABLES.ROOMS);
 			const memberCollection = tx.findCollectionByNameOrId(DB.TABLES.MEMBERS);
 

@@ -7,7 +7,7 @@ import {
 } from "../constants";
 import { logger } from "../logger";
 import { mediaService } from "../services/media";
-import type { RecordIdString } from "../types";
+import type { MediaMetadata, RecordIdString } from "../types";
 
 type UseMediaProps = {
     /** ID медиа-записи */
@@ -33,6 +33,8 @@ type UseMediaResult = {
     isLoading: boolean;
     /** Ошибка, если возникла */
     error: Error | null;
+    /** Метаданные файла (ширина, высота и т.д.) */
+    metadata: MediaMetadata | undefined;
 };
 
 /**
@@ -169,5 +171,6 @@ export function useMedia({
         thumbnailUrl: urls.thumbnailUrl,
         isLoading,
         error: queryError,
+        metadata: mediaContent?.metadata || undefined,
     };
 }

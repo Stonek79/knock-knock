@@ -361,7 +361,7 @@ export const messageRepository = {
     ): Promise<Result<void, MessageRepoError>> => {
         try {
             const filter = pb.filter(
-                `${MESSAGE_FIELDS.ROOM} = {:roomId} && ${MESSAGE_FIELDS.SENDER} != {:currentUserId} && ${MESSAGE_FIELDS.STATUS} != {:status}`,
+                `${MESSAGE_FIELDS.ROOM} = {:roomId} && ${MESSAGE_FIELDS.SENDER} != {:currentUserId} && (${MESSAGE_FIELDS.STATUS} != {:status} || ${MESSAGE_FIELDS.STATUS} = null || ${MESSAGE_FIELDS.STATUS} = "")`,
                 { roomId, currentUserId, status: MESSAGE_STATUS.READ },
             );
             const records = await pb

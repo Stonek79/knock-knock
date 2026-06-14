@@ -16,6 +16,7 @@ import {
 import { logger } from "../logger";
 import { mediaDb } from "../mediadb/media-db";
 import { mediaRepository } from "../repositories/media.repository";
+import { mediaMetadataSchema } from "../schemas/media";
 import type {
     AppError,
     AttachmentType,
@@ -28,7 +29,7 @@ import { appError, err, fromPromise, ok, type Result } from "../utils/result";
 import { mediaWorkerClient } from "../workers/media.client";
 
 /**
- * СЕРВИС ОРКЕСТРАЦИИ МЕДИА (Media Vault v3)
+ * СЕРВИС ОРКЕСТРАЦИИ МЕДИА
  */
 
 type GetMediaParams = {
@@ -489,10 +490,11 @@ export const mediaService = {
             return ok({
                 original: item[MEDIA_CACHE_FIELDS.BLOB] || null,
                 thumbnail: item[MEDIA_CACHE_FIELDS.THUMBNAIL] || null,
+                metadata: item[MEDIA_CACHE_FIELDS.METADATA] || null,
             });
         }
 
-        return ok({ original: null, thumbnail: null });
+        return ok({ original: null, thumbnail: null, metadata: null });
     },
 
     /**
@@ -565,7 +567,16 @@ export const mediaService = {
 
         try {
             if (!record[MEDIA_FIELDS.THUMBNAIL]) {
-                return ok({ original: null, thumbnail: null });
+                const parsedMetadata = mediaMetadataSchema.safeParse(
+                    record[MEDIA_FIELDS.METADATA],
+                );
+                return ok({
+                    original: null,
+                    thumbnail: null,
+                    metadata: parsedMetadata.success
+                        ? parsedMetadata.data
+                        : null,
+                });
             }
 
             const thumbField = record[MEDIA_FIELDS.THUMBNAIL];
@@ -626,7 +637,14 @@ export const mediaService = {
                 await mediaDb.put({ item: cacheItem, userId });
             }
 
-            return ok({ original: null, thumbnail: cleanThumb });
+            const parsedMetadata = mediaMetadataSchema.safeParse(
+                record[MEDIA_FIELDS.METADATA],
+            );
+            return ok({
+                original: null,
+                thumbnail: cleanThumb,
+                metadata: parsedMetadata.success ? parsedMetadata.data : null,
+            });
         } catch (error) {
             return err(
                 appError(
@@ -718,9 +736,13 @@ export const mediaService = {
                 await mediaDb.put({ item: cacheItem, userId });
             }
 
+            const parsedMetadata = mediaMetadataSchema.safeParse(
+                record[MEDIA_FIELDS.METADATA],
+            );
             return ok({
                 original: typedOriginalBlob,
                 thumbnail: existing?.thumbnail || null,
+                metadata: parsedMetadata.success ? parsedMetadata.data : null,
             });
         } catch (error) {
             return err(

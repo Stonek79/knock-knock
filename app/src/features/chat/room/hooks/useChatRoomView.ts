@@ -1,5 +1,5 @@
 import { useLocation } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useMessages, useUnreadTracking } from "@/features/chat/message";
 import { useChatRoomData } from "@/features/chat/room/hooks/useChatRoomData";
 import { ROOM_TYPE, ROUTES } from "@/lib/constants";
@@ -39,26 +39,11 @@ export function useChatRoomView(roomId: string) {
             ?.last_read_at;
     }, [room?.room_members, user?.id]);
 
-    const { firstUnreadId, markAsRead } = useUnreadTracking(
+    const { firstUnreadId, markMessageAsRead } = useUnreadTracking(
         roomId,
         messages,
         lastReadAt,
     );
-
-    // Помечаем сообщения прочитанными при входе и выходе из комнаты
-    // Используем ref, чтобы избежать срабатывания эффекта при каждом изменении функции markAsRead
-    const markAsReadRef = useRef(markAsRead);
-    markAsReadRef.current = markAsRead;
-
-    useEffect(() => {
-        // При входе помечаем прочитанным
-        markAsReadRef.current();
-
-        return () => {
-            // При выходе тоже (на случай если были новые сообщения пока чат был открыт)
-            markAsReadRef.current();
-        };
-    }, []);
 
     // --- Ref для управления скроллом (передаётся в MessageList) ---
     const scrollRef = useRef<{ scrollToBottom: () => void } | null>(null);
@@ -110,5 +95,6 @@ export function useChatRoomView(roomId: string) {
         firstUnreadId,
         isFavoritesView,
         scrollRef,
+        markMessageAsRead,
     };
 }

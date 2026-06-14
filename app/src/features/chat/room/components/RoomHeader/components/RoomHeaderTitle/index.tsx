@@ -53,7 +53,7 @@ export function RoomHeaderTitle({
             return (
                 <span className={styles.subtitle}>
                     {onlineUsers[peer.id] === USER_WEB_STATUS.ONLINE ? (
-                        <Flex align="center" gap="1">
+                        <Flex align="center" gap="1" pl="1">
                             <span className={styles.onlineDot} />
                             <span className={styles.onlineText}>
                                 {t("chat.online", "в сети")}

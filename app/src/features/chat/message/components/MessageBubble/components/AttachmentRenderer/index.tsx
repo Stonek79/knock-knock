@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { ImageOff, Loader2, Play } from "lucide-react";
 import {
     type Dispatch,
@@ -37,6 +38,41 @@ interface AttachmentRendererProps {
 }
 
 /**
+ * Функция для вычисления класса пропорций на основе метаданных медиафайла.
+ */
+function getRatioClass(
+    isSingle: boolean,
+    metadata?: { width?: number; height?: number } | null,
+): string {
+    if (!isSingle || !metadata?.width || !metadata?.height) {
+        return "";
+    }
+    const ratio = metadata.width / metadata.height;
+    if (ratio <= 0.6) {
+        return styles.ratio_1_2;
+    }
+    if (ratio <= 0.7) {
+        return styles.ratio_2_3;
+    }
+    if (ratio <= 0.85) {
+        return styles.ratio_3_4;
+    }
+    if (ratio <= 1.15) {
+        return styles.ratio_1_1;
+    }
+    if (ratio <= 1.4) {
+        return styles.ratio_4_3;
+    }
+    if (ratio <= 1.6) {
+        return styles.ratio_3_2;
+    }
+    if (ratio <= 1.85) {
+        return styles.ratio_16_9;
+    }
+    return styles.ratio_2_1;
+}
+
+/**
  * Внутренний компонент для рендеринга изображения с поддержкой превью.
  */
 function CachedImage({
@@ -49,6 +85,7 @@ function CachedImage({
     isVault,
     userId,
     onErrorStateChange,
+    isSingle,
 }: {
     att: Attachment;
     index: number;
@@ -59,9 +96,10 @@ function CachedImage({
     isVault?: boolean;
     userId: string;
     onErrorStateChange?: (id: string, hasError: boolean) => void;
+    isSingle: boolean;
 }) {
-    // Получаем оригинальный URL и URL превью
-    const { objectUrl, thumbnailUrl, isLoading, error } = useMedia({
+    // Получаем оригинальный URL, URL превью и метаданные
+    const { objectUrl, thumbnailUrl, isLoading, error, metadata } = useMedia({
         mediaId: att.id,
         roomKey,
         isVault,
@@ -82,11 +120,13 @@ function CachedImage({
     const showPlaceholder =
         !displayUrl && (imageErrors[att.id] || !!error || isLoading);
 
+    const ratioClass = getRatioClass(isSingle, metadata);
+
     return (
         <button
             key={att.id}
             type="button"
-            className={styles.imageButton}
+            className={clsx(styles.imageButton, ratioClass)}
             onClick={(e) => {
                 e.stopPropagation();
                 if (!showPlaceholder) {
@@ -98,7 +138,7 @@ function CachedImage({
                 <Flex
                     align="center"
                     justify="center"
-                    className={styles.imagePlaceholder}
+                    className={clsx(styles.imagePlaceholder, ratioClass)}
                 >
                     <ImageOff
                         size={ICON_SIZE.lg}
@@ -135,6 +175,7 @@ function CachedVideo({
     userId,
     onErrorStateChange,
     isFailed,
+    isSingle,
 }: {
     att: Attachment;
     index: number;
@@ -144,8 +185,9 @@ function CachedVideo({
     userId: string;
     onErrorStateChange?: (id: string, hasError: boolean) => void;
     isFailed?: boolean;
+    isSingle: boolean;
 }) {
-    const { objectUrl, thumbnailUrl, isLoading, error } = useMedia({
+    const { objectUrl, thumbnailUrl, isLoading, error, metadata } = useMedia({
         mediaId: att.id,
         roomKey,
         isVault,
@@ -199,10 +241,12 @@ function CachedVideo({
         };
     }, [displayUrl]);
 
+    const ratioClass = getRatioClass(isSingle, metadata);
+
     return (
         <button
             type="button"
-            className={styles.videoThumbnailContainer}
+            className={clsx(styles.videoThumbnailContainer, ratioClass)}
             onClick={(e) => {
                 e.stopPropagation();
                 if (!showPlaceholder && !isVideoLoading) {
@@ -214,7 +258,7 @@ function CachedVideo({
                 <Flex
                     align="center"
                     justify="center"
-                    className={styles.imagePlaceholder}
+                    className={clsx(styles.imagePlaceholder, ratioClass)}
                 >
                     <Play
                         size={ICON_SIZE.lg}
@@ -334,6 +378,7 @@ export function AttachmentRenderer({
         }
 
         const count = mediaAttachments.length;
+        const isSingle = count === 1;
         const displayCount = count > 4 ? "many" : count.toString();
         const visibleMedia = mediaAttachments.slice(0, 4);
         const hiddenCount = count - 4;
@@ -361,6 +406,7 @@ export function AttachmentRenderer({
                                 isVault={isVault}
                                 userId={userId}
                                 onErrorStateChange={handleMediaErrorStateChange}
+                                isSingle={isSingle}
                             />
                         );
                     } else {
@@ -375,6 +421,7 @@ export function AttachmentRenderer({
                                 userId={userId}
                                 onErrorStateChange={handleMediaErrorStateChange}
                                 isFailed={isFailed}
+                                isSingle={isSingle}
                             />
                         );
                     }

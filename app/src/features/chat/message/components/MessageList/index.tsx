@@ -49,6 +49,10 @@ interface MessageListProps {
     roomType?: RoomType;
     /** Обработчик повторной отправки сообщения */
     onRetry?: (message: ChatMessage) => void;
+    /** ID комнаты чата */
+    roomId?: string;
+    /** Обработчик прочтения сообщения */
+    onMarkMessageAsRead?: (message: DecryptedMessageWithProfile) => void;
 }
 
 export function MessageList({
@@ -65,6 +69,8 @@ export function MessageList({
     roomKey,
     roomType,
     onRetry,
+    roomId,
+    onMarkMessageAsRead,
 }: MessageListProps) {
     const { t } = useTranslation();
 
@@ -75,6 +81,9 @@ export function MessageList({
         handleScroll: handleChatScroll,
     } = useChatScroll({
         messages: messages || [],
+        firstUnreadId,
+        roomId,
+        onMarkMessageAsRead,
     });
 
     // Expose scrollToBottom to parent via ref
