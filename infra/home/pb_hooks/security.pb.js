@@ -7,10 +7,14 @@
 // 1. ЗАЩИТА ОТ ЭСКАЛАЦИИ ПРИВИЛЕГИЙ ПРИ СОЗДАНИИ (Создание админов и владельцев)
 onRecordCreateRequest((e) => {
 	const authRecord = e.requestInfo().authRecord;
-	if (!authRecord || authRecord.collection().name !== "users") return;
+	if (!authRecord || authRecord.collection().name !== "users") {
+		return;
+	}
 
 	const isGlobalAdmin = authRecord.get("role") === "admin";
-	if (isGlobalAdmin) return;
+	if (isGlobalAdmin) {
+		return;
+	}
 
 	const role = e.record.get("role");
 	const targetUserId = e.record.get("user");
@@ -18,7 +22,7 @@ onRecordCreateRequest((e) => {
 
 	if (role === "owner") {
 		// Создавать 'owner' можно только при инициализации комнаты (создатель = текущий юзер)
-		const room = $app.findRecordById("rooms", roomId);
+		const room = e.app.findRecordById("rooms", roomId);
 		if (
 			room.get("created_by") !== authRecord.id ||
 			targetUserId !== authRecord.id
@@ -28,7 +32,7 @@ onRecordCreateRequest((e) => {
 	} else if (role === "admin") {
 		// Назначать админа при добавлении в комнату может только текущий 'owner'
 		try {
-			const currentUserMember = $app.findFirstRecordByFilter(
+			const currentUserMember = e.app.findFirstRecordByFilter(
 				"room_members",
 				"room = {:room} && user = {:user}",
 				{ room: roomId, user: authRecord.id },
@@ -48,12 +52,16 @@ onRecordCreateRequest((e) => {
 // 2. ЗАЩИТА ОТ ЭСКАЛАЦИИ ПРИВИЛЕГИЙ ПРИ ОБНОВЛЕНИИ (Смена ролей)
 onRecordUpdateRequest((e) => {
 	const authRecord = e.requestInfo().authRecord;
-	if (!authRecord || authRecord.collection().name !== "users") return;
+	if (!authRecord || authRecord.collection().name !== "users") {
+		return;
+	}
 
 	const isGlobalAdmin = authRecord.get("role") === "admin";
-	if (isGlobalAdmin) return;
+	if (isGlobalAdmin) {
+		return;
+	}
 
-	const oldRecord = $app.findRecordById("room_members", e.record.id);
+	const oldRecord = e.app.findRecordById("room_members", e.record.id);
 	const oldRole = oldRecord.get("role");
 	const newRole = e.record.get("role");
 
@@ -61,7 +69,7 @@ onRecordUpdateRequest((e) => {
 	if (oldRole !== newRole) {
 		const roomId = e.record.get("room");
 		try {
-			const currentUserMember = $app.findFirstRecordByFilter(
+			const currentUserMember = e.app.findFirstRecordByFilter(
 				"room_members",
 				"room = {:room} && user = {:user}",
 				{ room: roomId, user: authRecord.id },
@@ -101,7 +109,7 @@ onRecordUpdateRequest((e) => {
 		return;
 	}
 
-	const oldRecord = $app.findRecordById("messages", e.record.id);
+	const oldRecord = e.app.findRecordById("messages", e.record.id);
 
 	if (oldRecord.get("sender") !== authRecord.id) {
 		console.log(`🛡️ [RLS_DEBUG] Проверка обновления чужого сообщения ID: ${e.record.id} пользователем: ${authRecord.id} (Отправитель сообщения: ${oldRecord.get("sender")})`);

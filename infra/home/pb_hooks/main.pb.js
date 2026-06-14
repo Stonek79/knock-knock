@@ -25,7 +25,7 @@ onRecordAfterCreateSuccess((e) => {
 	// Безопасная проверка существования комнаты без генерации исключений в БД
 	let rooms = [];
 	try {
-		rooms = $app.findRecordsByFilter(
+		rooms = e.app.findRecordsByFilter(
 			DB.TABLES.ROOMS,
 			`id = '${deterministicId}'`,
 			"",
@@ -45,7 +45,7 @@ onRecordAfterCreateSuccess((e) => {
 	console.log(`📦 [REG_DEBUG] Комната Избранного не найдена. Создаем новую...`);
 
 	try {
-		$app.runInTransaction((tx) => {
+		e.app.runInTransaction((tx) => {
 			const roomCollection = tx.findCollectionByNameOrId(DB.TABLES.ROOMS);
 			const memberCollection = tx.findCollectionByNameOrId(DB.TABLES.MEMBERS);
 
@@ -91,7 +91,7 @@ onRecordAfterDeleteSuccess((e) => {
 
 	// Удаление медиафайлов
 	try {
-		const mediaRecords = $app.findRecordsByFilter(
+		const mediaRecords = e.app.findRecordsByFilter(
 			DB.TABLES.MEDIA,
 			`${DB.FIELDS.CREATED_BY} = {:uid}`,
 			"-created",
@@ -100,7 +100,7 @@ onRecordAfterDeleteSuccess((e) => {
 			{ uid: user.id },
 		);
 		for (const rec of mediaRecords) {
-			$app.deleteNoValidate(rec);
+			e.app.deleteNoValidate(rec);
 		}
 	} catch (err) {
 		console.error(`❌ [CLEANUP_ERROR] Медиа: ${err}`);
@@ -108,7 +108,7 @@ onRecordAfterDeleteSuccess((e) => {
 
 	// Удаление личных диалогов
 	try {
-		const memberRecords = $app.findRecordsByFilter(
+		const memberRecords = e.app.findRecordsByFilter(
 			DB.TABLES.MEMBERS,
 			`${DB.FIELDS.USER} = {:uid}`,
 			"-created",
@@ -119,10 +119,10 @@ onRecordAfterDeleteSuccess((e) => {
 
 		for (const member of memberRecords) {
 			const roomId = member.get(DB.FIELDS.ROOM);
-			const room = $app.findRecordById(DB.TABLES.ROOMS, roomId);
+			const room = e.app.findRecordById(DB.TABLES.ROOMS, roomId);
 
 			if (room && room.get(DB.FIELDS.TYPE) === DB.VALUES.ROOM_TYPE_DIRECT) {
-				$app.deleteNoValidate(room);
+				e.app.deleteNoValidate(room);
 				console.log(`🗑️ [CLEANUP] Удален личный чат: ${room.id}`);
 			}
 		}
@@ -203,7 +203,7 @@ onRecordAfterCreateSuccess((e) => {
 		const senderId = message.get(DB.FIELDS.SENDER);
 
 		// Поиск получателей уведомления
-		const members = $app.findRecordsByFilter(
+		const members = e.app.findRecordsByFilter(
 			DB.TABLES.MEMBERS,
 			`${DB.FIELDS.ROOM} = {:roomId} && ${DB.FIELDS.USER} != {:senderId}`,
 			"",
@@ -224,7 +224,7 @@ onRecordAfterCreateSuccess((e) => {
 			.map((id) => `${DB.FIELDS.USER_ID} = '${id}'`)
 			.join(" || ");
 
-		const subscriptions = $app.findRecordsByFilter(
+		const subscriptions = e.app.findRecordsByFilter(
 			DB.TABLES.PUSH_SUBS,
 			filterQuery,
 			"",
@@ -250,7 +250,7 @@ onRecordAfterCreateSuccess((e) => {
 		};
 
 		// Сохранение задачи в task_queue
-		const taskCollection = $app.findCollectionByNameOrId(DB.TABLES.TASK_QUEUE);
+		const taskCollection = e.app.findCollectionByNameOrId(DB.TABLES.TASK_QUEUE);
 		const task = new Record(taskCollection, {
 			[DB.FIELDS.TASK_KEY]: `push:msg:${message.id}`,
 			[DB.FIELDS.TYPE]: DB.VALUES.TASK_TYPE_PUSH,
@@ -265,7 +265,7 @@ onRecordAfterCreateSuccess((e) => {
 				.split(".")[0],
 		});
 
-		$app.save(task);
+		e.app.save(task);
 	} catch (err) {
 		console.error(`❌ [PUSH_QUEUE_ERROR]: ${err}`);
 	}
