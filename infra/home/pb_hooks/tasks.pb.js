@@ -31,7 +31,9 @@ cronAdd("task_runner", DB_TOP.CONFIG.CRON_RUNNER, () => {
 			{ now: nowStr },
 		);
 	} catch (findErr) {
-		console.error(`❌ [CRON_DEBUG] Ошибка при поиске задач в очереди: ${findErr.message || findErr}`);
+		console.error(
+			`❌ [CRON_DEBUG] Ошибка при поиске задач в очереди: ${findErr.message || findErr}`,
+		);
 		return;
 	}
 
@@ -43,10 +45,14 @@ cronAdd("task_runner", DB_TOP.CONFIG.CRON_RUNNER, () => {
 
 	for (const task of tasks) {
 		try {
-			console.log(`⏰ [CRON_DEBUG] Обработка задачи ID: ${task.id}, Тип: ${task.get(DB.FIELDS.TYPE)}, Статус: ${task.get(DB.FIELDS.STATUS)}`);
+			console.log(
+				`⏰ [CRON_DEBUG] Обработка задачи ID: ${task.id}, Тип: ${task.get(DB.FIELDS.TYPE)}, Статус: ${task.get(DB.FIELDS.STATUS)}`,
+			);
 			helpers.processTask(task);
 		} catch (taskErr) {
-			console.error(`❌ [CRON_DEBUG] Сбой при обработке задачи ${task.id}: ${taskErr.message || taskErr}`);
+			console.error(
+				`❌ [CRON_DEBUG] Сбой при обработке задачи ${task.id}: ${taskErr.message || taskErr}`,
+			);
 		}
 	}
 });
