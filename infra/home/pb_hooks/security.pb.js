@@ -8,12 +8,12 @@
 onRecordCreateRequest((e) => {
 	const authRecord = e.requestInfo().authRecord;
 	if (!authRecord || authRecord.collection().name !== "users") {
-		return;
+		return e.next();
 	}
 
 	const isGlobalAdmin = authRecord.get("role") === "admin";
 	if (isGlobalAdmin) {
-		return;
+		return e.next();
 	}
 
 	const role = e.record.get("role");
@@ -47,18 +47,19 @@ onRecordCreateRequest((e) => {
 			throw new BadRequestError("Security Policy: Permission denied.");
 		}
 	}
+	e.next();
 }, "room_members");
 
 // 2. ЗАЩИТА ОТ ЭСКАЛАЦИИ ПРИВИЛЕГИЙ ПРИ ОБНОВЛЕНИИ (Смена ролей)
 onRecordUpdateRequest((e) => {
 	const authRecord = e.requestInfo().authRecord;
 	if (!authRecord || authRecord.collection().name !== "users") {
-		return;
+		return e.next();
 	}
 
 	const isGlobalAdmin = authRecord.get("role") === "admin";
 	if (isGlobalAdmin) {
-		return;
+		return e.next();
 	}
 
 	const oldRecord = e.app.findRecordById("room_members", e.record.id);
@@ -85,6 +86,7 @@ onRecordUpdateRequest((e) => {
 			throw new BadRequestError("Security Policy: Permission denied.");
 		}
 	}
+	e.next();
 }, "room_members");
 
 // 3. ЗАЩИТА ОТ УДАЛЕНИЯ ВЛАДЕЛЬЦА КОМНАТЫ
@@ -95,18 +97,19 @@ onRecordDeleteRequest((e) => {
 			"Security Policy: The owner of the room cannot be removed. Delete the room instead.",
 		);
 	}
+	e.next();
 }, "room_members");
 
 // 4. ЗАЩИТА ОТ ИЗМЕНЕНИЯ ЧУЖИХ СООБЩЕНИЙ
 onRecordUpdateRequest((e) => {
 	const authRecord = e.requestInfo().authRecord;
 	if (!authRecord || authRecord.collection().name !== "users") {
-		return;
+		return e.next();
 	}
 
 	const isGlobalAdmin = authRecord.get("role") === "admin";
 	if (isGlobalAdmin) {
-		return;
+		return e.next();
 	}
 
 	const oldRecord = e.app.findRecordById("messages", e.record.id);
@@ -151,4 +154,5 @@ onRecordUpdateRequest((e) => {
 
 		console.log(`🛡️ [RLS_DEBUG_ALLOWED] Разрешено обновление чужого сообщения ${e.record.id} (новое состояние статуса: ${e.record.get("status")})`);
 	}
+	e.next();
 }, "messages");

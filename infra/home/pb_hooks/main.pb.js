@@ -273,7 +273,9 @@ onRecordAfterCreateSuccess((e) => {
  * 5. АВТОМАТИЧЕСКИЙ СБРОС ЗАВИСШИХ ЗАДАЧ ПРИ СТАРТЕ
  * Сбрасывает статус всех задач, оставшихся в состоянии 'processing' после перезапуска сервера, обратно в 'pending'.
  */
-onAfterBootstrap((e) => {
+onBootstrap((e) => {
+	e.next();
+
 	const DB = require(`${__hooks}/db.js`);
 	try {
 		console.log("🧹 [BOOTSTRAP] Проверка и сброс зависших задач в очереди...");
