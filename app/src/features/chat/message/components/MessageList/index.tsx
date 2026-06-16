@@ -27,6 +27,8 @@ interface MessageListProps {
     messages?: DecryptedMessageWithProfile[];
     /** Состояние загрузки */
     messagesLoading?: boolean;
+    /** Состояние загрузки комнаты */
+    isRoomLoading?: boolean;
     /** ID текущего пользователя для изоляции медиа и проверки авторства */
     userId: string;
     /** Набор выбранных сообщений */
@@ -41,6 +43,10 @@ interface MessageListProps {
     scrollRef?: RefObject<{ scrollToBottom: () => void } | null>;
     /** ID первого непрочитанного сообщения */
     firstUnreadId?: string | null;
+    /** ID статической плашки первого непрочитанного сообщения */
+    unreadDividerId?: string | null;
+    /** Обработчик скрытия плашки непрочитанных */
+    onDismissDivider?: () => void;
     /** Состояние Избранного (фильтрация только звезд) */
     isFavoritesView?: boolean;
     /** Ключ шифрования комнаты */
@@ -58,6 +64,7 @@ interface MessageListProps {
 export function MessageList({
     messages,
     messagesLoading,
+    isRoomLoading,
     userId,
     selectedMessageIds,
     onToggleSelection,
@@ -65,6 +72,8 @@ export function MessageList({
     editingId,
     scrollRef,
     firstUnreadId,
+    unreadDividerId,
+    onDismissDivider,
     isFavoritesView,
     roomKey,
     roomType,
@@ -79,11 +88,15 @@ export function MessageList({
         showScrollButton,
         scrollToBottom,
         handleScroll: handleChatScroll,
+        unreadCount,
     } = useChatScroll({
         messages: messages || [],
         firstUnreadId,
+        unreadDividerId,
+        onDismissDivider,
         roomId,
         onMarkMessageAsRead,
+        isRoomLoading,
     });
 
     // Expose scrollToBottom to parent via ref
@@ -101,7 +114,7 @@ export function MessageList({
         return messages?.map((msg: DecryptedMessageWithProfile, index) => {
             const isOwn = userId === msg.sender;
             const isEditing = editingId === msg.id && isOwn;
-            const isFirstUnread = msg.id === firstUnreadId;
+            const isFirstUnread = msg.id === unreadDividerId;
 
             const prevMsg = messages[index - 1];
             const nextMsg = messages[index + 1];
@@ -196,7 +209,7 @@ export function MessageList({
         messages,
         userId,
         editingId,
-        firstUnreadId,
+        unreadDividerId,
         selectedMessageIds,
         onToggleSelection,
         onReplyMessage,
@@ -250,6 +263,7 @@ export function MessageList({
             <ScrollButton
                 scrollToBottom={scrollToBottom}
                 showScrollButton={showScrollButton}
+                unreadCount={unreadCount}
             />
         </Box>
     );

@@ -13,7 +13,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: auto;
-    overflow-anchor: none;
+    overflow-anchor: auto;
     padding: var(--space-2);
     touch-action: pan-y;
     overscroll-behavior: contain;
@@ -66,4 +66,24 @@
 
 .messageWrapper {
     width: 100%;
+}
+
+.unreadBadge {
+    position: absolute;
+    top: -6px;
+    right: -2px;
+    background-color: var(--accent-primary);
+    color: var(--color-white);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 1;
 }

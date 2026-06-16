@@ -8,9 +8,11 @@ import styles from "./message-list.module.css";
 export const ScrollButton = ({
     scrollToBottom,
     showScrollButton,
+    unreadCount = 0,
 }: {
     scrollToBottom: () => void;
     showScrollButton: boolean;
+    unreadCount?: number;
 }) => {
     if (!showScrollButton) {
         return null;
@@ -22,11 +24,16 @@ export const ScrollButton = ({
                 size="lg"
                 shape="round"
                 variant="solid"
-                onClick={() => scrollToBottom()}
+                onClick={() => {
+                    scrollToBottom();
+                }}
                 className={styles.scrollButton}
             >
                 <ArrowDown size={ICON_SIZE.sm} />
             </IconButton>
+            {unreadCount > 0 && (
+                <div className={styles.unreadBadge}>{unreadCount}</div>
+            )}
         </Box>
     );
 };

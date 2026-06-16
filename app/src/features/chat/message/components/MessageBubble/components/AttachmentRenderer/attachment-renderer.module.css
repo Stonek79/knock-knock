@@ -197,12 +197,41 @@
     border: none;
 }
 
+/* Плейсхолдер одиночного медиа — резервируем место с aspect-ratio 16/9 */
 .mediaGallery[data-count="1"] .imagePlaceholder {
     width: 100%;
     max-width: var(--max-w-attachment-single);
     max-height: var(--max-h-attachment-single);
     aspect-ratio: 16 / 9;
     height: auto;
+}
+
+/* Плейсхолдер для 2 элементов — квадратный, как картинка */
+.mediaGallery[data-count="2"] .imagePlaceholder {
+    aspect-ratio: 1;
+    height: auto;
+    min-height: auto;
+}
+
+/* Плейсхолдер для 3 элементов — первый 2:1, остальные квадратные */
+.mediaGallery[data-count="3"] > *:first-child .imagePlaceholder {
+    aspect-ratio: 2 / 1;
+    height: auto;
+    min-height: auto;
+}
+
+.mediaGallery[data-count="3"] > *:not(:first-child) .imagePlaceholder {
+    aspect-ratio: 1;
+    height: auto;
+    min-height: auto;
+}
+
+/* Плейсхолдер для 4+ элементов — квадратный */
+.mediaGallery[data-count="4"] .imagePlaceholder,
+.mediaGallery[data-count="many"] .imagePlaceholder {
+    aspect-ratio: 1;
+    height: auto;
+    min-height: auto;
 }
 
 .placeholderIcon {

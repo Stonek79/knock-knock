@@ -16,28 +16,61 @@ export function useUnreadTracking(
     lastReadAt?: string | null,
 ) {
     const pbUser = useAuthStore((state) => state.pbUser);
-    const [isManuallyRead, setIsManuallyRead] = useState(false);
     const [prevRoomId, setPrevRoomId] = useState(roomId);
+
+    // Состояния для статической плашки непрочитанных сообщений
+    const [unreadDividerId, setUnreadDividerId] = useState<string | null>(null);
+    const [hasFixedDivider, setHasFixedDivider] = useState(false);
+    const [isDividerDismissed, setIsDividerDismissed] = useState(false);
 
     // Сброс стейта при смене комнаты
     if (prevRoomId !== roomId) {
         setPrevRoomId(roomId);
-        setIsManuallyRead(false);
+        setUnreadDividerId(null);
+        setHasFixedDivider(false);
+        setIsDividerDismissed(false);
     }
 
-    // Декларативно вычисляем ID первого непрочитанного сообщения
+    // Фиксируем unreadDividerId один раз при входе в чат (когда загрузился lastReadAt и сообщения)
+    if (
+        !hasFixedDivider &&
+        !isDividerDismissed &&
+        lastReadAt &&
+        messages.length > 0 &&
+        pbUser
+    ) {
+        const lastReadTime = new Date(lastReadAt).getTime();
+        const firstUnread = messages.find(
+            (m) =>
+                new Date(m.created).getTime() > lastReadTime &&
+                m.sender !== pbUser.id,
+        );
+        if (firstUnread) {
+            setUnreadDividerId(firstUnread.id);
+        }
+        setHasFixedDivider(true);
+    }
+
+    // Декларативно вычисляем ID текущего первого непрочитанного сообщения (для кнопки скролла)
     const firstUnreadId = useMemo(() => {
-        if (isManuallyRead || !lastReadAt || messages.length === 0) {
+        if (!lastReadAt || messages.length === 0 || !pbUser) {
             return null;
         }
 
         const lastReadTime = new Date(lastReadAt).getTime();
         const firstUnread = messages.find(
-            (m) => new Date(m.created).getTime() > lastReadTime,
+            (m) =>
+                new Date(m.created).getTime() > lastReadTime &&
+                m.sender !== pbUser.id,
         );
 
         return firstUnread?.id || null;
-    }, [messages, lastReadAt, isManuallyRead]);
+    }, [messages, lastReadAt, pbUser]);
+
+    const dismissDivider = useCallback(() => {
+        setIsDividerDismissed(true);
+        setUnreadDividerId(null);
+    }, []);
 
     const messagesRef = useRef(messages);
     const lastReadAtRef = useRef(lastReadAt);
@@ -98,10 +131,6 @@ export function useUnreadTracking(
             });
 
             if (updateResult.isOk()) {
-                setIsManuallyRead(true);
-                logger.info(
-                    `Сообщение ${message.id} от ${message.sender} помечено как прочитанное, новый unread_count: ${newUnreadCount}`,
-                );
                 MessageService.markMessagesAsRead(roomId, pbUser.id).catch(
                     (err) => {
                         logger.error(
@@ -117,6 +146,8 @@ export function useUnreadTracking(
 
     return {
         firstUnreadId,
+        unreadDividerId,
+        dismissDivider,
         markMessageAsRead,
     };
 }

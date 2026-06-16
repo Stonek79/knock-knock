@@ -51,15 +51,6 @@
 - [x] **Mailpit**: Локальная отладка писем.
 - [x] **Security**: Honeypot + Time-check на формах регистрации.
 
----
-
-## 🟡 Актуальные задачи (In Progress / Next Steps)
-
-### 1. Фоновая архитектура (Task Runner)
-- [x] **1.1** Создание коллекции `task_queue` в PocketBase.
-- [x] **1.2** Реализация `pb_hooks/task_runner.pb.js` для обработки задач по расписанию (Cron).
-- [x] **1.3** Интеграция Task Runner для отправки Push-уведомлений (**Backend Ready**).
-
 ### 8. Push-уведомления (Stage 3)
 - [x] **Web Push API**: Регистрация и жизненный цикл Service Worker.
 - [x] **Subscription Management**: Сохранение и удаление подписок в PocketBase (поле `user_id`).
@@ -71,17 +62,12 @@
 
 ## 🟡 Актуальные задачи (In Progress / Next Steps)
 
-### 1. Фоновая архитектура (Task Runner)
-- [x] **1.1** Создание коллекции `task_queue` в PocketBase.
-- [x] **1.2** Реализация `pb_hooks/task_runner.pb.js` для обработки задач по расписанию (Cron).
-- [x] **1.3** Интеграция Task Runner для отправки Push-уведомлений (**Backend Ready**).
-
-### 3. Современная медиа-система (v3) — 📋 `plans/media_system_v3.md`
+### 1. Современная медиа-система (v3) — 📋 `plans/media_system_v3.md`
 - [ ] **3.1** Переход на **Dexie.js** для Offline-хранилища (IndexedDB).
 - [ ] **3.2** Реализация **Web Workers** для сжатия (WebCodecs) и шифрования медиа.
 - [ ] **3.3** "Умная" очистка кэша (TTL + Favorites retention).
 
-### 4. Групповые чаты
+### 2. Групповые чаты
 - [ ] Создание групп (интеграция с PB).
 - [ ] E2E шифрование для групп.
 - [ ] Управление участниками.

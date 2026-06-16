@@ -23,7 +23,7 @@ export function useChatRoomView(roomId: string) {
     const { pathname } = useLocation();
 
     // --- Данные комнаты (для определения типа и участников) ---
-    const { data: roomInfo } = useChatRoomData(roomId);
+    const { data: roomInfo, isLoading: roomLoading } = useChatRoomData(roomId);
     const room = roomInfo?.room;
     const roomKey = roomInfo?.roomKey;
 
@@ -39,11 +39,12 @@ export function useChatRoomView(roomId: string) {
             ?.last_read_at;
     }, [room?.room_members, user?.id]);
 
-    const { firstUnreadId, markMessageAsRead } = useUnreadTracking(
-        roomId,
-        messages,
-        lastReadAt,
-    );
+    const {
+        firstUnreadId,
+        unreadDividerId,
+        dismissDivider,
+        markMessageAsRead,
+    } = useUnreadTracking(roomId, messages, lastReadAt);
 
     // --- Ref для управления скроллом (передаётся в MessageList) ---
     const scrollRef = useRef<{ scrollToBottom: () => void } | null>(null);
@@ -92,7 +93,10 @@ export function useChatRoomView(roomId: string) {
     return {
         messages: filteredMessages,
         messagesLoading,
+        isRoomLoading: roomLoading,
         firstUnreadId,
+        unreadDividerId,
+        dismissDivider,
         isFavoritesView,
         scrollRef,
         markMessageAsRead,

@@ -43,6 +43,80 @@ type UseMediaResult = {
  *
  * @param props - { mediaId, userId, roomKey, isVault }
  */
+interface CacheEntry {
+    objectUrl?: string;
+    thumbnailUrl?: string;
+    refCount: number;
+    cleanupTimeout: ReturnType<typeof setTimeout> | null;
+}
+
+const blobUrlCache = new Map<string, CacheEntry>();
+
+function acquireBlobUrls(
+    mediaId: string,
+    mediaContent: { original: Blob | null; thumbnail: Blob | null },
+): { objectUrl: string | undefined; thumbnailUrl: string | undefined } {
+    let entry = blobUrlCache.get(mediaId);
+
+    if (entry) {
+        if (entry.cleanupTimeout) {
+            clearTimeout(entry.cleanupTimeout);
+            entry.cleanupTimeout = null;
+        }
+        entry.refCount += 1;
+
+        if (mediaContent.original && !entry.objectUrl) {
+            entry.objectUrl = URL.createObjectURL(mediaContent.original);
+        }
+        if (mediaContent.thumbnail && !entry.thumbnailUrl) {
+            entry.thumbnailUrl = URL.createObjectURL(mediaContent.thumbnail);
+        }
+
+        return { objectUrl: entry.objectUrl, thumbnailUrl: entry.thumbnailUrl };
+    }
+
+    const objectUrl = mediaContent.original
+        ? URL.createObjectURL(mediaContent.original)
+        : undefined;
+    const thumbnailUrl = mediaContent.thumbnail
+        ? URL.createObjectURL(mediaContent.thumbnail)
+        : undefined;
+
+    entry = {
+        objectUrl,
+        thumbnailUrl,
+        refCount: 1,
+        cleanupTimeout: null,
+    };
+    blobUrlCache.set(mediaId, entry);
+
+    return { objectUrl, thumbnailUrl };
+}
+
+function releaseBlobUrls(mediaId: string): void {
+    const entry = blobUrlCache.get(mediaId);
+    if (!entry) {
+        return;
+    }
+
+    entry.refCount -= 1;
+
+    if (entry.refCount <= 0) {
+        if (entry.cleanupTimeout) {
+            clearTimeout(entry.cleanupTimeout);
+        }
+        entry.cleanupTimeout = setTimeout(() => {
+            if (entry.objectUrl) {
+                URL.revokeObjectURL(entry.objectUrl);
+            }
+            if (entry.thumbnailUrl) {
+                URL.revokeObjectURL(entry.thumbnailUrl);
+            }
+            blobUrlCache.delete(mediaId);
+        }, 5000);
+    }
+}
+
 export function useMedia({
     mediaId,
     userId,
@@ -132,7 +206,7 @@ export function useMedia({
             return;
         }
 
-        if (!mediaContent) {
+        if (!mediaContent || !mediaId) {
             setUrls((prev) => {
                 if (
                     isLoading &&
@@ -147,24 +221,13 @@ export function useMedia({
             return;
         }
 
-        const objectUrl = mediaContent.original
-            ? URL.createObjectURL(mediaContent.original)
-            : undefined;
-        const thumbnailUrl = mediaContent.thumbnail
-            ? URL.createObjectURL(mediaContent.thumbnail)
-            : undefined;
-
-        setUrls({ objectUrl, thumbnailUrl });
+        const acquired = acquireBlobUrls(mediaId, mediaContent);
+        setUrls(acquired);
 
         return () => {
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-            }
-            if (thumbnailUrl) {
-                URL.revokeObjectURL(thumbnailUrl);
-            }
+            releaseBlobUrls(mediaId);
         };
-    }, [mediaContent, isOptimistic, initialUrl, isLoading]);
+    }, [mediaContent, mediaId, isOptimistic, initialUrl, isLoading]);
 
     return {
         objectUrl: urls.objectUrl,

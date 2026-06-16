@@ -29,7 +29,10 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
     const {
         messages,
         messagesLoading,
+        isRoomLoading,
         firstUnreadId,
+        unreadDividerId,
+        dismissDivider,
         isFavoritesView,
         scrollRef,
         markMessageAsRead,
@@ -55,6 +58,7 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
                 roomId={roomId}
                 messages={messages}
                 messagesLoading={messagesLoading}
+                isRoomLoading={isRoomLoading}
                 userId={user?.id ?? ""}
                 selectedMessageIds={selectedMessageIds}
                 onToggleSelection={(id) =>
@@ -62,6 +66,8 @@ export function ChatRoomMessages({ roomId }: ChatRoomMessagesProps) {
                 }
                 editingId={editingId}
                 firstUnreadId={firstUnreadId}
+                unreadDividerId={unreadDividerId}
+                onDismissDivider={dismissDivider}
                 isFavoritesView={isFavoritesView}
                 roomKey={roomKey}
                 scrollRef={scrollRef}

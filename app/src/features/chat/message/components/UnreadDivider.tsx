@@ -9,7 +9,7 @@ export function UnreadDivider() {
     const { t } = useTranslation();
 
     return (
-        <Box className={styles.container}>
+        <Box className={styles.container} data-unread-divider>
             <Box className={styles.line} />
             <span className={styles.text}>
                 {t("chat.unreadMessages", "Непрочитанные сообщения")}

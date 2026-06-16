@@ -365,11 +365,6 @@ export const messageRepository = {
                 { roomId, currentUserId, status: MESSAGE_STATUS.READ },
             );
 
-            console.log(
-                `[DB_DEBUG] markMessagesAsRead: Запуск для комнаты ${roomId}. Фильтр:`,
-                filter,
-            );
-
             const records = await pb
                 .collection(DB_TABLES.MESSAGES)
                 .getFullList({
@@ -377,10 +372,6 @@ export const messageRepository = {
                     fields: MESSAGE_FIELDS.ID,
                     $autoCancel: false,
                 });
-
-            console.log(
-                `[DB_DEBUG] markMessagesAsRead: Найдено сообщений для обновления: ${records.length}`,
-            );
 
             if (records.length === 0) {
                 return ok(undefined);
@@ -394,13 +385,7 @@ export const messageRepository = {
                 });
             }
 
-            console.log(
-                `[DB_DEBUG] markMessagesAsRead: Отправка batch-запроса на обновление ${records.length} сообщений...`,
-            );
             await batch.send();
-            console.log(
-                `[DB_DEBUG] markMessagesAsRead: Batch-запрос успешно выполнен.`,
-            );
 
             return ok(undefined);
         } catch (e) {
