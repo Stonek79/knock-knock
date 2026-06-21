@@ -16,7 +16,7 @@
 }
 
 .title {
-    color: var(--gray-12);
+    color: var(--foreground);
     font-size: var(--text-xl);
     font-weight: var(--font-weight-bold);
     margin: var(--space-2) 0;
@@ -24,7 +24,7 @@
 
 .description {
     max-width: var(--max-w-card);
-    color: var(--gray-11);
+    color: var(--muted);
     line-height: 1.5;
 }
 

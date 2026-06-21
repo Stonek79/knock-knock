@@ -50,6 +50,10 @@ router.update({
     },
 });
 
+import { useEffect } from "react";
+
+import { PwaInstallPrompt } from "./components/ui/PwaInstallPrompt";
+
 /**
  * Корневой компонент приложения.
  * Управляет темами через data-theme и data-mode
@@ -58,10 +62,33 @@ function Root() {
     const theme = useThemeStore((state) => state.theme);
     const mode = useThemeStore((state) => state.mode);
 
+    useEffect(() => {
+        if ("serviceWorker" in navigator) {
+            const handleMessage = (event: MessageEvent) => {
+                if (
+                    event.data &&
+                    event.data.type === "NAVIGATE" &&
+                    typeof event.data.url === "string"
+                ) {
+                    // Используем router.history.push для программного перехода без перезагрузки и без ошибок типов
+                    router.history.push(event.data.url);
+                }
+            };
+            navigator.serviceWorker.addEventListener("message", handleMessage);
+            return () => {
+                navigator.serviceWorker.removeEventListener(
+                    "message",
+                    handleMessage,
+                );
+            };
+        }
+    }, []);
+
     return (
         <div data-theme={theme} data-mode={mode} className="knock-root">
             <QueryClientProvider client={queryClient}>
                 <RouterProvider router={router} />
+                <PwaInstallPrompt />
             </QueryClientProvider>
         </div>
     );

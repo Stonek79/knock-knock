@@ -18,7 +18,7 @@
 }
 
 .emptyIcon {
-    color: var(--gray-8);
+    color: var(--muted-foreground);
     opacity: 0.5;
     width: var(--size-icon-xl);
     height: var(--size-icon-xl);

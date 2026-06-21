@@ -1,0 +1,81 @@
+.overlay {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--size-md);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.promptCard {
+    background-color: var(--color-bg-base);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--size-md);
+    box-shadow: var(--shadow-xl);
+    max-width: 400px;
+    width: 100%;
+    pointer-events: auto;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--size-xs);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-sm);
+}
+
+.instructions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-xs);
+    background-color: var(--color-bg-subtle);
+    padding: var(--size-sm);
+    border-radius: var(--radius-md);
+    margin-top: var(--size-xs);
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: var(--size-xs);
+}
+
+.icon {
+    color: var(--color-text-brand);
+    width: 18px;
+    height: 18px;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: var(--color-bg-base);
+    border: 1px solid var(--color-border-subtle);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 500;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

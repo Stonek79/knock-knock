@@ -1,6 +1,7 @@
 import { Mail } from "lucide-react";
 import { type ComponentPropsWithoutRef, forwardRef } from "react";
 import { TextField } from "../TextField";
+import styles from "./styles.module.css";
 
 /**
  * Пропсы компонента EmailInput.
@@ -20,7 +21,7 @@ export const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
         return (
             <TextField ref={ref} type="email" className={className} {...props}>
                 <TextField.Slot>
-                    <Mail size="var(--size-icon-sm)" />
+                    <Mail className={styles.emailInput} />
                 </TextField.Slot>
             </TextField>
         );

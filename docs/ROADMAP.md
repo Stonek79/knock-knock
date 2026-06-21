@@ -76,6 +76,9 @@
 
 ## ⚪ Планируется (Backlog)
 
+### 0. Превью ссылок (OpenGraph Link Previews)
+- [ ] Разработка системы генерации красивых карточек предпросмотра для ссылок, отправленных в чате. Отложено для более поздних этапов после PWA и WebRTC.
+
 ### 1. Звонки (WebRTC) — 📋 `WEBRTC_CALLS_IMPLEMENTATION.md` + `IMPLEMENTATION_PLAN_v2.md → Этап 4`
 
 **✅ Принятые решения (PocketBase Era):**

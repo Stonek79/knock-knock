@@ -39,6 +39,33 @@ function handlePushTask(payload) {
 				`Push Gateway error (Status: ${res.statusCode}): ${res.raw}`,
 			);
 		}
+
+		try {
+			const data = res.json();
+			if (data && data.expired_endpoints && data.expired_endpoints.length > 0) {
+				console.log(`📡 [PUSH_DEBUG] Найдено ${data.expired_endpoints.length} просроченных подписок. Начинаю очистку...`);
+				
+				for (const endpoint of data.expired_endpoints) {
+					try {
+						const expiredRecs = $app.findRecordsByFilter(
+							DB.TABLES.PUSH_SUBS,
+							`${DB.FIELDS.ENDPOINT} = {:endpoint}`,
+							"",
+							10,
+							0,
+							{ endpoint: endpoint }
+						);
+						for (const rec of expiredRecs) {
+							$app.delete(rec);
+						}
+					} catch (e) {
+						console.error(`❌ [PUSH_DEBUG_ERROR] Ошибка удаления подписки ${endpoint}:`, e);
+					}
+				}
+			}
+		} catch (parseErr) {
+			console.error(`❌ [PUSH_DEBUG_ERROR] Не удалось распарсить JSON ответ от шлюза:`, parseErr);
+		}
 	} catch (httpErr) {
 		console.error(`❌ [PUSH_DEBUG_ERROR] Сбой сети при отправке push-запроса: ${httpErr.message || httpErr}`);
 		throw httpErr;

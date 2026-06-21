@@ -27,6 +27,7 @@ app.post("/api/send-push", async (req, res) => {
 	}
 
 	const results = [];
+	const expired_endpoints = [];
 	for (const sub of subscriptions) {
 		try {
 			await webpush.sendNotification(
@@ -47,10 +48,14 @@ app.post("/api/send-push", async (req, res) => {
 				success: false,
 				error: err.message,
 			});
-			// Примечание: если err.statusCode === 410, то подписка просрочена (надо бы её удалить)
+			
+			// Если статус 410 (Gone) или 404 (Not Found), подписка стала недействительной
+			if (err.statusCode === 410 || err.statusCode === 404) {
+				expired_endpoints.push(sub.endpoint);
+			}
 		}
 	}
-	res.json({ results });
+	res.json({ results, expired_endpoints });
 });
 
 const PORT = 4000;

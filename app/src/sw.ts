@@ -46,7 +46,7 @@ self.addEventListener("push", (event) => {
         icon: NOTIFICATION_CONFIG.ICON,
         badge: NOTIFICATION_CONFIG.BADGE,
         vibrate: [100, 50, 100],
-        data: data.data || {},
+        data: data || {}, // передаем данные целиком
         actions: [
             { action: NOTIFICATION_ACTIONS.OPEN, title: "Открыть" },
             { action: NOTIFICATION_ACTIONS.CLOSE, title: "Закрыть" },
@@ -64,20 +64,29 @@ self.addEventListener("notificationclick", (event) => {
     if (event.action === NOTIFICATION_ACTIONS.CLOSE) {
         return;
     }
-    const urlToOpen = event.notification.data?.url || ROUTES.HOME;
+
+    // Получаем roomId из data
+    const roomId = event.notification.data?.roomId;
+    const urlToOpen = roomId ? `/chat/${roomId}` : ROUTES.HOME;
+
     event.waitUntil(
         self.clients
             .matchAll({ type: "window", includeUncontrolled: true })
-            .then((clientList) => {
+            .then(async (clientList) => {
                 // 1. Пытаемся найти уже открытое окно приложения
                 for (const client of clientList) {
                     const isSameOrigin = client.url.includes(location.origin);
                     if (isSameOrigin && "focus" in client) {
-                        // Фокусируемся и переходим на нужный URL внутри открытого окна
-                        if ("navigate" in client) {
-                            (client as WindowClient).navigate(urlToOpen);
-                        }
-                        return (client as WindowClient).focus();
+                        // Фокусируемся
+                        const focusedClient = await (
+                            client as WindowClient
+                        ).focus();
+                        // Отправляем сообщение для программного перехода без перезагрузки страницы
+                        focusedClient.postMessage({
+                            type: "NAVIGATE",
+                            url: urlToOpen,
+                        });
+                        return focusedClient;
                     }
                 }
                 // 2. Если окна нет - открываем новое

@@ -200,6 +200,17 @@ onRecordAfterCreateSuccess((e) => {
 		const roomId = message.get(DB.FIELDS.ROOM);
 		const senderId = message.get(DB.FIELDS.SENDER);
 
+		// Получаем имя отправителя для уведомления
+		let senderName = "Knock-Knock";
+		try {
+			const senderRecord = e.app.findRecordById("users", senderId);
+			if (senderRecord) {
+				senderName = senderRecord.get("name") || senderRecord.get("username") || "Пользователь";
+			}
+		} catch (err) {
+			// игнорируем ошибку
+		}
+
 		// Поиск получателей уведомления
 		const members = e.app.findRecordsByFilter(
 			DB.TABLES.MEMBERS,
@@ -217,8 +228,52 @@ onRecordAfterCreateSuccess((e) => {
 
 		const userIds = members.map((m) => m.get(DB.FIELDS.USER));
 
-		// Сбор активных подписок
-		const filterQuery = userIds
+		// Фильтруем получателей, которые сейчас онлайн (чтобы не спамить пушами)
+		const offlineUserIds = [];
+		for (const uid of userIds) {
+			try {
+				const presenceRecords = e.app.findRecordsByFilter(
+					"presence_status",
+					"user = {:uid}",
+					"-created",
+					1,
+					0,
+					{ uid: uid }
+				);
+				
+				if (presenceRecords.length > 0) {
+					const p = presenceRecords[0];
+					const isOnline = p.getBool("is_online");
+					const lastPingStr = p.getDateTime("last_ping").string();
+					
+					let isRecent = false;
+					if (lastPingStr) {
+						// Pocketbase возвращает DateTime, переводим в JS Date (учитывая UTC)
+						const lastPingDate = new Date(lastPingStr.replace(" ", "T") + "Z");
+						if ((Date.now() - lastPingDate.getTime()) < 65000) {
+							isRecent = true;
+						}
+					}
+					
+					// Если пользователь активен, пуш не ставим в очередь
+					if (isOnline && isRecent) {
+						continue;
+					}
+				}
+			} catch (err) {
+				// Если ошибка проверки, лучше отправить пуш, чем пропустить
+			}
+			
+			offlineUserIds.push(uid);
+		}
+
+		if (offlineUserIds.length === 0) {
+			e.next();
+			return;
+		}
+
+		// Сбор активных подписок только для offline-пользователей
+		const filterQuery = offlineUserIds
 			.map((id) => `${DB.FIELDS.USER_ID} = '${id}'`)
 			.join(" || ");
 
@@ -245,6 +300,8 @@ onRecordAfterCreateSuccess((e) => {
 		const payload = {
 			type: DB.VALUES.PUSH_TYPE_NEW_MESSAGE,
 			roomId: roomId,
+			title: senderName,
+			body: "Новое сообщение"
 		};
 
 		// Сохранение задачи в task_queue

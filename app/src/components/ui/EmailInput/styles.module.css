@@ -1,1 +1,5 @@
 /* Стили для EmailInput пока не требуются, но файл создан для консистентности */
+.emailInput {
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+}
