@@ -22,7 +22,9 @@ export const profileModelSchema = z.object({
     avatar_url: z.string().nullable().optional(),
     status: z.string().optional(),
     last_seen: z.string().optional(),
-    role: z.enum([USER_ROLE.USER, USER_ROLE.ADMIN] as const).optional(),
+    role: z
+        .enum([USER_ROLE.USER, USER_ROLE.ADMIN] as const)
+        .catch(USER_ROLE.USER),
     banned_until: z.string().nullable().optional(),
     is_agreed_to_rules: z.boolean().optional(),
     created_at: z.string().optional(),

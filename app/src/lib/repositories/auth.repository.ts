@@ -1,4 +1,4 @@
-import { DB_TABLES, ERROR_CODES } from "../constants";
+import { DB_TABLES, ERROR_CODES, USER_ROLE } from "../constants";
 import { pb } from "../pocketbase";
 import type {
     AuthRepoError,
@@ -40,6 +40,7 @@ export const authRepository = {
                 email,
                 password,
                 passwordConfirm: password,
+                role: USER_ROLE.USER,
                 ...meta,
             }),
             (e) => {
