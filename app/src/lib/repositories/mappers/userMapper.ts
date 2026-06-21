@@ -22,14 +22,24 @@ export const UserMapper = {
         user: UserRecord,
         getFileUrl: (record: UserRecord, filename: string) => string,
     ): Profile {
+        const extractString = (val: unknown, fallback: string): string => {
+            if (Array.isArray(val)) {
+                return val[0] || fallback;
+            }
+            if (typeof val === "string" && val.trim() !== "") {
+                return val;
+            }
+            return fallback;
+        };
+
         const domainUser = {
             id: user.id,
             email: user.email,
             username: user.username || "",
             display_name: user.display_name || user.username || "",
             avatar_url: user.avatar ? getFileUrl(user, user.avatar) : null,
-            role: user.role || USER_ROLE.USER,
-            status: user.status ?? USER_WEB_STATUS.OFFLINE,
+            role: extractString(user.role, USER_ROLE.USER),
+            status: extractString(user.status, USER_WEB_STATUS.OFFLINE),
             last_seen:
                 user.last_seen || user.updated || new Date().toISOString(),
             is_agreed_to_rules: user.is_agreed_to_rules ?? false,

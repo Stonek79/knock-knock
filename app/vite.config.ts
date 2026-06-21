@@ -60,6 +60,9 @@ export default defineConfig({
             "@": resolve(__dirname, "./src"),
         },
     },
+    build: {
+        modulePreload: false,
+    },
     server: {
         host: true,
         allowedHosts: ["knok-knok.ru", "www.knok-knok.ru", "api.knok-knok.ru"],
