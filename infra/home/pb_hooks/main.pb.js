@@ -435,39 +435,29 @@ onBootstrap((e) => {
  * 6. КАСТОМНЫЕ ЭНДПОИНТЫ ДЛЯ ПОИСКА КОНТАКТОВ (АНАЛОГ TELEGRAM)
  * Позволяет получать список контактов и искать пользователей по username,
  * не открывая глобальный listRule для всех.
+ *
+ * Все роуты защищены middleware $apis.requireAuth(), который автоматически
+ * проверяет JWT-токен из заголовка Authorization и заполняет e.auth.
+ * Документация: https://pocketbase.io/docs/js-routing/#retrieving-the-current-auth-state
  */
 
-// Универсальная функция для получения пользователя из контекста (для PB v0.22 и v0.23)
-function getAuthRecord(c) {
-	try {
-		// PB v0.23+
-		if (c.auth) {
-			return c.auth;
-		}
-		// Fallback PB v0.22
-		if (typeof c.get === "function") {
-			return c.get("authRecord") || c.get("admin");
-		}
-	} catch (e) {
-		console.log("Error extracting authRecord:", e);
-	}
-	return null;
-}
-
-routerAdd("GET", "/api/custom/users/contacts", (c) => {
-	const authRecord = getAuthRecord(c);
-	if (!authRecord) {
-				return c.json(403, { message: "Guest access not allowed" });
-	}
-	const userId = authRecord.id;
+/**
+ * GET /api/custom/users/contacts
+ * Возвращает список пользователей, с которыми текущий юзер имеет общие комнаты.
+ */
+routerAdd("GET", "/api/custom/users/contacts", (e) => {
+	const userId = e.auth.id;
 
 	try {
 		const myMembers = $app.findRecordsByFilter(
 			"room_members",
 			`user = '${userId}'`,
+			"",
+			500,
+			0,
 		);
 		if (myMembers.length === 0) {
-			return c.json(200, []);
+			return e.json(200, []);
 		}
 		const roomIds = myMembers.map((m) => m.get("room"));
 
@@ -475,15 +465,18 @@ routerAdd("GET", "/api/custom/users/contacts", (c) => {
 		const otherMembers = $app.findRecordsByFilter(
 			"room_members",
 			`user != '${userId}' && (${filter})`,
+			"",
+			500,
+			0,
 		);
 		const otherUserIds = [...new Set(otherMembers.map((m) => m.get("user")))];
 
 		if (otherUserIds.length === 0) {
-			return c.json(200, []);
+			return e.json(200, []);
 		}
 
 		const usersFilter = otherUserIds.map((id) => `id = '${id}'`).join(" || ");
-		const users = $app.findRecordsByFilter("users", usersFilter);
+		const users = $app.findRecordsByFilter("users", usersFilter, "", 500, 0);
 
 		const result = users.map((u) => ({
 			id: u.id,
@@ -495,56 +488,47 @@ routerAdd("GET", "/api/custom/users/contacts", (c) => {
 			role: u.get("role"),
 		}));
 
-		return c.json(200, result);
-	} catch (e) {
-		console.error("Contacts error:", e);
-		return c.json(200, []);
+		return e.json(200, result);
+	} catch (err) {
+		console.error("❌ [CONTACTS] Ошибка:", err);
+		return e.json(200, []);
 	}
-});
+}, $apis.requireAuth());
 
-routerAdd("GET", "/api/custom/users/search", (c) => {
-	const authRecord = getAuthRecord(c);
-	if (!authRecord) {
-		return c.json(403, { message: "Guest access not allowed" });
-	}
-	const q = c.queryParam("q") || "";
+/**
+ * GET /api/custom/users/search?q=...
+ * Поиск пользователей по username или display_name.
+ */
+routerAdd("GET", "/api/custom/users/search", (e) => {
+	const q = e.request.url.query().get("q") || "";
 	if (!q) {
-		return c.json(200, []);
+		return e.json(200, []);
 	}
 
 	try {
 		const filter = `username ~ '${q}' || display_name ~ '${q}'`;
 		const users = $app.findRecordsByFilter("users", filter, "-created", 50, 0);
 
-		return c.json(
+		return e.json(
 			200,
 			users.map((u) => u.publicExport()),
 		);
 	} catch (err) {
-		console.error("❌ [API_USERS_SEARCH] Error:", err);
-		return c.json(500, { message: "Internal Server Error" });
+		console.error("❌ [SEARCH] Ошибка:", err);
+		return e.json(500, { message: "Internal Server Error" });
 	}
-});
+}, $apis.requireAuth());
 
 /**
- * ГЕНЕРАЦИЯ ИНВАЙТА С RATE LIMITING
+ * POST /api/custom/invites/generate
+ * Генерация инвайт-кода с rate limiting (админы без ограничений).
  */
-routerAdd("POST", "/api/custom/invites/generate", (c) => {
+routerAdd("POST", "/api/custom/invites/generate", (e) => {
 	const DB = require(`${__hooks}/db.js`);
-	const user = getAuthRecord(c);
-	if (!user) {
-		console.log("❌ [INVITES] user is null");
-		return c.json(401, { message: "Unauthorized" });
-	}
+	const user = e.auth;
 
-	// 2. Проверка лимитов (Rate Limiting) (админы без ограничений)
-	let isAdmin = false;
-	if (typeof user.get === "function") {
-		isAdmin = user.get("role") === "admin";
-	} else {
-		// Если user.get не функция, значит это models.Admin (суперпользователь)
-		isAdmin = true;
-	}
+	// Проверка лимитов (Rate Limiting) — админы без ограничений
+	const isAdmin = user.get("role") === "admin";
 
 	if (!isAdmin) {
 		const pastTime = new Date(Date.now() - DB.CONFIG.INVITE_RATE_LIMIT_MINUTES * 60000)
@@ -560,11 +544,11 @@ routerAdd("POST", "/api/custom/invites/generate", (c) => {
 		);
 
 		if (recentInvites.length > 0) {
-			return c.json(429, { message: `Rate limit: Only 1 invite allowed per ${DB.CONFIG.INVITE_RATE_LIMIT_MINUTES} minute(s)` });
+			return e.json(429, { message: `Rate limit: Only 1 invite allowed per ${DB.CONFIG.INVITE_RATE_LIMIT_MINUTES} minute(s)` });
 		}
 	}
 
-	// Генерация
+	// Генерация инвайт-кода
 	const inviteCollection = $app.findCollectionByNameOrId("invites");
 	const record = new Record(inviteCollection);
 	const code = `kk-${$security.randomString(8)}`;
@@ -574,5 +558,5 @@ routerAdd("POST", "/api/custom/invites/generate", (c) => {
 
 	$app.save(record);
 
-	return c.json(200, { code: code });
-});
+	return e.json(200, { code: code });
+}, $apis.requireAuth());
