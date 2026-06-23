@@ -14,13 +14,17 @@ onRecordAfterCreateSuccess((e) => {
 	const DB = require(`${__hooks}/db.js`);
 	const user = e.record;
 
-	console.log(`🚀 [REG_DEBUG] Начало инициализации Избранного для пользователя: ${user.email()} (ID: ${user.id})`);
+	console.log(
+		`🚀 [REG_DEBUG] Начало инициализации Избранного для пользователя: ${user.email()} (ID: ${user.id})`,
+	);
 
 	// Генерация детерминированного ID для комнаты на основе ID пользователя
 	const rawHash = $security.md5(`"${DB.VALUES.PREFIX_SELF_CHAT}" ${user.id}`);
 	const deterministicId = rawHash.slice(0, 15);
 
-	console.log(`🔍 [REG_DEBUG] Сгенерированный ID комнаты Избранного: ${deterministicId}`);
+	console.log(
+		`🔍 [REG_DEBUG] Сгенерированный ID комнаты Избранного: ${deterministicId}`,
+	);
 
 	// Безопасная проверка существования комнаты без генерации исключений в БД
 	let rooms = [];
@@ -33,11 +37,15 @@ onRecordAfterCreateSuccess((e) => {
 			0,
 		);
 	} catch (filterErr) {
-		console.error(`❌ [REG_DEBUG_ERROR] Ошибка при проверке существования комнаты: ${filterErr.message || filterErr}`);
+		console.error(
+			`❌ [REG_DEBUG_ERROR] Ошибка при проверке существования комнаты: ${filterErr.message || filterErr}`,
+		);
 	}
 
 	if (rooms.length > 0) {
-		console.log(`ℹ️ [REG_DEBUG] Избранное уже существует для пользователя: ${user.email()} (Room ID: ${deterministicId}). Создание не требуется.`);
+		console.log(
+			`ℹ️ [REG_DEBUG] Избранное уже существует для пользователя: ${user.email()} (Room ID: ${deterministicId}). Создание не требуется.`,
+		);
 		e.next();
 		return;
 	}
@@ -71,9 +79,13 @@ onRecordAfterCreateSuccess((e) => {
 		});
 		e.app.saveNoValidate(member);
 
-		console.log(`⭐ [REG] Избранное успешно создано и записано для: ${user.email()}`);
+		console.log(
+			`⭐ [REG] Избранное успешно создано и записано для: ${user.email()}`,
+		);
 	} catch (err) {
-		console.error(`❌ [REG_ERROR] Ошибка при создании Избранного: ${err.message || err}`);
+		console.error(
+			`❌ [REG_ERROR] Ошибка при создании Избранного: ${err.message || err}`,
+		);
 	}
 
 	e.next();
@@ -205,9 +217,15 @@ onRecordAfterCreateSuccess((e) => {
 		try {
 			const senderRecord = e.app.findRecordById("users", senderId);
 			if (senderRecord) {
-				senderName = senderRecord.get("name") || senderRecord.get("username") || "Пользователь";
+				senderName =
+					senderRecord.get("name") ||
+					senderRecord.get("username") ||
+					"Пользователь";
 			}
 		} catch (err) {
+			console.error(
+				`❌ [PUSH_QUEUE_ERROR] Ошибка получения имени отправителя: ${err.message || err}`,
+			);
 			// игнорируем ошибку
 		}
 
@@ -238,32 +256,35 @@ onRecordAfterCreateSuccess((e) => {
 					"-created",
 					1,
 					0,
-					{ uid: uid }
+					{ uid: uid },
 				);
-				
+
 				if (presenceRecords.length > 0) {
 					const p = presenceRecords[0];
 					const isOnline = p.getBool("is_online");
 					const lastPingStr = p.getDateTime("last_ping").string();
-					
+
 					let isRecent = false;
 					if (lastPingStr) {
 						// Pocketbase возвращает DateTime, переводим в JS Date (учитывая UTC)
-						const lastPingDate = new Date(lastPingStr.replace(" ", "T") + "Z");
-						if ((Date.now() - lastPingDate.getTime()) < 65000) {
+						const lastPingDate = new Date(`${lastPingStr.replace(" ", "T")}Z`);
+						if (Date.now() - lastPingDate.getTime() < 65000) {
 							isRecent = true;
 						}
 					}
-					
+
 					// Если пользователь активен, пуш не ставим в очередь
 					if (isOnline && isRecent) {
 						continue;
 					}
 				}
 			} catch (err) {
+				console.error(
+					`❌ [PUSH_QUEUE_ERROR] Ошибка проверки статуса пользователя: ${err.message || err}`,
+				);
 				// Если ошибка проверки, лучше отправить пуш, чем пропустить
 			}
-			
+
 			offlineUserIds.push(uid);
 		}
 
@@ -301,7 +322,7 @@ onRecordAfterCreateSuccess((e) => {
 			type: DB.VALUES.PUSH_TYPE_NEW_MESSAGE,
 			roomId: roomId,
 			title: senderName,
-			body: "Новое сообщение"
+			body: "Новое сообщение",
 		};
 
 		// Сохранение задачи в task_queue
@@ -349,9 +370,96 @@ onBootstrap((e) => {
 			.execute();
 
 		const rowsAffected = result.rowsAffected() || 0;
-		console.log(`🧹 [BOOTSTRAP] Очередь задач проверена. Восстановлено задач: ${rowsAffected}`);
+		console.log(
+			`🧹 [BOOTSTRAP] Очередь задач проверена. Восстановлено задач: ${rowsAffected}`,
+		);
 	} catch (err) {
-		console.error(`❌ [BOOTSTRAP_ERROR] Ошибка при автосбросе задач: ${err.message || err}`);
+		console.error(
+			`❌ [BOOTSTRAP_ERROR] Ошибка при автосбросе задач: ${err.message || err}`,
+		);
 	}
 });
 
+/**
+ * 6. КАСТОМНЫЕ ЭНДПОИНТЫ ДЛЯ ПОИСКА КОНТАКТОВ (АНАЛОГ TELEGRAM)
+ * Позволяет получать список контактов и искать пользователей по username,
+ * не открывая глобальный listRule для всех.
+ */
+routerAdd("GET", "/api/custom/users/contacts", (c) => {
+	const authRecord = c.get("authRecord");
+	if (!authRecord) {
+		return c.json(403, { message: "Guest access not allowed" });
+	}
+	const userId = authRecord.id;
+
+	try {
+		const myMembers = $app.findRecordsByFilter(
+			"room_members",
+			`user = '${userId}'`,
+		);
+		if (myMembers.length === 0) {
+			return c.json(200, []);
+		}
+		const roomIds = myMembers.map((m) => m.get("room"));
+
+		const filter = roomIds.map((id) => `room = '${id}'`).join(" || ");
+		const otherMembers = $app.findRecordsByFilter(
+			"room_members",
+			`user != '${userId}' && (${filter})`,
+		);
+		const otherUserIds = [...new Set(otherMembers.map((m) => m.get("user")))];
+
+		if (otherUserIds.length === 0) {
+			return c.json(200, []);
+		}
+
+		const usersFilter = otherUserIds.map((id) => `id = '${id}'`).join(" || ");
+		const users = $app.findRecordsByFilter("users", usersFilter);
+
+		const result = users.map((u) => ({
+			id: u.id,
+			username: u.get("username"),
+			display_name: u.get("display_name"),
+			avatar: u.get("avatar"),
+			status: u.get("status"),
+			last_seen: u.get("last_seen"),
+			role: u.get("role"),
+		}));
+
+		return c.json(200, result);
+	} catch (e) {
+		console.error("Contacts error:", e);
+		return c.json(200, []);
+	}
+});
+
+routerAdd("GET", "/api/custom/users/search", (c) => {
+	const authRecord = c.get("authRecord");
+	if (!authRecord) {
+		return c.json(403, { message: "Guest access not allowed" });
+	}
+	const q = c.queryParam("q") || "";
+	if (!q) {
+		return c.json(200, []);
+	}
+
+	try {
+		const filter = `username ~ '${q}' || display_name ~ '${q}'`;
+		const users = $app.findRecordsByFilter("users", filter, "-created", 50, 0);
+
+		const result = users.map((u) => ({
+			id: u.id,
+			username: u.get("username"),
+			display_name: u.get("display_name"),
+			avatar: u.get("avatar"),
+			status: u.get("status"),
+			last_seen: u.get("last_seen"),
+			role: u.get("role"),
+		}));
+
+		return c.json(200, result);
+	} catch (e) {
+		console.error("Search error:", e);
+		return c.json(200, []);
+	}
+});

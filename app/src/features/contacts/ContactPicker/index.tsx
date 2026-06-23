@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Search } from "@/components/ui/Search";
 import { Spinner } from "@/components/ui/Spinner";
 import { useContacts } from "@/features/contacts/hooks/useContacts";
+import { useUserSearch } from "@/features/contacts/hooks/useUserSearch";
 import { CONTACT_PICKER_MODE, ICON_SIZE } from "@/lib/constants";
 import type { Profile } from "@/lib/types/profile";
 import type { ContactPickerMode } from "@/lib/types/ui";
@@ -44,26 +45,38 @@ export function ContactPicker({
     const [searchQuery, setSearchQuery] = useState("");
     const deferredSearchQuery = useDeferredValue(searchQuery);
 
-    const { data: contacts = [], isLoading, isError } = useContacts();
+    const { data: contacts = [], isLoading: isLoadingContacts } = useContacts();
+    const { data: searchResults = [], isLoading: isLoadingSearch } =
+        useUserSearch(deferredSearchQuery);
 
     const user = useAuthStore((state) => state.profile);
 
     const filteredContacts = useMemo(() => {
-        let list = contacts;
+        let list = deferredSearchQuery.trim() ? searchResults : contacts;
+
+        // Объединяем контакты и результаты поиска, удаляя дубликаты
+        if (deferredSearchQuery.trim() && contacts.length > 0) {
+            const all = [...contacts, ...searchResults];
+            const unique = new Map(all.map((item) => [item.id, item]));
+            list = Array.from(unique.values());
+
+            // Фильтруем локально для быстрого отклика
+            const query = deferredSearchQuery.toLowerCase();
+            list = list.filter(
+                (contact) =>
+                    contact.display_name?.toLowerCase().includes(query) ||
+                    contact.username?.toLowerCase().includes(query),
+            );
+        }
+
         if (user) {
             list = list.filter((c) => c.id !== user.id);
         }
 
-        if (!deferredSearchQuery.trim()) {
-            return list;
-        }
-        const query = deferredSearchQuery.toLowerCase();
-        return list.filter(
-            (contact) =>
-                contact.display_name?.toLowerCase().includes(query) ||
-                contact.username?.toLowerCase().includes(query),
-        );
-    }, [contacts, deferredSearchQuery, user]);
+        return list;
+    }, [contacts, searchResults, deferredSearchQuery, user]);
+
+    const isLoading = isLoadingContacts || isLoadingSearch;
 
     const handleContactClick = (contact: Profile) => {
         if (mode === CONTACT_PICKER_MODE.SINGLE) {

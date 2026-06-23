@@ -25,3 +25,9 @@ export const ROUTES = {
     TERMS: "/terms",
     VERIFY: "/auth/verify",
 } as const;
+
+/** Пути к кастомным API эндпоинтам бэкенда */
+export const API_ROUTES = {
+    USERS_SEARCH: "/api/custom/users/search",
+    USERS_CONTACTS: "/api/custom/users/contacts",
+} as const;

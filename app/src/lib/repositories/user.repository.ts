@@ -3,7 +3,7 @@
  * Управляет получением данных пользователей, их профилей и статусов.
  */
 
-import { DB_TABLES, ERROR_CODES, USER_FIELDS } from "../constants";
+import { API_ROUTES, DB_TABLES, ERROR_CODES, USER_FIELDS } from "../constants";
 import { pb } from "../pocketbase";
 import type {
     Profile,
@@ -118,17 +118,17 @@ export const userRepository = {
             return ok([]);
         }
 
-        const filter = userIds
-            .map((id) => pb.filter(`${USER_FIELDS.ID} = "${id}"`))
-            .join(" || ");
-
         return fromPromise(
-            pb
-                .collection(DB_TABLES.USERS)
-                .getFullList<{ id: string; public_key_x25519: string }>({
-                    filter,
-                    fields: `${USER_FIELDS.ID},${USER_FIELDS.PUBLIC_KEY_X25519}`,
-                }),
+            Promise.all(
+                userIds.map((id) =>
+                    pb.collection(DB_TABLES.USERS).getOne<{
+                        id: string;
+                        public_key_x25519: string;
+                    }>(id, {
+                        fields: `${USER_FIELDS.ID},${USER_FIELDS.PUBLIC_KEY_X25519}`,
+                    }),
+                ),
+            ),
             (e: unknown) => {
                 return appError(
                     ERROR_CODES.NETWORK_ERROR,
@@ -144,20 +144,46 @@ export const userRepository = {
      */
     searchUsers: async (
         query: string,
-        sort: UserSort = `-${USER_FIELDS.CREATED}` as UserSort,
+        _sort: UserSort = `-${USER_FIELDS.CREATED}` as UserSort,
     ): Promise<Result<Profile[], UserRepoError>> => {
-        const filter = query
-            ? `(${USER_FIELDS.USERNAME} ~ "${query}" || ${USER_FIELDS.DISPLAY_NAME} ~ "${query}")`
-            : "";
+        // Если запрос пустой, не отправляем его на сервер, чтобы не грузить всех (как в ТГ)
+        if (!query) {
+            return ok([]);
+        }
 
         return fromPromise(
-            pb
-                .collection(DB_TABLES.USERS)
-                .getFullList<UserRecord>({ filter, sort }),
+            // Используем кастомный эндпоинт для поиска, так как коллекция users закрыта (listRule)
+            pb.send<UserRecord[]>(API_ROUTES.USERS_SEARCH, {
+                method: "GET",
+                query: { q: query },
+            }),
             (e: unknown) =>
                 appError(
                     ERROR_CODES.NETWORK_ERROR,
                     "Ошибка при поиске пользователей",
+                    e,
+                ),
+        ).then((res) =>
+            res.map((records) =>
+                records.map((r) =>
+                    UserMapper.toDomain(r, (rec, file) =>
+                        pb.files.getURL(rec, file),
+                    ),
+                ),
+            ),
+        );
+    },
+
+    /**
+     * Получить список контактов (пользователи, с которыми есть чаты)
+     */
+    getContacts: async (): Promise<Result<Profile[], UserRepoError>> => {
+        return fromPromise(
+            pb.send<UserRecord[]>(API_ROUTES.USERS_CONTACTS, { method: "GET" }),
+            (e: unknown) =>
+                appError(
+                    ERROR_CODES.NETWORK_ERROR,
+                    "Ошибка при получении контактов",
                     e,
                 ),
         ).then((res) =>

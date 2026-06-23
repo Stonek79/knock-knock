@@ -464,8 +464,8 @@
 			"CREATE UNIQUE INDEX `idx_tokenKey_users` ON `users` (`tokenKey`)",
 			"CREATE UNIQUE INDEX `idx_username` ON `users` (`username`) WHERE `username` != ''"
 		],
-		"listRule": "@request.auth.id != \"\" && (id = @request.auth.id || @request.auth.role = \"admin\")",
-		"viewRule": "@request.auth.id != \"\" && (id = @request.auth.id || @request.auth.role = \"admin\")",
+		"listRule": "@request.auth.id != \"\"",
+		"viewRule": "@request.auth.id != \"\"",
 		"createRule": "",
 		"updateRule": "id = @request.auth.id",
 		"deleteRule": "id = @request.auth.id"

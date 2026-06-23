@@ -11,7 +11,7 @@ export function useContacts() {
     return useQuery({
         queryKey: QUERY_KEYS.contacts(),
         queryFn: async () => {
-            const result = await userRepository.getAllUsers();
+            const result = await userRepository.getContacts();
 
             if (result.isErr()) {
                 logger.error(
