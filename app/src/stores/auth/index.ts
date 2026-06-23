@@ -127,6 +127,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     signOut: async () => {
+        AuthService.logout();
         set({ pbUser: null, profile: null });
         ChatRealtimeService.destroy();
     },

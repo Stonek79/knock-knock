@@ -10,6 +10,15 @@ export const auth = {
     emailPlaceholder: "name@example.com",
     passwordPlaceholder: "••••••••",
     signInToAccount: "Войдите в свой аккаунт",
+    inviteCode: "Код приглашения",
+    inviteCodePlaceholder: "Вставьте код (напр. kk-...)",
+    inviteTooltip:
+        "Для защиты от спама регистрация требует код приглашения. Получите его у действующего участника.",
+    usernameRequired: "Обязательное поле",
+    usernameTooShort: "Слишком короткий",
+    usernameTooLong: "Слишком длинный",
+    usernameInvalid: "Только английские буквы, цифры и _",
+    inviteCodeTooShort: "Код слишком короткий",
     sending: "Отправка...",
     signOut: "Выйти",
     error: "Ошибка авторизации",
@@ -42,6 +51,12 @@ export const auth = {
     required: "Обязательное поле",
     usernameMin: "Минимум {{min}} символов",
     iAgreeToTerms: "Я принимаю условия использования",
+    displayNameHint: "Имя, которое увидят другие пользователи в чатах.",
+    usernamePlaceholder: "Ваш уникальный логин",
+    usernameTooltip:
+        "Ваш уникальный идентификатор в системе (логин). По нему вас смогут найти другие пользователи.",
+    displayNameTooltip:
+        "Ваше публичное имя, которое будут видеть все в чатах. Можно использовать любые символы, включая пробелы.",
     verificationRequired:
         "Пожалуйста, подтвердите ваш email для полного доступа.",
     verificationTitle: "Верификация аккаунта",

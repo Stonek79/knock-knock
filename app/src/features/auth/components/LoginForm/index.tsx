@@ -2,8 +2,8 @@ import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { EmailInput } from "@/components/ui/EmailInput";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { TextField } from "@/components/ui/TextField";
 import { loginSchema } from "@/lib/schemas/auth";
 import { useAuthForms } from "../../hooks/useAuthForms";
 import styles from "../../styles/authForm.module.css";
@@ -22,13 +22,13 @@ export function LoginForm() {
             className={styles.form}
         >
             <Flex direction="column" gap="4">
-                {/* Email */}
+                {/* Username */}
                 <loginForm.Field
-                    name="email"
+                    name="username"
                     validators={{
                         onBlur: ({ value }) => {
                             const res =
-                                loginSchema.shape.email.safeParse(value);
+                                loginSchema.shape.username.safeParse(value);
                             return res.success
                                 ? undefined
                                 : t(res.error.issues[0].message);
@@ -38,7 +38,7 @@ export function LoginForm() {
                                 return undefined;
                             }
                             const res =
-                                loginSchema.shape.email.safeParse(value);
+                                loginSchema.shape.username.safeParse(value);
                             return res.success
                                 ? undefined
                                 : t(res.error.issues[0].message);
@@ -46,14 +46,14 @@ export function LoginForm() {
                     }}
                 >
                     {(field) => (
-                        <AuthField label={t("common.email")} field={field}>
-                            <EmailInput
+                        <AuthField label={t("profile.username")} field={field}>
+                            <TextField
                                 value={field.state.value}
                                 onChange={(e) =>
                                     field.handleChange(e.target.value)
                                 }
-                                autoComplete="email"
-                                placeholder={t("auth.emailPlaceholder")}
+                                autoComplete="username"
+                                placeholder={t("auth.usernamePlaceholder")}
                             />
                         </AuthField>
                     )}

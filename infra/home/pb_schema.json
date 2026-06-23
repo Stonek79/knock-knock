@@ -346,7 +346,7 @@
 				"name": "email",
 				"type": "email",
 				"system": true,
-				"required": true
+				"required": false
 			},
 			{
 				"id": "bool1547992806",
@@ -398,14 +398,21 @@
 				"name": "status",
 				"type": "select",
 				"system": false,
-				"values": ["online", "offline", "away"]
+				"values": [
+					"online",
+					"offline",
+					"away"
+				]
 			},
 			{
 				"id": "user_role_field",
 				"name": "role",
 				"type": "select",
 				"system": false,
-				"values": ["user", "admin"]
+				"values": [
+					"user",
+					"admin"
+				]
 			},
 			{
 				"id": "user_ls_field",
@@ -458,6 +465,16 @@
 				"system": true,
 				"onCreate": true,
 				"onUpdate": true
+			},
+			{
+				"id": "usr_invite_code_id",
+				"name": "invite_code",
+				"type": "relation",
+				"system": false,
+				"required": false,
+				"collectionId": "pbc_invites_id",
+				"maxSelect": 1,
+				"cascadeDelete": false
 			}
 		],
 		"indexes": [
@@ -498,14 +515,22 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": ["direct", "group", "ephemeral"]
+				"values": [
+					"direct",
+					"group",
+					"ephemeral",
+					"system"
+				]
 			},
 			{
 				"id": "room_vis_id",
 				"name": "visibility",
 				"type": "select",
 				"system": false,
-				"values": ["public", "private"],
+				"values": [
+					"public",
+					"private"
+				],
 				"required": true
 			},
 			{
@@ -620,7 +645,11 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": ["owner", "admin", "member"]
+				"values": [
+					"owner",
+					"admin",
+					"member"
+				]
 			},
 			{
 				"id": "rm_unread_id",
@@ -776,21 +805,37 @@
 				"type": "text",
 				"system": false
 			},
-			{ "id": "msg_iv_id", "name": "iv", "type": "text", "system": false },
+			{
+				"id": "msg_iv_id",
+				"name": "iv",
+				"type": "text",
+				"system": false
+			},
 			{
 				"id": "msg_type_id",
 				"name": "type",
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": ["text", "image", "audio", "video", "file", "system"]
+				"values": [
+					"text",
+					"image",
+					"audio",
+					"video",
+					"file",
+					"system"
+				]
 			},
 			{
 				"id": "msg_status_id",
 				"name": "status",
 				"type": "select",
 				"system": false,
-				"values": ["sent", "delivered", "read"]
+				"values": [
+					"sent",
+					"delivered",
+					"read"
+				]
 			},
 			{
 				"id": "msg_meta_id",
@@ -1212,7 +1257,12 @@
 				"system": false,
 				"required": true
 			},
-			{ "id": "fold_icon_id", "name": "icon", "type": "text", "system": false },
+			{
+				"id": "fold_icon_id",
+				"name": "icon",
+				"type": "text",
+				"system": false
+			},
 			{
 				"id": "fold_ord_id",
 				"name": "order",
@@ -1289,7 +1339,12 @@
 				"name": "reason",
 				"type": "select",
 				"system": false,
-				"values": ["spam", "offensive", "illegal", "other"],
+				"values": [
+					"spam",
+					"offensive",
+					"illegal",
+					"other"
+				],
 				"required": true
 			},
 			{
@@ -1297,7 +1352,11 @@
 				"name": "status",
 				"type": "select",
 				"system": false,
-				"values": ["pending", "reviewed", "dismissed"],
+				"values": [
+					"pending",
+					"reviewed",
+					"dismissed"
+				],
 				"required": true
 			},
 			{
@@ -1443,7 +1502,12 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": ["image", "video", "audio", "document"]
+				"values": [
+					"image",
+					"video",
+					"audio",
+					"document"
+				]
 			},
 			{
 				"id": "med_size_id",
@@ -1559,7 +1623,13 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": ["push", "email", "media_cleanup", "cleanup", "test"]
+				"values": [
+					"push",
+					"email",
+					"media_cleanup",
+					"cleanup",
+					"test"
+				]
 			},
 			{
 				"id": "tq_payload_id",
@@ -1573,7 +1643,12 @@
 				"name": "status",
 				"type": "select",
 				"system": false,
-				"values": ["pending", "processing", "completed", "failed"]
+				"values": [
+					"pending",
+					"processing",
+					"completed",
+					"failed"
+				]
 			},
 			{
 				"id": "tq_attempts_id",
@@ -1672,7 +1747,10 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": ["audio", "video"]
+				"values": [
+					"audio",
+					"video"
+				]
 			},
 			{
 				"id": "cl_status_id",
@@ -1680,7 +1758,13 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": ["ringing", "ongoing", "ended", "missed", "rejected"]
+				"values": [
+					"ringing",
+					"ongoing",
+					"ended",
+					"missed",
+					"rejected"
+				]
 			},
 			{
 				"id": "cl_started_id",
@@ -1736,6 +1820,91 @@
 		"listRule": "@request.auth.id != '' && room.room_members_via_room.user ?= @request.auth.id",
 		"viewRule": "@request.auth.id != '' && room.room_members_via_room.user ?= @request.auth.id",
 		"createRule": "@request.auth.id != '' && initiator = @request.auth.id && room.room_members_via_room.user ?= @request.auth.id",
+		"updateRule": null,
+		"deleteRule": null
+	},
+	{
+		"id": "pbc_invites_id",
+		"name": "invites",
+		"type": "base",
+		"system": false,
+		"fields": [
+			{
+				"id": "text3208210256",
+				"name": "id",
+				"type": "text",
+				"system": true,
+				"primaryKey": true,
+				"required": true,
+				"autogeneratePattern": "[a-z0-9]{15}"
+			},
+			{
+				"id": "inv_code_id",
+				"name": "code",
+				"type": "text",
+				"system": false,
+				"required": true,
+				"options": {
+					"min": 6,
+					"max": 30,
+					"pattern": ""
+				}
+			},
+			{
+				"id": "inv_cb_id",
+				"name": "created_by",
+				"type": "relation",
+				"system": false,
+				"required": true,
+				"collectionId": "_pb_users_auth_",
+				"maxSelect": 1,
+				"cascadeDelete": false
+			},
+			{
+				"id": "inv_ub_id",
+				"name": "used_by",
+				"type": "relation",
+				"system": false,
+				"required": false,
+				"collectionId": "_pb_users_auth_",
+				"maxSelect": 1,
+				"cascadeDelete": false
+			},
+			{
+				"id": "inv_status_id",
+				"name": "status",
+				"type": "select",
+				"system": false,
+				"required": true,
+				"values": [
+					"active",
+					"used",
+					"revoked"
+				]
+			},
+			{
+				"id": "autodate2990389176",
+				"name": "created",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": false
+			},
+			{
+				"id": "autodate3332085495",
+				"name": "updated",
+				"type": "autodate",
+				"system": true,
+				"onCreate": true,
+				"onUpdate": true
+			}
+		],
+		"indexes": [
+			"CREATE UNIQUE INDEX `idx_invite_code` ON `invites` (`code`)"
+		],
+		"listRule": "@request.auth.id != \"\" && (created_by = @request.auth.id || @request.auth.role ?= \"admin\")",
+		"viewRule": "@request.auth.id != \"\" && (created_by = @request.auth.id || @request.auth.role ?= \"admin\")",
+		"createRule": null,
 		"updateRule": null,
 		"deleteRule": null
 	}

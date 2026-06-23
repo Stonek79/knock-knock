@@ -45,9 +45,16 @@ export function ContactPicker({
     const [searchQuery, setSearchQuery] = useState("");
     const deferredSearchQuery = useDeferredValue(searchQuery);
 
-    const { data: contacts = [], isLoading: isLoadingContacts } = useContacts();
-    const { data: searchResults = [], isLoading: isLoadingSearch } =
-        useUserSearch(deferredSearchQuery);
+    const {
+        data: contacts = [],
+        isLoading: isLoadingContacts,
+        isError: isErrorContacts,
+    } = useContacts();
+    const {
+        data: searchResults = [],
+        isLoading: isLoadingSearch,
+        isError: isErrorSearch,
+    } = useUserSearch(deferredSearchQuery);
 
     const user = useAuthStore((state) => state.profile);
 
@@ -77,6 +84,7 @@ export function ContactPicker({
     }, [contacts, searchResults, deferredSearchQuery, user]);
 
     const isLoading = isLoadingContacts || isLoadingSearch;
+    const isError = isErrorContacts || isErrorSearch;
 
     const handleContactClick = (contact: Profile) => {
         if (mode === CONTACT_PICKER_MODE.SINGLE) {

@@ -15,6 +15,11 @@ export const settings = {
         deleteWarning:
             "Deletion is irreversible and all user data and information about them will be destroyed and cannot be restored",
         enterPasswordToDelete: "Enter password to confirm",
+        invites: "Invites",
+        invitesDesc:
+            "Generate an invite code or QR code to invite friends. Available 1 invite every 3 minutes.",
+        generateInvite: "Generate Invite",
+        inviteReady: "Invite is ready! Scan the QR code or copy the link.",
     },
     appearance: {
         appearance: "Appearance",

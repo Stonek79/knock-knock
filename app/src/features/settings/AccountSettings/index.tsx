@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/auth";
 import styles from "./accountsettings.module.css";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { DeleteAccountModal } from "./DeleteAccountModal";
+import { InviteSection } from "./InviteSection";
 import { SignOutConfirmModal } from "./SignOutConfirmModal";
 
 /**
@@ -66,6 +67,9 @@ export function AccountSettings() {
                         </Flex>
                     </Flex>
                 </Card>
+
+                {/* Приглашения */}
+                <InviteSection />
 
                 {/* Безопасность */}
                 <Card className={styles.card}>

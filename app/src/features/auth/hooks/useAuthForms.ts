@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
+import { useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { logger } from "@/lib/logger";
 import { AuthService } from "@/lib/services/auth";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
 
@@ -16,6 +16,8 @@ export function useAuthForms() {
     const { t } = useTranslation();
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [startTime] = useState(Date.now());
+    const search = useSearch({ strict: false });
+    const initialInviteCode = (search as { invite?: string }).invite || "";
 
     // --- ФОРМА ВХОДА ---
     // Anti-bot поля не нужны при логине — PocketBase проверяет только credentials.
@@ -23,7 +25,7 @@ export function useAuthForms() {
     // вызывает 400 Bad Request, т.к. PocketBase их не принимает.
     const loginForm = useForm({
         defaultValues: {
-            email: "",
+            username: "",
             password: "",
         },
         onSubmit: async ({ value }) => {
@@ -31,7 +33,7 @@ export function useAuthForms() {
             ChatRealtimeService.destroy();
 
             const result = await AuthService.loginWithPassword(
-                value.email,
+                value.username,
                 value.password,
             );
 
@@ -49,7 +51,8 @@ export function useAuthForms() {
     // --- ФОРМА РЕГИСТРАЦИИ ---
     const registerForm = useForm({
         defaultValues: {
-            email: "",
+            username: "",
+            invite_code: initialInviteCode,
             display_name: "",
             password: "",
             passwordConfirm: "",
@@ -66,43 +69,22 @@ export function useAuthForms() {
 
             ChatRealtimeService.destroy();
 
-            // Если имя не введено, берем часть email до @ в качестве дефолта
-            const displayName =
-                value.display_name.trim() || value.email.split("@")[0];
-
-            // 1. Регистрация (Email + Password + Display Name + anti-bot meta)
+            // 1. Регистрация (Username + Password + Invite + meta)
             const regResult = await AuthService.register(
-                value.email,
+                value.username,
                 value.password,
+                value.invite_code,
                 {
-                    display_name: displayName,
+                    display_name: value.display_name.trim(),
                     _startTime: value._startTime,
                     username_bot: value.username_bot,
                 },
             );
 
             if (regResult.isOk()) {
-                // 2. Запрос верификации email (подстраховка — PB может не отправить автоматически)
-                AuthService.requestVerification(value.email).then(
-                    (verifyResult) => {
-                        if (verifyResult.isErr()) {
-                            logger.warn(
-                                "Не удалось запросить верификацию email",
-                                verifyResult.error,
-                            );
-                        } else {
-                            logger.info(
-                                "Письмо верификации отправлено",
-                                value.email,
-                            );
-                        }
-                    },
-                );
-
-                // 3. Автоматический вход для получения токена
-                // Без anti-bot meta — PocketBase не принимает лишние params в authWithPassword
+                // 2. Автоматический вход для получения токена
                 const loginResult = await AuthService.loginWithPassword(
-                    value.email,
+                    value.username,
                     value.password,
                 );
 

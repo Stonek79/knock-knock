@@ -96,6 +96,9 @@ const DB = {
 		// Внешние сервисы (Push Gateway)
 		PUSH_GATEWAY_DEFAULT_URL: "http://push-gateway:4000",
 		PUSH_GATEWAY_ENDPOINT: "/api/send-push",
+
+		// Настройки инвайтов
+		INVITE_RATE_LIMIT_MINUTES: 3, // Лимит на генерацию инвайтов (в минутах)
 	},
 };
 

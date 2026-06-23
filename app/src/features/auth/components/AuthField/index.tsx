@@ -1,5 +1,7 @@
+import { CircleHelp } from "lucide-react";
 import { cloneElement, isValidElement, type ReactElement } from "react";
 import { Flex } from "@/components/layout/Flex";
+import { Tooltip } from "@/components/ui/Tooltip";
 import styles from "./authField.module.css";
 
 /**
@@ -34,6 +36,7 @@ interface AuthFieldProps<TField extends MinimalFieldApi> {
     children: ReactElement<ValidatedInputProps>;
     helperText?: string;
     className?: string;
+    tooltipInfo?: string;
 }
 
 /**
@@ -45,6 +48,7 @@ export function AuthField<TField extends MinimalFieldApi>({
     children,
     helperText,
     className,
+    tooltipInfo,
 }: AuthFieldProps<TField>) {
     const { errors, isTouched } = field.state.meta;
     const { submissionAttempts } = field.form.state;
@@ -66,9 +70,16 @@ export function AuthField<TField extends MinimalFieldApi>({
             gap="1"
             className={`${styles.fieldContainer} ${className || ""}`}
         >
-            <label htmlFor={field.name} className={styles.label}>
-                {label}
-            </label>
+            <Flex align="center" gap="2">
+                <label htmlFor={field.name} className={styles.label}>
+                    {label}
+                </label>
+                {tooltipInfo && (
+                    <Tooltip content={tooltipInfo}>
+                        <CircleHelp size={14} className={styles.tooltipIcon} />
+                    </Tooltip>
+                )}
+            </Flex>
             {cloneElement(children, {
                 id: field.name,
                 onBlur: field.handleBlur,

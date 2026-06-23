@@ -11,6 +11,15 @@ export const auth = {
     passwordPlaceholder: "••••••••",
     welcomeBack: "Welcome back",
     signInToAccount: "Sign in to your account",
+    inviteCode: "Invite Code",
+    inviteCodePlaceholder: "Enter code (e.g. kk-...)",
+    inviteTooltip:
+        "To prevent spam, registration requires an invite code. Ask a current member for one.",
+    usernameRequired: "Required field",
+    usernameTooShort: "Too short",
+    usernameTooLong: "Too long",
+    usernameInvalid: "Only English letters, numbers, and _",
+    inviteCodeTooShort: "Code is too short",
     checkEmail: "Check your email",
     magicLinkSent: "We sent a magic link to your email address.",
     signInWithEmail: "Sign In with Email",
@@ -48,6 +57,12 @@ export const auth = {
     required: "Required field",
     usernameMin: "Min {{min}} characters",
     iAgreeToTerms: "I agree to the terms of use",
+    displayNameHint: "The name other users will see in chats.",
+    usernamePlaceholder: "Your unique login",
+    usernameTooltip:
+        "Your unique identifier in the system (login). Other users can find you by it.",
+    displayNameTooltip:
+        "Your public name that everyone will see in chats. You can use any characters, including spaces.",
     verificationRequired: "Please verify your email to access full features.",
     verificationTitle: "Account Verification",
     verificationProcessing: "Verifying your token...",

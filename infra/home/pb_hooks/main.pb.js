@@ -80,8 +80,40 @@ onRecordAfterCreateSuccess((e) => {
 		e.app.saveNoValidate(member);
 
 		console.log(
-			`⭐ [REG] Избранное успешно создано и записано для: ${user.email()}`,
+			`⭐ [REG] Избранное успешно создано и записано для: ${user.username() || user.email()}`,
 		);
+
+		// Обновляем инвайт
+		const inviteId = user.get("invite_code");
+		if (inviteId) {
+			try {
+				const invite = e.app.findRecordById("invites", inviteId);
+				invite.set("status", "used");
+				invite.set("used_by", user.id);
+				e.app.saveNoValidate(invite);
+			} catch (err) {
+				console.error(`❌ Ошибка обновления инвайта: ${err}`);
+			}
+		}
+
+		// Создание системной комнаты (Knock-Knock)
+		const sysDeterministicId = $security.md5(`${user.id}system`).substring(0, 15);
+		const sysRoom = new Record(roomCollection, {
+			[DB.FIELDS.ID]: sysDeterministicId,
+			[DB.FIELDS.TYPE]: "system",
+			[DB.FIELDS.NAME]: "Knock-Knock System",
+			[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
+			[DB.FIELDS.CREATED_BY]: user.id,
+		});
+		e.app.saveNoValidate(sysRoom);
+
+		const sysMember = new Record(memberCollection, {
+			[DB.FIELDS.ROOM]: sysRoom.id,
+			[DB.FIELDS.USER]: user.id,
+			[DB.FIELDS.ROLE]: "member", // обычный участник (только чтение на фронтенде)
+			[DB.FIELDS.UNREAD_COUNT]: 0,
+		});
+		e.app.saveNoValidate(sysMember);
 	} catch (err) {
 		console.error(
 			`❌ [REG_ERROR] Ошибка при создании Избранного: ${err.message || err}`,
@@ -181,9 +213,29 @@ onRecordCreateRequest((e) => {
 		// Проверка времени заполнения формы
 		const startTimeStr = data[DB.FIELDS.START_TIME];
 		const start = parseInt(startTimeStr || "0", 10);
-		if (startTimeStr && Date.now() - start < 3000) {
+		if (startTimeStr && Date.now() - start < 2000) {
 			throw $errors.badRequest("Bot detected (too fast)");
 		}
+
+		// Проверка инвайт-кода
+		const inviteCodeRaw = data.invite_code;
+		if (!inviteCodeRaw) {
+			throw $errors.badRequest("Invite code is required");
+		}
+		const invites = e.app.findRecordsByFilter(
+			"invites",
+			`code = '${inviteCodeRaw}' && status = 'active'`,
+			"",
+			1,
+			0,
+		);
+		if (invites.length === 0) {
+			throw $errors.badRequest("Invalid or inactive invite code");
+		}
+		const invite = invites[0];
+
+		// Подменяем код на id инвайта для связи
+		e.record.set("invite_code", invite.id);
 	} catch (err) {
 		if (err.message?.includes("Bot detected")) {
 			throw err;
@@ -369,9 +421,8 @@ onBootstrap((e) => {
 			})
 			.execute();
 
-		const rowsAffected = result.rowsAffected() || 0;
 		console.log(
-			`🧹 [BOOTSTRAP] Очередь задач проверена. Восстановлено задач: ${rowsAffected}`,
+			`🧹 [BOOTSTRAP] Очередь задач проверена. Восстановлено задач: ${result.rowsAffected() || 0}`,
 		);
 	} catch (err) {
 		console.error(
@@ -447,19 +498,57 @@ routerAdd("GET", "/api/custom/users/search", (c) => {
 		const filter = `username ~ '${q}' || display_name ~ '${q}'`;
 		const users = $app.findRecordsByFilter("users", filter, "-created", 50, 0);
 
-		const result = users.map((u) => ({
-			id: u.id,
-			username: u.get("username"),
-			display_name: u.get("display_name"),
-			avatar: u.get("avatar"),
-			status: u.get("status"),
-			last_seen: u.get("last_seen"),
-			role: u.get("role"),
-		}));
-
-		return c.json(200, result);
-	} catch (e) {
-		console.error("Search error:", e);
-		return c.json(200, []);
+		return c.json(
+			200,
+			users.map((u) => u.publicExport()),
+		);
+	} catch (err) {
+		console.error("❌ [API_USERS_SEARCH] Error:", err);
+		throw new ApiError(500, "Internal Server Error");
 	}
+});
+
+/**
+ * ГЕНЕРАЦИЯ ИНВАЙТА С RATE LIMITING
+ */
+routerAdd("POST", "/api/custom/invites/generate", (c) => {
+	const DB = require(`${__hooks}/db.js`);
+	const user = c.get("authRecord");
+	if (!user) {
+		throw new ApiError(401, "Unauthorized");
+	}
+
+	// 2. Проверка лимитов (Rate Limiting) (админы без ограничений)
+	if (user.role !== "admin") {
+		const pastTime = new Date(Date.now() - DB.CONFIG.INVITE_RATE_LIMIT_MINUTES * 60000)
+			.toISOString()
+			.replace("T", " ");
+
+		const recentInvites = $app.findRecordsByFilter(
+			"invites",
+			`created_by = '${user.id}' && created >= '${pastTime}'`,
+			"",
+			1,
+			0,
+		);
+
+		if (recentInvites.length > 0) {
+			throw new ApiError(
+				429,
+				`Rate limit: Only 1 invite allowed per ${DB.CONFIG.INVITE_RATE_LIMIT_MINUTES} minute(s)`,
+			);
+		}
+	}
+
+	// Генерация
+	const inviteCollection = $app.findCollectionByNameOrId("invites");
+	const record = new Record(inviteCollection);
+	const code = `kk-${$security.randomString(8)}`;
+	record.set("code", code);
+	record.set("created_by", user.id);
+	record.set("status", "active");
+
+	$app.save(record);
+
+	return c.json(200, { code: code });
 });

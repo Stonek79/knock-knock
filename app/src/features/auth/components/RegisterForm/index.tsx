@@ -3,7 +3,7 @@ import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { EmailInput } from "@/components/ui/EmailInput";
+
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { TextField } from "@/components/ui/TextField";
 import { registerFieldsSchema } from "@/lib/schemas/auth";
@@ -82,7 +82,8 @@ export function RegisterForm() {
                         <AuthField
                             label={t("profile.displayName")}
                             field={field}
-                            helperText={t("profile.displayNameHint")}
+                            helperText={t("auth.displayNameHint")}
+                            tooltipInfo={t("auth.displayNameTooltip")}
                         >
                             <TextField
                                 value={field.state.value}
@@ -97,13 +98,13 @@ export function RegisterForm() {
                     )}
                 </registerForm.Field>
 
-                {/* Email */}
+                {/* Username */}
                 <registerForm.Field
-                    name="email"
+                    name="username"
                     validators={{
                         onBlur: ({ value }) => {
                             const res =
-                                registerFieldsSchema.shape.email.safeParse(
+                                registerFieldsSchema.shape.username.safeParse(
                                     value,
                                 );
                             if (res.success) {
@@ -116,7 +117,7 @@ export function RegisterForm() {
                                 return undefined;
                             }
                             const res =
-                                registerFieldsSchema.shape.email.safeParse(
+                                registerFieldsSchema.shape.username.safeParse(
                                     value,
                                 );
                             if (res.success) {
@@ -127,14 +128,65 @@ export function RegisterForm() {
                     }}
                 >
                     {(field) => (
-                        <AuthField label={t("common.email")} field={field}>
-                            <EmailInput
+                        <AuthField
+                            label={t("profile.username")}
+                            field={field}
+                            tooltipInfo={t("auth.usernameTooltip")}
+                        >
+                            <TextField
                                 value={field.state.value}
                                 onChange={(e) => {
                                     field.handleChange(e.target.value);
                                 }}
-                                autoComplete="email"
-                                placeholder={t("auth.emailPlaceholder")}
+                                autoComplete="username"
+                                placeholder={t("auth.usernamePlaceholder")}
+                            />
+                        </AuthField>
+                    )}
+                </registerForm.Field>
+
+                {/* Invite Code */}
+                <registerForm.Field
+                    name="invite_code"
+                    validators={{
+                        onBlur: ({ value }) => {
+                            const res =
+                                registerFieldsSchema.shape.invite_code.safeParse(
+                                    value,
+                                );
+                            if (res.success) {
+                                return undefined;
+                            }
+                            return t(res.error.issues[0].message);
+                        },
+                        onChange: ({ value, fieldApi }) => {
+                            if (fieldApi.state.meta.errors.length === 0) {
+                                return undefined;
+                            }
+                            const res =
+                                registerFieldsSchema.shape.invite_code.safeParse(
+                                    value,
+                                );
+                            if (res.success) {
+                                return undefined;
+                            }
+                            return t(res.error.issues[0].message);
+                        },
+                    }}
+                >
+                    {(field) => (
+                        <AuthField
+                            label={t("auth.inviteCode")}
+                            field={field}
+                            tooltipInfo={t("auth.inviteTooltip")}
+                        >
+                            <TextField
+                                value={field.state.value}
+                                onChange={(e) => {
+                                    field.handleChange(e.target.value);
+                                }}
+                                autoComplete="off"
+                                placeholder={t("auth.inviteCodePlaceholder")}
                             />
                         </AuthField>
                     )}

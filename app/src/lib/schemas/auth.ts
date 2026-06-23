@@ -4,7 +4,12 @@ import { z } from "zod";
  * Схема полей регистрации (для доступа к .shape в формах)
  */
 export const registerFieldsSchema = z.object({
-    email: z.email({ message: "auth.emailInvalid" }),
+    username: z
+        .string()
+        .min(3, { message: "auth.usernameTooShort" })
+        .max(30, { message: "auth.usernameTooLong" })
+        .regex(/^[a-zA-Z0-9_]+$/, { message: "auth.usernameInvalid" }),
+    invite_code: z.string().min(6, { message: "auth.inviteCodeTooShort" }),
     display_name: z
         .string()
         .min(2, { message: "auth.displayNameTooShort" })
@@ -23,7 +28,7 @@ export const registerFieldsSchema = z.object({
 });
 
 export const loginSchema = z.object({
-    email: z.email({ message: "auth.emailInvalid" }),
+    username: z.string().min(1, { message: "auth.usernameRequired" }),
     password: z
         .string()
         .min(8, { message: "auth.passwordTooShort" })

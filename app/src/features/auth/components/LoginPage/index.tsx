@@ -1,4 +1,4 @@
-import { Navigate } from "@tanstack/react-router";
+import { Navigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
@@ -12,7 +12,11 @@ import styles from "./login.module.css";
 
 export function LoginPage() {
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState("login");
+    const search = useSearch({ strict: false });
+    const hasInvite = !!(search as { invite?: string }).invite;
+    const [activeTab, setActiveTab] = useState(
+        hasInvite ? "register" : "login",
+    );
     const profile = useAuthStore((state) => state.profile);
 
     if (profile) {
@@ -41,7 +45,7 @@ export function LoginPage() {
                     <Tabs
                         value={activeTab}
                         onValueChange={setActiveTab}
-                        defaultValue="login"
+                        defaultValue={hasInvite ? "register" : "login"}
                     >
                         <Tabs.List className={styles.tabsList}>
                             <Tabs.Trigger value="login">

@@ -23,6 +23,5 @@ export const profile = {
     enterBackupPassword: "Введите пароль",
     confirmPassword: "Повторите пароль",
     namePlaceholder: "Придумайте никнейм",
-    displayNameHint:
-        "Если оставить пустым, будет использована часть вашего email",
+    displayNameHint: "Имя, которое увидят другие пользователи в чатах.",
 } as const;

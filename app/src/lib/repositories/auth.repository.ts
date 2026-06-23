@@ -18,7 +18,7 @@ function isUserRecord(record: unknown): record is AuthUser {
         typeof record === "object" &&
         record !== null &&
         "id" in record &&
-        "email" in record
+        "username" in record
     );
 }
 
@@ -31,15 +31,17 @@ export const authRepository = {
      * Регистрация нового пользователя
      */
     register: async (
-        email: string,
+        username: string,
         password: string,
+        inviteCode: string,
         meta?: Record<string, string>,
     ): Promise<Result<AuthUser, AuthRepoError>> => {
         return fromPromise(
             pb.collection(DB_TABLES.USERS).create<AuthUser>({
-                email,
+                username,
                 password,
                 passwordConfirm: password,
+                invite_code: inviteCode,
                 role: USER_ROLE.USER,
                 ...meta,
             }),
@@ -53,14 +55,14 @@ export const authRepository = {
      * Логин с помощью email и пароля
      */
     login: async (
-        email: string,
+        username: string,
         password: string,
         meta?: Record<string, string>,
     ): Promise<Result<AuthUser, AuthRepoError>> => {
         return fromPromise(
             pb
                 .collection(DB_TABLES.USERS)
-                .authWithPassword<AuthUser>(email, password, meta)
+                .authWithPassword<AuthUser>(username, password, meta)
                 .then((res) => res.record),
             (e) => {
                 return appError(

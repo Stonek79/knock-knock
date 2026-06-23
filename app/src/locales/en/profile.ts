@@ -16,5 +16,5 @@ export const profile = {
     theme: "Theme",
     confirmPassword: "Confirm Password",
     namePlaceholder: "Think of a nickname",
-    displayNameHint: "If left blank, a part of your email will be used",
+    displayNameHint: "The name other users will see in chats.",
 } as const;
