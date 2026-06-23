@@ -444,15 +444,6 @@ function getAuthRecord(c) {
 		if (c.auth) {
 			return c.auth;
 		}
-		
-		// PB v0.22 (принудительный парсинг токена из заголовков)
-		if (typeof $apis !== "undefined" && typeof $apis.requestInfo === "function") {
-			const info = $apis.requestInfo(c);
-			if (info && (info.authRecord || info.admin || info.auth)) {
-				return info.authRecord || info.admin || info.auth;
-			}
-		}
-
 		// Fallback PB v0.22
 		if (typeof c.get === "function") {
 			return c.get("authRecord") || c.get("admin");
@@ -466,8 +457,7 @@ function getAuthRecord(c) {
 routerAdd("GET", "/api/custom/users/contacts", (c) => {
 	const authRecord = getAuthRecord(c);
 	if (!authRecord) {
-		console.log("❌ [CONTACTS] authRecord is null. Headers:", typeof c.request?.header === 'function' ? c.request.header() : "unknown");
-		return c.json(403, { message: "Guest access not allowed" });
+				return c.json(403, { message: "Guest access not allowed" });
 	}
 	const userId = authRecord.id;
 
@@ -532,7 +522,7 @@ routerAdd("GET", "/api/custom/users/search", (c) => {
 		);
 	} catch (err) {
 		console.error("❌ [API_USERS_SEARCH] Error:", err);
-		throw new ApiError(500, "Internal Server Error");
+		return c.json(500, { message: "Internal Server Error" });
 	}
 });
 
@@ -544,11 +534,19 @@ routerAdd("POST", "/api/custom/invites/generate", (c) => {
 	const user = getAuthRecord(c);
 	if (!user) {
 		console.log("❌ [INVITES] user is null");
-		throw new ApiError(401, "Unauthorized");
+		return c.json(401, { message: "Unauthorized" });
 	}
 
 	// 2. Проверка лимитов (Rate Limiting) (админы без ограничений)
-	if (user.get("role") !== "admin") {
+	let isAdmin = false;
+	if (typeof user.get === "function") {
+		isAdmin = user.get("role") === "admin";
+	} else {
+		// Если user.get не функция, значит это models.Admin (суперпользователь)
+		isAdmin = true;
+	}
+
+	if (!isAdmin) {
 		const pastTime = new Date(Date.now() - DB.CONFIG.INVITE_RATE_LIMIT_MINUTES * 60000)
 			.toISOString()
 			.replace("T", " ");
@@ -562,10 +560,7 @@ routerAdd("POST", "/api/custom/invites/generate", (c) => {
 		);
 
 		if (recentInvites.length > 0) {
-			throw new ApiError(
-				429,
-				`Rate limit: Only 1 invite allowed per ${DB.CONFIG.INVITE_RATE_LIMIT_MINUTES} minute(s)`,
-			);
+			return c.json(429, { message: `Rate limit: Only 1 invite allowed per ${DB.CONFIG.INVITE_RATE_LIMIT_MINUTES} minute(s)` });
 		}
 	}
 
