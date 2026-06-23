@@ -436,9 +436,37 @@ onBootstrap((e) => {
  * Позволяет получать список контактов и искать пользователей по username,
  * не открывая глобальный listRule для всех.
  */
+
+// Универсальная функция для получения пользователя из контекста (для PB v0.22 и v0.23)
+function getAuthRecord(c) {
+	try {
+		// PB v0.23+
+		if (c.auth) {
+			return c.auth;
+		}
+		
+		// PB v0.22 (принудительный парсинг токена из заголовков)
+		if (typeof $apis !== "undefined" && typeof $apis.requestInfo === "function") {
+			const info = $apis.requestInfo(c);
+			if (info && (info.authRecord || info.admin || info.auth)) {
+				return info.authRecord || info.admin || info.auth;
+			}
+		}
+
+		// Fallback PB v0.22
+		if (typeof c.get === "function") {
+			return c.get("authRecord") || c.get("admin");
+		}
+	} catch (e) {
+		console.log("Error extracting authRecord:", e);
+	}
+	return null;
+}
+
 routerAdd("GET", "/api/custom/users/contacts", (c) => {
-	const authRecord = c.get("authRecord");
+	const authRecord = getAuthRecord(c);
 	if (!authRecord) {
+		console.log("❌ [CONTACTS] authRecord is null. Headers:", typeof c.request?.header === 'function' ? c.request.header() : "unknown");
 		return c.json(403, { message: "Guest access not allowed" });
 	}
 	const userId = authRecord.id;
@@ -485,7 +513,7 @@ routerAdd("GET", "/api/custom/users/contacts", (c) => {
 });
 
 routerAdd("GET", "/api/custom/users/search", (c) => {
-	const authRecord = c.get("authRecord");
+	const authRecord = getAuthRecord(c);
 	if (!authRecord) {
 		return c.json(403, { message: "Guest access not allowed" });
 	}
@@ -513,13 +541,14 @@ routerAdd("GET", "/api/custom/users/search", (c) => {
  */
 routerAdd("POST", "/api/custom/invites/generate", (c) => {
 	const DB = require(`${__hooks}/db.js`);
-	const user = c.get("authRecord");
+	const user = getAuthRecord(c);
 	if (!user) {
+		console.log("❌ [INVITES] user is null");
 		throw new ApiError(401, "Unauthorized");
 	}
 
 	// 2. Проверка лимитов (Rate Limiting) (админы без ограничений)
-	if (user.role !== "admin") {
+	if (user.get("role") !== "admin") {
 		const pastTime = new Date(Date.now() - DB.CONFIG.INVITE_RATE_LIMIT_MINUTES * 60000)
 			.toISOString()
 			.replace("T", " ");
