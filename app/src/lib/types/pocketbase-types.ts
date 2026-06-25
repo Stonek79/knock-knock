@@ -51,7 +51,7 @@ export type UsersStatusOptions = "online" | "offline" | "away";
 
 export type UsersRoleOptions = "user" | "admin";
 
-export type RoomsTypeOptions = "direct" | "group" | "ephemeral";
+export type RoomsTypeOptions = "direct" | "group" | "ephemeral" | "system";
 
 export type RoomsVisibilityOptions = "public" | "private";
 

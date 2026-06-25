@@ -133,6 +133,7 @@ export const ROOM_TYPE = {
     DIRECT: "direct",
     GROUP: "group",
     EPHEMERAL: "ephemeral",
+    SYSTEM: "system",
 } as const satisfies Record<string, RoomsTypeOptions>;
 
 /** Видимость комнат */

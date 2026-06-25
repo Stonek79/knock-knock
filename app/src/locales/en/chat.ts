@@ -28,4 +28,6 @@ export const chat = {
         accessDenied: "Access denied or room not found",
         keysMissing: "Encryption keys missing. Update them in settings.",
     },
+    systemChannelReadOnly:
+        "This is a system notification channel. You cannot reply here.",
 } as const;

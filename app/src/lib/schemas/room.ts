@@ -8,6 +8,7 @@ export const roomTypeSchema = z.enum([
     ROOM_TYPE.DIRECT,
     ROOM_TYPE.GROUP,
     ROOM_TYPE.EPHEMERAL,
+    ROOM_TYPE.SYSTEM,
 ]);
 export const memberRoleSchema = z.enum([
     MEMBER_ROLE.OWNER,

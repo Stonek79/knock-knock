@@ -7,3 +7,9 @@
     align-items: center;
     box-sizing: border-box;
 }
+
+.systemMessage {
+    justify-content: center;
+    padding: var(--space-4);
+    text-align: center;
+}
