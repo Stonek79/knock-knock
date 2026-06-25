@@ -59,6 +59,28 @@ export function ChatRoomInputArea({ roomId }: ChatRoomInputAreaProps) {
           }
         : null;
 
+    const isSystemRoom = roomInfo?.room.type === "system";
+
+    if (isSystemRoom) {
+        return (
+            <div
+                className={styles.inputArea}
+                style={{
+                    justifyContent: "center",
+                    padding: "16px",
+                    color: "var(--color-text-secondary)",
+                }}
+            >
+                <span>
+                    {t(
+                        "chat.systemChannelReadOnly",
+                        "Это системный канал уведомлений. Отвечать здесь нельзя.",
+                    )}
+                </span>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.inputArea}>
             <MessageInput

@@ -14,6 +14,7 @@ export const ROUTES = {
     SETTINGS_SECURITY: "/settings/security",
     SETTINGS_STORAGE: "/settings/storage",
     SETTINGS_PROFILE: "/settings/profile",
+    SETTINGS_BROADCAST: "/settings/broadcast",
     FAVORITES: "/favorites",
     CALLS: "/calls",
     ADMIN: "/admin",
@@ -31,4 +32,5 @@ export const API_ROUTES = {
     USERS_SEARCH: "/api/custom/users/search",
     USERS_CONTACTS: "/api/custom/users/contacts",
     INVITES_GENERATE: "/api/custom/invites/generate",
+    BROADCAST_SEND: "/api/custom/broadcast",
 } as const;

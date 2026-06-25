@@ -5,6 +5,7 @@ import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { SETTINGS_ITEMS } from "@/config/settings";
 import { ICON_SIZE } from "@/lib/constants";
+import { useAuthStore } from "@/stores/auth";
 import { SidebarHeader } from "../../navigation/components/SidebarHeader";
 import styles from "./settingssidebar.module.css";
 
@@ -14,13 +15,17 @@ import styles from "./settingssidebar.module.css";
 export function SettingsSidebar() {
     const { t } = useTranslation();
     const location = useLocation();
+    const pbUser = useAuthStore((state) => state.pbUser);
+    const isAdmin = pbUser?.role === "admin";
 
     return (
         <Box className={styles.sidebar}>
             <SidebarHeader title={t("settings.title", "Настройки")} />
 
             <Flex direction="column" gap="1" p="3">
-                {SETTINGS_ITEMS.map((item) => {
+                {SETTINGS_ITEMS.filter(
+                    (item) => !item.adminOnly || isAdmin,
+                ).map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname.startsWith(item.path);
                     return (

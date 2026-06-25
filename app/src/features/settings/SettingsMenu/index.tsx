@@ -6,6 +6,7 @@ import { Flex } from "@/components/layout/Flex";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/Text";
 import { SETTINGS_ITEMS } from "@/config/settings";
+import { useAuthStore } from "@/stores/auth";
 import styles from "./settingsmenu.module.css";
 
 /**
@@ -13,11 +14,15 @@ import styles from "./settingsmenu.module.css";
  */
 export function SettingsMenu() {
     const { t } = useTranslation();
+    const pbUser = useAuthStore((state) => state.pbUser);
+    const isAdmin = pbUser?.role === "admin";
 
     return (
         <Box className={styles.mobileContainer}>
             <Flex direction="column" gap="2" px="4">
-                {SETTINGS_ITEMS.map((item) => {
+                {SETTINGS_ITEMS.filter(
+                    (item) => !item.adminOnly || isAdmin,
+                ).map((item) => {
                     const Icon = item.icon;
 
                     return (

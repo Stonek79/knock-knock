@@ -63,4 +63,12 @@ export const settings = {
         clearTitle: "Clear cache",
         clearCache: "Clear cache",
     },
+    broadcast: {
+        title: "Global Broadcast",
+        description:
+            "Send a system notification to all users. The message will appear in their system channel.",
+        placeholder: "Enter notification text...",
+        send: "Send broadcast",
+        success: "Broadcast successfully queued!",
+    },
 } as const;

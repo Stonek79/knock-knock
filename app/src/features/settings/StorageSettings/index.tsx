@@ -87,6 +87,17 @@ export function StorageSettings() {
                             </Text>
                         </Flex>
 
+                        <Text
+                            size="sm"
+                            intent="danger"
+                            style={{ marginTop: "8px", marginBottom: "8px" }}
+                        >
+                            {t(
+                                "settings.storage.warning",
+                                "Внимание: Вкладка хранилище в данный момент не отображает реальный объем занятого места и, следовательно, не полностью очищает его. Мы работаем над исправлением.",
+                            )}
+                        </Text>
+
                         <AlertDialog.Root>
                             <AlertDialog.Trigger asChild>
                                 <Button

@@ -72,6 +72,7 @@ const DB = {
 		// Типы задач и уведомлений
 		TASK_TYPE_PUSH: "push",
 		TASK_TYPE_CLEANUP: "cleanup",
+		TASK_TYPE_BROADCAST: "broadcast",
 		PUSH_TYPE_NEW_MESSAGE: "NEW_MESSAGE",
 
 		// Параметры комнат и сообщений

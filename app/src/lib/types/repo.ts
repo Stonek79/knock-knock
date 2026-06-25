@@ -22,6 +22,8 @@ export type RoomRepoError = AppError<ErrorCode>;
 export type MessageRepoError = AppError<ErrorCode>;
 export type MediaRepoError = AppError<ErrorCode>;
 export type PresenceRepoError = AppError<ErrorCode>;
+export type BroadcastRepoError = AppError<ErrorCode>;
+export type InviteRepoError = AppError<ErrorCode>;
 
 /** Типизация expand */
 export type RoomExpand = string;

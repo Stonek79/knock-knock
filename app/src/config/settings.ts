@@ -2,6 +2,7 @@ import {
     Bell,
     Database,
     Lock,
+    Megaphone,
     Palette,
     Shield,
     ShieldCheck,
@@ -16,6 +17,7 @@ export interface SettingsItemConfig {
     labelKey: string;
     defaultLabel: string;
     color: string;
+    adminOnly?: boolean;
 }
 
 export const SETTINGS_ITEMS: SettingsItemConfig[] = [
@@ -74,5 +76,14 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         defaultLabel: "Хранилище и данные",
         path: ROUTES.SETTINGS_STORAGE,
         color: "aqua",
+    },
+    {
+        key: "broadcast",
+        icon: Megaphone,
+        labelKey: "settings.broadcast.broadcast",
+        defaultLabel: "Рассылки (Админ)",
+        path: ROUTES.SETTINGS_BROADCAST,
+        color: "red",
+        adminOnly: true,
     },
 ];

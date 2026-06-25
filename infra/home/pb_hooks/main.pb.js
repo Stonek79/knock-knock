@@ -432,7 +432,113 @@ onBootstrap((e) => {
 });
 
 /**
- * 6. КАСТОМНЫЕ ЭНДПОИНТЫ ДЛЯ ПОИСКА КОНТАКТОВ (АНАЛОГ TELEGRAM)
+ * 6. CRON ЗАДАЧИ
+ */
+
+// 6.1. Очистка старых системных сообщений (старше 30 дней) - запускается каждую ночь в 3:00
+cronAdd("cleanup_system_messages", "0 3 * * *", () => {
+	const DB = require(`${__hooks}/db.js`);
+	console.log("🧹 [CRON] Запуск очистки старых системных сообщений...");
+	try {
+		// В SQLite функции datetime работают с форматом "YYYY-MM-DD HH:MM:SSZ",
+		// PocketBase хранит даты именно в таком виде.
+		const result = $app
+			.db()
+			.newQuery(
+				`DELETE FROM ${DB.TABLES.MESSAGES}
+            WHERE created < datetime('now', '-30 days')
+            AND room IN (SELECT id FROM ${DB.TABLES.ROOMS} WHERE type = 'system')`,
+			)
+			.execute();
+
+		console.log(
+			`🧹 [CRON] Удалено старых системных сообщений: ${result.rowsAffected() || 0}`,
+		);
+	} catch (err) {
+		console.error(`❌ [CRON_ERROR] Ошибка очистки: ${err.message || err}`);
+	}
+});
+
+// 6.2. Фоновая рассылка Broadcast сообщений - запускается каждую минуту
+cronAdd("process_broadcasts", "* * * * *", () => {
+	const DB = require(`${__hooks}/db.js`);
+	try {
+		const tasks = $app.findRecordsByFilter(
+			DB.TABLES.TASK_QUEUE,
+			`type = '${DB.VALUES.TASK_TYPE_BROADCAST}' && status = '${DB.VALUES.STATUS_PENDING}'`,
+			"",
+			10, // берем пачками
+			0,
+		);
+
+		if (tasks.length === 0) {
+			return;
+		}
+
+		for (const task of tasks) {
+			task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_PROCESSING);
+			$app.save(task);
+
+			try {
+				const payload = task.get(DB.FIELDS.PAYLOAD);
+				const text = payload.text;
+				const adminId = payload.adminId;
+
+				// Находим все системные комнаты пользователей
+				const sysRooms = $app.findRecordsByFilter(
+					DB.TABLES.ROOMS,
+					`type = 'system'`,
+					"",
+					100000,
+					0,
+				);
+
+				const messageCollection = $app.findCollectionByNameOrId(
+					DB.TABLES.MESSAGES,
+				);
+				let successCount = 0;
+
+				for (const room of sysRooms) {
+					const msg = new Record(messageCollection, {
+						content: text,
+						room: room.id,
+						sender: adminId,
+						type: "text",
+					});
+
+					try {
+						$app.saveNoValidate(msg);
+						successCount++;
+					} catch (e) {
+						// Игнорируем ошибку конкретного сообщения
+						console.error(
+							`❌ [BROADCAST_ERROR] Ошибка отправки в комнату ${room.id}: ${e.message || e}`,
+						);
+					}
+				}
+
+				console.log(
+					`📣 [BROADCAST] Успешно отправлено ${successCount} сообщений (Task ID: ${task.id})`,
+				);
+
+				task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_COMPLETED);
+				$app.save(task);
+			} catch (innerErr) {
+				console.error(
+					`❌ [BROADCAST_ERROR] Ошибка выполнения задачи: ${innerErr.message || innerErr}`,
+				);
+				task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_FAILED);
+				task.set(DB.FIELDS.LAST_ERROR, String(innerErr.message || innerErr));
+				$app.save(task);
+			}
+		}
+	} catch (err) {
+		console.error(`❌ [BROADCAST_ERROR] Общая ошибка: ${err.message || err}`);
+	}
+});
+
+/**
+ * 7. КАСТОМНЫЕ ЭНДПОИНТЫ ДЛЯ ПОИСКА КОНТАКТОВ (АНАЛОГ TELEGRAM)
  * Позволяет получать список контактов и искать пользователей по username,
  * не открывая глобальный listRule для всех.
  *
@@ -440,6 +546,49 @@ onBootstrap((e) => {
  * проверяет JWT-токен из заголовка Authorization и заполняет e.auth.
  * Документация: https://pocketbase.io/docs/js-routing/#retrieving-the-current-auth-state
  */
+
+/**
+ * POST /api/custom/broadcast
+ * Эндпоинт для отправки Broadcast-сообщений администратором.
+ */
+routerAdd(
+	"POST",
+	"/api/custom/broadcast",
+	(e) => {
+		const DB = require(`${__hooks}/db.js`);
+		const user = e.auth;
+
+		const isAdmin = user.get("role") === "admin";
+		if (!isAdmin) {
+			return e.json(403, { message: "Forbidden: Admins only" });
+		}
+
+		// Используем DynamicModel для парсинга тела запроса
+		const body = new DynamicModel({ text: "" });
+		e.bindBody(body);
+
+		if (!body.text || body.text.trim() === "") {
+			return e.json(400, { message: "Text field is required" });
+		}
+
+		const taskCollection = $app.findCollectionByNameOrId(DB.TABLES.TASK_QUEUE);
+		const task = new Record(taskCollection);
+
+		task.set(DB.FIELDS.TASK_KEY, `broadcast_${Date.now()}`);
+		task.set(DB.FIELDS.TYPE, DB.VALUES.TASK_TYPE_BROADCAST);
+		task.set(DB.FIELDS.PAYLOAD, { text: body.text, adminId: user.id });
+		task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_PENDING);
+		task.set(
+			DB.FIELDS.RUN_AT,
+			new Date().toISOString().replace("T", " ").split(".")[0],
+		);
+
+		$app.save(task);
+
+		return e.json(200, { success: true, message: "Broadcast task created" });
+	},
+	$apis.requireAuth(),
+);
 
 /**
  * GET /api/custom/users/contacts
