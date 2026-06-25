@@ -18,4 +18,5 @@ export const QUERY_KEYS = {
     favoritesRoom: (userId?: string) => ["favorites-room", userId] as const,
     media: (mediaId?: string | null, userId?: string | null) =>
         ["media", mediaId, userId] as const,
+    broadcastHistory: () => ["broadcast-history"] as const,
 } as const;

@@ -50,7 +50,11 @@ function createMediaWorkerClient() {
      * Инициализация воркера.
      */
     const initWorker = () => {
-        if (typeof window === "undefined" || worker instanceof Worker) {
+        if (
+            typeof window === "undefined" ||
+            typeof Worker === "undefined" ||
+            (worker !== null && !(worker instanceof Error))
+        ) {
             return;
         }
 
@@ -130,7 +134,7 @@ function createMediaWorkerClient() {
          * Очистка ресурсов воркера.
          */
         destroy: () => {
-            if (worker instanceof Worker) {
+            if (typeof Worker !== "undefined" && worker instanceof Worker) {
                 worker.terminate();
             }
             worker = null;

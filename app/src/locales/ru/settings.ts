@@ -71,5 +71,10 @@ export const settings = {
         placeholder: "Введите текст уведомления...",
         send: "Отправить рассылку",
         success: "Рассылка успешно добавлена в очередь!",
+        history: "История рассылок",
+        mediaBroadcast: "Медиа-рассылка",
+        deleteConfirm: "Удалить рассылку у всех пользователей?",
+        deleteSuccess: "Рассылка успешно удалена",
+        deleteError: "Ошибка при удалении",
     },
 } as const;

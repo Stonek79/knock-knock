@@ -163,6 +163,7 @@ export function MessageList({
                         senderName={msg.profiles?.display_name}
                         senderAvatar={msg.profiles?.avatar_url ?? undefined}
                         status={msg.status}
+                        isSystem={msg.type === "system"}
                         isEdited={msg.is_edited}
                         isDeleted={msg.is_deleted}
                         isStarred={msg.is_starred}

@@ -483,6 +483,8 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 				const payload = task.get(DB.FIELDS.PAYLOAD);
 				const text = payload.text;
 				const adminId = payload.adminId;
+				const attachments = payload.attachments || [];
+				const broadcastId = task.getString(DB.FIELDS.TASK_KEY);
 
 				// Находим все системные комнаты пользователей
 				const sysRooms = $app.findRecordsByFilter(
@@ -503,7 +505,9 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 						content: text,
 						room: room.id,
 						sender: adminId,
-						type: "text",
+						type: "system",
+						attachments: attachments,
+						metadata: { broadcast_id: broadcastId },
 					});
 
 					try {
@@ -563,20 +567,23 @@ routerAdd(
 			return e.json(403, { message: "Forbidden: Admins only" });
 		}
 
-		// Используем DynamicModel для парсинга тела запроса
-		const body = new DynamicModel({ text: "" });
-		e.bindBody(body);
+		const info = e.requestInfo();
+		const text = info?.body?.text || "";
+		const attachments = info?.body?.attachments || [];
 
-		if (!body.text || body.text.trim() === "") {
-			return e.json(400, { message: "Text field is required" });
+		if (!text || typeof text !== "string" || text.trim() === "") {
+			if (attachments.length === 0) {
+				return e.json(400, { message: "Text or attachments required" });
+			}
 		}
 
 		const taskCollection = $app.findCollectionByNameOrId(DB.TABLES.TASK_QUEUE);
 		const task = new Record(taskCollection);
 
-		task.set(DB.FIELDS.TASK_KEY, `broadcast_${Date.now()}`);
+		const broadcastId = `broadcast_${Date.now()}`;
+		task.set(DB.FIELDS.TASK_KEY, broadcastId);
 		task.set(DB.FIELDS.TYPE, DB.VALUES.TASK_TYPE_BROADCAST);
-		task.set(DB.FIELDS.PAYLOAD, { text: body.text, adminId: user.id });
+		task.set(DB.FIELDS.PAYLOAD, { text: text, attachments: attachments, adminId: user.id });
 		task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_PENDING);
 		task.set(
 			DB.FIELDS.RUN_AT,
@@ -586,6 +593,127 @@ routerAdd(
 		$app.save(task);
 
 		return e.json(200, { success: true, message: "Broadcast task created" });
+	},
+	$apis.requireAuth(),
+);
+
+/**
+ * GET /api/custom/broadcast/history
+ * Возвращает историю рассылок (записи task_queue с типом 'broadcast').
+ * Прямой доступ к коллекции закрыт правилами PocketBase, поэтому
+ * используем серверный хук, который работает с привилегиями приложения.
+ */
+routerAdd(
+	"GET",
+	"/api/custom/broadcast/history",
+	(e) => {
+		const DB = require(`${__hooks}/db.js`);
+		const user = e.auth;
+
+		if (user.get("role") !== "admin") {
+			return e.json(403, { message: "Forbidden: Admins only" });
+		}
+
+		try {
+			const records = $app.findRecordsByFilter(
+				DB.TABLES.TASK_QUEUE,
+				`type = '${DB.VALUES.TASK_TYPE_BROADCAST}'`,
+				"-created",
+				50,
+				0,
+			);
+
+			const items = records.map((r) => ({
+				id: r.id,
+				task_key: r.getString(DB.FIELDS.TASK_KEY),
+				type: r.getString(DB.FIELDS.TYPE),
+				status: r.getString(DB.FIELDS.STATUS),
+				payload: r.get(DB.FIELDS.PAYLOAD),
+				created: r.created,
+				updated: r.updated,
+			}));
+
+			return e.json(200, {
+				page: 1,
+				perPage: 50,
+				totalItems: items.length,
+				totalPages: 1,
+				items,
+			});
+		} catch (err) {
+			console.error("Broadcast history error:", err);
+			return e.json(500, { message: "Internal server error" });
+		}
+	},
+	$apis.requireAuth(),
+);
+
+/**
+ * DELETE /api/custom/broadcast/:id
+ * Эндпоинт для отзыва (жесткого удаления) Broadcast-сообщения администратором.
+ */
+routerAdd(
+	"DELETE",
+	"/api/custom/broadcast/:id",
+	(e) => {
+		const DB = require(`${__hooks}/db.js`);
+		const user = e.auth;
+
+		if (user.get("role") !== "admin") {
+			return e.json(403, { message: "Forbidden: Admins only" });
+		}
+
+		const broadcastId = e.request.pathValue("id");
+		if (!broadcastId) {
+			return e.json(400, { message: "Broadcast ID is required" });
+		}
+
+		try {
+			// В PocketBase v0.23 фильтрация по JSON-полям делается через Like оператор или json_extract
+			const messages = $app.findRecordsByFilter(
+				DB.TABLES.MESSAGES,
+				`metadata~'"broadcast_id":"${broadcastId}"'`,
+				"",
+				100000,
+				0,
+			);
+
+			for (const msg of messages) {
+				$app.delete(msg);
+			}
+
+			// Находим саму задачу
+			const tasks = $app.findRecordsByFilter(
+				DB.TABLES.TASK_QUEUE,
+				`task_key = '${broadcastId}'`,
+				"",
+				1,
+				0,
+			);
+			
+			if (tasks.length > 0) {
+				const task = tasks[0];
+				const payload = task.get(DB.FIELDS.PAYLOAD) || {};
+				const attachments = payload.attachments || [];
+
+				$app.delete(task);
+
+				// Пытаемся удалить вложения
+				for (const mediaId of attachments) {
+					try {
+						const mediaRecord = $app.findRecordById("media", mediaId);
+						$app.delete(mediaRecord);
+					} catch (err) {
+						console.error(`Failed to delete media ${mediaId}:`, err);
+					}
+				}
+			}
+
+			return e.json(200, { success: true, deleted: messages.length });
+		} catch (err) {
+			console.error("Broadcast delete error:", err);
+			return e.json(500, { message: "Internal server error" });
+		}
 	},
 	$apis.requireAuth(),
 );

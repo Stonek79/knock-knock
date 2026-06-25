@@ -70,5 +70,10 @@ export const settings = {
         placeholder: "Enter notification text...",
         send: "Send broadcast",
         success: "Broadcast successfully queued!",
+        history: "Broadcast History",
+        mediaBroadcast: "Media broadcast",
+        deleteConfirm: "Delete broadcast for all users?",
+        deleteSuccess: "Broadcast successfully deleted",
+        deleteError: "Error deleting broadcast",
     },
 } as const;

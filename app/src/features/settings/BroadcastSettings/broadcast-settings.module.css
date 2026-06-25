@@ -24,3 +24,12 @@
     margin-top: var(--space-4);
     margin-bottom: var(--space-4);
 }
+
+.historySection {
+    margin-top: var(--space-6);
+}
+
+.historyItem {
+    padding: var(--space-3);
+    background-color: var(--color-bg-secondary);
+}

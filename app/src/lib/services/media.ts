@@ -157,6 +157,13 @@ let hasCleanedUp = false;
 
 export const mediaService = {
     /**
+     * Получение публичного URL для системного файла
+     */
+    getSystemFileUrl: (id: string, filename: string): string => {
+        return mediaRepository.getSystemFileUrl(id, filename);
+    },
+
+    /**
      * Получение превью для ленты сообщений.
      * Умная логика: если файл Аудио или Документ, качаем оригинал.
      */

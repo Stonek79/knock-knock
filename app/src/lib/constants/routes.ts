@@ -33,4 +33,6 @@ export const API_ROUTES = {
     USERS_CONTACTS: "/api/custom/users/contacts",
     INVITES_GENERATE: "/api/custom/invites/generate",
     BROADCAST_SEND: "/api/custom/broadcast",
+    BROADCAST_HISTORY: "/api/custom/broadcast/history",
+    BROADCAST_DELETE: (id: string) => `/api/custom/broadcast/${id}`,
 } as const;

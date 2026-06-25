@@ -55,6 +55,7 @@ interface MessageBubbleProps {
     roomKey?: CryptoKey;
     roomType?: RoomType;
     userId: string;
+    isSystem?: boolean;
 }
 
 /**
@@ -85,6 +86,7 @@ export function MessageBubble({
     roomKey,
     roomType,
     userId,
+    isSystem = false,
 }: MessageBubbleProps) {
     const { t } = useTranslation();
     const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
@@ -331,6 +333,7 @@ export function MessageBubble({
                         userId={userId}
                         onMediaError={setHasMediaError}
                         isFailed={showError}
+                        isSystem={isSystem}
                     />
                 )}
                 {isDeleted ? (

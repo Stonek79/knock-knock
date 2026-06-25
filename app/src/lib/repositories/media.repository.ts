@@ -69,6 +69,15 @@ export const mediaRepository = {
     },
 
     /**
+     * Получение публичного URL системного файла (когда нет полного record)
+     */
+    getSystemFileUrl: (id: string, filename: string): string => {
+        return pb.buildUrl(
+            `/api/files/${STORAGE_CONFIG.MEDIA_COLLECTION}/${id}/${filename}`,
+        );
+    },
+
+    /**
      * Скачивание файла с авторизацией (PocketBase).
      * @param url Полный URL файла
      * @returns Result с Blob или Error

@@ -18,6 +18,7 @@ import {
     OPTIMISTIC_ID_PREFIX,
 } from "@/lib/constants";
 import { useMedia } from "@/lib/mediadb/useMedia";
+import { mediaService } from "@/lib/services/media";
 import type { Attachment } from "@/lib/types";
 import { AudioMessagePlayer } from "../../../AudioMessagePlayer";
 import { DocumentAttachmentCard } from "../DocumentAttachmentCard";
@@ -35,6 +36,7 @@ interface AttachmentRendererProps {
     userId: string;
     onMediaError?: (hasError: boolean) => void;
     isFailed?: boolean;
+    isSystem?: boolean;
 }
 
 /**
@@ -86,6 +88,7 @@ function CachedImage({
     userId,
     onErrorStateChange,
     isSingle,
+    isSystem,
 }: {
     att: Attachment;
     index: number;
@@ -97,10 +100,11 @@ function CachedImage({
     userId: string;
     onErrorStateChange?: (id: string, hasError: boolean) => void;
     isSingle: boolean;
+    isSystem?: boolean;
 }) {
     // Получаем оригинальный URL, URL превью и метаданные
     const { objectUrl, thumbnailUrl, isLoading, error, metadata } = useMedia({
-        mediaId: att.id,
+        mediaId: isSystem ? undefined : att.id,
         roomKey,
         isVault,
         userId,
@@ -115,7 +119,12 @@ function CachedImage({
     const isBlob =
         typeof att.url === "string" &&
         att.url.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX);
-    const displayUrl = isBlob ? att.url : thumbnailUrl || objectUrl;
+    const systemUrl = isSystem
+        ? mediaService.getSystemFileUrl(att.id, att.file_name)
+        : undefined;
+    const displayUrl = isBlob
+        ? att.url
+        : systemUrl || thumbnailUrl || objectUrl;
 
     const showPlaceholder =
         !displayUrl && (imageErrors[att.id] || !!error || isLoading);
@@ -176,6 +185,7 @@ function CachedVideo({
     onErrorStateChange,
     isFailed,
     isSingle,
+    isSystem,
 }: {
     att: Attachment;
     index: number;
@@ -186,9 +196,10 @@ function CachedVideo({
     onErrorStateChange?: (id: string, hasError: boolean) => void;
     isFailed?: boolean;
     isSingle: boolean;
+    isSystem?: boolean;
 }) {
     const { objectUrl, thumbnailUrl, isLoading, error, metadata } = useMedia({
-        mediaId: att.id,
+        mediaId: isSystem ? undefined : att.id,
         roomKey,
         isVault,
         userId,
@@ -204,7 +215,10 @@ function CachedVideo({
     const isBlob =
         typeof att.url === "string" &&
         att.url.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX);
-    const displayUrl = isBlob ? att.url : objectUrl;
+    const systemUrl = isSystem
+        ? mediaService.getSystemFileUrl(att.id, att.file_name)
+        : undefined;
+    const displayUrl = isBlob ? att.url : systemUrl || objectUrl;
 
     const isVideoLoading =
         (isLoading || att.id.startsWith(OPTIMISTIC_ID_PREFIX)) && !isFailed;
@@ -318,6 +332,7 @@ export function AttachmentRenderer({
     userId,
     onMediaError,
     isFailed = false,
+    isSystem = false,
 }: AttachmentRendererProps) {
     const mediaAttachments = useMemo(
         () =>
@@ -407,6 +422,7 @@ export function AttachmentRenderer({
                                 userId={userId}
                                 onErrorStateChange={handleMediaErrorStateChange}
                                 isSingle={isSingle}
+                                isSystem={isSystem}
                             />
                         );
                     } else {
@@ -422,6 +438,7 @@ export function AttachmentRenderer({
                                 onErrorStateChange={handleMediaErrorStateChange}
                                 isFailed={isFailed}
                                 isSingle={isSingle}
+                                isSystem={isSystem}
                             />
                         );
                     }
