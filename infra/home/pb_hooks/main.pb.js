@@ -486,8 +486,13 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 				const attachments = payload.attachments || [];
 				const broadcastId = task.getString(DB.FIELDS.TASK_KEY);
 
-				// Находим все системные комнаты пользователей
-				const sysRooms = $app.findRecordsByFilter(
+				// Получаем коллекции
+				const roomCollection = $app.findCollectionByNameOrId(DB.TABLES.ROOMS);
+				const memberCollection = $app.findCollectionByNameOrId(DB.TABLES.MEMBERS);
+				const messageCollection = $app.findCollectionByNameOrId(DB.TABLES.MESSAGES);
+
+				// 1. Находим все существующие системные комнаты
+				const existingSysRooms = $app.findRecordsByFilter(
 					DB.TABLES.ROOMS,
 					`type = 'system'`,
 					"",
@@ -495,9 +500,66 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 					0,
 				);
 
-				const messageCollection = $app.findCollectionByNameOrId(
-					DB.TABLES.MESSAGES,
+				// Строим индекс по ID для быстрой проверки
+				const existingRoomIds = {};
+				for (const r of existingSysRooms) {
+					existingRoomIds[r.id] = true;
+				}
+
+				// 2. Самовосстановление: создаём системные комнаты для пользователей,
+				//    которые зарегистрировались ДО внедрения функционала broadcast.
+				const allUsers = $app.findRecordsByFilter(
+					DB.TABLES.USERS,
+					"",
+					"",
+					100000,
+					0,
 				);
+
+				// Собираем итоговый список системных комнат (существующие + новые)
+				const sysRooms = [...existingSysRooms];
+				let autoCreatedCount = 0;
+
+				for (const u of allUsers) {
+					const deterministicId = $security.md5(`${u.id}system`).substring(0, 15);
+					if (existingRoomIds[deterministicId]) {
+						continue;
+					}
+					try {
+						const newRoom = new Record(roomCollection, {
+							[DB.FIELDS.ID]: deterministicId,
+							[DB.FIELDS.TYPE]: "system",
+							[DB.FIELDS.NAME]: "Knock-Knock System",
+							[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
+							[DB.FIELDS.CREATED_BY]: u.id,
+						});
+						$app.saveNoValidate(newRoom);
+
+						const newMember = new Record(memberCollection, {
+							[DB.FIELDS.ROOM]: newRoom.id,
+							[DB.FIELDS.USER]: u.id,
+							[DB.FIELDS.ROLE]: "member",
+							[DB.FIELDS.UNREAD_COUNT]: 0,
+						});
+						$app.saveNoValidate(newMember);
+
+						sysRooms.push(newRoom);
+						existingRoomIds[deterministicId] = true;
+						autoCreatedCount++;
+					} catch (createErr) {
+						console.error(
+							`❌ [BROADCAST] Не удалось создать системную комнату для пользователя ${u.id}: ${createErr.message || createErr}`,
+						);
+					}
+				}
+
+				if (autoCreatedCount > 0) {
+					console.log(
+						`📣 [BROADCAST] Автосоздано системных комнат (миграция): ${autoCreatedCount}`,
+					);
+				}
+
+				// 3. Отправляем broadcast-сообщение во все системные комнаты
 				let successCount = 0;
 
 				for (const room of sysRooms) {
@@ -514,7 +576,6 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 						$app.saveNoValidate(msg);
 						successCount++;
 					} catch (e) {
-						// Игнорируем ошибку конкретного сообщения
 						console.error(
 							`❌ [BROADCAST_ERROR] Ошибка отправки в комнату ${room.id}: ${e.message || e}`,
 						);
@@ -568,8 +629,30 @@ routerAdd(
 		}
 
 		const info = e.requestInfo();
-		const text = info?.body?.text || "";
-		const attachments = info?.body?.attachments || [];
+
+		// Диагностика: выводим что реально пришло в теле запроса
+		console.log(`[BROADCAST] info.body: ${JSON.stringify(info?.body)}`);
+
+		// Основной способ (PocketBase v0.23+): requestInfo().body
+		let bodyData = info?.body || {};
+
+		// Fallback: если body пустой — читаем сырое тело и парсим сами.
+		// В PocketBase v0.25+ при использовании routerAdd с middleware
+		// тело иногда не попадает в requestInfo().body автоматически.
+		if (!bodyData.text && !bodyData.attachments) {
+			try {
+				const rawBody = toString(e.request.body);
+				console.log(`[BROADCAST] raw body fallback: ${rawBody}`);
+				if (rawBody) {
+					bodyData = JSON.parse(rawBody);
+				}
+			} catch (parseErr) {
+				console.error(`[BROADCAST] Ошибка парсинга raw body: ${parseErr}`);
+			}
+		}
+
+		const text = typeof bodyData.text === "string" ? bodyData.text : "";
+		const attachments = Array.isArray(bodyData.attachments) ? bodyData.attachments : [];
 
 		if (!text || typeof text !== "string" || text.trim() === "") {
 			if (attachments.length === 0) {
@@ -712,6 +795,104 @@ routerAdd(
 			return e.json(200, { success: true, deleted: messages.length });
 		} catch (err) {
 			console.error("Broadcast delete error:", err);
+			return e.json(500, { message: "Internal server error" });
+		}
+	},
+	$apis.requireAuth(),
+);
+
+/**
+ * POST /api/custom/admin/migrate-system-rooms
+ * Одноразовая миграция: создаёт системные комнаты для пользователей,
+ * зарегистрировавшихся ДО внедрения функционала Broadcast.
+ * Операция идемпотентна — безопасна для повторного вызова.
+ */
+routerAdd(
+	"POST",
+	"/api/custom/admin/migrate-system-rooms",
+	(e) => {
+		const DB = require(`${__hooks}/db.js`);
+		const user = e.auth;
+
+		if (user.get("role") !== "admin") {
+			return e.json(403, { message: "Forbidden: Admins only" });
+		}
+
+		try {
+			const roomCollection = $app.findCollectionByNameOrId(DB.TABLES.ROOMS);
+			const memberCollection = $app.findCollectionByNameOrId(DB.TABLES.MEMBERS);
+
+			// Индексируем все существующие системные комнаты
+			const existingSysRooms = $app.findRecordsByFilter(
+				DB.TABLES.ROOMS,
+				`type = 'system'`,
+				"",
+				100000,
+				0,
+			);
+			const existingRoomIds = {};
+			for (const r of existingSysRooms) {
+				existingRoomIds[r.id] = true;
+			}
+
+			// Проходим всех пользователей
+			const allUsers = $app.findRecordsByFilter(
+				DB.TABLES.USERS,
+				"",
+				"",
+				100000,
+				0,
+			);
+
+			let createdCount = 0;
+			let skippedCount = 0;
+
+			for (const u of allUsers) {
+				const deterministicId = $security.md5(`${u.id}system`).substring(0, 15);
+
+				if (existingRoomIds[deterministicId]) {
+					skippedCount++;
+					continue;
+				}
+
+				try {
+					const sysRoom = new Record(roomCollection, {
+						[DB.FIELDS.ID]: deterministicId,
+						[DB.FIELDS.TYPE]: "system",
+						[DB.FIELDS.NAME]: "Knock-Knock System",
+						[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
+						[DB.FIELDS.CREATED_BY]: u.id,
+					});
+					$app.saveNoValidate(sysRoom);
+
+					const sysMember = new Record(memberCollection, {
+						[DB.FIELDS.ROOM]: sysRoom.id,
+						[DB.FIELDS.USER]: u.id,
+						[DB.FIELDS.ROLE]: "member",
+						[DB.FIELDS.UNREAD_COUNT]: 0,
+					});
+					$app.saveNoValidate(sysMember);
+
+					createdCount++;
+					console.log(`✅ [MIGRATE_ROOMS] Создана системная комната для пользователя ${u.id}`);
+				} catch (createErr) {
+					console.error(
+						`❌ [MIGRATE_ROOMS] Ошибка создания для ${u.id}: ${createErr.message || createErr}`,
+					);
+				}
+			}
+
+			console.log(
+				`✅ [MIGRATE_ROOMS] Готово. Создано: ${createdCount}, уже существовало: ${skippedCount}`,
+			);
+
+			return e.json(200, {
+				success: true,
+				created: createdCount,
+				skipped: skippedCount,
+			});
+		} catch (err) {
+			console.error(`❌ [MIGRATE_ROOMS] Общая ошибка: ${err.message || err}`);
 			return e.json(500, { message: "Internal server error" });
 		}
 	},
