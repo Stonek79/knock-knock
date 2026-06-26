@@ -20,7 +20,7 @@ export function useUserManagement() {
     } = useQuery<Profile[]>({
         queryKey: QUERY_KEYS.adminUsers(search),
         queryFn: async () => {
-            const result = await userRepository.searchUsers(search);
+            const result = await userRepository.getAdminUsers(search);
 
             if (result.isErr()) {
                 throw result.error;

@@ -31,13 +31,13 @@ import { Route as AuthSettingsSecurityRouteImport } from './routes/_auth/setting
 import { Route as AuthSettingsProfileRouteImport } from './routes/_auth/settings/profile'
 import { Route as AuthSettingsPrivacyRouteImport } from './routes/_auth/settings/privacy'
 import { Route as AuthSettingsNotificationsRouteImport } from './routes/_auth/settings/notifications'
-import { Route as AuthSettingsBroadcastRouteImport } from './routes/_auth/settings/broadcast'
 import { Route as AuthSettingsAppearanceRouteImport } from './routes/_auth/settings/appearance'
 import { Route as AuthSettingsAccountRouteImport } from './routes/_auth/settings/account'
 import { Route as AuthFavoritesRoomIdRouteImport } from './routes/_auth/favorites.$roomId'
 import { Route as AuthDmUserIdRouteImport } from './routes/_auth/dm.$userId'
 import { Route as AuthChatRoomIdRouteImport } from './routes/_auth/chat/$roomId'
 import { Route as AuthAdminUsersRouteImport } from './routes/_auth/admin/users'
+import { Route as AuthAdminBroadcastRouteImport } from './routes/_auth/admin/broadcast'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -149,11 +149,6 @@ const AuthSettingsNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthSettingsRoute,
   } as any)
-const AuthSettingsBroadcastRoute = AuthSettingsBroadcastRouteImport.update({
-  id: '/broadcast',
-  path: '/broadcast',
-  getParentRoute: () => AuthSettingsRoute,
-} as any)
 const AuthSettingsAppearanceRoute = AuthSettingsAppearanceRouteImport.update({
   id: '/appearance',
   path: '/appearance',
@@ -184,6 +179,11 @@ const AuthAdminUsersRoute = AuthAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthAdminRoute,
 } as any)
+const AuthAdminBroadcastRoute = AuthAdminBroadcastRouteImport.update({
+  id: '/broadcast',
+  path: '/broadcast',
+  getParentRoute: () => AuthAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -198,13 +198,13 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthProfileRoute
   '/settings': typeof AuthSettingsRouteWithChildren
   '/auth/verify': typeof AuthVerifyRoute
+  '/admin/broadcast': typeof AuthAdminBroadcastRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/chat/$roomId': typeof AuthChatRoomIdRoute
   '/dm/$userId': typeof AuthDmUserIdRoute
   '/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
   '/settings/account': typeof AuthSettingsAccountRoute
   '/settings/appearance': typeof AuthSettingsAppearanceRoute
-  '/settings/broadcast': typeof AuthSettingsBroadcastRoute
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/settings/privacy': typeof AuthSettingsPrivacyRoute
   '/settings/profile': typeof AuthSettingsProfileRoute
@@ -224,13 +224,13 @@ export interface FileRoutesByTo {
   '/favorites': typeof AuthFavoritesRouteWithChildren
   '/profile': typeof AuthProfileRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/admin/broadcast': typeof AuthAdminBroadcastRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/chat/$roomId': typeof AuthChatRoomIdRoute
   '/dm/$userId': typeof AuthDmUserIdRoute
   '/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
   '/settings/account': typeof AuthSettingsAccountRoute
   '/settings/appearance': typeof AuthSettingsAppearanceRoute
-  '/settings/broadcast': typeof AuthSettingsBroadcastRoute
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/settings/privacy': typeof AuthSettingsPrivacyRoute
   '/settings/profile': typeof AuthSettingsProfileRoute
@@ -256,13 +256,13 @@ export interface FileRoutesById {
   '/_auth/profile': typeof AuthProfileRoute
   '/_auth/settings': typeof AuthSettingsRouteWithChildren
   '/auth/verify': typeof AuthVerifyRoute
+  '/_auth/admin/broadcast': typeof AuthAdminBroadcastRoute
   '/_auth/admin/users': typeof AuthAdminUsersRoute
   '/_auth/chat/$roomId': typeof AuthChatRoomIdRoute
   '/_auth/dm/$userId': typeof AuthDmUserIdRoute
   '/_auth/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
   '/_auth/settings/account': typeof AuthSettingsAccountRoute
   '/_auth/settings/appearance': typeof AuthSettingsAppearanceRoute
-  '/_auth/settings/broadcast': typeof AuthSettingsBroadcastRoute
   '/_auth/settings/notifications': typeof AuthSettingsNotificationsRoute
   '/_auth/settings/privacy': typeof AuthSettingsPrivacyRoute
   '/_auth/settings/profile': typeof AuthSettingsProfileRoute
@@ -288,13 +288,13 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/auth/verify'
+    | '/admin/broadcast'
     | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
     | '/favorites/$roomId'
     | '/settings/account'
     | '/settings/appearance'
-    | '/settings/broadcast'
     | '/settings/notifications'
     | '/settings/privacy'
     | '/settings/profile'
@@ -314,13 +314,13 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/profile'
     | '/auth/verify'
+    | '/admin/broadcast'
     | '/admin/users'
     | '/chat/$roomId'
     | '/dm/$userId'
     | '/favorites/$roomId'
     | '/settings/account'
     | '/settings/appearance'
-    | '/settings/broadcast'
     | '/settings/notifications'
     | '/settings/privacy'
     | '/settings/profile'
@@ -345,13 +345,13 @@ export interface FileRouteTypes {
     | '/_auth/profile'
     | '/_auth/settings'
     | '/auth/verify'
+    | '/_auth/admin/broadcast'
     | '/_auth/admin/users'
     | '/_auth/chat/$roomId'
     | '/_auth/dm/$userId'
     | '/_auth/favorites/$roomId'
     | '/_auth/settings/account'
     | '/_auth/settings/appearance'
-    | '/_auth/settings/broadcast'
     | '/_auth/settings/notifications'
     | '/_auth/settings/privacy'
     | '/_auth/settings/profile'
@@ -527,13 +527,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSettingsNotificationsRouteImport
       parentRoute: typeof AuthSettingsRoute
     }
-    '/_auth/settings/broadcast': {
-      id: '/_auth/settings/broadcast'
-      path: '/broadcast'
-      fullPath: '/settings/broadcast'
-      preLoaderRoute: typeof AuthSettingsBroadcastRouteImport
-      parentRoute: typeof AuthSettingsRoute
-    }
     '/_auth/settings/appearance': {
       id: '/_auth/settings/appearance'
       path: '/appearance'
@@ -576,15 +569,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAdminUsersRouteImport
       parentRoute: typeof AuthAdminRoute
     }
+    '/_auth/admin/broadcast': {
+      id: '/_auth/admin/broadcast'
+      path: '/broadcast'
+      fullPath: '/admin/broadcast'
+      preLoaderRoute: typeof AuthAdminBroadcastRouteImport
+      parentRoute: typeof AuthAdminRoute
+    }
   }
 }
 
 interface AuthAdminRouteChildren {
+  AuthAdminBroadcastRoute: typeof AuthAdminBroadcastRoute
   AuthAdminUsersRoute: typeof AuthAdminUsersRoute
   AuthAdminIndexRoute: typeof AuthAdminIndexRoute
 }
 
 const AuthAdminRouteChildren: AuthAdminRouteChildren = {
+  AuthAdminBroadcastRoute: AuthAdminBroadcastRoute,
   AuthAdminUsersRoute: AuthAdminUsersRoute,
   AuthAdminIndexRoute: AuthAdminIndexRoute,
 }
@@ -634,7 +636,6 @@ const AuthPrivateRouteWithChildren = AuthPrivateRoute._addFileChildren(
 interface AuthSettingsRouteChildren {
   AuthSettingsAccountRoute: typeof AuthSettingsAccountRoute
   AuthSettingsAppearanceRoute: typeof AuthSettingsAppearanceRoute
-  AuthSettingsBroadcastRoute: typeof AuthSettingsBroadcastRoute
   AuthSettingsNotificationsRoute: typeof AuthSettingsNotificationsRoute
   AuthSettingsPrivacyRoute: typeof AuthSettingsPrivacyRoute
   AuthSettingsProfileRoute: typeof AuthSettingsProfileRoute
@@ -646,7 +647,6 @@ interface AuthSettingsRouteChildren {
 const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
   AuthSettingsAccountRoute: AuthSettingsAccountRoute,
   AuthSettingsAppearanceRoute: AuthSettingsAppearanceRoute,
-  AuthSettingsBroadcastRoute: AuthSettingsBroadcastRoute,
   AuthSettingsNotificationsRoute: AuthSettingsNotificationsRoute,
   AuthSettingsPrivacyRoute: AuthSettingsPrivacyRoute,
   AuthSettingsProfileRoute: AuthSettingsProfileRoute,

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { MEMBER_ROLE, ROOM_MEMBER_FIELDS } from "@/lib/constants";
+import { ROOM_MEMBER_FIELDS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { roomRepository } from "@/lib/repositories/room.repository";
 import { MessageService } from "@/lib/services/message";
@@ -127,7 +127,6 @@ export function useUnreadTracking(
             const updateResult = await roomRepository.updateMember(member.id, {
                 [ROOM_MEMBER_FIELDS.LAST_READ_AT]: message.created,
                 [ROOM_MEMBER_FIELDS.UNREAD_COUNT]: newUnreadCount,
-                [ROOM_MEMBER_FIELDS.ROLE]: member.role || MEMBER_ROLE.MEMBER,
             });
 
             if (updateResult.isOk()) {

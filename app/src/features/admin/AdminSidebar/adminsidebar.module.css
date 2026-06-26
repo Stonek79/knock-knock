@@ -1,0 +1,35 @@
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.desktopItem {
+    padding: var(--space-3) var(--space-4);
+    color: var(--muted);
+    text-decoration: none;
+    transition: all var(--transition-base);
+    border-radius: var(--kk-radius-md);
+    margin: 0 var(--space-2);
+}
+
+.desktopItem:hover {
+    background: var(--glass-hover-bg);
+    color: var(--foreground);
+}
+
+.active {
+    background: var(--glass-bg);
+    color: var(--accent-primary);
+    font-weight: var(--font-weight-medium);
+    border: 1px solid var(--glass-border);
+}
+
+.icon {
+    color: var(--accent-primary);
+}
+
+.itemLabel {
+    font-size: var(--text-base);
+    color: inherit;
+}

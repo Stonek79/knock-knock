@@ -1,4 +1,5 @@
 import { useLocation } from "@tanstack/react-router";
+import { AdminSidebar } from "@/features/admin/AdminSidebar";
 import { CallsList } from "@/features/calls/CallsList";
 import { ChatList, FavoritesChatList } from "@/features/chat/list";
 import { ContactList } from "@/features/contacts/ContactList";
@@ -57,9 +58,14 @@ export function SidebarContent() {
         return <FavoritesChatList />;
     }
 
-    // Настройки и Админка
-    if (path.startsWith(ROUTES.SETTINGS) || path.startsWith(ROUTES.ADMIN)) {
+    // Настройки
+    if (path.startsWith(ROUTES.SETTINGS)) {
         return <SettingsSidebar />;
+    }
+
+    // Админка
+    if (path.startsWith(ROUTES.ADMIN)) {
+        return <AdminSidebar />;
     }
 
     return null;

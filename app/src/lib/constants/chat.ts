@@ -28,14 +28,6 @@ export const TYPING_CONFIG = {
     CHANNEL_PREFIX: "typing:",
 } as const;
 
-/** Типы вложений */
-export const ATTACHMENT_TYPES = {
-    IMAGE: "image",
-    VIDEO: "video",
-    AUDIO: "audio",
-    DOCUMENT: "document",
-} as const;
-
 /** Дефолтные значения для медиафайлов */
 export const MEDIA_DEFAULTS = {
     /** Метка голосового сообщения (ключ для i18n) */

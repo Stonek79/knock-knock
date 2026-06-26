@@ -1,12 +1,14 @@
 import {
     Bell,
     Database,
+    LayoutDashboard,
     Lock,
     Megaphone,
     Palette,
     Shield,
     ShieldCheck,
     User,
+    Users,
 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 
@@ -77,13 +79,31 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         path: ROUTES.SETTINGS_STORAGE,
         color: "aqua",
     },
+];
+
+export const ADMIN_ITEMS: SettingsItemConfig[] = [
+    {
+        key: "dashboard",
+        path: ROUTES.ADMIN,
+        icon: LayoutDashboard,
+        labelKey: "admin.menu.dashboard",
+        defaultLabel: "Панель управления",
+        color: "blue",
+    },
+    {
+        key: "users",
+        path: ROUTES.ADMIN_USERS,
+        icon: Users,
+        labelKey: "admin.menu.users",
+        defaultLabel: "Пользователи",
+        color: "green",
+    },
     {
         key: "broadcast",
+        path: ROUTES.ADMIN_BROADCAST,
         icon: Megaphone,
-        labelKey: "settings.broadcast.broadcast",
-        defaultLabel: "Рассылки (Админ)",
-        path: ROUTES.SETTINGS_BROADCAST,
-        color: "red",
-        adminOnly: true,
+        labelKey: "admin.menu.broadcast",
+        defaultLabel: "Рассылка",
+        color: "orange",
     },
 ];

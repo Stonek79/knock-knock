@@ -706,15 +706,43 @@ routerAdd(
 				0,
 			);
 
-			const items = records.map((r) => ({
-				id: r.id,
-				task_key: r.getString(DB.FIELDS.TASK_KEY),
-				type: r.getString(DB.FIELDS.TYPE),
-				status: r.getString(DB.FIELDS.STATUS),
-				payload: r.get(DB.FIELDS.PAYLOAD),
-				created: r.created,
-				updated: r.updated,
-			}));
+			const items = records.map((r) => {
+				const payload = r.get(DB.FIELDS.PAYLOAD) || {};
+				const attachmentIds = payload.attachments || [];
+				const mediaAttachments = [];
+
+				for (let i = 0; i < attachmentIds.length; i++) {
+					try {
+						const mediaRecord = $app.findRecordById("media", attachmentIds[i]);
+						if (mediaRecord) {
+							mediaAttachments.push({
+								id: mediaRecord.id,
+								file_name: mediaRecord.getString("file"),
+								file_size: mediaRecord.getInt("size"),
+								content_type: mediaRecord.getString("mime_type"),
+								type: mediaRecord.getString("type"),
+							});
+						}
+					} catch (mediaErr) {
+						console.error("Failed to load media info for broadcast history:", mediaErr);
+					}
+				}
+
+				return {
+					id: r.id,
+					task_key: r.getString(DB.FIELDS.TASK_KEY),
+					type: r.getString(DB.FIELDS.TYPE),
+					status: r.getString(DB.FIELDS.STATUS),
+					payload: {
+						text: payload.text || "",
+						adminId: payload.adminId || "",
+						attachments: attachmentIds,
+						mediaAttachments: mediaAttachments,
+					},
+					created: r.getString(DB.FIELDS.CREATED),
+					updated: r.getString(DB.FIELDS.UPDATED),
+				};
+			});
 
 			return e.json(200, {
 				page: 1,
@@ -958,9 +986,23 @@ routerAdd("GET", "/api/custom/users/contacts", (e) => {
  * Поиск пользователей по username или display_name.
  */
 routerAdd("GET", "/api/custom/users/search", (e) => {
+	const user = e.auth;
 	const q = e.request.url.query().get("q") || "";
+
 	if (!q) {
-		return e.json(200, []);
+		if (!user || user.get("role") !== "admin") {
+			return e.json(200, []);
+		}
+		try {
+			const users = $app.findRecordsByFilter("users", "", "-created", 50, 0);
+			return e.json(
+				200,
+				users.map((u) => u.publicExport()),
+			);
+		} catch (err) {
+			console.error("❌ [ADMIN_USERS] Ошибка:", err);
+			return e.json(500, { message: "Internal Server Error" });
+		}
 	}
 
 	try {

@@ -13,6 +13,7 @@ export const messageMetadataSchema = z
         reply_to_id: z.string().optional(), // ID сообщения, на которое дан ответ (для цитирования)
         forward_from_name: z.string().optional(), // Имя оригинального автора при пересылке
         forward_from_id: z.string().optional(), // ID оригинального автора при пересылке
+        broadcast_id: z.string().optional(), // ID рассылки (broadcast) для системных сообщений
     })
     .strict()
     .default({ deleted_by: [] });

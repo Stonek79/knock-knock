@@ -8,7 +8,7 @@ import { type RefObject, useImperativeHandle, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
-import { CLIENT_MESSAGE_STATUS } from "@/lib/constants";
+import { CLIENT_MESSAGE_STATUS, MESSAGE_TYPE } from "@/lib/constants";
 import type {
     ChatMessage,
     DecryptedMessageWithProfile,
@@ -163,7 +163,7 @@ export function MessageList({
                         senderName={msg.profiles?.display_name}
                         senderAvatar={msg.profiles?.avatar_url ?? undefined}
                         status={msg.status}
-                        isSystem={msg.type === "system"}
+                        isSystem={msg.type === MESSAGE_TYPE.SYSTEM}
                         isEdited={msg.is_edited}
                         isDeleted={msg.is_deleted}
                         isStarred={msg.is_starred}

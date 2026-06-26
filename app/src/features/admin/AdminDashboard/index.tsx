@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { AlertOctagon, ShieldAlert, Users } from "lucide-react";
+import { AlertOctagon, Megaphone, ShieldAlert, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { Grid } from "@/components/layout/Grid";
@@ -60,6 +60,23 @@ export function AdminDashboard() {
                         <Text size="xxl">--</Text>
                         <Button variant="soft" disabled>
                             {t("admin.viewBans", "View Bans")}
+                        </Button>
+                    </Flex>
+                </Card>
+
+                <Card>
+                    <Flex direction="column" gap="2">
+                        <Flex align="center" gap="2">
+                            <Megaphone />
+                            <Text weight="bold">
+                                {t("admin.broadcast", "Broadcast")}
+                            </Text>
+                        </Flex>
+                        <Text size="xxl">--</Text>
+                        <Button variant="soft" asChild>
+                            <Link to={ROUTES.ADMIN_BROADCAST}>
+                                {t("admin.manageBroadcast", "Manage Broadcast")}
+                            </Link>
                         </Button>
                     </Flex>
                 </Card>

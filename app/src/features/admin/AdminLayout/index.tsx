@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, useRouter } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
@@ -57,7 +56,7 @@ export function AdminLayout() {
         return null;
     }
 
-    const { display_name, role, username } = profile;
+    const { role } = profile;
 
     // Проверка роли администратора
     if (profile && role !== USER_ROLE.ADMIN) {
@@ -81,23 +80,6 @@ export function AdminLayout() {
 
     return (
         <div className={styles.adminContainer}>
-            <header className={styles.adminHeader}>
-                <Button onClick={() => router.history.back()}>
-                    <ArrowLeft />
-                </Button>
-                <Text weight="bold" size="lg">
-                    {t("admin.adminPanel", "Панель администратора")}
-                </Text>
-                <Flex gap="3" align="center">
-                    <Text size="md" intent="secondary">
-                        {t("admin.youAreAdmin", "Вы вошли как: ")}
-                        <Text weight="bold">
-                            {username || display_name || ""}
-                        </Text>{" "}
-                        <Text intent="secondary">({role})</Text>
-                    </Text>
-                </Flex>
-            </header>
             <main className={styles.adminContent}>
                 <Outlet />
             </main>

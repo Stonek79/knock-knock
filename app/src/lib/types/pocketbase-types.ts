@@ -24,7 +24,8 @@ export type CollectionName =
     | "push_subscriptions"
     | "media"
     | "task_queue"
-    | "call_logs";
+    | "call_logs"
+    | "invites";
 
 // Вспомогательные типы
 export type RecordIdString = string;
@@ -82,6 +83,7 @@ export type TaskQueueTypeOptions =
     | "email"
     | "media_cleanup"
     | "cleanup"
+    | "broadcast"
     | "test";
 
 export type TaskQueueStatusOptions =
@@ -98,6 +100,8 @@ export type CallLogsStatusOptions =
     | "ended"
     | "missed"
     | "rejected";
+
+export type InvitesStatusOptions = "active" | "used" | "revoked";
 
 // ---------------------------------------------------------------------------
 // Коллекция: _mfas
@@ -171,7 +175,7 @@ export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> &
 
 export type UsersRecord = {
     password: string;
-    email: string;
+    email?: string;
     display_name?: string;
     avatar?: string;
     username?: string;
@@ -183,6 +187,7 @@ export type UsersRecord = {
     public_key_x25519?: string;
     public_key_signing?: string;
     banned_until?: string;
+    invite_code?: RecordIdString;
 };
 
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> &
@@ -420,6 +425,20 @@ export type CallLogsRecord = {
 export type CallLogsResponse<Texpand = unknown> = Required<CallLogsRecord> &
     BaseSystemFields<Texpand>;
 
+// ---------------------------------------------------------------------------
+// Коллекция: invites
+// ---------------------------------------------------------------------------
+
+export type InvitesRecord = {
+    code: string;
+    created_by: RecordIdString;
+    used_by?: RecordIdString;
+    status: InvitesStatusOptions;
+};
+
+export type InvitesResponse<Texpand = unknown> = Required<InvitesRecord> &
+    BaseSystemFields<Texpand>;
+
 export type CollectionRecords = {
     _mfas: MfasRecord;
     _otps: OtpsRecord;
@@ -440,6 +459,7 @@ export type CollectionRecords = {
     media: MediaRecord;
     task_queue: TaskQueueRecord;
     call_logs: CallLogsRecord;
+    invites: InvitesRecord;
 };
 
 export type CollectionResponses = {
@@ -462,6 +482,7 @@ export type CollectionResponses = {
     media: MediaResponse;
     task_queue: TaskQueueResponse;
     call_logs: CallLogsResponse;
+    invites: InvitesResponse;
 };
 
 export type TypedPocketBase = PocketBase & {
@@ -495,4 +516,5 @@ export type TypedPocketBase = PocketBase & {
     collection(idOrName: "media"): RecordService<MediaResponse>;
     collection(idOrName: "task_queue"): RecordService<TaskQueueResponse>;
     collection(idOrName: "call_logs"): RecordService<CallLogsResponse>;
+    collection(idOrName: "invites"): RecordService<InvitesResponse>;
 };

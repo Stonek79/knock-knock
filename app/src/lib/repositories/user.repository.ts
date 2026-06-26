@@ -175,6 +175,35 @@ export const userRepository = {
     },
 
     /**
+     * Получить список пользователей для панели администрирования.
+     * Отправляет запрос на сервер даже при пустой строке поиска.
+     */
+    getAdminUsers: async (
+        search: string,
+    ): Promise<Result<Profile[], UserRepoError>> => {
+        return fromPromise(
+            pb.send<UserRecord[]>(API_ROUTES.USERS_SEARCH, {
+                method: "GET",
+                query: { q: search },
+            }),
+            (e: unknown) =>
+                appError(
+                    ERROR_CODES.NETWORK_ERROR,
+                    "Ошибка при получении списка пользователей",
+                    e,
+                ),
+        ).then((res) =>
+            res.map((records) =>
+                records.map((r) =>
+                    UserMapper.toDomain(r, (rec, file) =>
+                        pb.files.getURL(rec, file),
+                    ),
+                ),
+            ),
+        );
+    },
+
+    /**
      * Получить список контактов (пользователи, с которыми есть чаты)
      */
     getContacts: async (): Promise<Result<Profile[], UserRepoError>> => {

@@ -33,3 +33,13 @@
     padding: var(--space-3);
     background-color: var(--color-bg-secondary);
 }
+
+.bubblePreviewWrapper {
+    flex-grow: 1;
+    max-width: calc(100% - 48px);
+}
+
+.deleteBtn {
+    flex-shrink: 0;
+    align-self: center;
+}

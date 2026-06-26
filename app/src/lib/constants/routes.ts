@@ -14,7 +14,7 @@ export const ROUTES = {
     SETTINGS_SECURITY: "/settings/security",
     SETTINGS_STORAGE: "/settings/storage",
     SETTINGS_PROFILE: "/settings/profile",
-    SETTINGS_BROADCAST: "/settings/broadcast",
+    ADMIN_BROADCAST: "/admin/broadcast",
     FAVORITES: "/favorites",
     CALLS: "/calls",
     ADMIN: "/admin",

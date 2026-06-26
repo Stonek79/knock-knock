@@ -1,7 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import {
     KEYSTORE_TYPES,
-    MEMBER_ROLE,
     QUERY_KEYS,
     REALTIME_ACTIONS,
     ROOM_MEMBER_FIELDS,
@@ -265,9 +264,6 @@ async function handleMessageEvent({
                                         [ROOM_MEMBER_FIELDS.LAST_READ_AT]:
                                             new Date().toISOString(),
                                         [ROOM_MEMBER_FIELDS.UNREAD_COUNT]: 0,
-                                        [ROOM_MEMBER_FIELDS.ROLE]:
-                                            res.value.role ||
-                                            MEMBER_ROLE.MEMBER,
                                     })
                                     .catch((e) => {
                                         logger.error(

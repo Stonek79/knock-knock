@@ -2,6 +2,7 @@ import type {
     AuthSystemFields,
     CollectionName,
     MediaRecord,
+    MediaTypeOptions,
     MessageReactionsResponse,
     MessagesResponse,
     MessagesStatusOptions,
@@ -14,6 +15,8 @@ import type {
     RoomsResponse,
     RoomsTypeOptions,
     RoomsVisibilityOptions,
+    TaskQueueStatusOptions,
+    TaskQueueTypeOptions,
     UserFoldersResponse,
     UsersResponse,
     UsersRoleOptions,
@@ -171,6 +174,32 @@ export const USER_ROLE = {
     USER: "user",
     ADMIN: "admin",
 } as const satisfies Record<string, UsersRoleOptions>;
+
+/** Типы задач в очереди task_queue */
+export const TASK_QUEUE_TYPE = {
+    PUSH: "push",
+    EMAIL: "email",
+    MEDIA_CLEANUP: "media_cleanup",
+    CLEANUP: "cleanup",
+    BROADCAST: "broadcast",
+    TEST: "test",
+} as const satisfies Record<string, TaskQueueTypeOptions>;
+
+/** Типы вложений */
+export const ATTACHMENT_TYPES = {
+    IMAGE: "image",
+    VIDEO: "video",
+    AUDIO: "audio",
+    DOCUMENT: "document",
+} as const satisfies Record<string, MediaTypeOptions>;
+
+/** Статусы задач в очереди task_queue */
+export const TASK_QUEUE_STATUS = {
+    PENDING: "pending",
+    PROCESSING: "processing",
+    COMPLETED: "completed",
+    FAILED: "failed",
+} as const satisfies Record<string, TaskQueueStatusOptions>;
 
 /** Поля коллекции presence_status */
 export const PRESENCE_FIELDS = {
