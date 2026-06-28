@@ -1,72 +1,88 @@
-# План реализации: Замена confirm на AlertDialog и исправление подгрузки пользователей
+# Обновленный план реализации: Рефакторинг страницы рассылок (Стиль чата + AlertDialog)
 
-## Проблема 1: Использование `window.confirm` при удалении рассылки
-Текущая реализация использует нативный `window.confirm`, что нарушает требования к UI/UX и дизайну приложения. Необходимо заменить его на кастомный `AlertDialog` на основе Radix UI, который уже есть в проекте.
-
-## Проблема 2: Список пользователей в админке не подгружается при первом входе (без поискового запроса)
-На сервере в файле `infra/home/pb_hooks/main.pb.js` при пустом `q` (поисковом запросе) для администратора вызывается:
-`$app.findRecordsByFilter("users", "", "-created", 50, 0)`
-Пустой фильтр `""` в PocketBase вызывает ошибку `Filter expression cannot be empty`, из-за чего сервер возвращает ошибку `500 Internal Server Error`.
+## Цели
+1. **Кастомный AlertDialog**: Заменить `window.confirm` на Radix UI `AlertDialog`.
+2. **Разделение компонентов**: Выделить создание рассылки (ввод) и список рассылок (историю) в отдельные компоненты.
+3. **UX как в чате**: Изменить расположение элементов — заголовок сверху, список сообщений (история) в середине (занимает всё свободное место с прокруткой `overflow-y: auto`), поле ввода сообщений зафиксировано в самом низу.
 
 ---
 
 ## Варианты решения
 
-### Вариант 1: Встраивание AlertDialog непосредственно в Broadcast/index.tsx
-* **Описание**: Добавляем состояние `const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);` прямо в `Broadcast/index.tsx`. Там же рендерим разметку `AlertDialog`.
-* **Исправление бэкенда**: Заменяем `""` в `findRecordsByFilter` на `"id != ''"`.
+### Вариант 1 (Рекомендуемый): Полное разделение на микро-компоненты
+* **Описание**: Создаем структуру папок внутри `app/src/features/admin/Broadcast/`:
+  * `components/DeleteBroadcastDialog/index.tsx` — модалка удаления на основе `AlertDialog`.
+  * `components/BroadcastHeader/index.tsx` — верхняя панель с заголовком и описанием рассылок.
+  * `components/BroadcastHistory/index.tsx` — прокручиваемый список сообщений (история) с рендером `MessageBubble` и кнопкой удаления.
+  * `components/BroadcastInput/index.tsx` — закрепленная снизу панель ввода (`MessageInput` + статус отправки/ошибки).
+  * `index.tsx` — оркестратор страницы, управляющий стейтами, загрузкой и колбэками.
 * **Плюсы**:
-  * Быстрая реализация.
-  * Все изменения локализованы в одном файле.
+  * Идеальная модульная структура и чистота кода.
+  * Полное соответствие UX чата (инпут снизу, сообщения сверху).
+  * Удобно поддерживать и стилизовать.
 * **Минусы**:
-  * Засоряет основной компонент `Broadcast` разметкой модального окна.
+  * Создание 4-х новых файлов.
 
-### Вариант 2 (Рекомендуемый): Создание отдельного компонента `DeleteBroadcastDialog`
-* **Описание**: Создаем выделенный компонент `DeleteBroadcastDialog` в новой папке `app/src/features/admin/Broadcast/components/DeleteBroadcastDialog/index.tsx`. Он будет использовать Radix-компоненты `AlertDialog` и принимать пропсы `open`, `onOpenChange`, `onConfirm`. Логика вызова останется в `Broadcast/index.tsx`.
-* **Исправление бэкенда**: Заменяем `""` в `findRecordsByFilter` на `"id != ''"`.
+### Вариант 2: Частичное разделение (только форма ввода и список истории)
+* **Описание**: Создаем только два файла компонентов: `BroadcastInputForm.tsx` и `BroadcastHistoryList.tsx`. Модалка AlertDialog рендерится внутри основного `index.tsx`.
 * **Плюсы**:
-  * Чистая архитектура, следующая стилю проекта (аналогично `DeleteConfirmDialog` для сообщений).
-  * Разметка модалки изолирована от логики страницы.
-  * Легко тестировать и поддерживать.
+  * Меньше файлов, чем в Варианте 1.
 * **Минусы**:
-  * Создание одного дополнительного файла.
+  * Логика диалога удаления смешивается со страницей.
 
-### Вариант 3: Обобщенный универсальный диалог подтверждения удаления для всей админки
-* **Описание**: Разработка единого компонента `AdminConfirmDialog`, который принимает заголовки, описание и колбэк подтверждения, и переиспользование его везде в админке.
-* **Исправление бэкенда**: Аналогично.
+### Вариант 3: Переверстка без разделения компонентов (всё в одном файле)
+* **Описание**: Оставляем весь код в одном файле `Broadcast/index.tsx`, но переписываем CSS и HTML под структуру чата.
 * **Плюсы**:
-  * Максимальная переиспользуемость.
+  * Минимум изменений по файлам.
 * **Минусы**:
-  * Овер-инжиниринг для текущей задачи (пока подтверждение нужно только в одном месте админки).
+  * Нарушает требование разделить компоненты создания и списка рассылок.
+  * Сложный для поддержки файл (~350+ строк).
 
 ---
 
-## Детальный план реализации (на основе Варианта 2)
+## Детальный план реализации (на основе Варианта 1)
 
-### Шаг 1. Исправление серверного хука
-В файле [main.pb.js](file:///Users/alexstone/WebstormProjects/knock-knock/infra/home/pb_hooks/main.pb.js) на строке 997 заменяем пустую строку фильтра на `"id != ''"`:
-```javascript
-const users = $app.findRecordsByFilter("users", "id != ''", "-created", 50, 0);
-```
+### Шаг 1. Создание `DeleteBroadcastDialog`
+Создаем файл [DeleteBroadcastDialog/index.tsx](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/features/admin/Broadcast/components/DeleteBroadcastDialog/index.tsx):
+* Использует `AlertDialog` из `@/components/ui/AlertDialog` и `Button`.
+* Принимает `open: boolean`, `onOpenChange: (open: boolean) => void`, `onConfirm: () => void`.
 
-### Шаг 2. Создание компонента `DeleteBroadcastDialog`
-Создаем файл [DeleteBroadcastDialog/index.tsx](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/features/admin/Broadcast/components/DeleteBroadcastDialog/index.tsx) со следующей структурой:
-* Использование `AlertDialog.Root`, `AlertDialog.Content`, `AlertDialog.Title`, `AlertDialog.Description`, `AlertDialog.Cancel`, `AlertDialog.Action`.
-* Локализованные тексты подтверждения удаления рассылки.
-* Любой `return` внутри блока `if` оборачиваем в фигурные скобки.
+### Шаг 2. Создание `BroadcastHeader`
+Создаем файл [BroadcastHeader/index.tsx](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/features/admin/Broadcast/components/BroadcastHeader/index.tsx):
+* Рендерит иконку `Megaphone`, заголовок и описание рассылок.
+* Будет служить шапкой "чата рассылок".
 
-### Шаг 3. Интеграция диалога в `BroadcastPage`
-В файле [Broadcast/index.tsx](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/features/admin/Broadcast/index.tsx):
-* Добавляем стейт `const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);`.
-* Удаляем вызов `window.confirm`.
-* Заменяем вызов `handleDelete(item.task_key)` на `setDeleteTaskId(item.task_key)`.
-* Рендерим `<DeleteBroadcastDialog open={deleteTaskId !== null} onOpenChange={(open) => !open && setDeleteTaskId(null)} onConfirm={...} />`.
-* Проверяем форматирование `if` (фигурные скобки у `return`).
+### Шаг 3. Создание `BroadcastHistory`
+Создаем файл [BroadcastHistory/index.tsx](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/features/admin/Broadcast/components/BroadcastHistory/index.tsx):
+* Принимает список `history` (`TaskQueueResponse[]`), `onDelete` (`(id: string) => void`) и `isLoadingHistory` (`boolean`).
+* Рендерит сообщения через `MessageBubble`, обернутые в контейнеры, с кнопкой удаления `Trash2`.
+* Имеет собственный класс скролла, прокручивающийся вертикально.
 
-### Шаг 4. Проверка и линтинг
-* Запуск `npx biome check --write` в папке `app/` для проверки форматирования и линтинга.
-* Запуск `tsc --noEmit` в папке `app/` для проверки типов.
-* Проверка работоспособности.
+### Шаг 4. Создание `BroadcastInput`
+Создаем файл [BroadcastInput/index.tsx](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/features/admin/Broadcast/components/BroadcastInput/index.tsx):
+* Принимает `onSend`, `isLoading`, `status` (для вывода сообщений об успехе/ошибке).
+* Рендерит `MessageInput` и блок статуса.
 
----
+### Шаг 5. Обновление `Broadcast/index.tsx` и стилей `broadcast-settings.module.css`
+* В [index.tsx](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/features/admin/Broadcast/index.tsx):
+  * Храним стейты `deleteTaskId`, `isLoading`, `status`.
+  * Реализуем колбэки `handleSend` и `handleDelete`.
+  * Собираем все компоненты в макет:
+    ```tsx
+    <div className={styles.container}>
+        <BroadcastHeader />
+        <BroadcastHistory ... />
+        <BroadcastInput ... />
+        <DeleteBroadcastDialog ... />
+    </div>
+    ```
+* В [broadcast-settings.module.css](file:///Users/alexstone/WebstormProjects/knock-knock/app/src/features/admin/Broadcast/broadcast-settings.module.css):
+  * Меняем макет на `display: flex; flex-direction: column; height: 100vh` (или 100% высоты родителя, учитывая шапку).
+  * Фиксируем инпут внизу, а истории даем `flex: 1; overflow-y: auto;`.
+
+### Шаг 6. Проверка типов и линтинг
+* Обязательно оборачиваем все `return` в `if` блоках в фигурные скобки `{}`.
+* Запуск `npx biome check --write` в папке `app`.
+* Запуск `npx tsc --noEmit` в папке `app`.
+
 Есть ли у вас замечания или предложения к этому плану?

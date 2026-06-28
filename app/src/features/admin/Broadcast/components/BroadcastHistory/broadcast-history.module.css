@@ -1,0 +1,36 @@
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-4);
+    min-height: 0;
+    background-color: var(--color-bg-primary);
+}
+
+.list {
+    width: 100%;
+    max-width: var(--max-w-settings);
+    margin: 0 auto;
+}
+
+.historyItem {
+    padding: var(--space-3);
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+}
+
+.bubblePreviewWrapper {
+    flex-grow: 1;
+    max-width: calc(100% - 48px);
+}
+
+.deleteBtn {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.emptyState {
+    flex: 1;
+    min-height: 0;
+    background-color: var(--color-bg-primary);
+    padding: var(--space-8);
+}

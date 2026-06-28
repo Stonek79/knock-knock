@@ -1,45 +1,8 @@
 .container {
     height: 100%;
     width: 100%;
-    overflow-y: auto;
-}
-
-.content {
-    max-width: var(--max-w-settings);
-    margin: 0 auto;
-    width: 100%;
-    padding: var(--space-4);
-}
-
-.card {
-    padding: var(--space-6);
-}
-
-.icon {
-    color: var(--color-error);
-}
-
-.inputWrapper {
-    width: 100%;
-    margin-top: var(--space-4);
-    margin-bottom: var(--space-4);
-}
-
-.historySection {
-    margin-top: var(--space-6);
-}
-
-.historyItem {
-    padding: var(--space-3);
-    background-color: var(--color-bg-secondary);
-}
-
-.bubblePreviewWrapper {
-    flex-grow: 1;
-    max-width: calc(100% - 48px);
-}
-
-.deleteBtn {
-    flex-shrink: 0;
-    align-self: center;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--color-bg-primary);
 }

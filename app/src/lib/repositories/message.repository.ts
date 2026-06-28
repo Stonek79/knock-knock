@@ -2,7 +2,6 @@ import {
     DB_TABLES,
     ERROR_CODES,
     MESSAGE_FIELDS,
-    MESSAGE_STATUS,
     ROOM_MEMBER_FIELDS,
 } from "../constants";
 import { pb } from "../pocketbase";
@@ -357,35 +356,15 @@ export const messageRepository = {
      */
     markMessagesAsRead: async (
         roomId: string,
-        currentUserId: string,
+        _currentUserId: string,
     ): Promise<Result<void, MessageRepoError>> => {
         try {
-            const filter = pb.filter(
-                `${MESSAGE_FIELDS.ROOM} = {:roomId} && ${MESSAGE_FIELDS.SENDER} != {:currentUserId} && ${MESSAGE_FIELDS.STATUS} != {:status}`,
-                { roomId, currentUserId, status: MESSAGE_STATUS.READ },
-            );
-
-            const records = await pb
-                .collection(DB_TABLES.MESSAGES)
-                .getFullList({
-                    filter,
-                    fields: MESSAGE_FIELDS.ID,
-                    $autoCancel: false,
-                });
-
-            if (records.length === 0) {
-                return ok(undefined);
-            }
-
-            const batch = pb.createBatch();
-
-            for (const r of records) {
-                batch.collection(DB_TABLES.MESSAGES).update(r.id, {
-                    [MESSAGE_FIELDS.STATUS]: MESSAGE_STATUS.READ,
-                });
-            }
-
-            await batch.send();
+            // Вызываем серверный эндпоинт, который обновит статус через SQL
+            // Это решает проблему 400 Bad Request при Batch update и ускоряет работу
+            await pb.send(`/api/custom/rooms/${roomId}/read`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
 
             return ok(undefined);
         } catch (e) {

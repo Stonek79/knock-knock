@@ -1,0 +1,10 @@
+.header {
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-bg-primary);
+    flex-shrink: 0;
+}
+
+.icon {
+    color: var(--color-error);
+}
