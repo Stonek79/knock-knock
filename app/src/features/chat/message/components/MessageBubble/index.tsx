@@ -131,6 +131,10 @@ export function MessageBubble({
     const touchStartX = useRef<number | null>(null);
     const touchStartY = useRef<number | null>(null);
 
+    // Подменяем имя и аватар для системных сообщений
+    const finalSenderName = isSystem ? "Knock-Knock" : senderName;
+    const finalSenderAvatar = isSystem ? undefined : senderAvatar;
+
     const handleTouchStart = (e: React.TouchEvent) => {
         if (isEditing || isSelectionMode) {
             return;
@@ -276,13 +280,13 @@ export function MessageBubble({
                 }
             }}
         >
-            {!isOwn && roomType !== ROOM_TYPE.DIRECT && (
+            {!isOwn && roomType !== ROOM_TYPE.DIRECT && !isSystem && (
                 <Box className={styles.avatarContainer}>
                     {groupPosition === MESSAGE_POSITION.SINGLE ||
                     groupPosition === MESSAGE_POSITION.END ? (
                         <Avatar
-                            src={senderAvatar || undefined}
-                            name={senderName}
+                            src={finalSenderAvatar}
+                            name={finalSenderName}
                         />
                     ) : (
                         <Box className={styles.avatarPlaceholder} />
@@ -292,7 +296,7 @@ export function MessageBubble({
 
             <Box className={bubble}>
                 {!isOwn &&
-                    senderName &&
+                    finalSenderName &&
                     (groupPosition === MESSAGE_POSITION.SINGLE ||
                         groupPosition === MESSAGE_POSITION.START) && (
                         <span
@@ -300,7 +304,7 @@ export function MessageBubble({
                                 color: userColor,
                             })}
                         >
-                            {senderName}
+                            {finalSenderName}
                         </span>
                     )}
                 {forwardFromName && (

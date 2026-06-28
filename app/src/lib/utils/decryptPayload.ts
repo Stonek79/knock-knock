@@ -30,13 +30,8 @@ export async function decryptMessagePayload(
     }
 
     // Нет вектора инициализации — считаем это "сидом" (открытым сообщением)
-    if (!msg.iv && msg.content) {
-        return msg.content;
-    }
-
-    // Если всё ещё нет IV и сообщение не сид — невозможно расшифровать
     if (!msg.iv) {
-        return null;
+        return msg.content || "";
     }
 
     // Нет ключа — невозможно расшифровать

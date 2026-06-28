@@ -64,22 +64,30 @@ export function mapRoomToChatItem(
             : new Date(DEFAULT_DATE).getTime();
 
     // 4. Формирование имени и аватара
-    const roomName =
-        room.type === ROOM_TYPE.DIRECT
-            ? isSavedMessages
-                ? "favorites.title"
-                : peer?.display_name || room.name || "chat.unknownRoom"
-            : room.name || "chat.unknownRoom";
+    let roomName = room.name || "chat.unknownRoom";
+    let roomAvatar = isSavedMessages
+        ? undefined
+        : peer?.avatar_url || undefined;
+
+    if (room.type === "system") {
+        roomName = "Knock-Knock";
+        roomAvatar = undefined; // Можно добавить ссылку на логотип, если есть
+    } else if (room.type === ROOM_TYPE.DIRECT) {
+        roomName = isSavedMessages
+            ? "favorites.title"
+            : peer?.display_name || room.name || "chat.unknownRoom";
+    }
 
     return {
         id: room.id,
         name: roomName,
-        avatar: isSavedMessages ? undefined : peer?.avatar_url || undefined,
+        avatar: roomAvatar,
         lastMessage: lastMessageText,
         time: lastMsgDate ? formatChatTime(lastMsgDate) : "",
         unread: me?.unread_count || 0,
         pinPosition: me?.pin_position ?? null,
         isSelf: isSavedMessages,
+        isSystem: room.type === "system",
         isSavedMessages,
         isEphemeral: room.type === ROOM_TYPE.EPHEMERAL,
         _lastMsgTimestamp: lastMsgTimestamp,

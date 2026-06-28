@@ -13,6 +13,7 @@ import { ChatRoomInputArea } from "./components/ChatRoomInputArea";
 import { ChatRoomLayout } from "./components/ChatRoomLayout";
 import { ChatRoomMessages } from "./components/ChatRoomMessages";
 import { PrivacyBanner } from "./components/PrivacyBanner";
+import { SystemBanner } from "./components/SystemBanner";
 
 interface ChatRoomProps {
     roomId: string;
@@ -73,6 +74,8 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
             banner={
                 room.type === ROOM_TYPE.EPHEMERAL ? (
                     <PrivacyBanner />
+                ) : room.type === ROOM_TYPE.SYSTEM ? (
+                    <SystemBanner />
                 ) : undefined
             }
             messages={<ChatRoomMessages roomId={roomId} />}

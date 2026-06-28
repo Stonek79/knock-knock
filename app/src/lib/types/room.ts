@@ -81,6 +81,8 @@ export type ExtendedChatItem = ChatItem & {
     isSavedMessages: boolean;
     /** Является ли чат self-chat */
     isSelf: boolean;
+    /** Является ли чат системным */
+    isSystem?: boolean;
     /** Является ли чат эфемерным */
     isEphemeral: boolean;
     /** Timestamp для сортировки (вычисляется) */

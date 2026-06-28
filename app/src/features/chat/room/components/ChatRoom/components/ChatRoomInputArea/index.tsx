@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Text } from "@/components/ui/Text";
 import { MessageInput, useTypingIndicator } from "@/features/chat/message";
 import { ROOM_TYPE } from "@/lib/constants";
 import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
@@ -64,13 +63,7 @@ export function ChatRoomInputArea({ roomId }: ChatRoomInputAreaProps) {
     const isSystemRoom = roomInfo?.room.type === ROOM_TYPE.SYSTEM;
 
     if (isSystemRoom) {
-        return (
-            <div className={`${styles.inputArea} ${styles.systemMessage}`}>
-                <Text intent="secondary" size="sm">
-                    {t("chat.systemChannelReadOnly")}
-                </Text>
-            </div>
-        );
+        return null;
     }
 
     return (

@@ -7,9 +7,9 @@ import { ATTACHMENT_TYPES } from "@/lib/constants";
  */
 export const broadcastTaskPayloadSchema = z.object({
     /** Текст рассылки */
-    text: z.string(),
+    text: z.string().optional().default(""),
     /** ID администратора, создавшего рассылку */
-    adminId: z.string(),
+    adminId: z.string().optional().default(""),
     /** Массив ID медиа-вложений */
     attachments: z.array(z.string()).default([]),
     /** Обогащенные метаданные медиа-вложений от сервера */

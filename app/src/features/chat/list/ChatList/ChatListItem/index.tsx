@@ -17,6 +17,7 @@ export type ChatItem = {
     time?: string;
     unread?: number;
     pinPosition?: number | null;
+    isSystem?: boolean;
 };
 
 interface ChatListItemProps {
@@ -71,11 +72,21 @@ export function ChatListItem({
 function ChatListItemContent({ chat }: { chat: ChatItem }) {
     return (
         <Flex width="100%" minWidth={0} gap="3" data-testid="chat-item">
-            <Avatar
-                size="md"
-                src={chat.avatar}
-                name={chat.name.replace(/🔒\s*/, "")}
-            />
+            {chat.isSystem ? (
+                <div className={styles.systemAvatarWrapper}>
+                    <Avatar
+                        size="md"
+                        name={chat.name}
+                        fallback="📢" // Рупор для системного чата
+                    />
+                </div>
+            ) : (
+                <Avatar
+                    size="md"
+                    src={chat.avatar}
+                    name={chat.name.replace(/🔒\s*/, "")}
+                />
+            )}
             <Box className={styles.chatInfo}>
                 <div className={styles.name}>
                     <span
