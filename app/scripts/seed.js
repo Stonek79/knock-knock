@@ -112,8 +112,8 @@ async function runSeed() {
         const collectionsToClear = [
             "messages",
             "room_keys",
-            "room_members",
             "rooms",
+            "room_members",
             "users",
         ];
         for (const name of collectionsToClear) {
