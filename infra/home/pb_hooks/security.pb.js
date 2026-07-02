@@ -11,7 +11,7 @@ onRecordCreateRequest((e) => {
 		return e.next();
 	}
 
-	const isGlobalAdmin = authRecord.get("role") === "admin";
+	const isGlobalAdmin = authRecord.collection().name === "_superusers";
 	if (isGlobalAdmin) {
 		return e.next();
 	}
@@ -57,7 +57,7 @@ onRecordUpdateRequest((e) => {
 		return e.next();
 	}
 
-	const isGlobalAdmin = authRecord.get("role") === "admin";
+	const isGlobalAdmin = authRecord.collection().name === "_superusers";
 	if (isGlobalAdmin) {
 		return e.next();
 	}
@@ -107,7 +107,7 @@ onRecordUpdateRequest((e) => {
 		return e.next();
 	}
 
-	const isGlobalAdmin = authRecord.get("role") === "admin";
+	const isGlobalAdmin = authRecord.collection().name === "_superusers";
 	if (isGlobalAdmin) {
 		return e.next();
 	}

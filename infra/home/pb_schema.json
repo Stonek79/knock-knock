@@ -1,318 +1,5 @@
 [
 	{
-		"id": "pbc_3142635823",
-		"name": "_superusers",
-		"type": "auth",
-		"system": true,
-		"fields": [
-			{
-				"id": "text3208210256",
-				"name": "id",
-				"type": "text",
-				"system": true,
-				"primaryKey": true,
-				"required": true,
-				"autogeneratePattern": "[a-z0-9]{15}"
-			},
-			{
-				"id": "password901924565",
-				"name": "password",
-				"type": "password",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text2504183744",
-				"name": "tokenKey",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "email3885137012",
-				"name": "email",
-				"type": "email",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "bool1547992806",
-				"name": "emailVisibility",
-				"type": "bool",
-				"system": true
-			},
-			{
-				"id": "bool256245529",
-				"name": "verified",
-				"type": "bool",
-				"system": true
-			},
-			{
-				"id": "autodate2990389176",
-				"name": "created",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": false
-			},
-			{
-				"id": "autodate3332085495",
-				"name": "updated",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": true
-			}
-		],
-		"indexes": [
-			"CREATE UNIQUE INDEX `idx_tokenKey_pbc_3142635823` ON `_superusers` (`tokenKey`)",
-			"CREATE UNIQUE INDEX `idx_email_pbc_3142635823` ON `_superusers` (`email`) WHERE `email` != ''"
-		]
-	},
-	{
-		"id": "pbc_4275539003",
-		"name": "_authOrigins",
-		"type": "base",
-		"system": true,
-		"fields": [
-			{
-				"id": "text3208210256",
-				"name": "id",
-				"type": "text",
-				"system": true,
-				"primaryKey": true,
-				"required": true,
-				"autogeneratePattern": "[a-z0-9]{15}"
-			},
-			{
-				"id": "text455797646",
-				"name": "collectionRef",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text127846527",
-				"name": "recordRef",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text4228609354",
-				"name": "fingerprint",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "autodate2990389176",
-				"name": "created",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": false
-			},
-			{
-				"id": "autodate3332085495",
-				"name": "updated",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": true
-			}
-		],
-		"indexes": [
-			"CREATE UNIQUE INDEX `idx_authOrigins_unique_pairs` ON `_authOrigins` (collectionRef, recordRef, fingerprint)"
-		]
-	},
-	{
-		"id": "pbc_2281828961",
-		"name": "_externalAuths",
-		"type": "base",
-		"system": true,
-		"fields": [
-			{
-				"id": "text3208210256",
-				"name": "id",
-				"type": "text",
-				"system": true,
-				"primaryKey": true,
-				"required": true,
-				"autogeneratePattern": "[a-z0-9]{15}"
-			},
-			{
-				"id": "text455797646",
-				"name": "collectionRef",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text127846527",
-				"name": "recordRef",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text2462348188",
-				"name": "provider",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text1044722854",
-				"name": "providerId",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "autodate2990389176",
-				"name": "created",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": false
-			},
-			{
-				"id": "autodate3332085495",
-				"name": "updated",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": true
-			}
-		],
-		"indexes": [
-			"CREATE UNIQUE INDEX `idx_externalAuths_record_provider` ON `_externalAuths` (collectionRef, recordRef, provider)",
-			"CREATE UNIQUE INDEX `idx_externalAuths_collection_provider` ON `_externalAuths` (collectionRef, provider, providerId)"
-		]
-	},
-	{
-		"id": "pbc_2279338944",
-		"name": "_mfas",
-		"type": "base",
-		"system": true,
-		"fields": [
-			{
-				"id": "text3208210256",
-				"name": "id",
-				"type": "text",
-				"system": true,
-				"primaryKey": true,
-				"required": true,
-				"autogeneratePattern": "[a-z0-9]{15}"
-			},
-			{
-				"id": "text455797646",
-				"name": "collectionRef",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text127846527",
-				"name": "recordRef",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text1582905952",
-				"name": "method",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "autodate2990389176",
-				"name": "created",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": false
-			},
-			{
-				"id": "autodate3332085495",
-				"name": "updated",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": true
-			}
-		],
-		"indexes": [
-			"CREATE INDEX `idx_mfas_collectionRef_recordRef` ON `_mfas` (collectionRef,recordRef)"
-		]
-	},
-	{
-		"id": "pbc_1638494021",
-		"name": "_otps",
-		"type": "base",
-		"system": true,
-		"fields": [
-			{
-				"id": "text3208210256",
-				"name": "id",
-				"type": "text",
-				"system": true,
-				"primaryKey": true,
-				"required": true,
-				"autogeneratePattern": "[a-z0-9]{15}"
-			},
-			{
-				"id": "text455797646",
-				"name": "collectionRef",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text127846527",
-				"name": "recordRef",
-				"type": "text",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "password901924565",
-				"name": "password",
-				"type": "password",
-				"system": true,
-				"required": true
-			},
-			{
-				"id": "text3866985172",
-				"name": "sentTo",
-				"type": "text",
-				"system": true,
-				"required": false
-			},
-			{
-				"id": "autodate2990389176",
-				"name": "created",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": false
-			},
-			{
-				"id": "autodate3332085495",
-				"name": "updated",
-				"type": "autodate",
-				"system": true,
-				"onCreate": true,
-				"onUpdate": true
-			}
-		],
-		"indexes": [
-			"CREATE INDEX `idx_otps_collectionRef_recordRef` ON `_otps` (collectionRef, recordRef)"
-		]
-	},
-	{
 		"id": "_pb_users_auth_",
 		"name": "users",
 		"type": "auth",
@@ -398,21 +85,7 @@
 				"name": "status",
 				"type": "select",
 				"system": false,
-				"values": [
-					"online",
-					"offline",
-					"away"
-				]
-			},
-			{
-				"id": "user_role_field",
-				"name": "role",
-				"type": "select",
-				"system": false,
-				"values": [
-					"user",
-					"admin"
-				]
+				"values": ["online", "offline", "away"]
 			},
 			{
 				"id": "user_ls_field",
@@ -475,6 +148,31 @@
 				"collectionId": "pbc_invites_id",
 				"maxSelect": 1,
 				"cascadeDelete": false
+			},
+			{
+				"id": "user_profile_type",
+				"name": "profile_type",
+				"type": "select",
+				"system": false,
+				"values": ["public", "private"]
+			},
+			{
+				"id": "user_pub_prof_key",
+				"name": "public_profile_key",
+				"type": "text",
+				"system": false
+			},
+			{
+				"id": "user_enc_prof",
+				"name": "encrypted_profile",
+				"type": "json",
+				"system": false
+			},
+			{
+				"id": "user_key_vault",
+				"name": "key_vault",
+				"type": "json",
+				"system": false
 			}
 		],
 		"indexes": [
@@ -516,10 +214,11 @@
 				"system": false,
 				"required": true,
 				"values": [
+					"public_channel",
+					"private_channel",
 					"direct",
 					"group",
-					"ephemeral",
-					"system"
+					"ephemeral"
 				]
 			},
 			{
@@ -527,10 +226,7 @@
 				"name": "visibility",
 				"type": "select",
 				"system": false,
-				"values": [
-					"public",
-					"private"
-				],
+				"values": ["public", "private"],
 				"required": true
 			},
 			{
@@ -596,6 +292,12 @@
 				"system": true,
 				"onCreate": true,
 				"onUpdate": true
+			},
+			{
+				"id": "room_inactivity_tmr",
+				"name": "inactivity_timer",
+				"type": "number",
+				"system": false
 			}
 		],
 		"listRule": "@request.auth.id != \"\" && (visibility = \"public\" || room_members_via_room.user ?= @request.auth.id)",
@@ -645,11 +347,7 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": [
-					"owner",
-					"admin",
-					"member"
-				]
+				"values": ["owner", "admin", "member"]
 			},
 			{
 				"id": "rm_unread_id",
@@ -658,18 +356,6 @@
 				"system": false,
 				"required": true,
 				"noZero": false
-			},
-			{
-				"id": "rm_un_id",
-				"name": "user_name",
-				"type": "text",
-				"system": false
-			},
-			{
-				"id": "rm_ua_id",
-				"name": "user_avatar",
-				"type": "text",
-				"system": false
 			},
 			{
 				"id": "rm_fid_id",
@@ -788,18 +474,6 @@
 				"cascadeDelete": true
 			},
 			{
-				"id": "msg_sn_id",
-				"name": "sender_name",
-				"type": "text",
-				"system": false
-			},
-			{
-				"id": "msg_sa_id",
-				"name": "sender_avatar",
-				"type": "text",
-				"system": false
-			},
-			{
 				"id": "msg_content_id",
 				"name": "content",
 				"type": "text",
@@ -817,25 +491,14 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": [
-					"text",
-					"image",
-					"audio",
-					"video",
-					"file",
-					"system"
-				]
+				"values": ["text", "image", "audio", "video", "file", "system"]
 			},
 			{
 				"id": "msg_status_id",
 				"name": "status",
 				"type": "select",
 				"system": false,
-				"values": [
-					"sent",
-					"delivered",
-					"read"
-				]
+				"values": ["sent", "delivered", "read"]
 			},
 			{
 				"id": "msg_meta_id",
@@ -932,7 +595,7 @@
 		"viewRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
 		"createRule": "@request.auth.id != \"\" && sender = @request.auth.id && room.room_members_via_room.user ?= @request.auth.id",
 		"updateRule": "@request.auth.id != \"\" && (sender = @request.auth.id || room.room_members_via_room.user ?= @request.auth.id)",
-		"deleteRule": "@request.auth.id != \"\" && (sender = @request.auth.id || @request.auth.role = \"admin\")"
+		"deleteRule": "@request.auth.id != \"\" && sender = @request.auth.id"
 	},
 	{
 		"id": "pbc_keys_id",
@@ -1085,16 +748,6 @@
 				"autogeneratePattern": "[a-z0-9]{15}"
 			},
 			{
-				"id": "pres_user_id",
-				"name": "user",
-				"type": "relation",
-				"system": false,
-				"required": true,
-				"collectionId": "_pb_users_auth_",
-				"maxSelect": 1,
-				"cascadeDelete": true
-			},
-			{
 				"id": "pres_online_id",
 				"name": "is_online",
 				"type": "bool",
@@ -1139,17 +792,23 @@
 				"system": true,
 				"onCreate": true,
 				"onUpdate": true
+			},
+			{
+				"id": "pres_enc_user_id",
+				"name": "encrypted_user_id",
+				"type": "text",
+				"system": false
 			}
 		],
 		"indexes": [
-			"CREATE UNIQUE INDEX `idx_pres_user` ON `presence_status` (`user`)",
+			"CREATE UNIQUE INDEX `idx_pres_user` ON `presence_status` (`encrypted_user_id`)",
 			"CREATE INDEX `idx_pres_ping` ON `presence_status` (`last_ping`)"
 		],
 		"listRule": "@request.auth.id != ''",
 		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != '' && user = @request.auth.id",
-		"updateRule": "@request.auth.id != '' && user = @request.auth.id",
-		"deleteRule": "@request.auth.id != '' && user = @request.auth.id"
+		"createRule": "@request.auth.id != ''",
+		"updateRule": "@request.auth.id != ''",
+		"deleteRule": "@request.auth.id != ''"
 	},
 	{
 		"id": "pbc_reac_tab_id",
@@ -1339,12 +998,7 @@
 				"name": "reason",
 				"type": "select",
 				"system": false,
-				"values": [
-					"spam",
-					"offensive",
-					"illegal",
-					"other"
-				],
+				"values": ["spam", "offensive", "illegal", "other"],
 				"required": true
 			},
 			{
@@ -1352,11 +1006,7 @@
 				"name": "status",
 				"type": "select",
 				"system": false,
-				"values": [
-					"pending",
-					"reviewed",
-					"dismissed"
-				],
+				"values": ["pending", "reviewed", "dismissed"],
 				"required": true
 			},
 			{
@@ -1385,11 +1035,11 @@
 		"indexes": [
 			"CREATE UNIQUE INDEX `idx_msg_reporter` ON `message_reports` (`message`, `reporter`)"
 		],
-		"listRule": "@request.auth.role = 'admin' || @request.auth.id = reporter",
-		"viewRule": "@request.auth.role = 'admin' || @request.auth.id = reporter",
+		"listRule": "@request.auth.id != '' && @request.auth.id = reporter",
+		"viewRule": "@request.auth.id != '' && @request.auth.id = reporter",
 		"createRule": "@request.auth.id != '' && reporter = @request.auth.id",
-		"updateRule": "@request.auth.role = 'admin'",
-		"deleteRule": "@request.auth.role = 'admin'"
+		"updateRule": null,
+		"deleteRule": null
 	},
 	{
 		"id": "pbc_push_subs_id",
@@ -1502,23 +1152,12 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": [
-					"image",
-					"video",
-					"audio",
-					"document"
-				]
+				"values": ["image", "video", "audio", "document"]
 			},
 			{
 				"id": "med_size_id",
 				"name": "size",
 				"type": "number",
-				"system": false
-			},
-			{
-				"id": "med_mime_id",
-				"name": "mime_type",
-				"type": "text",
 				"system": false
 			},
 			{
@@ -1644,12 +1283,7 @@
 				"name": "status",
 				"type": "select",
 				"system": false,
-				"values": [
-					"pending",
-					"processing",
-					"completed",
-					"failed"
-				]
+				"values": ["pending", "processing", "completed", "failed"]
 			},
 			{
 				"id": "tq_attempts_id",
@@ -1733,25 +1367,12 @@
 				"cascadeDelete": false
 			},
 			{
-				"id": "cl_parts_id",
-				"name": "participants",
-				"type": "relation",
-				"system": false,
-				"required": false,
-				"collectionId": "_pb_users_auth_",
-				"maxSelect": 99,
-				"cascadeDelete": false
-			},
-			{
 				"id": "cl_type_id",
 				"name": "type",
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": [
-					"audio",
-					"video"
-				]
+				"values": ["audio", "video"]
 			},
 			{
 				"id": "cl_status_id",
@@ -1759,13 +1380,7 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": [
-					"ringing",
-					"ongoing",
-					"ended",
-					"missed",
-					"rejected"
-				]
+				"values": ["ringing", "ongoing", "ended", "missed", "rejected"]
 			},
 			{
 				"id": "cl_started_id",
@@ -1812,6 +1427,12 @@
 				"system": true,
 				"onCreate": true,
 				"onUpdate": true
+			},
+			{
+				"id": "call_enc_meta",
+				"name": "encrypted_metadata",
+				"type": "json",
+				"system": false
 			}
 		],
 		"indexes": [
@@ -1877,11 +1498,7 @@
 				"type": "select",
 				"system": false,
 				"required": true,
-				"values": [
-					"active",
-					"used",
-					"revoked"
-				]
+				"values": ["active", "used", "revoked"]
 			},
 			{
 				"id": "autodate2990389176",
@@ -1900,9 +1517,7 @@
 				"onUpdate": true
 			}
 		],
-		"indexes": [
-			"CREATE UNIQUE INDEX `idx_invite_code` ON `invites` (`code`)"
-		],
+		"indexes": ["CREATE UNIQUE INDEX `idx_invite_code` ON `invites` (`code`)"],
 		"listRule": "@request.auth.id != \"\" && (created_by = @request.auth.id || @request.auth.role ?= \"admin\")",
 		"viewRule": "@request.auth.id != \"\" && (created_by = @request.auth.id || @request.auth.role ?= \"admin\")",
 		"createRule": null,

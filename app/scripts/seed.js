@@ -35,8 +35,6 @@ const DB = {
         SENDER: "sender",
         DISPLAY_NAME: "display_name",
         AVATAR: "avatar",
-        SENDER_NAME: "sender_name",
-        SENDER_AVATAR: "sender_avatar",
         UNREAD_COUNT: "unread_count",
         ROLE: "role",
         NAME: "name",
@@ -140,7 +138,9 @@ async function runSeed() {
                 display_name: faker.person.fullName(),
                 username: `user_${i}_${faker.string.alphanumeric(4)}`,
                 status: "online",
-                role: i === 1 ? "admin" : "user", // Первый - админ
+                profile_type: faker.helpers.arrayElement(["public", "private"]),
+                key_vault: { mock: true },
+                encrypted_profile: { mock: true },
                 verified: true,
                 is_agreed_to_rules: true,
                 public_key_x25519: keys.public_key_x25519,
@@ -149,7 +149,7 @@ async function runSeed() {
                 settings: { theme: "default", mode: "dark" },
             });
             users.push(user);
-            console.log(`   + [${user.role}] ${email}`);
+            console.log(`   + [${user.profile_type}] ${email}`);
         }
 
         // 1.5. Регистрация системных комнат теперь происходит автоматически через pb_hooks
@@ -166,8 +166,6 @@ async function runSeed() {
                 const msg = await pb.collection(DB.TABLES.MESSAGES).create({
                     [DB.FIELDS.ROOM]: roomId,
                     [DB.FIELDS.SENDER]: sender.id,
-                    [DB.FIELDS.SENDER_NAME]: sender.display_name,
-                    [DB.FIELDS.SENDER_AVATAR]: sender.avatar || null,
                     content: faker.lorem.sentence(), // Обычный текст для DEV
                     iv: crypto.randomBytes(12).toString("base64"),
                     type: "text",
@@ -191,7 +189,6 @@ async function runSeed() {
                         m.id === members[0].id
                             ? DB.VALUES.ROLE_OWNER
                             : "member",
-                    user_name: m.display_name,
                     [DB.FIELDS.UNREAD_COUNT]: 0,
                     last_read_at: new Date().toISOString(),
                 });

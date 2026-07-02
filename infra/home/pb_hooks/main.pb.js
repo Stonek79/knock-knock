@@ -264,22 +264,7 @@ onRecordAfterCreateSuccess((e) => {
 		const roomId = message.get(DB.FIELDS.ROOM);
 		const senderId = message.get(DB.FIELDS.SENDER);
 
-		// Получаем имя отправителя для уведомления
-		let senderName = "Knock-Knock";
-		try {
-			const senderRecord = e.app.findRecordById("users", senderId);
-			if (senderRecord) {
-				senderName =
-					senderRecord.get("name") ||
-					senderRecord.get("username") ||
-					"Пользователь";
-			}
-		} catch (err) {
-			console.error(
-				`❌ [PUSH_QUEUE_ERROR] Ошибка получения имени отправителя: ${err.message || err}`,
-			);
-			// игнорируем ошибку
-		}
+		// Имя отправителя и текст больше не извлекаются (Blind Push)
 
 		// Поиск получателей уведомления
 		const members = e.app.findRecordsByFilter(
@@ -373,8 +358,6 @@ onRecordAfterCreateSuccess((e) => {
 		const payload = {
 			type: DB.VALUES.PUSH_TYPE_NEW_MESSAGE,
 			roomId: roomId,
-			title: senderName,
-			body: "Новое сообщение",
 		};
 
 		// Сохранение задачи в task_queue
@@ -623,7 +606,7 @@ routerAdd(
 		const DB = require(`${__hooks}/db.js`);
 		const user = e.auth;
 
-		const isAdmin = user.get("role") === "admin";
+		const isAdmin = user.collection().name === "_superusers";
 		if (!isAdmin) {
 			return e.json(403, { message: "Forbidden: Admins only" });
 		}
@@ -693,7 +676,7 @@ routerAdd(
 		const DB = require(`${__hooks}/db.js`);
 		const user = e.auth;
 
-		if (user.get("role") !== "admin") {
+		if (user.collection().name !== "_superusers") {
 			return e.json(403, { message: "Forbidden: Admins only" });
 		}
 
@@ -770,7 +753,7 @@ routerAdd(
 		const DB = require(`${__hooks}/db.js`);
 		const user = e.auth;
 
-		if (user.get("role") !== "admin") {
+		if (user.collection().name !== "_superusers") {
 			return e.json(403, { message: "Forbidden: Admins only" });
 		}
 
@@ -842,7 +825,7 @@ routerAdd(
 		const DB = require(`${__hooks}/db.js`);
 		const user = e.auth;
 
-		if (user.get("role") !== "admin") {
+		if (user.collection().name !== "_superusers") {
 			return e.json(403, { message: "Forbidden: Admins only" });
 		}
 
@@ -964,15 +947,17 @@ routerAdd("GET", "/api/custom/users/contacts", (e) => {
 		const usersFilter = otherUserIds.map((id) => `id = '${id}'`).join(" || ");
 		const users = $app.findRecordsByFilter("users", usersFilter, "", 500, 0);
 
-		const result = users.map((u) => ({
-			id: u.id,
-			username: u.get("username"),
-			display_name: u.get("display_name"),
-			avatar: u.get("avatar"),
-			status: u.get("status"),
-			last_seen: u.get("last_seen"),
-			role: u.get("role"),
-		}));
+		const result = users.map((u) => {
+			const isPublic = u.getString("profile_type") === "public";
+			return {
+				id: u.id,
+				username: isPublic ? u.getString("username") : undefined,
+				display_name: isPublic ? u.getString("display_name") : undefined,
+				avatar: isPublic ? u.getString("avatar") : undefined,
+				status: u.getString("status"),
+				last_seen: u.getString("last_seen"),
+			};
+		});
 
 		return e.json(200, result);
 	} catch (err) {
@@ -990,7 +975,7 @@ routerAdd("GET", "/api/custom/users/search", (e) => {
 	const q = e.request.url.query().get("q") || "";
 
 	if (!q) {
-		if (!user || user.get("role") !== "admin") {
+		if (!user || user.collection().name !== "_superusers") {
 			return e.json(200, []);
 		}
 		try {
@@ -1006,7 +991,7 @@ routerAdd("GET", "/api/custom/users/search", (e) => {
 	}
 
 	try {
-		const filter = `username ~ '${q}' || display_name ~ '${q}'`;
+		const filter = `profile_type = 'public' && (username ~ '${q}' || display_name ~ '${q}')`;
 		const users = $app.findRecordsByFilter("users", filter, "-created", 50, 0);
 
 		return e.json(
@@ -1028,7 +1013,7 @@ routerAdd("POST", "/api/custom/invites/generate", (e) => {
 	const user = e.auth;
 
 	// Проверка лимитов (Rate Limiting) — админы без ограничений
-	const isAdmin = user.get("role") === "admin";
+	const isAdmin = user.collection().name === "_superusers";
 
 	if (!isAdmin) {
 		const pastTime = new Date(Date.now() - DB.CONFIG.INVITE_RATE_LIMIT_MINUTES * 60000)
