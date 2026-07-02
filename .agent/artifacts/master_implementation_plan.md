@@ -2,6 +2,10 @@
 
 Этот документ представляет собой пофайловый план реализации новой архитектуры (Бизнес/Приватные профили, Sealed Sender, Key Vault, Каналы, WebRTC и Push).
 
+> **⚠️ ВАЖНО**: В проекте существуют ДВА разных понятия `role`:
+> 1. **Системная роль** (`users.role = "admin"`) — **УДАЛЯЕТСЯ** и выносится в `_superusers`. Затрагивает всю цепочку авторизации.
+> 2. **Роль участника в комнате** (`room_members.role = "owner" | "admin" | "member"`) — **НЕ ТРОГАТЬ**. Это внутренняя иерархия групповых чатов. Функции `updateMemberRole`, `handleUpdateRole` в `GroupInfoPanel` работают именно с ней.
+
 ---
 
 ## 1. Zero-Knowledge Архитектура (Безопасность от Админа БД)
@@ -85,6 +89,10 @@
 - **LoginForm**: поддержка входа администраторов (через `pb.admins.authWithPassword`). Дешифровка `key_vault` при успешном входе с использованием мастер-пароля.
 - **RegisterForm**: шаг выбора типа аккаунта (Бизнес / Инкогнито) с генерацией `Key Vault` и `Profile Key`.
 
+### [MODIFY] `app/src/features/settings/SettingsSidebar/index.tsx` & `SettingsMenu/index.tsx`
+- Оба компонента содержат `pbUser?.role === "admin"` для показа/скрытия админских пунктов навигации.
+- Заменить на `pb.authStore.isAdmin`.
+
 ---
 
 ## 4. Настройки, Профиль и Favorites
@@ -112,7 +120,31 @@
 
 ---
 
-## 5. UI и Логика Чатов
+## 5. Административный Модуль (`features/admin/`)
+
+> Весь модуль доступен только при входе через `pb.admins.authWithPassword`.
+
+### [MODIFY] `app/src/features/admin/AdminLayout/index.tsx`
+- Заменить проверку `role === "admin"` на проверку сессии `pb.authStore.isAdmin`.
+
+### [MODIFY] `app/src/features/admin/AdminSidebar/index.tsx`
+- Убрать зависимость от `user.role` при рендере элементов навигации.
+
+### [MODIFY] `app/src/features/admin/AdminDashboard/index.tsx` & `TestTools.tsx`
+- Привести к новой схеме авторизации (проверка сессии, а не поля `role`).
+
+### [MODIFY] `app/src/features/admin/UserList/index.tsx`
+- Поле `user.role` в списке пользователей будет отсутствовать. Отображение роли убрать или заменить на факт наличия в `_superusers`.
+
+### [MODIFY] `app/src/features/admin/Broadcast/index.tsx` & `components/BroadcastHistory/index.tsx`
+- Обновить тип `payload` broadcoast-сообщений согласно новой схеме (без `senderName` и открытого текста).
+
+### [MODIFY] `app/src/features/admin/hooks/useUserManagement.ts`
+- Обновить мутации управления пользователями: поле `role` удалено из коллекции `users`, API-вызовы банов/разбанов — привести в соответствие.
+
+---
+
+## 6. UI и Логика Чатов
 
 ### [MODIFY] `app/src/features/chat/message/components/MessageList/index.tsx` & `MessageBubble/index.tsx` & `RoomHeader/index.tsx`
 - Убрать зависимость от `role` пользователя в чате.
@@ -120,13 +152,26 @@
 
 ### [MODIFY] `app/src/features/chat/message/utils/optimistic.ts` & `hooks/useChatActions.ts`
 - Sealed Sender логика, оптимистичный рендеринг без передачи `sender_name`/`sender_avatar` в API.
+- В `useChatActions.ts` убрать проверку `isAdmin: user.role === USER_ROLE.ADMIN` (системная роль). Роль участника в комнате (`room_members.role`) — не трогать.
 
 ### [MODIFY] `app/src/lib/services/chat-crypto.ts`
 - Дешифровка контента сообщения, извлечение упакованных метаданных отправителя.
 
+### [MODIFY] `app/src/features/chat/list/utils/roomUiMapper.ts` (функция `mapRoomToChatItem`)
+- Четвёртый маппер UI-уровня. Формирует `ChatItem` (имя и аватар чата в списке).
+- Привести к новой схеме: если собеседник Инкогнито — подтягивать имя из локального Vault, если Бизнес — из открытых полей БД.
+
+### [MODIFY] `app/src/features/contacts/ContactList/index.tsx`
+- Компонент списка контактов. Зависит от `display_name` и `avatar`.
+- Перевести на расшифрованные данные: Public — из БД, Private — из Vault по UUID.
+
+### [MODIFY] `app/src/features/chat/room/components/GroupInfoPanel/index.tsx` & `components/GroupMemberItem/index.tsx`
+- `GroupMemberItem` отображает имя и аватар участника группы — перевести на Vault-источник.
+- `handleUpdateRole` работает с **ролью участника в комнате** (`room_members.role`) — **НЕ ТРОГАТЬ логику**, только привести типы в соответствие с обновлённым `pocketbase-types.ts`.
+
 ---
 
-## 6. Звонки, WebRTC и Push-уведомления (BYPASS_STRATEGY)
+## 7. Звонки, WebRTC и Push-уведомления (BYPASS_STRATEGY)
 
 ### [MODIFY] `app/src/features/calls/` & `call_logs`
 - Сокрытие участников звонка: сервер генерирует LiveKit токен, используя UUID участников вместо реальных имен.
@@ -141,7 +186,7 @@
 
 ---
 
-## 7. Стратегия тестирования и развертывания
+## 8. Стратегия тестирования и развертывания
 1. Применить новую схему `pb_schema.json` на dev-БД.
 2. Провести рефакторинг фронтенда (устранить ошибки компиляции в мапперах и компонентах).
 3. Проверить миграцию профиля (Бизнес <-> Инкогнито) и доставку Blind Push в симуляторе Service Worker.

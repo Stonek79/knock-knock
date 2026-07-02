@@ -32,6 +32,9 @@
 - `[ ]` **Формы входа и регистрации**:
   - `[ ]` `LoginForm`: поддержка входа админов (`pb.admins.authWithPassword`).
   - `[ ]` `RegisterForm`: выбор Бизнес / Инкогнито с генерацией `Key Vault` и `Profile Key`.
+- `[ ]` **Навигация и настройки**:
+  - `[ ]` `SettingsSidebar/index.tsx`: заменить `pbUser?.role === "admin"` на `pb.authStore.isAdmin`.
+  - `[ ]` `SettingsMenu/index.tsx`: то же самое.
 - `[ ]` **Компоненты настроек**:
   - `[ ]` `PrivacySettings`: логика переключения типа профиля (Бизнес / Инкогнито).
   - `[ ]` `NotificationSettings`: переключатель показа текста в пушах.
@@ -39,6 +42,13 @@
   - `[ ]` `ProfileSettings`: логика редактирования инкогнито-профиля (обновление `encrypted_profile`).
   - `[ ]` `ChangePasswordForm`: перешифрование `key_vault` при смене пароля.
   - `[ ]` `DeleteAccountModal`: удаление `key_vault` и ключей комнат с сервера при удалении.
+- `[ ]` **Административный модуль** (`features/admin/`):
+  - `[ ]` `AdminLayout/index.tsx`: заменить `role === "admin"` на проверку сессии PB.
+  - `[ ]` `AdminSidebar/index.tsx`: убрать зависимость от `user.role`.
+  - `[ ]` `AdminDashboard/index.tsx` & `TestTools.tsx`: привести к новой схеме авторизации.
+  - `[ ]` `UserList/index.tsx`: убрать/адаптировать отображение поля `role`.
+  - `[ ]` `Broadcast/index.tsx` & `BroadcastHistory/index.tsx`: обновить тип payload (без `senderName`).
+  - `[ ]` `hooks/useUserManagement.ts`: привести мутации бан/разбан к новому API.
 
 ## Фаза 3: Мапперы и Дешифровка Профилей (Frontend Data Layer)
 - `[ ]` **Типы и валидация**:
@@ -47,10 +57,13 @@
   - `[ ]` `userMapper.ts`: логика извлечения имени в зависимости от `profile_type`.
   - `[ ]` `roomMapper.ts`: сопоставление по UUID через локальный реестр.
   - `[ ]` `messageMapper.ts`: сопоставление UUID отправителя, удаление зависимости от открытого `sender_name`.
+  - `[ ]` `chat/list/utils/roomUiMapper.ts` (`mapRoomToChatItem`): привести к новой схеме (Vault / БД по `profile_type`).
+  - `[ ]` `features/contacts/ContactList/index.tsx`: перевести на расшифрованные данные (Public — БД, Private — Vault).
 
 ## Фаза 4: Чаты, WebRTC и Push-Миграция
 - `[ ]` **Шифрование чатов**:
   - `[ ]` `chat-crypto.ts` & `optimistic.ts`: логика Sealed Sender (упаковка метаданных в payload).
+  - `[ ]` `useChatActions.ts`: убрать `isAdmin: user.role === USER_ROLE.ADMIN` (системная). Роль в комнате (`room_members.role`) — НЕ ТРОГАТЬ.
 - `[ ]` **Service Worker**:
   - `[ ]` `sw.ts`: Приём Blind Push и локальная дешифровка.
 - `[ ]` **Миграция и VPS**:
@@ -61,7 +74,11 @@
   - `[ ]` Скрытие участников в токенах LiveKit.
   - `[ ]` Шифрование логов `call_logs` ключом комнаты.
 
-## Phase 5: Каналы, Модерация и Валидация
+## Phase 5: Каналы, UI Групп, Модерация и Валидация
+- `[ ]` **Группы и Контакты (UI)**:
+  - `[ ]` `GroupInfoPanel/index.tsx`: перевести отображение имён участников на Vault-источник.
+  - `[ ]` `GroupMemberItem/index.tsx`: аналогично.
+  - `[ ]` `GroupInfoPanel/index.tsx` — `handleUpdateRole`: НЕ ТРОГАТЬ логику. Только обновить типы под новый `pocketbase-types.ts`.
 - `[ ]` **Каналы**:
   - `[ ]` Реализовать логику Открытых и Закрытых каналов.
   - `[ ]` Внедрить cron в pb_hooks для удаления неактивных каналов.
