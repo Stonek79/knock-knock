@@ -354,8 +354,7 @@
 				"name": "unread_count",
 				"type": "number",
 				"system": false,
-				"required": true,
-				"noZero": false
+				"required": false
 			},
 			{
 				"id": "rm_fid_id",

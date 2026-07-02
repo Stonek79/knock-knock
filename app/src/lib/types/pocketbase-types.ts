@@ -50,9 +50,14 @@ export type AuthSystemFields<T = never> = {
 
 export type UsersStatusOptions = "online" | "offline" | "away";
 
-export type UsersRoleOptions = "user" | "admin";
+export type UsersProfileTypeOptions = "public" | "private";
 
-export type RoomsTypeOptions = "direct" | "group" | "ephemeral" | "system";
+export type RoomsTypeOptions =
+    | "public_channel"
+    | "private_channel"
+    | "direct"
+    | "group"
+    | "ephemeral";
 
 export type RoomsVisibilityOptions = "public" | "private";
 
@@ -180,7 +185,6 @@ export type UsersRecord = {
     avatar?: string;
     username?: string;
     status?: UsersStatusOptions;
-    role?: UsersRoleOptions;
     last_seen?: string;
     settings?: null | unknown;
     is_agreed_to_rules?: boolean;
@@ -188,6 +192,10 @@ export type UsersRecord = {
     public_key_signing?: string;
     banned_until?: string;
     invite_code?: RecordIdString;
+    profile_type?: UsersProfileTypeOptions;
+    public_profile_key?: string;
+    encrypted_profile?: null | unknown;
+    key_vault?: null | unknown;
 };
 
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> &
@@ -208,6 +216,7 @@ export type RoomsRecord = {
     metadata?: null | unknown;
     permissions?: null | unknown;
     is_test?: boolean;
+    inactivity_timer?: number;
 };
 
 export type RoomsResponse<Texpand = unknown> = Required<RoomsRecord> &
@@ -222,8 +231,6 @@ export type RoomMembersRecord = {
     user: RecordIdString;
     role: RoomMembersRoleOptions;
     unread_count: number;
-    user_name?: string;
-    user_avatar?: string;
     folder_id?: string;
     pin_position?: number;
     settings?: null | unknown;
@@ -245,8 +252,6 @@ export type RoomMembersResponse<Texpand = unknown> =
 export type MessagesRecord = {
     room: RecordIdString;
     sender: RecordIdString;
-    sender_name?: string;
-    sender_avatar?: string;
     content?: string;
     iv?: string;
     type: MessagesTypeOptions;
@@ -298,12 +303,12 @@ export type FavoritesResponse<Texpand = unknown> = Required<FavoritesRecord> &
 // ---------------------------------------------------------------------------
 
 export type PresenceStatusRecord = {
-    user: RecordIdString;
     is_online?: boolean;
     is_typing?: boolean;
     room_id?: string;
     last_ping?: string;
     is_test?: boolean;
+    encrypted_user_id?: string;
 };
 
 export type PresenceStatusResponse<Texpand = unknown> =
@@ -376,7 +381,6 @@ export type MediaRecord = {
     created_by: RecordIdString;
     type: MediaTypeOptions;
     size?: number;
-    mime_type?: string;
     metadata?: null | unknown;
     room?: RecordIdString;
     is_test?: boolean;
@@ -412,7 +416,6 @@ export type TaskQueueResponse<Texpand = unknown> = Required<TaskQueueRecord> &
 export type CallLogsRecord = {
     room: RecordIdString;
     initiator: RecordIdString;
-    participants?: RecordIdString[];
     type: CallLogsTypeOptions;
     status: CallLogsStatusOptions;
     started_at?: string;
@@ -420,6 +423,7 @@ export type CallLogsRecord = {
     duration_sec?: number;
     livekit_room_name?: string;
     is_test?: boolean;
+    encrypted_metadata?: null | unknown;
 };
 
 export type CallLogsResponse<Texpand = unknown> = Required<CallLogsRecord> &
