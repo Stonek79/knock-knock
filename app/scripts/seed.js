@@ -117,6 +117,7 @@ async function runSeed() {
             "users",
         ];
         for (const name of collectionsToClear) {
+            console.log(`   - Очистка коллекции ${name}...`);
             const records = await pb
                 .collection(name)
                 .getFullList({ fields: "id", $autoCancel: false });
@@ -171,6 +172,7 @@ async function runSeed() {
                     type: "text",
                     status: "read",
                     is_deleted: false,
+                    is_test: true,
                     metadata: {},
                     created: msgDate.toISOString(),
                     updated: msgDate.toISOString(),
@@ -190,6 +192,7 @@ async function runSeed() {
                             ? DB.VALUES.ROLE_OWNER
                             : "member",
                     [DB.FIELDS.UNREAD_COUNT]: 0,
+                    is_test: true,
                     last_read_at: new Date().toISOString(),
                 });
             }
@@ -204,6 +207,7 @@ async function runSeed() {
                 [DB.FIELDS.TYPE]: DB.VALUES.ROOM_TYPE_DIRECT,
                 [DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
                 [DB.FIELDS.CREATED_BY]: users[0].id,
+                is_test: true,
             });
             await setupMembers(directRoom.id, [users[0], opponent]);
             const lastD = await createChatMessages(
@@ -233,6 +237,7 @@ async function runSeed() {
                 [DB.FIELDS.TYPE]: DB.VALUES.ROOM_TYPE_GROUP,
                 [DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
                 [DB.FIELDS.CREATED_BY]: users[0].id,
+                is_test: true,
             });
 
             const gParticipants = faker.helpers.arrayElements(
@@ -257,7 +262,11 @@ async function runSeed() {
 
         console.log("\n✨ СИДИРОВАНИЕ ЗАВЕРШЕНО!");
     } catch (err) {
-        console.error("💥 ОШИБКА:", err.message, err.response?.data);
+        console.error("💥 ОШИБКА:", err.message);
+        console.error("Детали:", err.originalError || err);
+        if (err.response) {
+            console.error("Response:", JSON.stringify(err.response, null, 2));
+        }
     }
 }
 
