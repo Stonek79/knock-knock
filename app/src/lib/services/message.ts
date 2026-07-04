@@ -296,14 +296,17 @@ export const MessageService = {
     /**
      * Помечает сообщения как прочитанные — делегирует в репозиторий.
      */
-    async markMessagesAsRead(
-        roomId: string,
-        currentUserId: string,
-    ): Promise<Result<void, MessageError>> {
-        const result = await messageRepository.markMessagesAsRead(
+    async markMessagesAsRead({
+        roomId,
+        currentUserId,
+    }: {
+        roomId: string;
+        currentUserId: string;
+    }): Promise<Result<void, MessageError>> {
+        const result = await messageRepository.markMessagesAsRead({
             roomId,
             currentUserId,
-        );
+        });
         if (result.isErr()) {
             return err(
                 appError(

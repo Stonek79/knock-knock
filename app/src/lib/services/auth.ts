@@ -16,18 +16,23 @@ export const AuthService = {
     /**
      * Регистрация нового пользователя
      */
-    register: async (
-        username: string,
-        password: string,
-        inviteCode: string,
-        meta?: Record<string, string>,
-    ): Promise<Result<AuthUser, AuthRepoError>> => {
-        const result = await authRepository.register(
+    register: async ({
+        username,
+        password,
+        inviteCode,
+        meta,
+    }: {
+        username: string;
+        password: string;
+        inviteCode: string;
+        meta?: Record<string, string>;
+    }): Promise<Result<AuthUser, AuthRepoError>> => {
+        const result = await authRepository.register({
             username,
             password,
             inviteCode,
             meta,
-        );
+        });
 
         if (result.isOk()) {
             logger.info(
@@ -43,12 +48,16 @@ export const AuthService = {
     /**
      * Логин с помощью email и пароля
      */
-    loginWithPassword: async (
-        username: string,
-        password: string,
-        meta?: Record<string, string>,
-    ): Promise<Result<AuthUser, AuthRepoError>> => {
-        return authRepository.login(username, password, meta);
+    loginWithPassword: async ({
+        username,
+        password,
+        meta,
+    }: {
+        username: string;
+        password: string;
+        meta?: Record<string, string>;
+    }): Promise<Result<AuthUser, AuthRepoError>> => {
+        return authRepository.login({ username, password, meta });
     },
 
     /**

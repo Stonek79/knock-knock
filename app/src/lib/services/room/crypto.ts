@@ -14,12 +14,17 @@ import { appError, err, ok } from "@/lib/utils/result";
  * Шифрует симметричный ключ комнаты AES-GCM для каждого участника с использованием их публичного ECDH ключа.
  * Также формирует массив участников для добавления в БД.
  */
-export async function encryptRoomKeysForMembers(
-    profiles: { id: string; public_key_x25519: string }[],
-    roomKey: CryptoKey,
-    roomId: string,
-    myUserId: string,
-): Promise<
+export async function encryptRoomKeysForMembers({
+    profiles,
+    roomKey,
+    roomId,
+    myUserId,
+}: {
+    profiles: { id: string; public_key_x25519: string }[];
+    roomKey: CryptoKey;
+    roomId: string;
+    myUserId: string;
+}): Promise<
     Result<
         {
             encryptedKeys: RoomKeysRecord[];

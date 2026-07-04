@@ -26,11 +26,15 @@ export const broadcastService = {
     /**
      * Отправить глобальную рассылку всем пользователям.
      */
-    sendBroadcast: async (
-        text: string,
-        files?: File[],
-        audioBlob?: Blob,
-    ): Promise<Result<void, BroadcastRepoError>> => {
+    sendBroadcast: async ({
+        text,
+        files,
+        audioBlob,
+    }: {
+        text: string;
+        files?: File[];
+        audioBlob?: Blob;
+    }): Promise<Result<void, BroadcastRepoError>> => {
         const attachmentIds: string[] = [];
 
         try {
@@ -48,11 +52,15 @@ export const broadcastService = {
                 Result<MediaResponse, MediaRepoError>
             >[] = [];
 
-            const uploadFile = (
-                file: File | Blob,
-                originalName: string,
-                mimeType: string,
-            ) => {
+            const uploadFile = ({
+                file,
+                originalName,
+                mimeType,
+            }: {
+                file: File | Blob;
+                originalName: string;
+                mimeType: string;
+            }) => {
                 const formData = new FormData();
                 formData.append(MEDIA_FIELDS.FILE, file, originalName);
                 formData.append(MEDIA_FIELDS.CREATED_BY, userId);
@@ -80,13 +88,23 @@ export const broadcastService = {
 
             if (files && files.length > 0) {
                 for (const file of files) {
-                    uploadTasks.push(uploadFile(file, file.name, file.type));
+                    uploadTasks.push(
+                        uploadFile({
+                            file,
+                            originalName: file.name,
+                            mimeType: file.type,
+                        }),
+                    );
                 }
             }
 
             if (audioBlob) {
                 uploadTasks.push(
-                    uploadFile(audioBlob, "voice.webm", "audio/webm"),
+                    uploadFile({
+                        file: audioBlob,
+                        originalName: "voice.webm",
+                        mimeType: "audio/webm",
+                    }),
                 );
             }
 
@@ -100,7 +118,7 @@ export const broadcastService = {
                 }
             }
 
-            return broadcastRepository.sendBroadcast(text, attachmentIds);
+            return broadcastRepository.sendBroadcast({ text, attachmentIds });
         } catch (error) {
             return err(
                 appError(

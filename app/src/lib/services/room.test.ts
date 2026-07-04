@@ -155,7 +155,10 @@ describe("RoomService (PocketBase)", () => {
                 getFullList: mockGetFullList,
             });
 
-            const result = await findOrCreateDM("my-id", "target-id");
+            const result = await findOrCreateDM({
+                currentUserId: "my-id",
+                targetUserId: "target-id",
+            });
 
             expect(result.isOk()).toBe(true);
             if (result.isOk()) {

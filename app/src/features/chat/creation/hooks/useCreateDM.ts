@@ -21,11 +21,11 @@ export function useCreateDM() {
             targetUserId,
             isPrivate,
         }: CreateDMParams) => {
-            const res = await RoomService.findOrCreateDM(
-                currentUserId,
-                targetUserId,
-                isPrivate,
-            );
+            const res = await RoomService.findOrCreateDM({
+                currentUserId: currentUserId,
+                targetUserId: targetUserId,
+                isEphemeral: isPrivate,
+            });
             if (res.isErr()) {
                 throw new Error(res.error.message);
             }

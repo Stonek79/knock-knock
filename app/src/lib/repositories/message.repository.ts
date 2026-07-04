@@ -354,10 +354,13 @@ export const messageRepository = {
     /**
      * Пометить все сообщения как прочитанные
      */
-    markMessagesAsRead: async (
-        roomId: string,
-        _currentUserId: string,
-    ): Promise<Result<void, MessageRepoError>> => {
+    markMessagesAsRead: async ({
+        roomId,
+        currentUserId: _currentUserId,
+    }: {
+        roomId: string;
+        currentUserId: string;
+    }): Promise<Result<void, MessageRepoError>> => {
         try {
             // Вызываем серверный эндпоинт, который обновит статус через SQL
             // Это решает проблему 400 Bad Request при Batch update и ускоряет работу
@@ -417,10 +420,13 @@ export const messageRepository = {
      * Получить количество непрочитанных сообщений для списка комнат (пакетный режим)
      * Оптимизировано для V2+: получаем данные напрямую из room_members за один запрос
      */
-    getUnreadCountsBatch: async (
-        roomIds: string[],
-        userId: string,
-    ): Promise<Result<UnreadCount[], MessageRepoError>> => {
+    getUnreadCountsBatch: async ({
+        roomIds,
+        userId,
+    }: {
+        roomIds: string[];
+        userId: string;
+    }): Promise<Result<UnreadCount[], MessageRepoError>> => {
         if (roomIds.length === 0) {
             return ok([]);
         }

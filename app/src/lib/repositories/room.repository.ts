@@ -572,11 +572,15 @@ export const roomRepository = {
 
     /** Пакетные операции (Транзакции) */
 
-    createRoomWithMembersAndKeys: async (
-        roomData: Partial<RoomsResponse>,
-        membersData: Partial<RoomMembersResponse>[],
-        keysData: Partial<RoomKeysResponse>[],
-    ): Promise<Result<void, RoomRepoError>> => {
+    createRoomWithMembersAndKeys: async ({
+        roomData,
+        membersData,
+        keysData,
+    }: {
+        roomData: Partial<RoomsResponse>;
+        membersData: Partial<RoomMembersResponse>[];
+        keysData: Partial<RoomKeysResponse>[];
+    }): Promise<Result<void, RoomRepoError>> => {
         try {
             const batch = pb.createBatch();
             batch.collection(DB_TABLES.ROOMS).create(roomData);

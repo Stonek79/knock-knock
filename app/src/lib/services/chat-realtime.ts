@@ -245,10 +245,10 @@ async function handleMessageEvent({
             ) {
                 if (_activeRoomId === record.room) {
                     // Если чат сейчас открыт, сразу помечаем как прочитанные
-                    MessageService.markMessagesAsRead(
-                        record.room,
-                        userId,
-                    ).catch((err) => {
+                    MessageService.markMessagesAsRead({
+                        roomId: record.room,
+                        currentUserId: userId,
+                    }).catch((err) => {
                         logger.error(
                             "ChatRealtimeService: Ошибка автопрочтения нового сообщения в активном чате",
                             err,

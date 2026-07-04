@@ -28,7 +28,7 @@ export function useChatRoomData(propRoomId?: string) {
                 );
             }
 
-            const result = await getChatRoomData(roomId, pbUser.id);
+            const result = await getChatRoomData({ roomId, userId: pbUser.id });
 
             if (result.isErr()) {
                 throw result.error;

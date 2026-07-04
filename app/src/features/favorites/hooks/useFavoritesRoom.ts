@@ -28,10 +28,10 @@ export function useFavoritesRoom() {
             }
 
             // Находим или создаем чат с самим собой (targetUserId === currentUserId)
-            const res = await RoomService.findOrCreateDM(
-                profile.id,
-                profile.id,
-            );
+            const res = await RoomService.findOrCreateDM({
+                currentUserId: profile.id,
+                targetUserId: profile.id,
+            });
 
             if (res.isErr()) {
                 logger.error(

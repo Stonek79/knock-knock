@@ -32,12 +32,12 @@ export function useGroupActions({
 
         setIsLoading(true);
         try {
-            const result = await RoomService.addMembersToGroup(
+            const result = await RoomService.addMembersToGroup({
                 roomId,
                 newMemberIds,
                 roomKey,
                 myUserId,
-            );
+            });
 
             if (result.isErr()) {
                 throw new Error(result.error.message);
@@ -62,10 +62,10 @@ export function useGroupActions({
     const removeMember = async (userIdToRemove: string) => {
         setIsLoading(true);
         try {
-            const result = await RoomService.removeMemberFromGroup(
+            const result = await RoomService.removeMemberFromGroup({
                 roomId,
                 userIdToRemove,
-            );
+            });
 
             if (result.isErr()) {
                 throw new Error(result.error.message);
@@ -94,11 +94,11 @@ export function useGroupActions({
                 currentRole === MEMBER_ROLE.ADMIN
                     ? MEMBER_ROLE.MEMBER
                     : MEMBER_ROLE.ADMIN;
-            const result = await RoomService.updateMemberRole(
+            const result = await RoomService.updateMemberRole({
                 roomId,
                 targetUserId,
                 newRole,
-            );
+            });
 
             if (result.isErr()) {
                 throw new Error(result.error.message);

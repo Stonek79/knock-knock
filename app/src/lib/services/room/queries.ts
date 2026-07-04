@@ -71,12 +71,12 @@ async function provisionSelfChatKey(
         );
 
         // 4. Шифруем ключ комнаты через стандартный ECDH flow (для единственного участника — себя)
-        const cryptoResult = await encryptRoomKeysForMembers(
-            [{ id: userId, public_key_x25519: pubKeyBase64 }],
+        const cryptoResult = await encryptRoomKeysForMembers({
+            profiles: [{ id: userId, public_key_x25519: pubKeyBase64 }],
             roomKey,
             roomId,
-            userId,
-        );
+            myUserId: userId,
+        });
 
         if (cryptoResult.isErr()) {
             return err(
@@ -167,11 +167,15 @@ async function provisionSelfChatKey(
 /**
  * Находит существующий DM (прямой чат) или создает новый.
  */
-export async function findOrCreateDM(
-    currentUserId: string,
-    targetUserId: string,
+export async function findOrCreateDM({
+    currentUserId,
+    targetUserId,
     isEphemeral = false,
-): Promise<Result<string, RoomError>> {
+}: {
+    currentUserId: string;
+    targetUserId: string;
+    isEphemeral?: boolean;
+}): Promise<Result<string, RoomError>> {
     // 1. Оптимизация для Self-Chat: ищем комнату по имени "chat.favorites"
     if (currentUserId === targetUserId) {
         const existingResult =
@@ -254,10 +258,13 @@ export async function getFavoriteRooms(
  * Получает полные данные комнаты (метаданные + расшифрованный ключ).
  * Только через репозитории, без прямого обращения к PocketBase.
  */
-export async function getChatRoomData(
-    roomId: string,
-    userId: string,
-): Promise<Result<RoomDataWithKey, AppError<string>>> {
+export async function getChatRoomData({
+    roomId,
+    userId,
+}: {
+    roomId: string;
+    userId: string;
+}): Promise<Result<RoomDataWithKey, AppError<string>>> {
     try {
         // 1. Получаем комнату
         const roomsResult = await roomRepository.getRoomsWithMembers(
@@ -405,10 +412,10 @@ export async function getRoomUnreadCounts(
         last_read_at: m.last_read_at || DEFAULT_DATE,
     }));
 
-    const countsResult = await messageRepository.getUnreadCountsBatch(
-        rooms.map((r) => r.id),
+    const countsResult = await messageRepository.getUnreadCountsBatch({
+        roomIds: rooms.map((r) => r.id),
         userId,
-    );
+    });
 
     if (countsResult.isErr()) {
         return err(

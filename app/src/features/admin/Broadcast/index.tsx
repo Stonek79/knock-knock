@@ -85,11 +85,11 @@ export function Broadcast() {
         setIsLoading(true);
         setStatus(null);
 
-        const result = await broadcastService.sendBroadcast(
+        const result = await broadcastService.sendBroadcast({
             text,
             files,
             audioBlob,
-        );
+        });
 
         if (result.isOk()) {
             setStatus({

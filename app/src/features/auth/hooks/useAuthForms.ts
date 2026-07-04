@@ -32,10 +32,10 @@ export function useAuthForms() {
             setSubmitError(null);
             ChatRealtimeService.destroy();
 
-            const result = await AuthService.loginWithPassword(
-                value.username,
-                value.password,
-            );
+            const result = await AuthService.loginWithPassword({
+                username: value.username,
+                password: value.password,
+            });
 
             if (result.isOk()) {
                 return true;
@@ -70,23 +70,23 @@ export function useAuthForms() {
             ChatRealtimeService.destroy();
 
             // 1. Регистрация (Username + Password + Invite + meta)
-            const regResult = await AuthService.register(
-                value.username,
-                value.password,
-                value.invite_code,
-                {
+            const regResult = await AuthService.register({
+                username: value.username,
+                password: value.password,
+                inviteCode: value.invite_code,
+                meta: {
                     display_name: value.display_name.trim(),
                     _startTime: value._startTime,
                     username_bot: value.username_bot,
                 },
-            );
+            });
 
             if (regResult.isOk()) {
                 // 2. Автоматический вход для получения токена
-                const loginResult = await AuthService.loginWithPassword(
-                    value.username,
-                    value.password,
-                );
+                const loginResult = await AuthService.loginWithPassword({
+                    username: value.username,
+                    password: value.password,
+                });
 
                 if (!loginResult.isOk()) {
                     setSubmitError(t("auth.errors.loginAfterRegisterFailed"));

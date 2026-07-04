@@ -130,14 +130,15 @@ export function useUnreadTracking(
             });
 
             if (updateResult.isOk()) {
-                MessageService.markMessagesAsRead(roomId, pbUser.id).catch(
-                    (err) => {
-                        logger.error(
-                            "Ошибка при пометке сообщений как прочитанных в БД",
-                            err,
-                        );
-                    },
-                );
+                MessageService.markMessagesAsRead({
+                    roomId,
+                    currentUserId: pbUser.id,
+                }).catch((err) => {
+                    logger.error(
+                        "Ошибка при пометке сообщений как прочитанных в БД",
+                        err,
+                    );
+                });
             }
         },
         [roomId, pbUser],

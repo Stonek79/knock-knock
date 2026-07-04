@@ -30,12 +30,17 @@ export const authRepository = {
     /**
      * Регистрация нового пользователя
      */
-    register: async (
-        username: string,
-        password: string,
-        inviteCode: string,
-        meta?: Record<string, string>,
-    ): Promise<Result<AuthUser, AuthRepoError>> => {
+    register: async ({
+        username,
+        password,
+        inviteCode,
+        meta,
+    }: {
+        username: string;
+        password: string;
+        inviteCode: string;
+        meta?: Record<string, string>;
+    }): Promise<Result<AuthUser, AuthRepoError>> => {
         return fromPromise(
             pb.collection(DB_TABLES.USERS).create<AuthUser>({
                 username,
@@ -53,11 +58,15 @@ export const authRepository = {
     /**
      * Логин с помощью email и пароля
      */
-    login: async (
-        username: string,
-        password: string,
-        meta?: Record<string, string>,
-    ): Promise<Result<AuthUser, AuthRepoError>> => {
+    login: async ({
+        username,
+        password,
+        meta,
+    }: {
+        username: string;
+        password: string;
+        meta?: Record<string, string>;
+    }): Promise<Result<AuthUser, AuthRepoError>> => {
         return fromPromise(
             pb
                 .collection(DB_TABLES.USERS)

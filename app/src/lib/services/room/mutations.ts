@@ -100,12 +100,12 @@ export async function createRoom({
             public_key_x25519: p.public_key_x25519,
         }));
 
-        const cryptoResult = await encryptRoomKeysForMembers(
-            validProfiles,
+        const cryptoResult = await encryptRoomKeysForMembers({
+            profiles: validProfiles,
             roomKey,
             roomId,
             myUserId,
-        );
+        });
 
         if (cryptoResult.isErr()) {
             return err(cryptoResult.error);
@@ -113,17 +113,17 @@ export async function createRoom({
 
         const { encryptedKeys, roomMembers } = cryptoResult.value;
 
-        const createResult = await roomRepository.createRoomWithMembersAndKeys(
-            {
+        const createResult = await roomRepository.createRoomWithMembersAndKeys({
+            roomData: {
                 id: roomId,
                 type,
                 name: name ?? undefined,
                 created_by: myUserId,
                 visibility: "private",
             },
-            roomMembers,
-            encryptedKeys,
-        );
+            membersData: roomMembers,
+            keysData: encryptedKeys,
+        });
 
         if (createResult.isErr()) {
             return err(
@@ -211,12 +211,17 @@ export async function deleteRoom({
 /**
  * Добавляет участников в существующую группу.
  */
-export async function addMembersToGroup(
-    roomId: string,
-    newMemberIds: string[],
-    roomKey: CryptoKey,
-    myUserId: string,
-): Promise<Result<void, RoomError>> {
+export async function addMembersToGroup({
+    roomId,
+    newMemberIds,
+    roomKey,
+    myUserId,
+}: {
+    roomId: string;
+    newMemberIds: string[];
+    roomKey: CryptoKey;
+    myUserId: string;
+}): Promise<Result<void, RoomError>> {
     try {
         if (newMemberIds.length === 0) {
             return ok(undefined);
@@ -260,12 +265,12 @@ export async function addMembersToGroup(
             public_key_x25519: p.public_key_x25519,
         }));
 
-        const cryptoResult = await encryptRoomKeysForMembers(
-            validProfiles,
+        const cryptoResult = await encryptRoomKeysForMembers({
+            profiles: validProfiles,
             roomKey,
             roomId,
             myUserId,
-        );
+        });
 
         if (cryptoResult.isErr()) {
             return err(cryptoResult.error);
@@ -305,10 +310,13 @@ export async function addMembersToGroup(
 /**
  * Удаляет участника из группы.
  */
-export async function removeMemberFromGroup(
-    roomId: string,
-    userIdToRemove: string,
-): Promise<Result<void, RoomError>> {
+export async function removeMemberFromGroup({
+    roomId,
+    userIdToRemove,
+}: {
+    roomId: string;
+    userIdToRemove: string;
+}): Promise<Result<void, RoomError>> {
     try {
         const result = await roomRepository.removeMemberAndKeyFromRoom(
             roomId,
@@ -342,11 +350,15 @@ export async function removeMemberFromGroup(
 /**
  * Меняет роль пользователя в группе.
  */
-export async function updateMemberRole(
-    roomId: string,
-    targetUserId: string,
-    newRole: RoomMembersRoleOptions,
-): Promise<Result<void, RoomError>> {
+export async function updateMemberRole({
+    roomId,
+    targetUserId,
+    newRole,
+}: {
+    roomId: string;
+    targetUserId: string;
+    newRole: RoomMembersRoleOptions;
+}): Promise<Result<void, RoomError>> {
     try {
         const memberResult = await roomRepository.getMemberByRoomAndUser(
             roomId,
@@ -402,5 +414,5 @@ export async function leaveGroup(
     roomId: string,
     myUserId: string,
 ): Promise<Result<void, RoomError>> {
-    return removeMemberFromGroup(roomId, myUserId);
+    return removeMemberFromGroup({ roomId, userIdToRemove: myUserId });
 }

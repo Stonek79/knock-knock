@@ -30,11 +30,10 @@ export function FavoritesList() {
         }
 
         try {
-            const result = await RoomService.findOrCreateDM(
-                user.id,
-                user.id,
-                false,
-            );
+            const result = await RoomService.findOrCreateDM({
+                currentUserId: user.id,
+                targetUserId: user.id,
+            });
 
             if (result.isOk()) {
                 navigate({

@@ -17,10 +17,13 @@ export const broadcastRepository = {
      * @param text Текст рассылки
      * @returns Result с успешным статусом или ошибкой
      */
-    sendBroadcast: async (
-        text: string,
-        attachmentIds: string[] = [],
-    ): Promise<Result<void, BroadcastRepoError>> => {
+    sendBroadcast: async ({
+        text,
+        attachmentIds = [],
+    }: {
+        text: string;
+        attachmentIds?: string[];
+    }): Promise<Result<void, BroadcastRepoError>> => {
         return fromPromise(
             pb.send(API_ROUTES.BROADCAST_SEND, {
                 method: "POST",
