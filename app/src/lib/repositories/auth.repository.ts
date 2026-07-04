@@ -1,4 +1,4 @@
-import { DB_TABLES, ERROR_CODES, USER_ROLE } from "../constants";
+import { DB_TABLES, ERROR_CODES } from "../constants";
 import { pb } from "../pocketbase";
 import type {
     AuthRepoError,
@@ -42,7 +42,6 @@ export const authRepository = {
                 password,
                 passwordConfirm: password,
                 invite_code: inviteCode,
-                role: USER_ROLE.USER,
                 ...meta,
             }),
             (e) => {
@@ -107,6 +106,13 @@ export const authRepository = {
      */
     isAuthenticated: (): boolean => {
         return pb.authStore.isValid;
+    },
+
+    /**
+     * Проверка: является ли текущий пользователь администратором/суперпользователем
+     */
+    isAdmin: (): boolean => {
+        return pb.authStore.isSuperuser;
     },
 
     /**

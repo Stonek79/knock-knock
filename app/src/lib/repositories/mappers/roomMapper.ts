@@ -2,9 +2,10 @@ import type {
     PBRecord,
     PBRoom,
     PBRoomMember,
+    RoomType,
     RoomWithMembers,
 } from "@/lib/types";
-import { DB_EXPAND } from "../../constants";
+import { DB_EXPAND, ROOM_TYPE } from "../../constants";
 import { ensureISODate } from "../../utils/date";
 
 /**
@@ -13,6 +14,16 @@ import { ensureISODate } from "../../utils/date";
  */
 const isRecord = (val: unknown): val is Record<string, unknown> => {
     return typeof val === "object" && val !== null && !Array.isArray(val);
+};
+
+/**
+ * Проверка, является ли переданная строка допустимым типом комнаты
+ */
+const isRoomType = (type: unknown): type is RoomType => {
+    return (
+        typeof type === "string" &&
+        Object.values(ROOM_TYPE).includes(type as RoomType)
+    );
 };
 
 /**
@@ -46,24 +57,15 @@ export const RoomMapper = {
                     ? ensureISODate(m.last_read_at)
                     : null,
                 joined_at: ensureISODate(m.created),
-                user_name: m.user_name || undefined,
-                user_avatar: m.user_avatar || undefined,
                 pin_position:
                     typeof m.pin_position === "number" ? m.pin_position : null,
-                profiles: {
-                    display_name: m.user_name || "",
-                    username: "",
-                    avatar_url: m.user_avatar
-                        ? getFileUrl(m, m.user_avatar)
-                        : null,
-                },
             };
         });
 
         const domainRoom: RoomWithMembers = {
             id: record.id,
             name: record.name || null,
-            type: record.type,
+            type: isRoomType(record.type) ? record.type : ROOM_TYPE.DIRECT,
             visibility: record.visibility,
             created_at: ensureISODate(record.created),
             updated: record.updated,

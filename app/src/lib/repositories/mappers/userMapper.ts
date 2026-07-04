@@ -1,4 +1,4 @@
-import { USER_ROLE, USER_WEB_STATUS } from "@/lib/constants";
+import { USER_WEB_STATUS } from "@/lib/constants";
 import { profileModelSchema } from "@/lib/schemas/profile";
 import type { Profile, UserRecord } from "@/lib/types";
 
@@ -32,13 +32,30 @@ export const UserMapper = {
             return fallback;
         };
 
+        let displayName = "Anonymous";
+        let avatarUrl: string | null = null;
+
+        if (user.profile_type === "public") {
+            displayName = user.display_name || user.username || "";
+            avatarUrl = user.avatar ? getFileUrl(user, user.avatar) : null;
+        } else {
+            // private или undefined (по умолчанию считаем приватным для безопасности)
+            if (
+                import.meta.env.DEV &&
+                (user.encrypted_profile as Record<string, unknown>)?.mock
+            ) {
+                // Dev-mode bypass для моковых данных
+                displayName = user.display_name || user.username || "Mock User";
+                avatarUrl = user.avatar ? getFileUrl(user, user.avatar) : null;
+            }
+        }
+
         const domainUser = {
             id: user.id,
             email: user.email,
             username: user.username || "",
-            display_name: user.display_name || user.username || "",
-            avatar_url: user.avatar ? getFileUrl(user, user.avatar) : null,
-            role: extractString(user.role, USER_ROLE.USER),
+            display_name: displayName,
+            avatar_url: avatarUrl,
             status: extractString(user.status, USER_WEB_STATUS.OFFLINE),
             last_seen:
                 user.last_seen || user.updated || new Date().toISOString(),

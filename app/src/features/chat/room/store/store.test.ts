@@ -19,8 +19,6 @@ const createMsg = (
     id,
     room: "room-1",
     sender: senderId,
-    sender_name: "User",
-    sender_avatar: "",
     content,
     iv: "iv",
     type: "text",

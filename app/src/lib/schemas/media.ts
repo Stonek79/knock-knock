@@ -82,7 +82,7 @@ export const mediaSchema = z.object({
         ATTACHMENT_TYPES.DOCUMENT,
     ]),
     [MEDIA_FIELDS.SIZE]: z.number(),
-    [MEDIA_FIELDS.MIME_TYPE]: z.string(),
+
     [MEDIA_FIELDS.METADATA]: mediaMetadataSchema.optional(),
     [MEDIA_FIELDS.THUMBNAIL]: z.string().optional(),
     [MEDIA_FIELDS.IS_VAULT]: z.boolean().default(false),

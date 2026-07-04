@@ -57,7 +57,8 @@ export type RoomsTypeOptions =
     | "private_channel"
     | "direct"
     | "group"
-    | "ephemeral";
+    | "ephemeral"
+    | "system";
 
 export type RoomsVisibilityOptions = "public" | "private";
 

@@ -398,7 +398,7 @@ export const ChatRealtimeService = {
                     }
 
                     const record = e.record;
-                    const userId = record.user;
+                    const userId = record.encrypted_user_id;
 
                     _queryClient.setQueryData<Record<string, string>>(
                         QUERY_KEYS.presence(),

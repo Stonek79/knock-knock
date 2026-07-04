@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { LOCAL_KEY_TYPES, USER_FIELDS, USER_ROLE } from "@/lib/constants";
+import type { LOCAL_KEY_TYPES, USER_FIELDS } from "@/lib/constants";
 import type { folderSchema } from "@/lib/schemas/folder";
 import type { userSettingsSchema } from "@/lib/schemas/settings";
 
@@ -7,11 +7,6 @@ import type { userSettingsSchema } from "@/lib/schemas/settings";
  * Доменная модель папки
  */
 export type UserFolder = z.infer<typeof folderSchema>;
-
-/**
- * Роль пользователя (системные)
- */
-export type UserRole = (typeof USER_ROLE)[keyof typeof USER_ROLE];
 
 /**
  * Настройки пользователя

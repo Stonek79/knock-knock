@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { MessageInput, useTypingIndicator } from "@/features/chat/message";
-import { ROOM_TYPE } from "@/lib/constants";
+
 import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";
 import { useChatRoomView } from "../../../../hooks/useChatRoomView";
@@ -59,12 +59,6 @@ export function ChatRoomInputArea({ roomId }: ChatRoomInputAreaProps) {
               isDeleted: replyMessage.is_deleted,
           }
         : null;
-
-    const isSystemRoom = roomInfo?.room.type === ROOM_TYPE.SYSTEM;
-
-    if (isSystemRoom) {
-        return null;
-    }
 
     return (
         <div className={styles.inputArea}>

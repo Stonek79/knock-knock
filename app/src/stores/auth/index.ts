@@ -94,7 +94,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     pbUser: user,
                     profile,
                     loading: false,
-                    isAdmin: profile.role === "admin",
+                    isAdmin: authRepository.isAdmin(),
                 });
             } else {
                 const error = result.error;

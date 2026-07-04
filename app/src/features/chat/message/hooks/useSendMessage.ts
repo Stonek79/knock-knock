@@ -10,6 +10,7 @@ import {
     QUERY_KEYS,
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { SealedSenderUtil } from "@/lib/services/chat-crypto";
 import { mediaService } from "@/lib/services/media";
 import { MessageService } from "@/lib/services/message";
 import type {
@@ -173,9 +174,7 @@ export function useSendMessage({
             const result = await MessageService.sendMessage({
                 roomId,
                 senderId: user.id,
-                senderName: user.display_name,
-                senderAvatar: user?.avatar_url || "",
-                content: text,
+                content: SealedSenderUtil.pack(text, user.id),
                 roomKey,
                 attachments: attachments.length > 0 ? attachments : undefined,
                 metadata: {

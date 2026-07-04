@@ -7,6 +7,8 @@ import {
     NOTIFICATION_CONFIG,
     ROUTES,
 } from "@/lib/constants";
+import { getRoomMasterKey } from "@/lib/crypto/keystore";
+import { decryptMessage } from "@/lib/crypto/messages";
 
 declare const self: ServiceWorkerGlobalScope & {
     __WB_MANIFEST: Array<{ url: string; revision: string | null }>;
@@ -39,36 +41,84 @@ self.addEventListener("push", (event) => {
     if (!self.registration) {
         return;
     }
-    // Пробуем парсить как JSON. Если payload пришёл как plain text (например, при ручном тестировании),
-    // читаем его как строку и кладём в поле body, чтобы не крашиться.
-    let data: Record<string, unknown> = {};
-    try {
-        data = event.data?.json() ?? {};
-    } catch {
-        const rawText = event.data?.text() ?? "";
-        if (rawText) {
-            data = { body: rawText };
-        }
-    }
-    // Безопасное извлечение строковых полей из данных неизвестного типа
-    const title =
-        typeof data.title === "string" && data.title
-            ? data.title
-            : FULL_APP_NAME;
-    const body = typeof data.body === "string" ? data.body : "Новое сообщение";
 
-    const options: KnockNotificationOptions = {
-        body,
-        icon: NOTIFICATION_CONFIG.ICON,
-        badge: NOTIFICATION_CONFIG.BADGE,
-        vibrate: [100, 50, 100],
-        data, // передаём данные целиком для использования в notificationclick
-        actions: [
-            { action: NOTIFICATION_ACTIONS.OPEN, title: "Открыть" },
-            { action: NOTIFICATION_ACTIONS.CLOSE, title: "Закрыть" },
-        ],
-    };
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+        (async () => {
+            // Пробуем парсить как JSON. Если payload пришёл как plain text (например, при ручном тестировании),
+            // читаем его как строку и кладём в поле body, чтобы не крашиться.
+            let data: Record<string, unknown> = {};
+            try {
+                data = event.data?.json() ?? {};
+            } catch {
+                const rawText = event.data?.text() ?? "";
+                if (rawText) {
+                    data = { body: rawText };
+                }
+            }
+
+            // Безопасное извлечение строковых полей
+            const title =
+                typeof data.title === "string" && data.title
+                    ? data.title
+                    : FULL_APP_NAME;
+            let body =
+                typeof data.body === "string" ? data.body : "Новое сообщение";
+
+            // Дешифрация Blind Push
+            const roomId =
+                typeof data.roomId === "string" ? data.roomId : undefined;
+            const content =
+                typeof data.content === "string" ? data.content : undefined;
+            const iv = typeof data.iv === "string" ? data.iv : undefined;
+
+            if (roomId && content && iv) {
+                try {
+                    const roomKey = await getRoomMasterKey(roomId);
+                    if (roomKey) {
+                        const decrypted = await decryptMessage(
+                            content,
+                            iv,
+                            roomKey,
+                        );
+                        if (decrypted) {
+                            try {
+                                const parsed = JSON.parse(decrypted);
+                                body =
+                                    parsed.text ||
+                                    "Новое зашифрованное сообщение";
+                            } catch {
+                                body = decrypted; // Фолбэк для старых сообщений
+                            }
+                        }
+                    } else {
+                        console.warn(
+                            `[SW] Ключ комнаты ${roomId} не найден в Keystore`,
+                        );
+                        body = "Новое зашифрованное сообщение";
+                    }
+                } catch (e) {
+                    console.error(
+                        "[SW] Ошибка дешифрации PUSH-уведомления:",
+                        e,
+                    );
+                    body = "Новое сообщение (ошибка дешифрации)";
+                }
+            }
+
+            const options: KnockNotificationOptions = {
+                body,
+                icon: NOTIFICATION_CONFIG.ICON,
+                badge: NOTIFICATION_CONFIG.BADGE,
+                vibrate: [100, 50, 100],
+                data, // передаём данные целиком для использования в notificationclick
+                actions: [
+                    { action: NOTIFICATION_ACTIONS.OPEN, title: "Открыть" },
+                    { action: NOTIFICATION_ACTIONS.CLOSE, title: "Закрыть" },
+                ],
+            };
+            await self.registration.showNotification(title, options);
+        })(),
+    );
 });
 
 /**

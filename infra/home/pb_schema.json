@@ -218,7 +218,8 @@
 					"private_channel",
 					"direct",
 					"group",
-					"ephemeral"
+					"ephemeral",
+					"system"
 				]
 			},
 			{

@@ -9,9 +9,9 @@ import {
     QUERY_KEYS,
     ROOM_TYPE,
     ROUTES,
-    USER_ROLE,
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { SealedSenderUtil } from "@/lib/services/chat-crypto";
 import { MessageService } from "@/lib/services/message";
 import { RoomService } from "@/lib/services/room";
 import type { ChatMessage, Profile, RoomWithMembers } from "@/lib/types";
@@ -150,7 +150,6 @@ export function useChatActions({
             messageId,
             currentUserId: user.id,
             isOwnMessage,
-            isAdmin: user.role === USER_ROLE.ADMIN,
         });
         if (result.isOk()) {
             if (roomId) {
@@ -185,9 +184,14 @@ export function useChatActions({
             return;
         }
 
+        if (!user) {
+            logger.warn("Невозможно обновить: отсутствует пользователь");
+            return;
+        }
+
         const result = await MessageService.updateMessage({
             messageId,
-            newContent,
+            newContent: SealedSenderUtil.pack(newContent, user.id),
             roomKey,
         });
 

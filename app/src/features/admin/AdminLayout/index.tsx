@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
-import { QUERY_KEYS, ROUTES, USER_ROLE } from "@/lib/constants";
+import { QUERY_KEYS, ROUTES } from "@/lib/constants";
 import { userRepository } from "@/lib/repositories/user.repository";
 import type { Profile } from "@/lib/types/";
 import { useAuthStore } from "@/stores/auth";
@@ -19,6 +19,7 @@ export function AdminLayout() {
     const router = useRouter();
     const pbUser = useAuthStore((state) => state.pbUser);
     const authLoading = useAuthStore((state) => state.loading);
+    const isAdmin = useAuthStore((state) => state.isAdmin);
 
     // Загрузка профиля для проверки роли через репозиторий
     const { data: profile, isLoading: profileLoading } = useQuery({
@@ -56,10 +57,8 @@ export function AdminLayout() {
         return null;
     }
 
-    const { role } = profile;
-
     // Проверка роли администратора
-    if (profile && role !== USER_ROLE.ADMIN) {
+    if (profile && !isAdmin) {
         return (
             <Flex className={styles.accessDeniedContainer}>
                 <Text size="xl" weight="bold" intent="danger">

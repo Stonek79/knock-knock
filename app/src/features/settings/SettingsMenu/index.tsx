@@ -14,8 +14,7 @@ import styles from "./settingsmenu.module.css";
  */
 export function SettingsMenu() {
     const { t } = useTranslation();
-    const pbUser = useAuthStore((state) => state.pbUser);
-    const isAdmin = pbUser?.role === "admin";
+    const isAdmin = useAuthStore((state) => state.isAdmin);
 
     return (
         <Box className={styles.mobileContainer}>

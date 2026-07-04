@@ -11,7 +11,7 @@ import {
     base64ToArrayBuffer,
     exportPublicKey,
 } from "@/lib/crypto/keys";
-import { getKeyPair } from "@/lib/crypto/keystore";
+import { getKeyPair, saveRoomMasterKey } from "@/lib/crypto/keystore";
 import {
     generateDeterministicRoomId,
     generateDeterministicRoomKey,
@@ -302,6 +302,7 @@ export async function getChatRoomData(
             );
             const provisionResult = await provisionSelfChatKey(roomId, userId);
             if (provisionResult.isOk()) {
+                await saveRoomMasterKey({ roomId, key: provisionResult.value });
                 return ok({
                     room,
                     roomKey: provisionResult.value,
@@ -353,6 +354,9 @@ export async function getChatRoomData(
                 },
                 identity.privateKey,
             );
+
+            // Сохраняем расшифрованный мастер-ключ в IndexedDB для ServiceWorker
+            await saveRoomMasterKey({ roomId, key: roomKey });
 
             return ok({ room, roomKey, otherUserId });
         } catch (cryptoError) {

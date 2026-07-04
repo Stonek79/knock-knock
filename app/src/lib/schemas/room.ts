@@ -8,6 +8,8 @@ export const roomTypeSchema = z.enum([
     ROOM_TYPE.DIRECT,
     ROOM_TYPE.GROUP,
     ROOM_TYPE.EPHEMERAL,
+    ROOM_TYPE.PUBLIC_CHANNEL,
+    ROOM_TYPE.PRIVATE_CHANNEL,
     ROOM_TYPE.SYSTEM,
 ]);
 export const memberRoleSchema = z.enum([
@@ -35,8 +37,6 @@ export const expandedMemberSchema = z.object({
     joined_at: z.string(),
     unread_count: z.number().default(0),
     last_read_at: z.string().nullable().optional(),
-    user_name: z.string().optional(),
-    user_avatar: z.string().optional(),
     pin_position: z.number().nullable().optional(),
     profiles: memberProfileSchema.nullable().optional(),
 });

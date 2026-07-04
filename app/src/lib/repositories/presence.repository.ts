@@ -23,7 +23,7 @@ export const presenceRepository = {
             pb
                 .collection(DB_TABLES.PRESENCE_STATUS)
                 .getFirstListItem<PBPresenceStatus>(
-                    `${PRESENCE_FIELDS.USER} = "${userId}"`,
+                    `${PRESENCE_FIELDS.ENCRYPTED_USER_ID} = "${userId}"`,
                 ),
             (e) => {
                 return appError(
@@ -43,7 +43,7 @@ export const presenceRepository = {
     ): Promise<Result<PBPresenceStatus, PresenceRepoError>> => {
         return await fromPromise(
             pb.collection(DB_TABLES.PRESENCE_STATUS).create<PBPresenceStatus>({
-                user: userId,
+                encrypted_user_id: userId,
                 is_online: true,
                 last_ping: new Date().toISOString(),
             }),
@@ -142,8 +142,8 @@ export const presenceRepository = {
             pb
                 .collection(DB_TABLES.PRESENCE_STATUS)
                 .getFullList<PBPresenceStatus>({
-                    filter: `${PRESENCE_FIELDS.IS_TYPING} = true && ${PRESENCE_FIELDS.ROOM_ID} = "${roomId}" && ${PRESENCE_FIELDS.USER} != "${excludeUserId}"`,
-                    expand: PRESENCE_FIELDS.USER,
+                    filter: `${PRESENCE_FIELDS.IS_TYPING} = true && ${PRESENCE_FIELDS.ROOM_ID} = "${roomId}" && ${PRESENCE_FIELDS.ENCRYPTED_USER_ID} != "${excludeUserId}"`,
+                    expand: PRESENCE_FIELDS.ENCRYPTED_USER_ID,
                 }),
             (e) => {
                 return appError(

@@ -19,7 +19,6 @@ import type {
     TaskQueueTypeOptions,
     UserFoldersResponse,
     UsersResponse,
-    UsersRoleOptions,
     UsersStatusOptions,
 } from "../types";
 
@@ -56,7 +55,10 @@ export const USER_FIELDS = {
     DISPLAY_NAME: "display_name",
     AVATAR: "avatar",
     STATUS: "status",
-    ROLE: "role",
+    PROFILE_TYPE: "profile_type",
+    KEY_VAULT: "key_vault",
+    ENCRYPTED_PROFILE: "encrypted_profile",
+    PUBLIC_PROFILE_KEY: "public_profile_key",
     LAST_SEEN: "last_seen",
     SETTINGS: "settings",
     PUBLIC_KEY_X25519: "public_key_x25519",
@@ -77,6 +79,7 @@ export const ROOM_FIELDS = {
     CREATED_BY: "created_by",
     METADATA: "metadata",
     PERMISSIONS: "permissions",
+    INACTIVITY_TIMER: "inactivity_timer",
     IS_TEST: "is_test",
     CREATED: "created",
     UPDATED: "updated",
@@ -89,8 +92,6 @@ export const ROOM_MEMBER_FIELDS = {
     USER: "user",
     ROLE: "role",
     UNREAD_COUNT: "unread_count",
-    USER_NAME: "user_name",
-    USER_AVATAR: "user_avatar",
     FOLDER_ID: "folder_id",
     PIN_POSITION: "pin_position",
     SETTINGS: "settings",
@@ -107,8 +108,6 @@ export const MESSAGE_FIELDS = {
     ID: "id",
     ROOM: "room",
     SENDER: "sender",
-    SENDER_NAME: "sender_name",
-    SENDER_AVATAR: "sender_avatar",
     CONTENT: "content",
     IV: "iv",
     TYPE: "type",
@@ -136,6 +135,8 @@ export const ROOM_TYPE = {
     DIRECT: "direct",
     GROUP: "group",
     EPHEMERAL: "ephemeral",
+    PUBLIC_CHANNEL: "public_channel",
+    PRIVATE_CHANNEL: "private_channel",
     SYSTEM: "system",
 } as const satisfies Record<string, RoomsTypeOptions>;
 
@@ -169,12 +170,6 @@ export const USER_WEB_STATUS = {
     AWAY: "away",
 } as const satisfies Record<string, UsersStatusOptions>;
 
-/** Роли пользователя (системные) */
-export const USER_ROLE = {
-    USER: "user",
-    ADMIN: "admin",
-} as const satisfies Record<string, UsersRoleOptions>;
-
 /** Типы задач в очереди task_queue */
 export const TASK_QUEUE_TYPE = {
     PUSH: "push",
@@ -204,7 +199,7 @@ export const TASK_QUEUE_STATUS = {
 /** Поля коллекции presence_status */
 export const PRESENCE_FIELDS = {
     ID: "id",
-    USER: "user",
+    ENCRYPTED_USER_ID: "encrypted_user_id",
     IS_ONLINE: "is_online",
     IS_TYPING: "is_typing",
     ROOM_ID: "room_id",
@@ -252,9 +247,9 @@ export const MEDIA_FIELDS = {
     ID: "id",
     FILE: "file",
     CREATED_BY: "created_by",
+    ROOM: "room",
     TYPE: "type",
     SIZE: "size",
-    MIME_TYPE: "mime_type",
     METADATA: "metadata",
     THUMBNAIL: "thumbnail",
     IS_VAULT: "is_vault",

@@ -9,6 +9,37 @@ import type { MessageRow } from "../types";
 import { decryptMessagePayload } from "../utils/decryptPayload";
 
 /**
+ * Формат зашифрованного payload'а (Sealed Sender)
+ */
+export interface EncryptedPayload {
+    text: string;
+    sender_uuid: string;
+}
+
+/**
+ * Утилиты для упаковки и распаковки Sealed Sender payload'а.
+ */
+export const SealedSenderUtil = {
+    pack: (text: string, senderId: string): string => {
+        return JSON.stringify({ text, sender_uuid: senderId });
+    },
+    unpack: (payload: string): { text: string; sender_uuid?: string } => {
+        try {
+            const parsed = JSON.parse(payload);
+            if (parsed && typeof parsed === "object" && "text" in parsed) {
+                return {
+                    text: parsed.text,
+                    sender_uuid: parsed.sender_uuid,
+                };
+            }
+        } catch {
+            // Старые сообщения (до Sealed Sender) - это просто текст
+        }
+        return { text: payload };
+    },
+};
+
+/**
  * Сервис для управления криптографическими ключами чатов в памяти и дешифровки сообщений.
  * Централизует кэширование ключей комнат и логику дешифровки превью.
  */
@@ -90,15 +121,10 @@ class ChatCryptoService {
             key || undefined,
         );
 
-        if (decrypted) {
-            return {
-                content: decrypted,
-                isDecrypted: !!key, // Считаем расшифрованным, если был ключ
-            };
-        }
-
         if (decrypted !== null && decrypted !== undefined) {
             let finalContent = decrypted;
+            const unpacked = SealedSenderUtil.unpack(decrypted);
+            finalContent = unpacked.text;
 
             // Если текст пустой, но есть вложения — формируем красивый плейсхолдер
             if (

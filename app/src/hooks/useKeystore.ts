@@ -127,22 +127,24 @@ export function useKeystore(): KeystoreState & KeystoreActions {
         });
 
         try {
-            const identity = await generateIdentityKeyPair();
-            const prekey = await generatePreKeyPair();
+            const identityKeyPair = await generateIdentityKeyPair();
+            const prekeyKeyPair = await generatePreKeyPair();
 
-            await saveKeyPair(
-                KEYSTORE_TYPES.IDENTITY,
-                identity.privateKey,
-                identity.publicKey,
-            );
-            await saveKeyPair(
-                KEYSTORE_TYPES.PREKEY,
-                prekey.privateKey,
-                prekey.publicKey,
-            );
+            await saveKeyPair({
+                type: KEYSTORE_TYPES.IDENTITY,
+                privateKey: identityKeyPair.privateKey,
+                publicKey: identityKeyPair.publicKey,
+            });
+            await saveKeyPair({
+                type: KEYSTORE_TYPES.PREKEY,
+                privateKey: prekeyKeyPair.privateKey,
+                publicKey: prekeyKeyPair.publicKey,
+            });
 
-            const rawIdentity = await exportPublicKey(identity.publicKey);
-            const rawPrekey = await exportPublicKey(prekey.publicKey);
+            const rawIdentity = await exportPublicKey(
+                identityKeyPair.publicKey,
+            );
+            const rawPrekey = await exportPublicKey(prekeyKeyPair.publicKey);
 
             setState({
                 loading: false,
@@ -264,16 +266,16 @@ export function useKeystore(): KeystoreState & KeystoreActions {
 
                 const restored = result.value;
 
-                await saveKeyPair(
-                    KEYSTORE_TYPES.IDENTITY,
-                    restored.identity.privateKey,
-                    restored.identity.publicKey,
-                );
-                await saveKeyPair(
-                    KEYSTORE_TYPES.PREKEY,
-                    restored.prekey.privateKey,
-                    restored.prekey.publicKey,
-                );
+                await saveKeyPair({
+                    type: KEYSTORE_TYPES.IDENTITY,
+                    privateKey: restored.identity.privateKey,
+                    publicKey: restored.identity.publicKey,
+                });
+                await saveKeyPair({
+                    type: KEYSTORE_TYPES.PREKEY,
+                    privateKey: restored.prekey.privateKey,
+                    publicKey: restored.prekey.publicKey,
+                });
 
                 await loadKeys();
                 return ok(undefined);

@@ -378,7 +378,7 @@ export const mediaService = {
                 mediaService._getFileType(file.type),
             );
             formData.append(MEDIA_FIELDS.SIZE, original.size.toString());
-            formData.append(MEDIA_FIELDS.MIME_TYPE, file.type);
+
             formData.append(MEDIA_FIELDS.IS_VAULT, isVault.toString());
             formData.append(
                 MEDIA_FIELDS.REFERENCES,
@@ -535,7 +535,6 @@ export const mediaService = {
             [MEDIA_CACHE_FIELDS.METADATA]: {
                 name: record[MEDIA_FIELDS.FILE],
                 size: original?.size || record[MEDIA_FIELDS.SIZE] || 0,
-                mimeType: record[MEDIA_FIELDS.MIME_TYPE],
                 ...safeMetadata,
             },
             [MEDIA_CACHE_FIELDS.REFERENCES]: roomId
@@ -712,7 +711,9 @@ export const mediaService = {
 
             // Обходим баг Safari с IndexedDB, перечитывая Blob из Web Worker'а в ArrayBuffer на главном потоке
             const originalBuffer = await decryptResult.original.arrayBuffer();
-            const originalMime = record[MEDIA_FIELDS.MIME_TYPE] || "";
+            const originalMime =
+                (record[MEDIA_FIELDS.METADATA] as { mimeType?: string })
+                    ?.mimeType || "";
             const typedOriginalBlob = new Blob([originalBuffer], {
                 type: originalMime,
             });

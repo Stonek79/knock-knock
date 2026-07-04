@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { USER_ROLE, VALIDATION } from "@/lib/constants";
+import { VALIDATION } from "@/lib/constants";
 import { userSettingsSchema } from "./settings";
 
 // Схема для валидации формы обновления профиля
@@ -22,9 +22,6 @@ export const profileModelSchema = z.object({
     avatar_url: z.string().nullable().optional(),
     status: z.string().optional(),
     last_seen: z.string().optional(),
-    role: z
-        .enum([USER_ROLE.USER, USER_ROLE.ADMIN] as const)
-        .catch(USER_ROLE.USER),
     banned_until: z.string().nullable().optional(),
     is_agreed_to_rules: z.boolean().optional(),
     created_at: z.string().optional(),

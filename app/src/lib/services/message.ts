@@ -13,8 +13,6 @@ import { mediaService } from "./media";
 export interface SendMessageOptions {
     roomId: string;
     senderId: string;
-    senderName?: string;
-    senderAvatar?: string;
     content: string;
     roomKey: CryptoKey;
     attachments?: Attachment[];
@@ -51,8 +49,6 @@ export const MessageService = {
     async sendMessage({
         roomId,
         senderId,
-        senderName,
-        senderAvatar,
         content,
         roomKey,
         attachments,
@@ -79,8 +75,6 @@ export const MessageService = {
         const result = await messageRepository.sendMessage({
             room: roomId,
             sender: senderId,
-            sender_name: senderName || "",
-            sender_avatar: senderAvatar || "",
             content: ciphertext,
             iv,
             attachments: attachments ?? null,

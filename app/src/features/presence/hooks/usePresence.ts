@@ -31,7 +31,7 @@ export function usePresence() {
                 const lastPing = new Date(r.last_ping).getTime();
                 const isStale = now - lastPing > 90000;
 
-                initialMap[r.user] =
+                initialMap[r.encrypted_user_id] =
                     r.is_online && !isStale
                         ? USER_WEB_STATUS.ONLINE
                         : USER_WEB_STATUS.OFFLINE;

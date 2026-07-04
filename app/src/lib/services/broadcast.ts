@@ -68,7 +68,7 @@ export const broadcastService = {
 
                 formData.append(MEDIA_FIELDS.TYPE, type);
                 formData.append(MEDIA_FIELDS.SIZE, file.size.toString());
-                formData.append(MEDIA_FIELDS.MIME_TYPE, mimeType);
+
                 formData.append(MEDIA_FIELDS.IS_VAULT, "false");
                 formData.append(
                     MEDIA_FIELDS.REFERENCES,

@@ -358,6 +358,8 @@ onRecordAfterCreateSuccess((e) => {
 		const payload = {
 			type: DB.VALUES.PUSH_TYPE_NEW_MESSAGE,
 			roomId: roomId,
+			content: message.get(DB.FIELDS.CONTENT),
+			iv: message.get(DB.FIELDS.IV),
 		};
 
 		// Сохранение задачи в task_queue

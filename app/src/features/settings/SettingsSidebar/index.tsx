@@ -15,8 +15,7 @@ import styles from "./settingssidebar.module.css";
 export function SettingsSidebar() {
     const { t } = useTranslation();
     const location = useLocation();
-    const pbUser = useAuthStore((state) => state.pbUser);
-    const isAdmin = pbUser?.role === "admin";
+    const isAdmin = useAuthStore((state) => state.isAdmin);
 
     return (
         <Box className={styles.sidebar}>

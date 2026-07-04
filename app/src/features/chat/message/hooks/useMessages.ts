@@ -7,6 +7,7 @@ import {
 } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { messageRepository } from "@/lib/repositories/message.repository";
+import { SealedSenderUtil } from "@/lib/services/chat-crypto";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
 import type { ChatMessage } from "@/lib/types";
 import { decryptMessagePayload } from "@/lib/utils/decryptPayload";
@@ -88,10 +89,19 @@ export function useMessages({ roomId, roomKey }: UseMessagesProps) {
                 // Дешифровка контента для истории через общую утилиту
                 const content = await decryptMessagePayload(record, roomKey);
 
+                let finalContent = content;
+                if (content) {
+                    const unpacked = SealedSenderUtil.unpack(content);
+                    finalContent = unpacked.text;
+                    if (unpacked.sender_uuid) {
+                        record.sender = unpacked.sender_uuid;
+                    }
+                }
+
                 // Используем маппер для создания доменного объекта
                 decrypted.push({
                     ...record,
-                    content,
+                    content: finalContent,
                 });
             }
 

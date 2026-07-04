@@ -70,11 +70,6 @@ export const MessageMapper = {
 
         return {
             ...record,
-            // Добавляем profiles для UI
-            profiles: {
-                display_name: record.sender_name,
-                avatar_url: record.sender_avatar,
-            },
             attachments: this.parseAttachments(record.attachments),
             metadata,
             reactions_summary,

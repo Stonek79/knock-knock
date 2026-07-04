@@ -1,5 +1,6 @@
 import { DB_TABLES, MESSAGE_STATUS, MESSAGE_TYPE } from "@/lib/constants";
 import { CLIENT_MESSAGE_STATUS } from "@/lib/constants/ui";
+import { SealedSenderUtil } from "@/lib/services/chat-crypto";
 import type { Attachment, ChatMessage } from "@/lib/types";
 
 /**
@@ -50,9 +51,7 @@ export function createOptimisticMessage(
         // --- Поля из MessagesRecord ---
         room: params.roomId,
         sender: params.senderId,
-        sender_name: params.senderName,
-        sender_avatar: params.senderAvatar,
-        content: params.text || null,
+        content: SealedSenderUtil.pack(params.text || "", params.senderId),
         iv: "",
         type: MESSAGE_TYPE.TEXT,
         status: MESSAGE_STATUS.SENT,
@@ -69,6 +68,10 @@ export function createOptimisticMessage(
         metadata: { deleted_by: [] },
         attachments: params.attachments ?? null,
         reactions_summary: null,
+        profiles: {
+            display_name: params.senderName,
+            avatar_url: params.senderAvatar,
+        },
 
         // --- Клиентские мета-поля ---
         _uiStatus: CLIENT_MESSAGE_STATUS.SENDING,

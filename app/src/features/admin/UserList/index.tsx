@@ -7,7 +7,7 @@ import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Table } from "@/components/ui/Table";
 import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
-import { COMPONENT_INTENT, USER_ROLE } from "@/lib/constants";
+
 import { formatChatTime } from "@/lib/utils/date";
 import { useUserManagement } from "../hooks/useUserManagement";
 import styles from "./userlist.module.css";
@@ -40,9 +40,7 @@ export function UserList() {
                         <Table.ColumnHeaderCell>
                             {t("admin.tableUser", "User")}
                         </Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>
-                            {t("admin.tableRole", "Role")}
-                        </Table.ColumnHeaderCell>
+
                         <Table.ColumnHeaderCell>
                             {t("admin.tableStatus", "Status")}
                         </Table.ColumnHeaderCell>
@@ -74,19 +72,7 @@ export function UserList() {
                                         )}
                                     </Flex>
                                 </Table.RowHeaderCell>
-                                <Table.Cell>
-                                    <Badge
-                                        className={styles.badge}
-                                        intent={
-                                            user.role === USER_ROLE.ADMIN
-                                                ? COMPONENT_INTENT.PRIMARY
-                                                : COMPONENT_INTENT.NEUTRAL
-                                        }
-                                        variant="soft"
-                                    >
-                                        {user.role || USER_ROLE.USER}
-                                    </Badge>
-                                </Table.Cell>
+
                                 <Table.Cell>
                                     {isBanned ? (
                                         <Badge

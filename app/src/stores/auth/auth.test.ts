@@ -18,7 +18,6 @@ vi.mock("@/lib/services/auth", () => ({
             username: user.username,
             display_name: user.display_name,
             avatar_url: null,
-            role: user.role || "user",
             created_at: user.created || new Date().toISOString(),
             status: user.status || "offline",
             last_seen: user.last_seen || new Date().toISOString(),

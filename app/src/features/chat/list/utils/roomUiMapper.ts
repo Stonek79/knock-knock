@@ -24,9 +24,7 @@ export function mapRoomToChatItem(
     // 1. Определяем контекст чата
     const isSavedMessages =
         room.type === ROOM_TYPE.DIRECT && members.length === 1;
-    const peerMember = members.find((m) => m.user_id !== currentUserId);
     const me = members.find((m) => m.user_id === currentUserId);
-    const peer = peerMember?.profiles || null;
 
     // 2. Обработка последнего сообщения (типизировано через lastMessagePreviewSchema)
     const lastMsg = room.last_message;
@@ -65,17 +63,13 @@ export function mapRoomToChatItem(
 
     // 4. Формирование имени и аватара
     let roomName = room.name || "chat.unknownRoom";
-    let roomAvatar = isSavedMessages
-        ? undefined
-        : peer?.avatar_url || undefined;
+    let roomAvatar: string | undefined; // Аватар теперь подтягивается на уровне UI через связи (user_id)
 
-    if (room.type === "system") {
-        roomName = "Knock-Knock";
-        roomAvatar = undefined; // Можно добавить ссылку на логотип, если есть
-    } else if (room.type === ROOM_TYPE.DIRECT) {
+    if (room.type === ROOM_TYPE.DIRECT) {
+        // Имя собеседника (peer) теперь также должно подтягиваться на уровне UI
         roomName = isSavedMessages
             ? "favorites.title"
-            : peer?.display_name || room.name || "chat.unknownRoom";
+            : room.name || "chat.unknownRoom";
     }
 
     return {
@@ -87,7 +81,6 @@ export function mapRoomToChatItem(
         unread: me?.unread_count || 0,
         pinPosition: me?.pin_position ?? null,
         isSelf: isSavedMessages,
-        isSystem: room.type === "system",
         isSavedMessages,
         isEphemeral: room.type === ROOM_TYPE.EPHEMERAL,
         _lastMsgTimestamp: lastMsgTimestamp,
