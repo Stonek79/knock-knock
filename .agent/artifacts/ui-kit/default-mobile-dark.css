@@ -1,0 +1,338 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap");
+
+:root {
+	--base-font-size: 14px;
+	--bg-main: #0e1621;
+	--bg-card: #17212b;
+	--text-white: #ffffff;
+	--text-grey: #7f91a4;
+	--accent: #5288c1;
+	--border: #242f3d;
+
+	--gold: var(--accent);
+	--gold-glow: transparent;
+	--gold-border: var(--border);
+	--emerald-dark: #2b5278;
+	--bg: var(--bg-main);
+	--bg2: var(--bg-card);
+	--text: var(--text-white);
+	--text-secondary: var(--text-grey);
+	--glass: var(--bg-card);
+	--glass-border: var(--border);
+	--badge: var(--accent);
+
+	--radius-sm: 0.5rem;
+	--radius-md: 0.75rem;
+	--radius-lg: 1.25rem;
+	--radius-full: 9999rem;
+	--font-main: "Inter", sans-serif;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	min-height: 100dvh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+	font-family: var(--font-main);
+	color: var(--text-white);
+	background: #000; /* Фон страницы для презентации */
+}
+
+/* Фон-картинка для Emerald презентации */
+.background {
+	position: fixed;
+	inset: 0;
+	background: var(--bg-main);
+	filter: blur(10px) brightness(0.7); /* Сильно блюрим для задника презентации */
+	pointer-events: none;
+	z-index: -1;
+}
+
+/* Каркас телефона */
+.phone {
+	width: 24rem; /* Около 384px - стандартный мобильный */
+	height: 52rem; /* Около 832px */
+	border-radius: 3rem;
+	overflow: hidden;
+	position: relative;
+	border: 2px solid rgba(255, 255, 255, 0.15);
+
+	/* Основной фон внутри телефона - та же картинка, но без размытия */
+	background: var(--bg-main);
+
+	box-shadow: 0 0 4rem rgba(0, 0, 0, 0.6);
+	display: flex;
+	flex-direction: column;
+}
+
+.glass {
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+}
+
+.header {
+	padding: 1rem 1.5rem 1rem;
+	text-align: center;
+	border-bottom: 1px solid var(--gold-border);
+}
+
+.header h1 {
+	font-size: 1.8rem;
+	font-weight: 500;
+	letter-spacing: 0.05rem;
+	color: var(--text-white);
+}
+
+.tabs {
+	display: flex;
+	justify-content: space-around;
+	padding: 0.5rem 1rem;
+	border-top: 1px solid var(--gold);
+	border-bottom: 1px solid var(--gold);
+}
+
+.tabs button {
+	border: none;
+	background: none;
+	color: var(--text-grey);
+	font-size: 0.9rem;
+	font-weight: 500;
+	padding: 0.75rem 0.5rem;
+	cursor: pointer;
+	font-family: var(--font-main);
+	transition: all 0.2s;
+}
+
+.tabs .active {
+	color: var(--gold);
+	border-bottom: 2px solid var(--gold);
+	text-shadow: 0 0 5px var(--gold-glow);
+}
+
+.chat-list {
+	padding: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	flex: 1;
+	overflow-y: auto;
+	padding-bottom: 6rem; /* Место под навбар */
+}
+
+/* Скрываем скроллбар */
+.chat-list::-webkit-scrollbar {
+	width: 0;
+}
+
+.chat {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem;
+	border-radius: 1rem;
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	transition: 0.2s;
+}
+
+.avatar {
+	position: relative;
+}
+
+.avatar img {
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 1px solid var(--gold);
+}
+
+.chat.active .avatar img {
+	border-color: var(--gold);
+	box-shadow: 0 0 10px var(--gold-glow);
+}
+
+.online {
+	width: 0.8rem;
+	height: 0.8rem;
+	border-radius: 50%;
+	position: absolute;
+	bottom: 0.1rem;
+	right: 0.1rem;
+	background: var(--gold);
+	border: 2px solid #111;
+}
+
+.content {
+	flex: 1;
+	min-width: 0;
+}
+
+.content h3 {
+	font-size: 1.1rem;
+	font-weight: 500;
+	margin-bottom: 0.2rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.content p {
+	color: var(--text-grey);
+	font-size: 0.9rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.content span {
+	color: var(--gold);
+}
+
+.meta {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.5rem;
+}
+
+.meta span {
+	font-size: 0.8rem;
+	color: var(--text-grey);
+}
+
+.badge {
+	min-width: 1.4rem;
+	height: 1.4rem;
+	padding: 0 0.4rem;
+	border-radius: 1rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: var(--gold);
+	color: #111;
+	font-size: 0.75rem;
+	font-weight: 600;
+	box-shadow: 0 0 8px var(--gold-glow);
+}
+
+/* =========================================
+   НАВБАР И ВЫЕМКА (EMERALD)
+   ========================================= */
+
+.nav-container {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 6rem;
+	z-index: 10;
+
+	background: rgba(255, 255, 255, 0.07);
+}
+
+/* Сам стеклянный навбар с выемкой */
+.bottom {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	padding: 0 1rem 1rem 1rem;
+	background: var(--bg-card);
+	border-top: 1px solid var(--border);
+}
+
+.bottom::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	border-top: 1px solid var(--gold);
+	box-shadow: 0 0 5px var(--gold-glow);
+	z-index: -1;
+}
+
+.nav-item {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.3rem;
+	color: var(--text-grey);
+	font-size: 0.75rem;
+	cursor: pointer;
+	transition: color 0.2s;
+}
+
+.nav-item svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	stroke: currentColor;
+}
+
+.nav-item.active {
+	color: var(--gold);
+}
+.nav-item.active svg {
+	filter: drop-shadow(0 0 5px var(--gold-glow));
+}
+
+.nav-center-placeholder {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	height: 100%;
+}
+.nav-center-placeholder span {
+	font-size: 0.7rem;
+	font-weight: 500;
+	letter-spacing: 0.05rem;
+	color: var(--gold);
+	margin-bottom: -0.2rem;
+}
+
+/* Кнопка создания */
+.new-chat {
+	position: absolute;
+	top: -2rem;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 4.4rem;
+	height: 4.4rem;
+	border-radius: 50%;
+	z-index: 20;
+	cursor: pointer;
+	border: 2px solid var(--gold);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	transition: 0.2s;
+	color: var(--gold);
+
+	background: rgba(255, 255, 255, 0.07);
+}
+
+.new-chat:hover {
+	transform: translateX(-50%) scale(1.05);
+	box-shadow:
+		0 0 25px var(--gold),
+		inset 0 0 15px rgba(229, 204, 144, 0.5);
+}
+
+.new-chat svg {
+	width: 2.5rem;
+	height: 2.5rem;
+	stroke: currentColor;
+}

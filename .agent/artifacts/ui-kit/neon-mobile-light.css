@@ -1,0 +1,418 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+	--base-font-size: 14px;
+	--bg: #f0f4f8;
+	--bg2: #ffffff;
+
+	--glass: rgba(255, 255, 255, 0.5);
+	--glass-border: rgba(0, 0, 0, 0.05);
+
+	--text: #111111;
+	--text-secondary: #6b7280;
+
+	--cyan: #008b9e;
+	--pink: #c2185b;
+
+	--cyan-glow: rgba(70, 236, 255, 0.6);
+	--pink-glow: rgba(255, 98, 221, 0.6);
+
+	--badge: #ff63d8;
+
+	font-size: var(--base-font-size);
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	min-height: 100dvh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+	font-family: "Inter", sans-serif;
+	color: var(--text);
+
+	/* Фон презентации */
+	background: url("neon_light_mob.jpg") no-repeat center center / cover;
+}
+
+.background {
+	position: fixed;
+	inset: 0;
+	background: url("neon_light_mob.jpg") no-repeat center center / cover;
+	filter: blur(15px) brightness(1); /* Размытый и затемненный задник */
+	pointer-events: none;
+	z-index: -1;
+}
+
+/* Каркас телефона */
+.phone {
+	width: 24rem;
+	height: 52rem;
+	border-radius: 3rem;
+	overflow: hidden;
+	position: relative;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	background: url("neon_light_mob.jpg") no-repeat center center / cover;
+	box-shadow:
+		0 0 4rem rgba(0, 0, 0, 0.1),
+		inset 0 0 50px rgba(0, 0, 0, 0.05);
+	display: flex;
+	flex-direction: column;
+}
+
+.glass {
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	background: var(--glass);
+}
+
+.header {
+	padding: 1rem 1.5rem 1rem;
+	text-align: center;
+}
+
+.header h1 {
+	font-size: 2rem;
+	letter-spacing: 0.1rem;
+	color: var(--cyan);
+	text-shadow: 0 0 1rem var(--cyan);
+}
+
+.tabs {
+	display: flex;
+	justify-content: space-around;
+	padding: 0.5rem 1rem;
+	border-top: 1px solid var(--cyan-glow);
+	border-bottom: 1px solid var(--cyan-glow);
+	background: rgba(255, 255, 255, 0.6);
+}
+
+.tabs .active {
+	color: var(--cyan);
+	border-bottom: 2px solid var(--cyan);
+	text-shadow: none;
+}
+
+.tabs button {
+	border: none;
+	background: none;
+	color: #6b7280;
+	font-size: 0.9rem;
+	font-weight: 600;
+	padding: 0.75rem 0.5rem;
+	cursor: pointer;
+	font-family: "Inter", sans-serif;
+	transition: 0.2s;
+}
+
+.chat-list {
+	padding: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	flex: 1;
+	overflow-y: auto;
+	padding-bottom: 7rem;
+}
+
+.chat-list::-webkit-scrollbar {
+	width: 0;
+}
+
+.chat {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem;
+	border-radius: 1.3rem;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	transition: 0.25s;
+}
+
+.chat.active {
+	background: rgba(70, 236, 255, 0.05);
+	border-color: rgba(70, 236, 255, 0.3);
+	box-shadow:
+		0 0 1.5rem var(--cyan-glow),
+		inset 0 0 1rem var(--cyan-glow);
+}
+
+.chat.pink {
+	background: rgba(255, 98, 221, 0.05);
+	border-color: rgba(255, 98, 221, 0.3);
+	box-shadow:
+		0 0 1.5rem var(--pink-glow),
+		inset 0 0 1rem var(--pink-glow);
+}
+
+.avatar {
+	position: relative;
+}
+
+.avatar img {
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 2px solid var(--cyan);
+	box-shadow: 0 0 1rem var(--cyan-glow);
+}
+.chat.pink .avatar img {
+	border-color: var(--pink);
+	box-shadow: 0 0 1rem var(--pink-glow);
+}
+
+.online {
+	width: 0.8rem;
+	height: 0.8rem;
+	border-radius: 50%;
+	position: absolute;
+	bottom: 0.1rem;
+	right: 0.1rem;
+	background: var(--cyan);
+	box-shadow: 0 0 0.8rem var(--cyan);
+	border: 2px solid var(--bg);
+}
+
+.online.pink {
+	background: var(--pink);
+	box-shadow: 0 0 0.8rem var(--pink);
+}
+
+.content {
+	flex: 1;
+	min-width: 0;
+}
+
+.content h3 {
+	font-size: 1.1rem;
+	margin-bottom: 0.2rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.content p {
+	color: var(--text-secondary);
+	font-size: 0.9rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.content span {
+	color: var(--cyan);
+	text-shadow: none;
+}
+.chat.pink .content span {
+	color: var(--pink);
+	text-shadow: 0 0 5px var(--pink);
+}
+
+.meta {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.5rem;
+}
+.meta span {
+	font-size: 0.8rem;
+	color: #888888;
+}
+
+.badge {
+	min-width: 1.4rem;
+	height: 1.4rem;
+	padding: 0 0.4rem;
+	border-radius: 1rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: var(--badge);
+	color: #fff;
+	font-size: 0.75rem;
+	font-weight: 700;
+	box-shadow: 0 0 1rem var(--pink);
+}
+
+/* =========================================
+   НАВБАР И ВЫЕМКА (CYBERPUNK NEON)
+   ========================================= */
+
+.nav-container {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 6rem;
+	z-index: 10;
+
+	background: rgba(255, 255, 255, 0.5);
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
+}
+
+/* Сам стеклянный навбар с выемкой */
+.bottom {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	padding: 0 1rem 1rem 1rem; /* Учитываем home indicator */
+	background: rgba(255, 255, 255, 0.6);
+	/* Создаем выемку по центру (маска) */
+	/* Круглая вырезанная область радиусом 2.8rem по центру верха */
+	mask-image: radial-gradient(
+		circle at 50% 0,
+		transparent 2.8rem,
+		black 2.8rem
+	);
+	-webkit-mask-image: radial-gradient(
+		circle at 50% 0,
+		transparent 2.8rem,
+		black 2.8rem
+	);
+}
+
+/* Создаем верхнюю световую границу, которая тоже обрезается выемкой */
+.bottom::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	z-index: -1;
+	border-top: 1px solid var(--cyan-glow);
+	box-shadow: 0 0 5px var(--cyan-glow);
+}
+
+.nav-item {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.3rem;
+	color: #6b7280;
+	font-size: 0.75rem;
+	cursor: pointer;
+	transition: 0.2s;
+}
+
+.nav-item svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	stroke: currentColor;
+}
+
+.nav-item.active {
+	color: var(--cyan);
+	text-shadow: none;
+}
+
+/* Место под центральную кнопку */
+.nav-center-placeholder {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	height: 100%;
+}
+.nav-center-placeholder span {
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.05rem;
+	color: var(--cyan);
+	text-shadow: none;
+	margin-bottom: -0.2rem;
+}
+
+/* Центральная неоновая кнопка (расположена ВНЕ выемки, чтобы не обрезаться) */
+.new-chat {
+	position: absolute;
+	top: -2rem; /* Поднимаем из выемки */
+	left: 50%;
+	transform: translateX(-50%);
+	width: 4.4rem;
+	height: 4.4rem;
+	border-radius: 50%;
+	z-index: 20;
+	cursor: pointer;
+	border: var(--cyan) 2px solid;
+	background: rgba(255, 255, 255, 0.5);
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	transition: 0.2s;
+}
+
+.new-chat:hover {
+	transform: translateX(-50%) scale(1.05);
+	box-shadow:
+		0 -15px 35px rgba(255, 98, 221, 0.8),
+		0 15px 35px rgba(70, 236, 255, 0.8),
+		inset 0 2px 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Плюсик внутри, который тоже с градиентом (сделаем через текст или SVG mask) */
+.plus-icon {
+	width: 2.2rem;
+	height: 2.2rem;
+	/* Для градиента на самом плюсе внутри цветной кнопки, 
+	   плюс должен быть контрастным (например белым или черным),
+	   так как фон кнопки уже градиентный. 
+	   Пользователь просил: "плючик внутри большой который тоже имеет фоновую подсветку переходящий из розового в синий". 
+	   Чтобы плюс был градиентным на фоне градиента, мы сделаем кнопку темно-стеклянной ВНУТРИ ободка?
+	   Или кнопка полность цветная? Ок, пусть плюс будет БЕЛЫМ с градиентным свечением. */
+	background: #fff;
+	mask:
+		url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>')
+		center / contain no-repeat;
+	-webkit-mask:
+		url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>')
+		center / contain no-repeat;
+}
+
+/* Градиентный бордер через before */
+.new-chat::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.5);
+	z-index: -1;
+	box-shadow:
+		0 -10px 25px rgba(255, 98, 221, 0.6),
+		0 10px 25px rgba(70, 236, 255, 0.6);
+}
+
+/* Темная внутренность */
+.new-chat-inner {
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: rgba(255, 255, 255, 0.5);
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
+}
+
+/* Плюсик с градиентом от розового к синему */
+.plus-icon {
+	background: linear-gradient(180deg, var(--pink), var(--cyan));
+	width: 2.2rem;
+	height: 2.2rem;
+	/* Свечение самого плюсика */
+	filter: drop-shadow(0 0 8px var(--cyan));
+}

@@ -1,0 +1,602 @@
+/* =========================================================
+   KNOCK KNOCK — MESSENGER (V14 - Bulletproof Glass + Olive Gold BG)
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap");
+
+:root {
+	--base-font-size: 14px;
+
+	/* --- Цветовая палитра --- */
+	--gold: #b8860b;
+	--gold-glow: rgba(184, 134, 11, 0.3);
+	--gold-border: rgba(184, 134, 11, 0.4);
+
+	--emerald-dark: #e0ede6;
+
+	/* Тот самый RGB 11 11 11, но в формате RGBA для сохранения прозрачности! */
+	--bg-dark: rgba(255, 255, 255, 0.4); /* Чуть прозрачнее для блюра */
+	--bg-darker: rgba(255, 255, 255, 0.6);
+
+	--active-chat: linear-gradient(
+		90deg,
+		rgba(74, 83, 78, 0.5) 0%,
+		rgba(49, 64, 57, 0.1) 100%
+	);
+
+	--text-white: #111111;
+	--text-gold: var(--gold);
+	--text-grey: #5c6660;
+
+	--radius-sm: 0.5rem;
+	--radius-md: 0.75rem;
+	--radius-lg: 1.25rem;
+	--radius-full: 9999rem;
+
+	--sidebar-w: 5.5rem;
+	--chatlist-w: 23rem;
+	--header-height: 5.5rem;
+
+	--font-main: "Outfit", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+html {
+	font-size: var(--base-font-size);
+}
+button {
+	cursor: pointer;
+	border: none;
+	background: none;
+	color: inherit;
+	font-family: inherit;
+}
+input {
+	border: none;
+	outline: none;
+	background: none;
+	color: inherit;
+	font-family: inherit;
+}
+ul {
+	list-style: none;
+}
+a {
+	text-decoration: none;
+	color: inherit;
+}
+
+/* =========================================================
+   ФОН (Оливковая ветвь с золотыми стеблями)
+   ========================================================= */
+body {
+	font-family: var(--font-main);
+	font-weight: 300;
+	color: var(--text-white);
+	min-height: 100dvh;
+	overflow: hidden;
+	/* Устанавливаем сгенерированную картинку на фон */
+	background: url("olive_gold_bg_light.jpg") no-repeat center center / cover;
+}
+
+/* =========================================================
+   ОБЩИЙ КОНТЕЙНЕР
+   ========================================================= */
+.app {
+	display: flex;
+	height: 100dvh;
+	width: 100%;
+	padding: 1.5rem;
+	gap: 1.5rem;
+}
+
+/* =========================================================
+   ПУЛЕНЕПРОБИВАЕМЫЙ ГЛАССМОРФИЗМ (Стандарт CSS Generator)
+   ========================================================= */
+.glass-block {
+	/* Только прозрачный RGBA цвет, никаких градиентов внутри фона */
+	background: rgba(255, 255, 255, 0.07);
+
+	/* Только blur, без saturate и brightness, чтобы не вызывать баги рендеринга WebKit */
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+
+	/* Границы стекла */
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: var(--radius-lg);
+
+	/* Тень */
+	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* =========================================================
+   ЛЕВАЯ НАВИГАЦИЯ (Сайдбар)
+   ========================================================= */
+.sidebar {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: var(--sidebar-w);
+	flex-shrink: 0;
+	padding: 1.5rem 0;
+	gap: 2rem;
+	background: var(--bg-darker);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+}
+.sidebar__bottom {
+	margin-top: auto;
+}
+
+.avatar-profile {
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: var(--radius-full);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--gold);
+	font-size: 1.25rem;
+	font-weight: 500;
+	border: 1px solid var(--gold);
+	box-shadow:
+		inset 0 1px 2px rgba(255, 255, 255, 0.2),
+		0 4px 15px var(--gold-glow);
+	background: rgba(229, 204, 144, 0.1);
+}
+
+.nav {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	width: 100%;
+}
+.nav__list {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	width: 100%;
+}
+.nav__item {
+	width: 100%;
+}
+.nav__link {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	padding: 0.5rem 0;
+	color: var(--text-grey);
+	transition: all 0.2s ease;
+	gap: 0.35rem;
+}
+.nav__link:hover {
+	color: var(--gold);
+}
+.nav__link--active {
+	color: var(--gold);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.nav__link--active .nav__icon {
+	filter: drop-shadow(0 0 8px var(--gold));
+}
+
+.nav__link--active::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 2px;
+	height: 100%;
+	background: var(--gold);
+	box-shadow: 0 0 8px var(--gold-glow);
+}
+.nav__icon {
+	width: 1.5rem;
+	height: 1.5rem;
+}
+.nav__label {
+	font-size: 0.85rem;
+	font-weight: 400;
+}
+.menu-btn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35rem;
+	color: var(--text-grey);
+}
+.menu-btn:hover {
+	color: var(--gold);
+}
+
+/* =========================================================
+   СПИСОК ДИАЛОГОВ
+   ========================================================= */
+.chat-list {
+	display: flex;
+	flex-direction: column;
+	width: var(--chatlist-w);
+	flex-shrink: 0;
+}
+
+.chat-list__header {
+	height: var(--header-height);
+	padding: 0 1.5rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: rgba(255, 255, 255, 0.1);
+	border-bottom: 1px solid var(--gold-border);
+	border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.chat-list__title {
+	font-family: var(--font-main);
+	font-size: 1.65rem;
+	font-weight: 500;
+	color: var(--text-white);
+}
+.icon-btn {
+	width: 2.25rem;
+	height: 2.25rem;
+	color: var(--text-grey);
+	transition: color 0.2s;
+}
+.icon-btn:hover {
+	color: var(--gold);
+	filter: drop-shadow(0 0 5px var(--gold-glow));
+}
+.icon-btn svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.search {
+	padding: 1.25rem 1.5rem;
+	position: relative;
+}
+.search__icon {
+	position: absolute;
+	left: 2.25rem;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 1rem;
+	height: 1rem;
+	color: var(--text-grey);
+}
+.search__input {
+	width: 100%;
+	padding: 0.75rem 1rem 0.75rem 2.5rem;
+	font-size: 0.95rem;
+	background: var(--bg-dark);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border-radius: var(--radius-md);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: var(--text-white);
+}
+.search__input::placeholder {
+	color: var(--text-grey);
+}
+
+.conversations {
+	flex: 1;
+	overflow-y: auto;
+	padding: 0;
+}
+.conversation {
+	display: flex;
+	gap: 1rem;
+	padding: 1rem 0.5rem;
+	cursor: pointer;
+	transition: background 0.2s ease;
+	position: relative;
+	align-items: center;
+	border-bottom: 1px solid var(--gold-glow);
+}
+.conversation:last-child {
+	border-bottom: none;
+}
+.conversation:hover {
+	background: rgba(229, 204, 144, 0.05);
+}
+
+.conversation--active {
+	background: var(--active-chat);
+	box-shadow: 6px 4px 10px var(--gold-glow);
+}
+.conversation--active::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 2px;
+	height: 100%;
+	background: var(--gold);
+	box-shadow: 0 0 10px var(--gold-glow);
+}
+
+.avatar-chat {
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: var(--radius-full);
+	object-fit: cover;
+	border: 1px solid var(--gold);
+}
+.conversation--active .avatar-chat {
+	border: 3px solid var(--gold);
+	box-shadow: 0 0 24px var(--gold);
+}
+
+.conversation__body {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+.conversation__top {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+}
+
+.conversation__bottom {
+	width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.conversation__name {
+	font-family: var(--font-main);
+	font-size: 1.15rem;
+	font-weight: 500;
+	color: var(--text-white);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.conversation__time {
+	font-size: 0.85rem;
+	color: var(--text-grey);
+}
+
+.conversation__preview {
+	font-size: 0.9rem;
+	color: #08462f;
+	text-wrap: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* =========================================================
+   ОСНОВНОЕ ОКНО ЧАТА
+   ========================================================= */
+.chat-window {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.chat-window__header {
+	height: var(--header-height);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0 2rem;
+	background: rgba(255, 255, 255, 0.1);
+	border-bottom: 1px solid var(--gold-border);
+	border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.chat-window__peer {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+.chat-window__peer .avatar-chat {
+	width: 3.5rem;
+	height: 3.5rem;
+	border: 1px solid var(--gold);
+	box-shadow: none;
+}
+.chat-window__peer-info {
+	display: flex;
+	flex-direction: column;
+}
+.chat-window__peer-name {
+	font-family: var(--font-main);
+	font-size: 1.35rem;
+	font-weight: 500;
+	color: var(--text-white);
+}
+.chat-window__peer-status {
+	font-size: 0.85rem;
+	color: #08462f;
+}
+
+.chat-window__actions {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+.chat-window__actions .icon-btn-gold {
+	color: var(--gold);
+}
+.chat-window__actions .icon-btn-gold svg {
+	width: 1.75rem;
+	height: 1.75rem;
+	fill: var(--gold);
+	filter: drop-shadow(0 0 5px var(--gold-glow));
+}
+.chat-window__actions .icon-btn-gold:hover svg {
+	transform: scale(1.1);
+	transition: transform 0.2s;
+}
+
+/* Лента сообщений */
+.messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1.5rem 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+.messages__day {
+	text-align: center;
+	margin: 1rem 0;
+}
+.messages__day-label {
+	font-size: 0.8rem;
+	color: var(--text-grey);
+	padding: 0.25rem 1rem;
+	background: rgba(255, 255, 255, 0.5);
+	border-radius: var(--radius-full);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.message {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.75rem;
+	max-width: 75%;
+}
+.message--in {
+	align-self: flex-start;
+}
+.message--out {
+	align-self: flex-end;
+	flex-direction: row-reverse;
+}
+
+.message__avatar {
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: var(--radius-full);
+	object-fit: cover;
+	border: 1px solid var(--gold);
+}
+.message__bubble {
+	padding: 0.875rem 1.125rem;
+	border-radius: var(--radius-lg);
+	font-size: 1.05rem;
+	line-height: 1.4;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+.message__bubble--in {
+	background: var(--bg-dark);
+	color: var(--text-white);
+	border-bottom-left-radius: 0.25rem;
+}
+.message__bubble--out {
+	background: var(--emerald-dark);
+	color: #08462f;
+	border-bottom-right-radius: 0.25rem;
+}
+
+.message__meta {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-top: 0.4rem;
+	font-size: 0.75rem;
+	color: var(--text-grey);
+}
+.message__bubble--out .message__meta {
+	color: rgba(229, 204, 144, 0.7);
+}
+
+/* =========================================================
+   ВВОД
+   ========================================================= */
+.composer {
+	padding: 1.25rem 2rem;
+	background: rgba(255, 255, 255, 0.1);
+	border-top: 1px solid var(--gold-border);
+}
+
+.composer__wrapper {
+	display: flex;
+	align-items: center;
+	background: var(--bg-dark);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border: 1px solid var(--gold-border);
+	border-radius: var(--radius-lg);
+	padding: 0.5rem 0.5rem 0.5rem 1rem;
+	gap: 0.5rem;
+}
+
+.composer__attach,
+.composer__emoji {
+	width: 2rem;
+	height: 2rem;
+	color: var(--text-grey);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.composer__attach:hover,
+.composer__emoji:hover {
+	color: var(--gold);
+}
+.composer__attach svg,
+.composer__emoji svg {
+	width: 1.2rem;
+	height: 1.2rem;
+}
+
+.composer__input {
+	flex: 1;
+	font-size: 1.05rem;
+	font-weight: 400;
+	color: var(--text-white);
+}
+.composer__input::placeholder {
+	color: var(--text-grey);
+}
+
+.composer__send {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.75rem;
+	height: 2.75rem;
+	border-radius: var(--radius-full);
+	background: var(--gold);
+	color: #fff;
+	transition: all 0.2s;
+	flex-shrink: 0;
+}
+.composer__send:hover {
+	box-shadow: 0 0 10px var(--gold);
+	transform: scale(1.05);
+}
+.composer__send svg {
+	width: 1.15rem;
+	height: 1.15rem;
+	stroke: #111;
+}
+
+/* === MOBILE CHAT OVERRIDES === */
+.sidebar, .chat-list { display: none !important; }
+.app { padding: 0 !important; gap: 0 !important; }
+.chat-window { border-radius: 0 !important; border: none !important; box-shadow: none !important; height: 100dvh; }
+.chat-window__header { border-radius: 0 !important; padding: 0 1rem !important; }
+.messages { padding: 1rem !important; }
+.composer { padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) 1rem !important; }
+.composer__wrapper { padding: 0.25rem 0.25rem 0.25rem 0.75rem !important; }
+.btn-back { display: flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; margin-right: 0.5rem; }

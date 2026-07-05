@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Knock Knock — Default Desktop Dark</title>
+    <link rel="stylesheet" href="default-desktop-dark.css">
+    <style>
+        body { overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
+        .message__bubble p, .composer__input { user-select: text; -webkit-user-select: text; }
+        button, input { -webkit-appearance: none; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- ====== ЛЕВАЯ НАВИГАЦИЯ ====== -->
+        <aside class="sidebar glass-block">
+            <div class="sidebar__top">
+                <div class="avatar-profile">EL</div>
+            </div>
+ 
+            <nav class="nav">
+                <ul class="nav__list">
+                    <li class="nav__item">
+                        <a href="#" class="nav__link">
+                            <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <span class="nav__label">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#" class="nav__link nav__link--active">
+                            <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            <span class="nav__label">Messages</span>
+                        </a>
+                    </li>
+                    <li class="nav__item">
+                        <a href="#" class="nav__link">
+                            <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            <span class="nav__label">Contacts</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+ 
+            <div class="sidebar__bottom">
+                <button class="menu-btn" aria-label="Settings">
+                    <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span class="nav__label">Settings</span>
+                </button>
+            </div>
+        </aside>
+ 
+        <!-- ====== СПИСОК ДИАЛОГОВ ====== -->
+        <section class="chat-list glass-block">
+            <header class="chat-list__header">
+                <h1 class="chat-list__title">Messages</h1>
+                <button class="icon-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                </button>
+            </header>
+ 
+            <div class="search">
+                <svg class="search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" class="search__input" placeholder="Search conversations...">
+            </div>
+ 
+            <div class="conversations">
+                <article class="conversation conversation--active">
+                    <img class="avatar-chat" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150" alt="EV">
+                    <div class="conversation__body">
+                        <div class="conversation__top">
+                            <span class="conversation__name">Eleanor Vance</span>
+                            <span class="conversation__time">2m</span>
+                        </div>
+                        <div class="conversation__bottom">
+                            <span class="conversation__preview">Looking forward to the gallery opening...</span>
+                        </div>
+                    </div>
+                </article>
+ 
+                <article class="conversation">
+                    <img class="avatar-chat" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150" alt="AP">
+                    <div class="conversation__body">
+                        <div class="conversation__top">
+                            <span class="conversation__name">Arthur Pendelton</span>
+                            <span class="conversation__time">1h</span>
+                        </div>
+                        <div class="conversation__bottom">
+                            <span class="conversation__preview">The manuscript is ready for review</span>
+                        </div>
+                    </div>
+                </article>
+ 
+                <article class="conversation">
+                    <img class="avatar-chat" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="SC">
+                    <div class="conversation__body">
+                        <div class="conversation__top">
+                            <span class="conversation__name">Seraphina Croft</span>
+                            <span class="conversation__time">3h</span>
+                        </div>
+                        <div class="conversation__bottom">
+                            <span class="conversation__preview">Photo sent</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="conversation">
+                    <img class="avatar-chat" src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=150" alt="SC">
+                    <div class="conversation__body">
+                        <div class="conversation__top">
+                            <span class="conversation__name">Marcus Aurelius</span>
+                            <span class="conversation__time">5h</span>
+                        </div>
+                        <div class="conversation__bottom">
+                            <span class="conversation__preview">What we do now echoes in eternity.</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+ 
+        <!-- ====== ОСНОВНОЕ ОКНО ЧАТА ====== -->
+        <section class="chat-window glass-block">
+            <header class="chat-window__header">
+                <div class="chat-window__peer">
+                    <img class="avatar-chat" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150" alt="EV">
+                    <div class="chat-window__peer-info">
+                        <h2 class="chat-window__peer-name">Eleanor Vance</h2>
+                        <span class="chat-window__peer-status">Active Now</span>
+                    </div>
+                </div>
+ 
+                <div class="chat-window__actions">
+                    <button class="icon-btn-gold">
+                        <svg viewBox="0 0 24 24" stroke="none">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn-gold">
+                        <svg viewBox="0 0 24 24" stroke="none">
+                            <path d="M23 7l-7 5 7 5V7z" />
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                        </svg>
+                    </button>
+                    <button class="icon-btn-gold">
+                        <svg viewBox="0 0 24 24" stroke="none">
+                            <circle cx="12" cy="12" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="19" r="2"/>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+ 
+            <div class="messages">
+                <div class="messages__day">
+                    <span class="messages__day-label">Today</span>
+                </div>
+ 
+                <div class="message message--in">
+                    <img class="message__avatar" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150" alt="EV">
+                    <div class="message__bubble message__bubble--in">
+                        <p>Hi! Are we still on for the gallery opening tonight? 🎨</p>
+                        <div class="message__meta">
+                            <span>10:32 AM</span>
+                        </div>
+                    </div>
+                </div>
+ 
+                <div class="message message--out">
+                    <div class="message__bubble message__bubble--out">
+                        <p>Absolutely! I've been looking forward to it all week.</p>
+                        <div class="message__meta">
+                            <span>10:34 AM</span>
+                        </div>
+                    </div>
+                </div>
+ 
+                <div class="message message--in">
+                    <img class="message__avatar" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150" alt="EV">
+                    <div class="message__bubble message__bubble--in">
+                        <p>Perfect. The new exhibition features three emerging artists from the local scene.</p>
+                        <div class="message__meta">
+                            <span>10:35 AM</span>
+                        </div>
+                    </div>
+                </div>
+ 
+                <div class="message message--out">
+                    <div class="message__bubble message__bubble--out">
+                        <p>Works for me. I'll book a table at The Ivy. 🍷</p>
+                        <div class="message__meta">
+                            <span>10:41 AM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+ 
+            <footer class="composer">
+                <div class="composer__wrapper">
+                    <button class="composer__attach">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    </button>
+                    
+                    <input type="text" class="composer__input" placeholder="Type a message...">
+                    
+                    <button class="composer__emoji">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                    </button>
+                    
+                    <button class="composer__send" id="dynamic-btn">
+                        <svg id="icon-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1.25rem; height: 1.25rem;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line><line x1="8" y1="22" x2="16" y2="22"></line></svg>
+                        <svg id="icon-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </footer>
+        </section>
+    </div>
+
+    <script>
+        const input = document.querySelector('.composer__input');
+        const iconMic = document.getElementById('icon-mic');
+        const iconSend = document.getElementById('icon-send');
+
+        input.addEventListener('input', (e) => {
+            if (e.target.value.trim().length > 0) {
+                iconMic.style.display = 'none';
+                iconSend.style.display = 'block';
+            } else {
+                iconMic.style.display = 'block';
+                iconSend.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
