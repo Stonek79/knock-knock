@@ -1,0 +1,78 @@
+:root {
+    /* =========================================== */
+    /* Component Sizes (Scalable)                  */
+    /* =========================================== */
+    --size-icon-xs: calc(14px * var(--scale-factor));
+    --size-icon-sm: calc(18px * var(--scale-factor));
+    --size-icon-md: calc(24px * var(--scale-factor));
+    --size-icon-lg: calc(32px * var(--scale-factor));
+    --size-icon-xl: calc(40px * var(--scale-factor));
+
+    --size-avatar-xs: calc(24px * var(--scale-factor));
+    --size-avatar-sm: calc(32px * var(--scale-factor));
+    --size-avatar-md: calc(40px * var(--scale-factor));
+    --size-avatar-lg: calc(80px * var(--scale-factor));
+    --size-avatar-xl: calc(120px * var(--scale-factor));
+    --size-avatar-xxl: calc(160px * var(--scale-factor));
+    --size-avatar-xl-temp: var(--size-avatar-xl);
+
+    --size-btn-h-1: calc(28px * var(--scale-factor));
+    --size-btn-h-2: calc(32px * var(--scale-factor));
+    --size-btn-h-3: calc(36px * var(--scale-factor));
+    --size-btn-h-4: calc(44px * var(--scale-factor));
+
+    --size-input-h: calc(36px * var(--scale-factor));
+    --size-touch: calc(40px * var(--scale-factor));
+    --size-nav-icon-bg: calc(50px * var(--scale-factor));
+    --size-nav-item-min: 56px; /* Статичный min-width для навигации */
+    --size-nav-item-max: 80px; /* Статичный max-width для навигации */
+    --size-nav-icon-h: calc(32px * var(--scale-factor));
+
+    --size-badge: calc(18px * var(--scale-factor));
+    --size-badge-radius: calc(9px * var(--scale-factor));
+
+    --size-loader-ring: calc(60px * var(--scale-factor));
+    --size-online-dot: calc(6px * var(--scale-factor));
+    --size-error-icon-lg: calc(64px * var(--scale-factor));
+    --size-error-icon-sm: calc(32px * var(--scale-factor));
+    --size-icon-box-lg: calc(80px * var(--scale-factor));
+
+    /* Внешний вид (Landscape - Широкие) */
+    --size-preview-height-wide: calc(90px * var(--scale-factor));
+    --size-preview-width-wide: calc(240px * var(--scale-factor));
+
+    /* Внешний вид (Portrait - Высокие) */
+    --size-preview-height-tall: calc(110px * var(--scale-factor));
+    --size-preview-width-portrait: calc(80px * var(--scale-factor));
+
+    /* =========================================== */
+    /* Layout Sizes                                */
+    /* =========================================== */
+    --header-height: calc(72px * var(--scale-factor));
+    --footer-height: calc(72px * var(--scale-factor));
+    --panel-width: 360px; /* Статичная ширина сайдбара */
+    --max-w-settings: 1200px;
+
+    /* Container Max Widths (статичные) */
+    --max-h-picker: 250px;
+    --max-w-auth: 450px;
+    --max-w-dialog: 450px;
+    --max-w-content: 600px;
+    --max-w-content-wide: 800px;
+    --max-w-profile: 480px;
+    --max-w-toast: 380px;
+    --max-w-empty-state: 300px;
+    --max-w-card: 320px;
+    --max-w-media-modal: 480px;
+    --max-h-attachment-img: 250px;
+    --max-w-attachment-single: 280px;
+    --max-h-attachment-single: 320px;
+    --min-w-audio-player: 250px;
+    --max-h-textarea: 160px;
+    --audio-play-btn-size: 40px;
+
+    /* Viewport Proportions */
+    --vw-dialog: 90vw;
+    --vh-dialog: 85vh;
+    --min-w-dropdown: 180px;
+}

@@ -2,27 +2,38 @@
     display: flex;
     align-items: center;
     padding: var(--space-1) var(--space-2);
-    margin: var(--space-1);
-    border-radius: var(--kk-radius-md);
+    cursor: pointer;
     text-decoration: none;
     color: inherit;
-    transition: all var(--transition-base);
-    border: var(--border-width-base) solid var(--glass-border);
+    transition:
+        background var(--transition-base),
+        box-shadow var(--transition-base);
+    position: relative;
+    border-bottom: var(--border-width-base) solid var(--glass-border);
+}
+
+.chatListItem:last-child {
+    border-bottom: none;
 }
 
 .chatListItem:hover:not(.chatListItemActive) {
-    box-shadow: 0 var(--space-1) var(--space-2) var(--glass-border);
-    border: var(--border-width-base) solid var(--glass-border);
-    opacity: 0.7;
+    background: var(--glass-hover-bg);
 }
 
 .chatListItemActive {
-    background: var(--glass-bg);
-    border-color: var(--accent-primary);
-    box-shadow:
-        0 0 var(--space-4) var(--glow-soft),
-        0 0 var(--space-6) var(--glow-soft),
-        inset 0 0 var(--space-5) var(--glow-soft);
+    background: var(--active-chat);
+    box-shadow: var(--active-chat-shadow);
+}
+
+.chatListItemActive::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--active-chat-border);
+    box-shadow: var(--active-chat-glow);
 }
 
 .activeAvatar {

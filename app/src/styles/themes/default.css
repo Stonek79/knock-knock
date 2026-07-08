@@ -1,0 +1,136 @@
+/* =====================================================
+ * ТЕМА: DEFAULT
+ * Чистый, знакомый, практичный интерфейс.
+ * Дефолтный режим: light. Шрифт: Helvetica Neue.
+ * ===================================================== */
+[data-theme="default"] {
+    --font-family:
+        "Helvetica Neue", Helvetica, Arial, -apple-system, system-ui, sans-serif;
+
+    /* LIGHT MODE: Светлый и чистый (дефолтный) */
+    &[data-mode="light"] {
+        --bg-app: #f0f2f5; /* Характерный серо-белый WA фон */
+        --surface: #ffffff; /* Белые панели, sidebar, карточки */
+        --surface-1: #f0f2f5; /* Фон за элементами */
+        --surface-2: #e9edef; /* Заголовки, тулбары */
+        --color-background: #f0f2f5;
+        --foreground: #111b21; /* Основной текст — почти чёрный */
+        --muted: #667781; /* Вторичный текст (даты, подписи) */
+        --muted-foreground: #8696a0; /* Placeholder, hint */
+        --accent-primary: #00a884; /* WA зелёный (современный) */
+        --accent-secondary: #008069; /* WA тёмно-зелёный */
+        /* Бордеры заметно темнее фона #f0f2f5 */
+        --border: #d1d7db;
+
+        /* Glassmorphism для default/light: непрозрачный белый фон,
+           без blur — чтобы заголовки не давали артефактов */
+        --glass-bg: #ffffff;
+        --glass-border: #d1d7db; /* Видимый разделитель */
+        --glass-border-active: #00a884;
+        /* Default: без теней — чистый flat-дизайн */
+        --glass-shadow: none;
+        --glass-hover-bg: rgba(0, 168, 132, 0.08);
+        --glow-soft: rgba(0, 168, 132, 0.15);
+        /* Без свечения в заголовке — WA не использует glow на тексте */
+        --title-glow: none;
+
+        /* Пузыри сообщений */
+        --bubble-in: #ffffff; /* Входящие — белые */
+        --bubble-in-fg: #111b21;
+        --bubble-out: #d9fdd3; /* Исходящие — светло-зелёные */
+        --bubble-out-fg: #111b21;
+
+        /* Статусные цвета */
+        --color-error: #ea0038;
+        --color-success: #00a884;
+        --color-warning: #ffbc38;
+        --color-info: #009de2;
+
+        /* Intent Tokens */
+        --intent-primary-main: var(--accent-primary);
+        --intent-primary-text: #ffffff;
+        --intent-primary-alpha: rgba(0, 168, 132, 0.15);
+
+        --intent-secondary-main: var(--accent-secondary);
+        --intent-secondary-text: #ffffff;
+        --intent-secondary-alpha: rgba(0, 128, 105, 0.15);
+
+        --intent-success-main: var(--color-success);
+        --intent-success-text: #ffffff;
+        --intent-success-alpha: rgba(0, 168, 132, 0.15);
+
+        --intent-error-main: var(--color-error);
+        --intent-error-text: #ffffff;
+        --intent-error-alpha: rgba(234, 0, 56, 0.15);
+
+        --intent-warning-main: var(--color-warning);
+        --intent-warning-text: #111b21;
+        --intent-warning-alpha: rgba(255, 188, 56, 0.15);
+
+        --intent-info-main: var(--color-info);
+        --intent-info-text: #ffffff;
+        --intent-info-alpha: rgba(0, 157, 226, 0.15);
+    }
+
+    /* DARK MODE: Тёмный, уютный, узнаваемый */
+    &[data-mode="dark"] {
+        --bg-app: #111b21; /* Очень тёмный синевато-чёрный */
+        --surface: #202c33; /* Панели (чуть светлее) */
+        --surface-1: #2a3942; /* Вложенные поверхности */
+        --surface-2: #182229; /* Заголовки, navigation */
+        --color-background: #111b21;
+        --foreground: #e9edef; /* Основной текст */
+        --muted: #8696a0; /* Вторичный */
+        --muted-foreground: #667781; /* Приглушённый */
+        --accent-primary: #00a884; /* Тот же WA зелёный */
+        --accent-secondary: #008069;
+        --border: #2a3942; /* Разделители — тёмно-синие */
+
+        /* Glassmorphism для default dark */
+        --glass-bg: rgba(32, 44, 51, 0.92);
+        --glass-border: #2a3942;
+        --glass-border-active: #00a884;
+        /* Default dark: тоже без тени — чистый flat */
+        --glass-shadow: none;
+        --glass-hover-bg: rgba(0, 168, 132, 0.12);
+        --glow-soft: rgba(0, 168, 132, 0.2);
+        --title-glow: none;
+
+        /* Пузыри сообщений */
+        --bubble-in: #202c33; /* Тёмно-синий */
+        --bubble-in-fg: #e9edef;
+        --bubble-out: #005c4b; /* Тёмно-зелёный */
+        --bubble-out-fg: #e9edef;
+
+        /* Статусные цвета */
+        --color-error: #ea0038;
+        --color-success: #00a884;
+        --color-warning: #ffbc38;
+        --color-info: #009de2;
+
+        /* Intent Tokens */
+        --intent-primary-main: var(--accent-primary);
+        --intent-primary-text: #ffffff;
+        --intent-primary-alpha: rgba(0, 168, 132, 0.2);
+
+        --intent-secondary-main: var(--accent-secondary);
+        --intent-secondary-text: #ffffff;
+        --intent-secondary-alpha: rgba(0, 128, 105, 0.2);
+
+        --intent-success-main: var(--color-success);
+        --intent-success-text: #ffffff;
+        --intent-success-alpha: rgba(0, 168, 132, 0.2);
+
+        --intent-error-main: var(--color-error);
+        --intent-error-text: #ffffff;
+        --intent-error-alpha: rgba(234, 0, 56, 0.2);
+
+        --intent-warning-main: var(--color-warning);
+        --intent-warning-text: #111b21;
+        --intent-warning-alpha: rgba(255, 188, 56, 0.2);
+
+        --intent-info-main: var(--color-info);
+        --intent-info-text: #ffffff;
+        --intent-info-alpha: rgba(0, 157, 226, 0.2);
+    }
+}

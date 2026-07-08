@@ -1,0 +1,39 @@
+:root {
+    /* =========================================== */
+    /* Typography System                           */
+    /* =========================================== */
+    --text-xxs: calc(10px * var(--scale-factor));
+    --text-xs: calc(12px * var(--scale-factor));
+    --text-sm: calc(14px * var(--scale-factor));
+    --text-base: calc(16px * var(--scale-factor));
+    --text-lg: calc(18px * var(--scale-factor));
+    --text-xl: calc(20px * var(--scale-factor));
+    --text-2xl: calc(24px * var(--scale-factor));
+    --text-3xl: calc(30px * var(--scale-factor));
+    --text-4xl: calc(36px * var(--scale-factor));
+
+    /* Шрифтовые начертания */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+    --font-weight-black: 900;
+
+    /* Межстрочные интервалы */
+    --line-height-none: 1;
+    --line-height-tight: 1.25;
+    --line-height-snug: 1.375;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+
+    /* Семейство шрифтов (переопределяется в [data-theme]) */
+    --font-family:
+        "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+    /* Межбуквенный интервал */
+    --letter-spacing-tight: -0.02em;
+    --letter-spacing-normal: 0;
+    --letter-spacing-wide: 0.04em;
+}

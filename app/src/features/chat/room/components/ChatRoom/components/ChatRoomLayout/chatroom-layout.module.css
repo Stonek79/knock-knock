@@ -6,4 +6,13 @@
     position: relative;
     overflow: hidden;
     flex: 1;
+    background: transparent;
+    background-size: cover;
+    background-position: center;
+}
+
+@media (max-width: 767px) {
+    .roomWrapper {
+        background: var(--bg-chat, transparent);
+    }
 }

@@ -11,8 +11,8 @@
     border: 1px solid var(--color-border);
 }
 .deleteButton {
-    background: var(--color-error);
-    color: var(--color-text-on-error);
+    background: var(--intent-error-main);
+    color: var(--color-white);
     border: none;
 }
 .deleteButton:disabled {
@@ -38,8 +38,8 @@
 }
 
 .descriptionBox {
-    background: color-mix(in srgb, var(--color-error), transparent 92%);
-    border-left: 3px solid var(--color-error);
+    background: color-mix(in srgb, var(--intent-error-main), transparent 92%);
+    border-left: 3px solid var(--intent-error-main);
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
     margin: var(--space-4) 0;

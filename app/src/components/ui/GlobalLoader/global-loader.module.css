@@ -32,13 +32,13 @@
 .timeoutIcon {
     width: var(--size-error-icon-sm);
     height: var(--size-error-icon-sm);
-    color: var(--color-error);
+    color: var(--intent-error-main);
 }
 
 .refresh {
     width: var(--size-icon-sm);
     height: var(--size-icon-sm);
-    color: var(--color-error);
+    color: var(--intent-error-main);
 }
 
 @keyframes pulse {

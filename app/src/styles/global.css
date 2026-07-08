@@ -1,0 +1,145 @@
+/* =====================================================
+ * ГЛОБАЛЬНЫЕ СТИЛИ
+ * ===================================================== */
+
+/* Global Reset & Body */
+html {
+    font-size: calc(16px * var(--scale-factor, 1));
+}
+
+body {
+    margin: 0;
+    background: var(--bg-chat, var(--bg-cosmos, var(--bg-app)));
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    color: var(--foreground);
+    font-family: var(--font-family);
+    -webkit-font-smoothing: antialiased;
+    transition:
+        background-color 0.5s ease,
+        color 0.5s ease;
+    overflow: hidden;
+}
+
+.rt-Theme {
+    --cursor-default: default;
+    --cursor-text: text;
+    --cursor-pointer: pointer;
+}
+
+/* =====================================================
+ * Utility Classes для кнопок и вариантов
+ * ===================================================== */
+.premium-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--foreground);
+    backdrop-filter: var(--glass-blur-sm);
+}
+
+.premium-button:hover {
+    background: var(--accent-primary);
+    color: var(--bubble-out-fg);
+    box-shadow: 0 0 20px var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+.premium-button:active {
+    transform: translateY(0);
+}
+
+/* Variant Overrides for Custom Button */
+.variant-solid {
+    background: var(--accent-primary);
+    color: var(--bubble-out-fg);
+    border: none;
+}
+
+.variant-glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+}
+
+.variant-ghost {
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.variant-ghost:hover {
+    background: var(--glass-hover-bg);
+    color: var(--accent-primary);
+}
+
+/* =====================================================
+ * Animations
+ * ===================================================== */
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 5px var(--accent-primary);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--accent-primary);
+    }
+    100% {
+        box-shadow: 0 0 5px var(--accent-primary);
+    }
+}
+
+.glow-active {
+    animation: pulse-glow 2s infinite;
+}
+
+/* =====================================================
+ * Scrollbar Style
+ * ===================================================== */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+*:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+}
+*:hover::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* =====================================================
+ * Lightbox (yet-another-react-lightbox) Theme
+ * ===================================================== */
+.yarl__root {
+    --yarl__color_backdrop: var(--glass-bg);
+    --yarl__color_button: var(--foreground);
+    --yarl__color_button_active: var(--accent-primary);
+    --yarl__color_button_disabled: var(--muted);
+    backdrop-filter: var(--glass-blur);
+}
+
+.yarl__button {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Адаптивность для одиночных вложений в чате */
+@media (min-width: 768px) {
+    :root {
+        --max-w-attachment-single: 360px;
+        --max-h-attachment-single: 400px;
+    }
+}
+
+@media (min-width: 1024px) {
+    :root {
+        --max-w-attachment-single: 400px;
+        --max-h-attachment-single: 450px;
+    }
+}

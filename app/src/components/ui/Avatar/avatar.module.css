@@ -17,7 +17,11 @@
     font-weight: var(--font-weight-semibold);
     background: var(--glass-bg);
     color: var(--foreground);
-    border: var(--border-width-base) solid var(--glass-border);
+    border: var(
+        --avatar-border,
+        var(--border-width-base) solid var(--glass-border)
+    );
+    box-shadow: var(--avatar-shadow, none);
 }
 
 /* =========================================== */
@@ -100,12 +104,16 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    /* Вычисляем градиент через переменные темы */
-    background: linear-gradient(
-        135deg,
-        var(--accent-primary),
-        var(--accent-secondary)
+    /* Вычисляем градиент или берем цвет из темы */
+    background: var(
+        --avatar-fallback-bg,
+        linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))
     );
-    color: var(--bubble-out-fg);
+    color: var(--avatar-fallback-fg, var(--bubble-out-fg));
     font-weight: var(--font-weight-bold);
+}
+
+.fallbackIcon {
+    width: 60%;
+    height: 60%;
 }

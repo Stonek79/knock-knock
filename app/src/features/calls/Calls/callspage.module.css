@@ -6,7 +6,11 @@
     width: var(--size-icon-box-lg);
     height: var(--size-icon-box-lg);
     border-radius: var(--kk-radius-full);
-    background: linear-gradient(135deg, var(--accent-9), var(--accent-10));
+    background: linear-gradient(
+        135deg,
+        var(--intent-primary-main),
+        var(--accent-secondary)
+    );
     display: flex;
     align-items: center;
     justify-content: center;
@@ -32,7 +36,7 @@
     margin-top: var(--space-6);
     padding: var(--space-3) var(--space-6);
     border-radius: var(--kk-radius-md);
-    background: var(--accent-9);
+    background: var(--intent-primary-main);
     color: var(--bubble-out-fg);
     cursor: pointer;
     display: flex;
@@ -42,5 +46,5 @@
 }
 
 .actionButton:hover {
-    background: var(--accent-10);
+    background: var(--accent-secondary);
 }

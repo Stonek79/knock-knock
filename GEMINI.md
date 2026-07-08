@@ -19,4 +19,5 @@
     - КОД ПРОЕКТА: Стандартные инструменты IDE (write_to_file, multi_replace_file_content) для реализации Diff-контроля.
 
 15: При работе с codebase-memory-mcp всегда передавай имя проекта в обязательный аргумент "project" (а не "project_name" или "projectName"). Точное имя проекта для вызовов: "Users-alexstone-WebstormProjects-knock-knock".
+16: Всегда следуй правилам, описанным в файле `.agents/rules/antigravity-rtk-rules.md`. В частности, обязательно используй префикс `rtk` при запуске любых терминальных команд для экономии токенов.
 

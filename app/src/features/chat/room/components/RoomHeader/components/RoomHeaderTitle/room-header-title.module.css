@@ -18,8 +18,8 @@
     width: var(--size-online-dot);
     height: var(--size-online-dot);
     border-radius: var(--kk-radius-full);
-    background: var(--color-success);
-    box-shadow: 0 0 var(--space-1) var(--color-success-alpha);
+    background: var(--intent-success-main);
+    box-shadow: 0 0 var(--space-1) var(--intent-success-alpha);
     flex-shrink: 0;
     position: relative;
 }

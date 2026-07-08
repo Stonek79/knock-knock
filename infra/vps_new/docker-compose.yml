@@ -1,0 +1,45 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: knock-knock-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - /etc/letsencrypt:/etc/letsencrypt
+    networks:
+      - knock-knock-net
+    depends_on:
+      - rathole
+
+  rathole:
+    image: rapiz1/rathole:latest
+    container_name: knock-knock-rathole
+    restart: unless-stopped
+    command: ["--server", "/app/server.toml"]
+    ports:
+      - "2333:2333" # Внешний порт для подключения Rathole-клиента из РФ
+    volumes:
+      - ./rathole/server.toml:/app/server.toml
+    networks:
+      - knock-knock-net
+
+  push-gateway:
+    build: ./push-gateway
+    container_name: knock-knock-push
+    restart: unless-stopped
+    # Порты наружу не пробрасываем! Доступ только внутри сети Docker для Nginx / Rathole
+    environment:
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+    env_file:
+      - .env
+    networks:
+      - knock-knock-net
+
+networks:
+  knock-knock-net:
+    name: knock-knock-net

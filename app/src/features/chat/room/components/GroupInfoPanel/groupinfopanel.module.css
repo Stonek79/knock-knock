@@ -11,10 +11,8 @@
     right: 0;
     bottom: 0;
     z-index: var(--z-modal); /* Должно перекрывать шапку с --z-dropdown (100) */
-    background-color: var(
-        --bg-primary,
-        var(--bg-app)
-    ); /* Гарантированный плотный фон */
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
 
     display: flex;
     flex-direction: column;
@@ -46,7 +44,7 @@
     min-height: var(--header-height);
     padding: 0 var(--space-4);
     border-bottom: var(--border-width-base) solid var(--glass-border);
-    background: var(--bg-primary, var(--bg-app)); /* Плотный фон шапки */
+    background: transparent;
     flex-shrink: 0;
     position: sticky;
     top: 0;
@@ -58,7 +56,7 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--space-4);
-    background-color: var(--bg-app);
+    background-color: transparent;
 }
 
 /* Блок действий (кнопка "Выйти") */
@@ -67,7 +65,7 @@
     justify-content: center;
     flex-shrink: 0;
     padding: var(--space-4);
-    background: var(--bg-primary, var(--bg-app));
+    background: transparent;
 }
 
 .leaveButton {

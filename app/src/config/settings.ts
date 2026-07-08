@@ -10,7 +10,8 @@ import {
     User,
     Users,
 } from "lucide-react";
-import { ROUTES } from "@/lib/constants";
+import { COMPONENT_INTENT, ROUTES } from "@/lib/constants";
+import type { ComponentIntent } from "@/lib/types/ui";
 
 export interface SettingsItemConfig {
     key: string;
@@ -18,7 +19,7 @@ export interface SettingsItemConfig {
     icon: React.ElementType;
     labelKey: string;
     defaultLabel: string;
-    color: string;
+    intent: ComponentIntent;
     adminOnly?: boolean;
 }
 
@@ -29,7 +30,7 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         icon: User,
         labelKey: "settings.profile.profile",
         defaultLabel: "Профиль",
-        color: "grey",
+        intent: COMPONENT_INTENT.SECONDARY,
     },
     {
         key: "account",
@@ -37,7 +38,7 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         labelKey: "settings.account.account",
         defaultLabel: "Аккаунт",
         path: ROUTES.SETTINGS_ACCOUNT,
-        color: "blue",
+        intent: COMPONENT_INTENT.INFO,
     },
     {
         key: "appearance",
@@ -45,7 +46,7 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         labelKey: "settings.appearance.appearance",
         defaultLabel: "Внешний вид",
         path: ROUTES.SETTINGS_APPEARANCE,
-        color: "violet",
+        intent: COMPONENT_INTENT.PRIMARY,
     },
     {
         key: "privacy",
@@ -53,7 +54,7 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         labelKey: "settings.privacy.privacy",
         defaultLabel: "Конфиденциальность",
         path: ROUTES.SETTINGS_PRIVACY,
-        color: "green",
+        intent: COMPONENT_INTENT.SUCCESS,
     },
     {
         key: "notifications",
@@ -61,7 +62,7 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         labelKey: "settings.notifications.notifications",
         defaultLabel: "Уведомления",
         path: ROUTES.SETTINGS_NOTIFICATIONS,
-        color: "orange",
+        intent: COMPONENT_INTENT.WARNING,
     },
     {
         key: "security",
@@ -69,7 +70,7 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         labelKey: "settings.security.security",
         defaultLabel: "Безопасность",
         path: ROUTES.SETTINGS_SECURITY,
-        color: "red",
+        intent: COMPONENT_INTENT.ERROR,
     },
     {
         key: "storage",
@@ -77,7 +78,7 @@ export const SETTINGS_ITEMS: SettingsItemConfig[] = [
         labelKey: "settings.storage.storage",
         defaultLabel: "Хранилище и данные",
         path: ROUTES.SETTINGS_STORAGE,
-        color: "aqua",
+        intent: COMPONENT_INTENT.INFO,
     },
 ];
 
@@ -88,7 +89,7 @@ export const ADMIN_ITEMS: SettingsItemConfig[] = [
         icon: LayoutDashboard,
         labelKey: "admin.menu.dashboard",
         defaultLabel: "Панель управления",
-        color: "blue",
+        intent: COMPONENT_INTENT.PRIMARY,
     },
     {
         key: "users",
@@ -96,7 +97,7 @@ export const ADMIN_ITEMS: SettingsItemConfig[] = [
         icon: Users,
         labelKey: "admin.menu.users",
         defaultLabel: "Пользователи",
-        color: "green",
+        intent: COMPONENT_INTENT.SUCCESS,
     },
     {
         key: "broadcast",
@@ -104,6 +105,6 @@ export const ADMIN_ITEMS: SettingsItemConfig[] = [
         icon: Megaphone,
         labelKey: "admin.menu.broadcast",
         defaultLabel: "Рассылка",
-        color: "orange",
+        intent: COMPONENT_INTENT.WARNING,
     },
 ];

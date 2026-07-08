@@ -52,24 +52,24 @@
 }
 
 .danger {
-    --btn-color-main: var(--color-error);
-    --btn-color-alpha: var(--color-error-alpha);
+    --btn-color-main: var(--intent-error-main);
+    --btn-color-alpha: var(--intent-error-alpha);
     --btn-color-text-on-main: var(--color-white);
-    --btn-color-text-on-clear: var(--color-error);
+    --btn-color-text-on-clear: var(--intent-error-main);
 }
 
 .success {
-    --btn-color-main: var(--color-success);
-    --btn-color-alpha: var(--color-success-alpha);
+    --btn-color-main: var(--intent-success-main);
+    --btn-color-alpha: var(--intent-success-alpha);
     --btn-color-text-on-main: var(--color-white);
-    --btn-color-text-on-clear: var(--color-success);
+    --btn-color-text-on-clear: var(--intent-success-main);
 }
 
 .warning {
-    --btn-color-main: var(--color-warning);
-    --btn-color-alpha: var(--color-warning-alpha);
+    --btn-color-main: var(--intent-warning-main);
+    --btn-color-alpha: var(--intent-warning-alpha);
     --btn-color-text-on-main: var(--color-black);
-    --btn-color-text-on-clear: var(--color-warning);
+    --btn-color-text-on-clear: var(--intent-warning-main);
 }
 
 .info {

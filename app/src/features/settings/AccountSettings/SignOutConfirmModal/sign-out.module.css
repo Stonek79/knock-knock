@@ -12,8 +12,8 @@
 }
 
 .descriptionBox {
-    background: color-mix(in srgb, var(--color-warning), transparent 92%);
-    border-left: 3px solid var(--color-warning);
+    background: color-mix(in srgb, var(--intent-warning-main), transparent 92%);
+    border-left: 3px solid var(--intent-warning-main);
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
     margin: var(--space-4) 0;

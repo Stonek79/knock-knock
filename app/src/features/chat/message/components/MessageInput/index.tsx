@@ -22,7 +22,6 @@ import { Slider } from "@/components/ui/Slider";
 import { Text } from "@/components/ui/Text";
 import { TextArea } from "@/components/ui/TextArea";
 import { useToast } from "@/components/ui/Toast";
-import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { ICON_SIZE } from "@/lib/constants";
 import { RECORDING_LIMITS } from "@/lib/constants/storage";
 import { useAudioRecording } from "../../hooks/useAudioRecording";
@@ -75,7 +74,6 @@ export function MessageInput({
 }: MessageInputProps) {
     const { t } = useTranslation();
     const toast = useToast();
-    const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
     const {
         message,
@@ -317,7 +315,6 @@ export function MessageInput({
                             disabled={disabled || sending}
                             className={styles.textArea}
                             data-testid="message-textarea"
-                            rows={isMobile ? 1 : 2}
                         />
                     )}
                 </Box>

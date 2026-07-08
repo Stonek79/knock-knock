@@ -27,16 +27,16 @@
 }
 
 .pdfIcon {
-    color: var(--doc-color-pdf, var(--color-error, #ef4444));
+    color: var(--doc-color-pdf, var(--intent-error-main));
 }
 .zipIcon {
-    color: var(--doc-color-zip, var(--color-warning, #f59e0b));
+    color: var(--doc-color-zip, var(--intent-warning-main));
 }
 .docIcon {
-    color: var(--doc-color-doc, var(--color-info, #3b82f6));
+    color: var(--doc-color-doc, var(--intent-info-main));
 }
 .xlsIcon {
-    color: var(--doc-color-xls, var(--color-success, #10b981));
+    color: var(--doc-color-xls, var(--intent-success-main));
 }
 .defaultIcon {
     color: var(--doc-color-default, var(--muted-foreground, var(--muted)));

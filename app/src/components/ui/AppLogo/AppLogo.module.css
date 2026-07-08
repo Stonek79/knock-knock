@@ -3,7 +3,11 @@
     font-weight: var(--font-weight-black);
     line-height: var(--line-height-none);
     letter-spacing: -0.04em;
-    background: linear-gradient(to right, var(--accent-9), var(--accent-11));
+    background: linear-gradient(
+        to right,
+        var(--intent-primary-main),
+        var(--foreground)
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

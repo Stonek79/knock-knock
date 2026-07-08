@@ -35,11 +35,11 @@
 }
 
 .itemSelected {
-    background-color: var(--blue-3);
+    background-color: var(--intent-info-alpha);
 }
 
 .itemSelected:hover {
-    background-color: var(--blue-4);
+    background-color: var(--intent-info-alpha);
 }
 
 .info {
@@ -82,7 +82,7 @@
 
 .errorText {
     font-size: var(--text-sm);
-    color: var(--ruby-9);
+    color: var(--intent-error-main);
 }
 
 .emptyText {

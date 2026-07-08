@@ -5,11 +5,11 @@
 }
 
 .statusActive {
-    background: var(--green-9);
+    background: var(--intent-success-main);
 }
 
 .statusSyncing {
-    background: var(--orange-9);
+    background: var(--intent-warning-main);
 }
 
 .hiddenInput {

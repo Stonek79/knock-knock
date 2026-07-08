@@ -4,7 +4,7 @@
 }
 
 .endSessionButton {
-    color: var(--color-error);
+    color: var(--intent-error-main);
     gap: var(--space-1);
 }
 

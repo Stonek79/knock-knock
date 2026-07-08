@@ -6,5 +6,5 @@
 }
 
 .icon {
-    color: var(--color-error);
+    color: var(--intent-error-main);
 }

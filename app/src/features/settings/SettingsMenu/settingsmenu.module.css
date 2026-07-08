@@ -46,3 +46,26 @@
     height: var(--size-icon-sm);
     stroke-width: 2.5px; /* Чуть толще для читаемости */
 }
+
+/* ============================================= */
+/* Intents Mapping */
+/* ============================================= */
+
+.intent-primary {
+    color: var(--intent-primary-main);
+}
+.intent-secondary {
+    color: var(--accent-secondary);
+}
+.intent-success {
+    color: var(--intent-success-main);
+}
+.intent-warning {
+    color: var(--intent-warning-main);
+}
+.intent-error {
+    color: var(--intent-error-main);
+}
+.intent-info {
+    color: var(--intent-info-main);
+}

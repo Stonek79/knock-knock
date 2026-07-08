@@ -11,16 +11,16 @@
 }
 
 .icon {
-    color: var(--accent-11);
+    color: var(--intent-primary-main);
 }
 
 .clearButton {
     width: fit-content;
-    background: var(--red-9);
+    background: var(--intent-error-main);
 }
 
 .destructiveButton {
-    background: var(--red-9);
+    background: var(--intent-error-main);
 }
 
 .dialogActions {

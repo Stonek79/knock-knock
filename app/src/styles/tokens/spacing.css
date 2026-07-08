@@ -1,0 +1,36 @@
+:root {
+    /* =========================================== */
+    /* Scale Factor (Telegram-style)               */
+    /* =========================================== */
+    --scale-factor: 1;
+
+    /* =========================================== */
+    /* Spacing System (Scalable)                   */
+    /* =========================================== */
+    --space-05: calc(2px * var(--scale-factor));
+    --space-1: calc(4px * var(--scale-factor));
+    --space-2: calc(8px * var(--scale-factor));
+    --space-3: calc(12px * var(--scale-factor));
+    --space-4: calc(16px * var(--scale-factor));
+    --space-5: calc(20px * var(--scale-factor));
+    --space-6: calc(24px * var(--scale-factor));
+    --space-7: calc(28px * var(--scale-factor));
+    --space-8: calc(32px * var(--scale-factor));
+    --space-10: calc(40px * var(--scale-factor));
+    --space-12: calc(48px * var(--scale-factor));
+    --space-16: calc(64px * var(--scale-factor));
+    --space-17: calc(80px * var(--scale-factor));
+    --space-18: calc(96px * var(--scale-factor));
+    --space-24: calc(128px * var(--scale-factor));
+    --space-32: calc(160px * var(--scale-factor));
+    --space-48: calc(256px * var(--scale-factor));
+    --space-64: calc(512px * var(--scale-factor));
+
+    /* Семантические алиасы spacing */
+    --space-xs: var(--space-2); /* 8px  */
+    --space-sm: var(--space-3); /* 12px */
+    --space-md: var(--space-4); /* 16px */
+    --space-lg: var(--space-6); /* 24px */
+    --space-xl: var(--space-8); /* 32px */
+    --space-2xl: var(--space-12); /* 48px */
+}

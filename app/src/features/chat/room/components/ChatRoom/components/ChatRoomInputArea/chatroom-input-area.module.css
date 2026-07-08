@@ -4,8 +4,9 @@
     padding: 0;
     max-height: 50vh;
     display: flex;
-    align-items: center;
     box-sizing: border-box;
+    min-height: var(--header-height);
+    align-items: end;
 }
 
 .systemMessage {

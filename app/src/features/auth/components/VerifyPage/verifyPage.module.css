@@ -54,17 +54,17 @@
 }
 
 .successIcon {
-    color: var(--color-success);
+    color: var(--intent-success-main);
     /* Добавляем легкое свечение для успеха */
     filter: drop-shadow(
-        0 0 calc(var(--space-1) * 2.5) var(--color-success-alpha)
+        0 0 calc(var(--space-1) * 2.5) var(--intent-success-alpha)
     );
 }
 
 .errorIcon {
-    color: var(--color-error);
+    color: var(--intent-error-main);
     filter: drop-shadow(
-        0 0 calc(var(--space-1) * 2.5) var(--color-error-alpha)
+        0 0 calc(var(--space-1) * 2.5) var(--intent-error-alpha)
     );
 }
 

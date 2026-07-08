@@ -35,7 +35,11 @@ export function SettingsMenu() {
                                     <Flex align="center" gap="3">
                                         <Box className={styles.iconBox}>
                                             <Icon
-                                                style={{ color: item.color }}
+                                                className={
+                                                    styles[
+                                                        `intent-${item.intent}`
+                                                    ]
+                                                }
                                             />
                                         </Box>
                                         <Text size="lg" weight="medium">

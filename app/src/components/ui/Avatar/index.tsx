@@ -1,5 +1,6 @@
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import clsx from "clsx";
+import { User } from "lucide-react";
 import { type ComponentRef, forwardRef, type ReactNode } from "react";
 import type { ComponentSize } from "@/lib/types/ui";
 import styles from "./avatar.module.css";
@@ -72,25 +73,28 @@ export const Avatar = forwardRef<
     ) => {
         // Генерируем инициалы
         const getInitials = (fullName: string) => {
-            const rawParts = fullName.trim().split(/\s+/);
+            // Удаляем все спецсимволы (вкл. скобки), оставляем только буквы, цифры и пробелы
+            const cleanName = fullName.replace(/[^\p{L}\p{N}\s]/gu, "");
+            const rawParts = cleanName.trim().split(/\s+/);
 
-            // Фильтруем части имени: игнорируем слова с точками (префиксы),
-            // но только если после фильтрации останется хотя бы одно слово.
-            const parts = rawParts.filter((word) => !word.includes("."));
-            const finalParts = parts.length > 0 ? parts : rawParts;
-
-            if (finalParts.length === 1) {
-                return finalParts[0].substring(0, 2).toUpperCase();
+            if (rawParts.length === 1 && rawParts[0] !== "") {
+                return rawParts[0].substring(0, 2).toUpperCase();
             }
-            if (finalParts.length >= 2) {
+            if (rawParts.length >= 2) {
                 return (
-                    finalParts[0][0] + (finalParts[1]?.[0] || "")
+                    rawParts[0][0] + (rawParts[1]?.[0] || "")
                 ).toUpperCase();
             }
-            return "?";
+            return <User className={styles.fallbackIcon} />;
         };
 
-        const finalFallback = fallback ?? (name ? getInitials(name) : "?");
+        const finalFallback =
+            fallback ??
+            (name ? (
+                getInitials(name)
+            ) : (
+                <User className={styles.fallbackIcon} />
+            ));
 
         return (
             <AvatarPrimitive.Root

@@ -14,14 +14,14 @@
     width: var(--size-error-icon-lg);
     height: var(--size-error-icon-lg);
     border-radius: var(--kk-radius-full);
-    background: var(--color-error-alpha);
+    background: var(--intent-error-alpha);
 }
 
 /* Иконка */
 .icon {
     width: var(--size-error-icon-sm);
     height: var(--size-error-icon-sm);
-    color: var(--color-error);
+    color: var(--intent-error-main);
 }
 
 /* Сообщение об ошибке */

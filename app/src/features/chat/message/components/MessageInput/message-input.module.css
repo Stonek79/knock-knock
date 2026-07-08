@@ -3,10 +3,14 @@
     flex-direction: row;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
     margin: 0;
     width: 100%;
     box-sizing: border-box;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border-top: var(--border-width-base) solid var(--glass-border);
+    border-radius: 0 0 var(--kk-radius-lg);
 }
 
 /* Контейнер всего инпута */
@@ -103,7 +107,7 @@
 /* На десктопе сохраняем высоту 72px и центрирование */
 @media (min-width: 769px) {
     .inputWrapper {
-        padding: var(--space-2) var(--space-3);
+        padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
         max-height: var(--max-h-textarea);
     }
 
@@ -137,7 +141,7 @@
     width: var(--size-online-dot);
     height: var(--size-online-dot);
     border-radius: var(--kk-radius-full);
-    background: var(--color-error);
+    background: var(--intent-error-main);
     animation: pulse var(--transition-slow) infinite alternate;
 }
 
@@ -152,7 +156,7 @@
 }
 
 .recordingBtnActive {
-    color: var(--color-error);
+    color: var(--intent-error-main);
     touch-action: "none";
     -ms-touch-action: "none";
 }
@@ -163,8 +167,8 @@
 }
 
 .recordingWarning {
-    --accent-primary: var(--color-error);
-    --glass-border: var(--color-error-alpha);
+    --accent-primary: var(--intent-error-main);
+    --glass-border: var(--intent-error-alpha);
 }
 
 /* Превью цитаты и пересылки */

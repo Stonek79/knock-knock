@@ -1,7 +1,11 @@
 /* === Оверлей (полноэкранный) === */
 .overlay {
-    --pin-error-color: var(--color-error);
-    --pin-error-glow: color-mix(in srgb, var(--color-error), transparent 50%);
+    --pin-error-color: var(--intent-error-main);
+    --pin-error-glow: color-mix(
+        in srgb,
+        var(--intent-error-main),
+        transparent 50%
+    );
     --pin-dot-size: var(--space-4);
     --pin-key-size: calc(var(--space-9) * 2);
     --pin-key-font-size: var(--text-2xl);

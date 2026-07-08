@@ -14,12 +14,25 @@ import styles from "./theme-selector.module.css";
  */
 export const ThemeSelector = () => {
     const { t } = useTranslation();
-    const { theme, setTheme, mode, setMode } = useThemeStore(
+    const {
+        theme,
+        setTheme,
+        mode,
+        setMode,
+        scaleFactor,
+        setScaleFactor,
+        chatWallpaper,
+        setChatWallpaper,
+    } = useThemeStore(
         useShallow((s) => ({
             theme: s.theme,
             setTheme: s.setTheme,
             mode: s.mode,
             setMode: s.setMode,
+            scaleFactor: s.scaleFactor,
+            setScaleFactor: s.setScaleFactor,
+            chatWallpaper: s.chatWallpaper,
+            setChatWallpaper: s.setChatWallpaper,
         })),
     );
 
@@ -124,6 +137,71 @@ export const ThemeSelector = () => {
                     </span>
                 </Box>
             </Box>
+
+            {/* Масштаб интерфейса */}
+            <Flex direction="column" gap="2" className={styles.section}>
+                <span className={styles.sectionTitle}>
+                    {t("settings.appearance.scale", "Масштаб (Scale)")}:{" "}
+                    {scaleFactor.toFixed(1)}
+                </span>
+                <Flex gap="2" align="center">
+                    <Button
+                        onClick={() =>
+                            setScaleFactor(Math.max(0.5, scaleFactor - 0.1))
+                        }
+                        className={styles.modeBtn}
+                    >
+                        -
+                    </Button>
+                    <input
+                        type="range"
+                        min="0.5"
+                        max="1.5"
+                        step="0.1"
+                        value={scaleFactor}
+                        onChange={(e) =>
+                            setScaleFactor(parseFloat(e.target.value))
+                        }
+                        className={styles.slider}
+                    />
+                    <Button
+                        onClick={() =>
+                            setScaleFactor(Math.min(1.5, scaleFactor + 0.1))
+                        }
+                        className={styles.modeBtn}
+                    >
+                        +
+                    </Button>
+                </Flex>
+            </Flex>
+
+            {/* Обои чата */}
+            <Flex direction="column" gap="2" className={styles.section}>
+                <span className={styles.sectionTitle}>
+                    {t("settings.appearance.wallpaper", "Обои чата")}
+                </span>
+                <select
+                    className={styles.wallpaperSelect}
+                    value={chatWallpaper || ""}
+                    onChange={(e) => setChatWallpaper(e.target.value || null)}
+                >
+                    <option value="">
+                        {t("settings.appearance.wallpaperNone", "Нет")}
+                    </option>
+                    <option value="/backgrounds/default_desktop_1783166503530.jpg">
+                        Default Desktop
+                    </option>
+                    <option value="/backgrounds/emerald_desktop_1783166494421.jpg">
+                        Emerald Desktop
+                    </option>
+                    <option value="/backgrounds/neon_desktop_1783166511720.jpg">
+                        Neon Desktop
+                    </option>
+                    <option value="/backgrounds/neon_chat_mobile_1783166485187.jpg">
+                        Neon Mobile
+                    </option>
+                </select>
+            </Flex>
         </Flex>
     );
 };

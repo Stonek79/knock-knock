@@ -29,17 +29,19 @@
 .bubbleOwn {
     background: var(--bubble-out);
     color: var(--bubble-out-fg);
+    backdrop-filter: var(--glass-blur-sm);
     border: 1px solid var(--bubble-out-border, transparent);
     border-bottom-right-radius: var(--kk-radius-sm);
-    box-shadow: var(--shadow-bubble);
+    box-shadow: var(--bubble-out-shadow, var(--shadow-bubble));
 }
 
 .bubblePeer {
     background: var(--bubble-in);
     color: var(--bubble-in-fg);
     backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--bubble-in-border, var(--glass-border));
     border-bottom-left-radius: var(--kk-radius-sm);
+    box-shadow: var(--bubble-in-shadow, none);
 }
 
 .time {
@@ -96,8 +98,8 @@
 
 .star {
     margin-right: var(--space-1);
-    fill: var(--color-warning);
-    color: var(--color-warning);
+    fill: var(--intent-warning-main);
+    color: var(--intent-warning-main);
 }
 
 .selected {
@@ -203,7 +205,7 @@
     padding: 0;
     cursor: pointer;
     display: flex;
-    color: var(--error, #ef4444);
+    color: var(--intent-error-main);
     width: var(--size-icon-xs);
     height: var(--size-icon-xs);
 }

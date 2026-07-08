@@ -1,6 +1,6 @@
 .banner {
     background: var(--glass-bg);
-    border-bottom: var(--border-width-base) solid var(--color-warning-alpha);
+    border-bottom: var(--border-width-base) solid var(--intent-warning-alpha);
     color: var(--foreground);
     width: 100%;
     position: sticky;
@@ -14,8 +14,8 @@
 }
 
 .icon {
-    color: var(--color-warning);
-    filter: drop-shadow(0 0 8px var(--color-warning-alpha));
+    color: var(--intent-warning-main);
+    filter: drop-shadow(0 0 8px var(--intent-warning-alpha));
     flex-shrink: 0;
 }
 

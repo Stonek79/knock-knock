@@ -10,8 +10,8 @@
     width: var(--size-icon-box-lg);
     height: var(--size-icon-box-lg);
     margin-bottom: var(--space-4);
-    color: var(--accent-9);
-    background: var(--accent-a3);
+    color: var(--intent-primary-main);
+    background: var(--intent-primary-alpha);
     border-radius: var(--kk-radius-full);
 }
 
@@ -31,10 +31,10 @@
 .warning {
     max-width: var(--max-w-card);
     padding: var(--space-3) var(--space-4);
-    background: var(--orange-a3);
+    background: var(--intent-warning-alpha);
     border: var(--border-width-base) solid var(--accent-primary);
     border-radius: var(--kk-radius-md);
-    color: var(--orange-11);
+    color: var(--intent-warning-main);
     font-size: var(--text-xs);
     line-height: 1.4;
 }

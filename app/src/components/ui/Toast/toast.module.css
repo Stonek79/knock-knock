@@ -69,11 +69,11 @@
 
 /* Варианты тоста */
 .success {
-    border-color: var(--color-success-alpha);
+    border-color: var(--intent-success-alpha);
 }
 
 .error {
-    border-color: var(--color-error-alpha);
+    border-color: var(--intent-error-alpha);
 }
 
 .info {
@@ -87,11 +87,11 @@
 }
 
 .icon.success {
-    color: var(--color-success);
+    color: var(--intent-success-main);
 }
 
 .icon.error {
-    color: var(--color-error);
+    color: var(--intent-error-main);
 }
 
 .icon.info {

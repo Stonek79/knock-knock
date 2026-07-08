@@ -1,0 +1,17 @@
+:root {
+    /* =========================================== */
+    /* Border Radius System                        */
+    /* =========================================== */
+    --kk-radius-sm: 4px;
+    --kk-radius-md: 8px;
+    --kk-radius-lg: 12px;
+    --kk-radius-xl: 16px;
+    --kk-radius-2xl: 20px;
+    --kk-radius-full: 50%;
+    --kk-radius-glass: 16px;
+    --radius-glass: var(--kk-radius-glass);
+    --radius-md: var(--kk-radius-md);
+    --radius-lg: var(--kk-radius-lg);
+    --radius-xl: var(--kk-radius-xl);
+    --radius-full: var(--kk-radius-full);
+}

@@ -4,6 +4,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 var(--space-5);
+    background: var(--header-bg);
     backdrop-filter: var(--glass-blur);
     border-bottom: var(--border-width-base) solid var(--glass-border);
     box-shadow: var(--glass-shadow);

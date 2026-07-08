@@ -64,19 +64,19 @@
 }
 
 .danger {
-    color: var(--color-error);
+    color: var(--intent-error-main);
 }
 
 .warning {
-    color: var(--color-warning);
+    color: var(--intent-warning-main);
 }
 
 .success {
-    color: var(--color-success);
+    color: var(--intent-success-main);
 }
 
 .info {
-    color: var(--color-info);
+    color: var(--intent-info-main);
 }
 
 /* =========================================== */

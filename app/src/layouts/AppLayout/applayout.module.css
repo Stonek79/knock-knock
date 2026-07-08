@@ -15,6 +15,9 @@
 .main {
     flex: 1;
     display: flex;
+    flex-direction: row;
+    padding: 1.5rem;
+    gap: 1.5rem;
     min-width: 0;
     height: 100%;
     overflow: hidden;
@@ -22,11 +25,13 @@
 
 /* Боковая панель */
 .sidebar {
-    background: transparent;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-right: var(--border-width-base) solid var(--glass-border);
     width: var(--panel-width);
     min-width: var(--panel-width);
     height: 100%;
@@ -49,15 +54,42 @@
     height: var(--footer-height);
 }
 
+/* Обёртка навигации для десктопа */
+.desktopNavigationWrapper {
+    flex-shrink: 0;
+    width: 80px;
+    height: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Обёртка аватарки */
+.avatarWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
 /* Основной контент (справа от sidebar) */
 .content {
     flex: 1;
     min-width: 0;
     height: 100%;
     position: relative;
-    background: transparent;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 /* Контент на всю ширину (когда sidebar отсутствует) */
@@ -71,9 +103,7 @@
     display: flex;
     align-items: center;
     padding: 0 var(--space-5);
-    border-bottom: var(--border-width-base) solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--glass-border);
     flex-shrink: 0;
 }
 

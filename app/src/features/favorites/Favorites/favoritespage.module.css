@@ -47,7 +47,7 @@
 }
 
 .errorText {
-    color: var(--color-error);
+    color: var(--intent-error-main);
     font-size: var(--text-sm);
     text-align: center;
 }

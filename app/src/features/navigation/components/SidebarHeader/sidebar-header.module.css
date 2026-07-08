@@ -5,7 +5,8 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: var(--border-width-base) solid var(--glass-border);
-    backdrop-filter: blur(8px);
+    background: var(--header-bg);
+    backdrop-filter: var(--glass-blur);
     flex-shrink: 0;
 }
 

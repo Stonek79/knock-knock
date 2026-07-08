@@ -57,22 +57,22 @@
 
 /** Ошибка */
 .error {
-    background: var(--color-error-alpha);
-    color: var(--color-error);
+    background: var(--intent-error-alpha);
+    color: var(--intent-error-main);
     border: none;
 }
 
 /** Успех */
 .success {
-    background: var(--color-success-alpha);
-    color: var(--color-success);
+    background: var(--intent-success-alpha);
+    color: var(--intent-success-main);
     border: none;
 }
 
 /** Предупреждение */
 .warning {
-    background: var(--color-warning-alpha);
-    color: var(--color-warning);
+    background: var(--intent-warning-alpha);
+    color: var(--intent-warning-main);
     border: none;
 }
 

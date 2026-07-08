@@ -1,0 +1,188 @@
+/* =====================================================
+ * ТЕМА: NEON (Cosmic Cyberpunk)
+ * Glassmorphism, киберпанк-палитра.
+ * ===================================================== */
+[data-theme="neon"] {
+    /* DARK MODE: Cosmic Cyberpunk с эффектом сверхновой */
+    &[data-mode="dark"] {
+        --bg-app: #010409; /* Deep Cosmic Void */
+        --bg-cosmos:
+            url("/backgrounds/neon_space_bg_1783248586050.jpg") center / cover
+            no-repeat fixed;
+
+        --surface: rgba(8, 18, 30, 0.8);
+        --surface-1: rgba(15, 28, 44, 0.7);
+        --surface-2: rgba(5, 12, 22, 0.9);
+        --color-background: #010409;
+        --foreground: #ffffff;
+        --muted: #000;
+        --muted-foreground: #a4b8c6;
+        --accent-primary: #00f0ff; /* Electric Cyan */
+        --accent-secondary: #00a8e8;
+        --border: rgba(0, 240, 255, 0.15);
+
+        --glass-bg: rgba(255, 255, 255, 0.07);
+        --header-bg: rgba(255, 255, 255, 0.1);
+        --glass-blur: blur(12px);
+        --glass-border: rgba(0, 240, 255, 0.15);
+        --glass-border-active: rgba(0, 240, 255, 0.6);
+        /* Тонкая синяя линия separator + свечение */
+        --glass-shadow:
+            0 1px 0 rgba(0, 240, 255, 0.2), 0 0 20px rgba(0, 240, 255, 0.05);
+        --glass-hover-bg: rgba(255, 255, 255, 0.08);
+        --glow-soft: rgba(0, 240, 255, 0.1);
+        /* Неоновое cyan-свечение на названии канала/собеседника */
+        --title-glow:
+            0 0 4px #00f0ff, 0 0 12px rgba(0, 240, 255, 0.7),
+            0 0 30px rgba(0, 240, 255, 0.4);
+
+        --active-chat: linear-gradient(
+            90deg,
+            rgba(74, 83, 78, 0.5) 0%,
+            rgba(49, 64, 57, 0.1) 100%
+        );
+        --active-chat-shadow: 6px 4px 10px rgba(0, 240, 255, 0.6);
+        --active-chat-border: #00f0ff;
+        --active-chat-glow: 0 0 10px rgba(0, 240, 255, 0.6);
+
+        --bubble-in: rgba(255, 98, 221, 0.3);
+        --bubble-in-fg: #ffffff;
+        --bubble-in-border: rgba(255, 98, 221, 0.4);
+        --bubble-in-shadow:
+            0 0 15px rgba(255, 98, 221, 0.6),
+            inset 0 0 10px rgba(255, 98, 221, 0.2);
+
+        --bubble-out: rgba(0, 240, 255, 0.3);
+        --bubble-out-fg: #ffffff;
+        --bubble-out-border: #00f0ff;
+        --bubble-out-shadow:
+            0 0 20px rgba(0, 240, 255, 0.6),
+            inset 0 0 15px rgba(0, 240, 255, 0.3);
+        /* Neon glow tokens */
+        --cyan-glow: rgba(70, 236, 255, 0.6);
+        --pink-glow: rgba(255, 98, 221, 0.6);
+
+        /* Avatar */
+        --avatar-fallback-bg: rgba(70, 236, 255, 0.1);
+        --avatar-fallback-fg: var(--accent-primary);
+        --avatar-border: 1px solid var(--accent-primary);
+        --avatar-shadow:
+            inset 0 1px 2px rgba(255, 255, 255, 0.2),
+            0 4px 15px var(--cyan-glow);
+
+        /* Neon Status Colors */
+        --color-error: #ff3366; /* Neon Red */
+        --color-success: #00ff99; /* Neon Green */
+        --color-warning: #ffd700; /* Neon Gold */
+        --color-info: #00b4ff; /* Neon Blue */
+
+        /* Neon Intent Tokens */
+        --intent-primary-main: var(--accent-primary);
+        --intent-primary-text: #000000;
+        --intent-primary-alpha: rgba(0, 240, 255, 0.15);
+
+        --intent-secondary-main: var(--accent-secondary);
+        --intent-secondary-text: #000000;
+        --intent-secondary-alpha: rgba(0, 168, 232, 0.15);
+
+        --intent-success-main: var(--color-success);
+        --intent-success-text: #000000;
+        --intent-success-alpha: rgba(0, 255, 153, 0.15);
+
+        --intent-error-main: var(--color-error);
+        --intent-error-text: #ffffff;
+        --intent-error-alpha: rgba(255, 51, 102, 0.15);
+
+        --intent-warning-main: var(--color-warning);
+        --intent-warning-text: #000000;
+        --intent-warning-alpha: rgba(255, 215, 0, 0.15);
+
+        --intent-info-main: var(--color-info);
+        --intent-info-text: #000000;
+        --intent-info-alpha: rgba(0, 180, 255, 0.15);
+    }
+
+    /* LIGHT MODE: Arctic Glass с неоновыми акцентами */
+    &[data-mode="light"] {
+        --bg-app: #e8ecef;
+        --bg-cosmos:
+            url("/backgrounds/neon_light_desk_1783260973984.jpg") center / cover
+            no-repeat fixed;
+        --surface: rgba(240, 244, 248, 0.8);
+        --surface-1: rgba(230, 236, 242, 0.9);
+        --surface-2: rgba(220, 228, 236, 1);
+        --color-background: #e8ecef;
+        --foreground: #4a6572;
+        --muted: #819ca9;
+        --muted-foreground: #a0b0ba;
+        --accent-primary: #00d1c1; /* Teal */
+        --accent-secondary: #00a8e8;
+        --border: rgba(0, 209, 193, 0.25);
+
+        --glass-bg: rgba(255, 255, 255, 0.07);
+        --header-bg: rgba(255, 255, 255, 0.1);
+        --glass-blur: blur(12px);
+        --glass-border: rgba(0, 209, 193, 0.3);
+        --glass-border-active: #00d1c1;
+        --glass-shadow: 0 1px 0 rgba(0, 209, 193, 0.2);
+        --glass-hover-bg: rgba(0, 209, 193, 0.1);
+        --glow-soft: rgba(0, 209, 193, 0.25);
+        --glow: 0 0 10px rgba(0, 209, 193, 0.4);
+        /* Лёгкое teal-свечение заголовков */
+        --title-glow: 0 0 4px rgba(0, 209, 193, 0.4);
+
+        --active-chat: linear-gradient(
+            90deg,
+            rgba(0, 209, 193, 0.2) 0%,
+            rgba(0, 209, 193, 0.05) 100%
+        );
+        --active-chat-shadow: 6px 4px 10px rgba(0, 209, 193, 0.4);
+        --active-chat-border: #00d1c1;
+        --active-chat-glow: 0 0 10px rgba(0, 209, 193, 0.4);
+
+        --bubble-in: rgba(0, 168, 232, 0.15);
+        --bubble-in-fg: #4a6572;
+        --bubble-in-border: rgba(0, 168, 232, 0.3);
+        --bubble-in-shadow:
+            0 0 10px rgba(0, 168, 232, 0.2),
+            inset 0 0 5px rgba(0, 168, 232, 0.1);
+
+        --bubble-out: linear-gradient(135deg, #00d1c1 0%, #00a8e8 100%);
+        --bubble-out-fg: #ffffff;
+        --bubble-out-border: transparent;
+        --bubble-out-shadow:
+            0 0 15px rgba(0, 209, 193, 0.3),
+            inset 0 0 10px rgba(0, 209, 193, 0.2);
+
+        /* Light Neon Status Colors */
+        --color-error: #e11d48;
+        --color-success: #059669;
+        --color-warning: #d97706;
+        --color-info: #0284c7;
+
+        /* Neon Light Intent Tokens */
+        --intent-primary-main: var(--accent-primary);
+        --intent-primary-text: #ffffff;
+        --intent-primary-alpha: rgba(0, 209, 193, 0.15);
+
+        --intent-secondary-main: var(--accent-secondary);
+        --intent-secondary-text: #ffffff;
+        --intent-secondary-alpha: rgba(0, 168, 232, 0.15);
+
+        --intent-success-main: var(--color-success);
+        --intent-success-text: #ffffff;
+        --intent-success-alpha: rgba(5, 150, 105, 0.15);
+
+        --intent-error-main: var(--color-error);
+        --intent-error-text: #ffffff;
+        --intent-error-alpha: rgba(225, 29, 72, 0.15);
+
+        --intent-warning-main: var(--color-warning);
+        --intent-warning-text: #ffffff;
+        --intent-warning-alpha: rgba(217, 119, 6, 0.15);
+
+        --intent-info-main: var(--color-info);
+        --intent-info-text: #ffffff;
+        --intent-info-alpha: rgba(2, 132, 199, 0.15);
+    }
+}

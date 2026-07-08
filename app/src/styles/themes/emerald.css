@@ -1,0 +1,188 @@
+/* =====================================================
+ * ТЕМА: EMERALD (Forest Gold Luxury)
+ * VIP-стиль, золото и изумруд.
+ * ===================================================== */
+[data-theme="emerald"] {
+    /* DARK MODE: Forest Gold Luxury */
+    &[data-mode="dark"] {
+        --bg-app: #091c15;
+        --bg-cosmos:
+            url("/backgrounds/olive_gold_bg_1783197692057.jpg") center / cover
+            no-repeat fixed;
+        --bg-void: #020e08;
+        --surface: rgba(21, 46, 37, 0.85);
+        --surface-1: rgba(30, 60, 48, 0.8);
+        --surface-2: rgba(12, 30, 22, 0.95);
+        --color-background: #091c15;
+        --foreground: #f0f2f0;
+        --muted: #a5b5ae;
+        --muted-foreground: #7a9088;
+        --accent-primary: #d4af37; /* Классическое золото */
+        --accent-secondary: #10b981; /* Изумрудный */
+        --border: rgba(212, 175, 55, 0.3);
+
+        --glass-bg: rgba(255, 255, 255, 0.07);
+        --header-bg: rgba(255, 255, 255, 0.1);
+        --glass-blur: blur(12px);
+        --glass-border: rgba(212, 175, 55, 0.5); /* Яркий золотой бордер */
+        /* Золотая линия separator — luxury стиль */
+        --glass-shadow:
+            0 1px 0 rgba(212, 175, 55, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+        --glass-hover-bg: rgba(212, 175, 55, 0.08);
+        --glow-soft: rgba(212, 175, 55, 0.2);
+        /* Золотое свечение на названии канала/собеседника */
+        --title-glow:
+            0 0 4px #d4af37, 0 0 12px rgba(212, 175, 55, 0.7),
+            0 0 30px rgba(212, 175, 55, 0.4);
+
+        --active-chat: linear-gradient(
+            90deg,
+            rgba(74, 83, 78, 0.5) 0%,
+            rgba(49, 64, 57, 0.1) 100%
+        );
+        --active-chat-shadow: 6px 4px 10px rgba(229, 204, 144, 0.4);
+        --active-chat-border: #d4af37;
+        --active-chat-glow: 0 0 10px rgba(229, 204, 144, 0.4);
+
+        --bubble-in: rgba(26, 54, 43, 0.8);
+        --bubble-in-fg: #f0f2f0;
+        --bubble-in-border: rgba(212, 175, 55, 0.5);
+        --bubble-in-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        --bubble-out: #0f5742;
+        --bubble-out-fg: #f0f2f0;
+        --bubble-out-border: #10b981;
+        --bubble-out-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+
+        /* Золотые акценты */
+        --gold-light: #ffe082;
+        --gold-main: #d4af37;
+        --gold-dark: #aa8c30;
+        --text-gold: #e6c200;
+
+        /* Avatar */
+        --avatar-fallback-bg: rgba(212, 175, 55, 0.1);
+        --avatar-fallback-fg: var(--gold-main);
+        --avatar-border: 1px solid var(--gold-main);
+        --avatar-shadow:
+            inset 0 1px 2px rgba(255, 255, 255, 0.2),
+            0 4px 15px rgba(212, 175, 55, 0.4);
+
+        /* Emerald Dark Status Colors (с добавлением премиум-рубина) */
+        --color-error: #e0115f; /* Рубин */
+        --color-success: #34d399;
+        --color-warning: #fbbf24;
+        --color-info: #38bdf8;
+
+        /* Emerald Intent Tokens */
+        --intent-primary-main: var(--accent-primary);
+        --intent-primary-text: #091c15;
+        --intent-primary-alpha: rgba(212, 175, 55, 0.15);
+
+        --intent-secondary-main: var(--accent-secondary);
+        --intent-secondary-text: #091c15;
+        --intent-secondary-alpha: rgba(16, 185, 129, 0.15);
+
+        --intent-success-main: var(--color-success);
+        --intent-success-text: #091c15;
+        --intent-success-alpha: rgba(52, 211, 153, 0.15);
+
+        --intent-error-main: var(--color-error);
+        --intent-error-text: #ffffff;
+        --intent-error-alpha: rgba(224, 17, 95, 0.15); /* Рубин альфа */
+
+        --intent-warning-main: var(--color-warning);
+        --intent-warning-text: #091c15;
+        --intent-warning-alpha: rgba(251, 191, 36, 0.15);
+
+        --intent-info-main: var(--color-info);
+        --intent-info-text: #091c15;
+        --intent-info-alpha: rgba(56, 189, 248, 0.15);
+    }
+
+    /* LIGHT MODE: Mint Sage с золотыми бордерами */
+    &[data-mode="light"] {
+        --bg-app: rgba(240, 244, 248, 0.8);
+        --bg-cosmos:
+            url("/backgrounds/olive_gold_bg_light_1783236992998.jpg") center /
+            cover no-repeat fixed;
+        --surface: #f5f9f6;
+        --surface-1: #eaf3ee;
+        --surface-2: #dfeee5;
+        --color-background: rgba(240, 244, 248, 0.8);
+        --foreground: #164e38;
+        --muted: #416254;
+        --muted-foreground: #6a8c7a;
+        --accent-primary: #10b981; /* Изумрудный */
+        --accent-secondary: #2c6e55;
+        --accent-light: #4ade80; /* Светло-зелёный */
+        --border: #d1e3db;
+
+        --glass-bg: rgba(255, 255, 255, 0.07);
+        --header-bg: rgba(255, 255, 255, 0.1);
+        --glass-blur: blur(12px);
+        --glass-border: #d1e3db;
+        --glass-border-active: #10b981;
+        --glass-shadow: 0 1px 0 rgba(16, 185, 129, 0.15);
+        --glass-hover-bg: rgba(16, 185, 129, 0.07);
+        --glow-soft: rgba(16, 185, 129, 0.15);
+        /* Лёгкое зелёное свечение заголовков */
+        --title-glow: 0 0 4px rgba(16, 185, 129, 0.4);
+
+        --active-chat: linear-gradient(
+            90deg,
+            rgba(74, 83, 78, 0.5) 0%,
+            rgba(49, 64, 57, 0.1) 100%
+        );
+        --active-chat-shadow: 6px 4px 10px rgba(184, 134, 11, 0.3);
+        --active-chat-border: #b8860b;
+        --active-chat-glow: 0 0 10px rgba(184, 134, 11, 0.3);
+
+        --bubble-in: rgba(255, 255, 255, 0.4);
+        --bubble-in-fg: #111111;
+        --bubble-in-border: rgba(255, 255, 255, 0.08);
+        --bubble-in-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        --bubble-out: #e0ede6;
+        --bubble-out-fg: #111111;
+        --bubble-out-border: rgba(184, 134, 11, 0.4);
+        --bubble-out-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+
+        /* Avatar */
+        --avatar-fallback-bg: rgba(184, 134, 11, 0.1);
+        --avatar-fallback-fg: #b8860b;
+        --avatar-border: 1px solid #b8860b;
+        --avatar-shadow:
+            inset 0 1px 2px rgba(255, 255, 255, 0.2),
+            0 4px 15px rgba(184, 134, 11, 0.3);
+
+        /* Emerald Light Status Colors */
+        --color-error: #9b111e; /* Настоящий рубин (Ruby Red) */
+        --color-success: #059669;
+        --color-warning: #d97706;
+        --color-info: #0284c7;
+
+        /* Emerald Light Intent Tokens */
+        --intent-primary-main: var(--accent-primary);
+        --intent-primary-text: #ffffff;
+        --intent-primary-alpha: rgba(16, 185, 129, 0.15);
+
+        --intent-secondary-main: var(--accent-secondary);
+        --intent-secondary-text: #ffffff;
+        --intent-secondary-alpha: rgba(44, 110, 85, 0.15);
+
+        --intent-success-main: var(--color-success);
+        --intent-success-text: #ffffff;
+        --intent-success-alpha: rgba(5, 150, 105, 0.15);
+
+        --intent-error-main: var(--color-error);
+        --intent-error-text: #ffffff;
+        --intent-error-alpha: rgba(155, 17, 30, 0.15); /* Рубин альфа */
+
+        --intent-warning-main: var(--color-warning);
+        --intent-warning-text: #ffffff;
+        --intent-warning-alpha: rgba(217, 119, 6, 0.15);
+
+        --intent-info-main: var(--color-info);
+        --intent-info-text: #ffffff;
+        --intent-info-alpha: rgba(2, 132, 199, 0.15);
+    }
+}

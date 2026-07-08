@@ -118,20 +118,23 @@ export function AppLayout() {
             ) : (
                 /* === ДЕСКТОПНЫЙ LAYOUT === */
                 <Flex className={styles.main}>
-                    {/* Сайдбар */}
-                    <Flex
-                        direction="column"
-                        id="app-sidebar"
-                        className={styles.sidebar}
-                    >
-                        <Box className={styles.sidebarContent}>
-                            <SidebarContent />
-                        </Box>
+                    {/* Вертикальная навигация */}
+                    <Box className={styles.desktopNavigationWrapper}>
+                        <Navigation />
+                    </Box>
 
-                        <Box className={styles.navigationWrapper}>
-                            <Navigation />
-                        </Box>
-                    </Flex>
+                    {/* Сайдбар */}
+                    {showSidebarContent && (
+                        <Flex
+                            direction="column"
+                            id="app-sidebar"
+                            className={styles.sidebar}
+                        >
+                            <Box className={styles.sidebarContent}>
+                                <SidebarContent />
+                            </Box>
+                        </Flex>
+                    )}
 
                     {/* Контент страницы */}
                     <Box

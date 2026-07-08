@@ -35,10 +35,10 @@
 }
 
 .item.intent-danger {
-    color: var(--color-error);
+    color: var(--intent-error-main);
 }
 .item.intent-danger[data-highlighted] {
-    background-color: var(--color-error-alpha);
+    background-color: var(--intent-error-alpha);
     color: var(--color-white);
 }
 

@@ -14,8 +14,12 @@ import type { DesignTheme, ThemeMode } from "@/lib/types/theme";
 interface ThemeState {
     theme: DesignTheme;
     mode: ThemeMode;
+    scaleFactor: number;
+    chatWallpaper: string | null;
     setTheme: (theme: DesignTheme) => void;
     setMode: (mode: ThemeMode) => void;
+    setScaleFactor: (scale: number) => void;
+    setChatWallpaper: (wallpaper: string | null) => void;
     toggleMode: () => void;
     applyTheme: () => void;
 }
@@ -29,12 +33,22 @@ export const useThemeStore = create<ThemeState>()(
         (set, get) => ({
             theme: DESIGN_THEME.DEFAULT,
             mode: THEME_MODE.LIGHT,
+            scaleFactor: 1,
+            chatWallpaper: null,
             setTheme: (theme) => {
                 set({ theme });
                 get().applyTheme();
             },
             setMode: (mode) => {
                 set({ mode });
+                get().applyTheme();
+            },
+            setScaleFactor: (scaleFactor) => {
+                set({ scaleFactor });
+                get().applyTheme();
+            },
+            setChatWallpaper: (chatWallpaper) => {
+                set({ chatWallpaper });
                 get().applyTheme();
             },
             toggleMode: () => {
@@ -46,7 +60,7 @@ export const useThemeStore = create<ThemeState>()(
                 get().applyTheme();
             },
             applyTheme: () => {
-                const { theme, mode } = get();
+                const { theme, mode, scaleFactor, chatWallpaper } = get();
                 if (typeof document !== "undefined") {
                     document.body.setAttribute(
                         THEME_ATTRIBUTES.DATA_THEME,
@@ -56,6 +70,21 @@ export const useThemeStore = create<ThemeState>()(
                         THEME_ATTRIBUTES.DATA_MODE,
                         mode,
                     );
+
+                    document.documentElement.style.setProperty(
+                        "--scale-factor",
+                        scaleFactor.toString(),
+                    );
+                    if (chatWallpaper) {
+                        document.documentElement.style.setProperty(
+                            "--bg-chat",
+                            `url('${chatWallpaper}')`,
+                        );
+                    } else {
+                        document.documentElement.style.removeProperty(
+                            "--bg-chat",
+                        );
+                    }
 
                     if (mode === THEME_MODE.DARK) {
                         document.documentElement.classList.add(THEME_MODE.DARK);
