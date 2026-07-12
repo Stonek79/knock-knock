@@ -6,7 +6,7 @@ method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
 [transport]
-tcpMux = false
+tcpMux = true
 tls.enable = true
 
 [log]

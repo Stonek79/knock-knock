@@ -6,7 +6,7 @@ token = "{{ .Envs.FRP_TOKEN }}"
 
 [transport]
 maxPoolCount = 20
-tcpMux = false
+tcpMux = true
 tls.force = true
 
 [log]
