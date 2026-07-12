@@ -37,6 +37,7 @@ services:
     image: fatedier/frpc:v0.58.1
     container_name: whoami-frpc
     restart: unless-stopped
+    command: ["-c", "/etc/frp/frpc.toml"]
     volumes:
       - ../vps_new/frp/frpc.toml:/etc/frp/frpc.toml
     env_file:
