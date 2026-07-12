@@ -1,0 +1,25 @@
+serverAddr = "149.33.42.8"
+serverPort = 7443
+
+auth.method = "token"
+auth.token = "{{ .Envs.FRP_TOKEN }}"
+
+[transport]
+# Оборачиваем туннель в чистый TLS для маскировки от ТСПУ
+tls.enable = true
+# КРИТИЧЕСКИ ВАЖНО: отключаем склейку трафика (Yamux). Теперь для каждого файла будет открываться свой TCP поток.
+tcpMux = false
+
+[[proxies]]
+name = "pocketbase_prod"
+type = "tcp"
+localIP = "whoami-pb"
+localPort = 8090
+remotePort = 8090
+
+[[proxies]]
+name = "pocketbase_dev"
+type = "tcp"
+localIP = "whoami-pb-dev"
+localPort = 8090
+remotePort = 9090

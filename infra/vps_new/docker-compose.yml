@@ -12,18 +12,18 @@ services:
     networks:
       - whoami-net
     depends_on:
-      - rathole
+      - frps
 
-  rathole:
-    image: rapiz1/rathole:latest
-    container_name: whoami-rathole
-    user: root
+  frps:
+    image: fatedier/frps:v0.58.1
+    container_name: whoami-frps
     restart: unless-stopped
-    command: ["--server", "/app/server.toml"]
     ports:
-      - "443:2333" # Маскируем Rathole под обычный HTTPS трафик!
+      - "7443:7443" # Внешний порт туннеля
     volumes:
-      - ./rathole/server.toml:/app/server.toml
+      - ./frp/frps.toml:/etc/frp/frps.toml
+    env_file:
+      - .env
     networks:
       - whoami-net
 
