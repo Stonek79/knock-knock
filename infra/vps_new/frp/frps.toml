@@ -10,7 +10,7 @@ token = "{{ .Envs.FRP_TOKEN }}"
 maxPoolCount = 20
 tcpMux = true
 tcpMuxKeepaliveInterval = 10
-heartbeatInterval = 10
+# heartbeatInterval — только для клиента, на сервере не поддерживается
 heartbeatTimeout = 30
 
 [log]
