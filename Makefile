@@ -13,8 +13,9 @@ help:
 	@echo "  make logs-push    - Смотреть логи Push-шлюза"
 
 # Создаёт магистральную Docker-сеть (нужно выполнить 1 раз)
+# MTU 1300 нужен для корректной маршрутизации больших пакетов через VPN/Wireguard
 network:
-	@docker network create whoami-net 2>/dev/null || echo "Сеть whoami-net уже существует."
+	@docker network create --opt com.docker.network.driver.mtu=1300 whoami-net 2>/dev/null || echo "Сеть whoami-net уже существует."
 
 # --- ЗАПУСК ---
 start-prod: network
