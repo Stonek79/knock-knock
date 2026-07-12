@@ -11,5 +11,5 @@ services:
 
 networks:
   default:
-    name: knock-knock-net
+    name: whoami-net
     external: true

@@ -3,7 +3,7 @@ services:
     build:
       context: ../../app
       dockerfile: Dockerfile
-    container_name: knock-knock-web
+    container_name: whoami-web
     restart: unless-stopped
     ports:
       - "3000:80"
@@ -12,5 +12,5 @@ services:
 
 networks:
   default:
-    name: knock-knock-net
+    name: whoami-net
     external: true

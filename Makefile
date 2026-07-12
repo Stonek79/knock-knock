@@ -14,7 +14,7 @@ help:
 
 # Создаёт магистральную Docker-сеть (нужно выполнить 1 раз)
 network:
-	@docker network create knock-knock-net 2>/dev/null || echo "Сеть knock-knock-net уже существует."
+	@docker network create whoami-net 2>/dev/null || echo "Сеть whoami-net уже существует."
 
 # --- ЗАПУСК ---
 start-prod: network
@@ -63,13 +63,13 @@ stop-all: stop-prod stop-dev stop-mailpit stop-push stop-web
 
 # --- ЛОГИ ---
 logs-push:
-	docker logs knock-knock-push -f
+	docker logs whoami-push -f
 
 logs-prod:
-	docker logs knock-knock-pb -f
+	docker logs whoami-pb -f
 
 logs-dev:
-	docker logs knock-knock-pb-dev -f
+	docker logs whoami-pb-dev -f
 
 logs-web:
-	docker logs knock-knock-web -f
+	docker logs whoami-web -f
