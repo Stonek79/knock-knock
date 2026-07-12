@@ -6,7 +6,14 @@ method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
 [transport]
-tcpMux = false
+# Пул предварительных work connections — без него каждый параллельный
+# запрос браузера требует нового round-trip для создания соединения,
+# что вызывает 502 при загрузке ассетов
+poolCount = 10
+tcpMux = true
+tcpMuxKeepaliveInterval = 10
+heartbeatInterval = 10
+heartbeatTimeout = 30
 
 [log]
 level = "trace"
