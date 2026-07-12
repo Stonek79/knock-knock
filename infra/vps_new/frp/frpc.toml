@@ -6,15 +6,7 @@ method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
 [transport]
-# WebSocket-транспорт: выглядит как обычный веб-трафик для ISP/DPI,
-# имеет собственное фреймирование (решает проблемы с фрагментацией)
-protocol = "websocket"
-# Пул предварительных work connections для параллельных запросов браузера
-poolCount = 3
-tcpMux = true
-tcpMuxKeepaliveInterval = 10
-heartbeatInterval = 10
-heartbeatTimeout = 30
+tcpMux = false
 
 [log]
 level = "trace"

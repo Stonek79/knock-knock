@@ -5,13 +5,8 @@ method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
 [transport]
-# Максимальное количество pool connections от одного клиента
-# (по умолчанию 5, что обрежет poolCount = 10 клиента)
 maxPoolCount = 20
-tcpMux = true
-tcpMuxKeepaliveInterval = 10
-# heartbeatInterval — только для клиента, на сервере не поддерживается
-heartbeatTimeout = 30
+tcpMux = false
 
 [log]
 level = "trace"
