@@ -1,8 +1,8 @@
 bindPort = 7443
 
-[log]
-level = "trace"
-
 [auth]
 method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
+
+[log]
+level = "trace"

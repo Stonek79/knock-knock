@@ -1,18 +1,12 @@
 serverAddr = "149.33.42.8"
 serverPort = 7443
 
-[log]
-level = "trace"
-
 [auth]
 method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
-[transport]
-# Оборачиваем туннель в чистый TLS для маскировки от ТСПУ
-tls.enable = false
-# КРИТИЧЕСКИ ВАЖНО: отключаем склейку трафика (Yamux). Теперь для каждого файла будет открываться свой TCP поток.
-tcpMux = false
+[log]
+level = "trace"
 
 [[proxies]]
 name = "pocketbase_prod"
