@@ -1,4 +1,7 @@
 bindPort = 7443
 
+[log]
+level = "trace"
+
 auth.method = "token"
-auth.token = "{{ .Envs.FRP_TOKEN }}"
+auth.token = "12345678"
