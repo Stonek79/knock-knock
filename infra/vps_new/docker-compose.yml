@@ -1,7 +1,7 @@
 services:
   nginx:
     image: nginx:alpine
-    container_name: knock-knock-nginx
+    container_name: whoami-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -11,13 +11,13 @@ services:
       - ./nginx:/etc/nginx/conf.d
       - /etc/letsencrypt:/etc/letsencrypt
     networks:
-      - knock-knock-net
+      - whoami-net
     depends_on:
       - rathole
 
   rathole:
     image: rapiz1/rathole:latest
-    container_name: knock-knock-rathole
+    container_name: whoami-rathole
     restart: unless-stopped
     command: ["--server", "/app/server.toml"]
     ports:
@@ -25,11 +25,11 @@ services:
     volumes:
       - ./rathole/server.toml:/app/server.toml
     networks:
-      - knock-knock-net
+      - whoami-net
 
   push-gateway:
     build: ./push-gateway
-    container_name: knock-knock-push
+    container_name: whoami-push
     restart: unless-stopped
     # Порты наружу не пробрасываем! Доступ только внутри сети Docker для Nginx / Rathole
     environment:
@@ -38,8 +38,8 @@ services:
     env_file:
       - .env
     networks:
-      - knock-knock-net
+      - whoami-net
 
 networks:
-  knock-knock-net:
-    name: knock-knock-net
+  whoami-net:
+    name: whoami-net

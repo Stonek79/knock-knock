@@ -5,8 +5,8 @@ remote_addr = "149.33.42.8:2333"
 [client.services.pocketbase]
 token = "Kx9m2PqL8vY5wR4nJc7t"
 # Адрес контейнера PocketBase внутри домашней сети Docker
-local_addr = "knock-knock-pb:8090"
+local_addr = "whoami-pb:8090"
 
 [client.services.pocketbase_dev]
 token = "Qp5z8WbK2nC7xM3vL9rT"
-local_addr = "knock-knock-pb-dev:8090"
+local_addr = "whoami-pb-dev:8090"

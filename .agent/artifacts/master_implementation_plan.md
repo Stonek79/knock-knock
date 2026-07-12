@@ -186,7 +186,18 @@
 
 ---
 
-## 8. Стратегия тестирования и развертывания
+## 8. Архитектурные улучшения (Type-Safe Realtime)
+
+### [ADD] `app/src/lib/types/realtime.ts` (Новый файл)
+- Создать единые типы для `RealtimeBusinessEvent` с использованием Discriminated Unions (основанные на сгенерированных `PBMessage`, `PBPresenceStatus` и т.д.). Это не заменяет БД типы, а выступает оберткой для типизации бизнес-логики.
+
+### [MODIFY] `app/src/lib/repositories/message.repository.ts` & `presence.repository.ts`
+- Отрефакторить обработчики подписок (`pb.collection().subscribe`). Маппить сырые события PocketBase в строгий формат `RealtimeBusinessEvent` перед передачей наверх.
+- На уровне UI или Stores использовать блок `switch (event.type)` с исчерпывающей проверкой (exhaustive check).
+
+---
+
+## 9. Стратегия тестирования и развертывания
 1. Применить новую схему `pb_schema.json` на dev-БД.
 2. Провести рефакторинг фронтенда (устранить ошибки компиляции в мапперах и компонентах).
 3. Проверить миграцию профиля (Бизнес <-> Инкогнито) и доставку Blind Push в симуляторе Service Worker.

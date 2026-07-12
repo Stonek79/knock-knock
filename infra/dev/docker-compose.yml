@@ -1,7 +1,7 @@
 services:
   pocketbase:
     image: ghcr.io/muchobien/pocketbase:latest
-    container_name: knock-knock-pb-dev
+    container_name: whoami-pb-dev
     restart: unless-stopped
     command: 
       - serve 
@@ -18,7 +18,7 @@ services:
       - .env
     environment:
       - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-}
-      - PB_PUSH_GATEWAY_URL=http://knock-knock-push:4000
+      - PB_PUSH_GATEWAY_URL=https://dev-api.whoami.ninja/push/
       - PB_SMTP_HOST=mailpit
       - PB_SMTP_PORT=1025
       - PB_SMTP_TLS=false
@@ -27,5 +27,5 @@ services:
 
 networks:
   default:
-    name: knock-knock-net
+    name: whoami-net
     external: true

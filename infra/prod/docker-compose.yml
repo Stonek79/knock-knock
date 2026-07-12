@@ -1,7 +1,7 @@
 services:
   pocketbase:
     image: ghcr.io/muchobien/pocketbase:latest
-    container_name: knock-knock-pb
+    container_name: whoami-pb
     restart: unless-stopped
     command: 
       - serve 
@@ -23,7 +23,7 @@ services:
       - PB_SMTP_USER=${PB_SMTP_USER:-}
       - PB_SMTP_PASS=${PB_SMTP_PASS:-}
       - PB_SMTP_TLS=${PB_SMTP_TLS:-true}
-      - PB_PUSH_GATEWAY_URL=http://knock-knock-push:4000
+      - PB_PUSH_GATEWAY_URL=https://api.whoami.ninja/push/
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
       interval: 30s
@@ -32,8 +32,18 @@ services:
       start_period: 10s
     networks:
       - default
+      
+  rathole-client:
+    image: rapiz1/rathole:latest
+    container_name: whoami-rathole-client
+    restart: unless-stopped
+    command: ["--client", "/app/client.toml"]
+    volumes:
+      - ../vps_new/rathole/client.toml:/app/client.toml
+    networks:
+      - default
 
 networks:
   default:
-    name: knock-knock-net
+    name: whoami-net
     external: true
