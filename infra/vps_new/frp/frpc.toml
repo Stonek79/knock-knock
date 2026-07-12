@@ -15,13 +15,13 @@ level = "trace"
 [[proxies]]
 name = "pocketbase_prod"
 type = "tcp"
-localIP = "whoami-pb"
+localIP = "127.0.0.1"
 localPort = 8090
 remotePort = 8090
 
 [[proxies]]
 name = "pocketbase_dev"
 type = "tcp"
-localIP = "whoami-pb-dev"
-localPort = 8090
+localIP = "127.0.0.1"
+localPort = 9090
 remotePort = 9090
