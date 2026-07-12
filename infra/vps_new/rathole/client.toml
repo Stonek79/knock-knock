@@ -13,7 +13,9 @@ pattern = "Noise_XX_25519_ChaChaPoly_BLAKE2s"
 token = "Kx9m2PqL8vY5wR4nJc7t"
 # Адрес контейнера PocketBase внутри домашней сети Docker
 local_addr = "whoami-pb:8090"
+nodelay = true
 
 [client.services.pocketbase_dev]
 token = "Qp5z8WbK2nC7xM3vL9rT"
 local_addr = "whoami-pb-dev:8090"
+nodelay = true

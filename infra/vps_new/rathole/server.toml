@@ -12,9 +12,10 @@ pattern = "Noise_XX_25519_ChaChaPoly_BLAKE2s"
 [server.services.pocketbase]
 # Секретный токен (нужно сгенерировать сложную строку и указать тут и у клиента)
 token = "Kx9m2PqL8vY5wR4nJc7t"
-# Локальный порт на VPS, на который будет проецироваться домашний PocketBase
-bind_addr = "0.0.0.0:8090"
+bind_addr = "0.0.0.0:8090" # Внутренний порт для проксирования на PB Prod
+nodelay = true
 
 [server.services.pocketbase_dev]
-token = "Qp5z8WbK2nC7xM3vL9rT"
-bind_addr = "0.0.0.0:9090"
+token = "y2N4vB7mZ9rP1qL5cW8x"
+bind_addr = "0.0.0.0:9090" # Внутренний порт для проксирования на PB Dev
+nodelay = true
