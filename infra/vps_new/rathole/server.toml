@@ -2,6 +2,14 @@
 # Порт, который слушает Rathole на VPS для приема соединений от домашнего сервера
 bind_addr = "0.0.0.0:2333"
 
+# TLS-шифрование: трафик неотличим от обычного HTTPS
+[server.transport]
+type = "tls"
+
+[server.transport.tls]
+pkcs12 = "/app/rathole.p12"
+pkcs12_password = "rathole2026"
+
 [server.services.pocketbase]
 # Секретный токен (нужно сгенерировать сложную строку и указать тут и у клиента)
 token = "Kx9m2PqL8vY5wR4nJc7t"

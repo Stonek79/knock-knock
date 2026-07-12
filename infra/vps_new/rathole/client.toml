@@ -2,6 +2,13 @@
 # IP-адрес твоего нового VPS в Ирландии и порт Rathole сервера (замаскирован под HTTPS)
 remote_addr = "149.33.42.8:443"
 
+# TLS-шифрование: трафик неотличим от обычного HTTPS
+[client.transport]
+type = "tls"
+
+[client.transport.tls]
+hostname = "api.whoami.ninja"
+
 [client.services.pocketbase]
 token = "Kx9m2PqL8vY5wR4nJc7t"
 # Адрес контейнера PocketBase внутри домашней сети Docker
