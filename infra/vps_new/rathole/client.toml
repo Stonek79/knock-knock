@@ -1,7 +1,6 @@
 [client]
 # IP-адрес твоего нового VPS в Ирландии и порт Rathole сервера (замаскирован под HTTPS)
 remote_addr = "149.33.42.8:443"
-heartbeat_interval = 120
 
 # TLS-шифрование: трафик неотличим от обычного HTTPS
 [client.transport]

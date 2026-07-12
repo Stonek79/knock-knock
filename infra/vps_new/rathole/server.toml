@@ -1,7 +1,6 @@
 [server]
 # Порт, который слушает Rathole на VPS для приема соединений от домашнего сервера
 bind_addr = "0.0.0.0:2333"
-heartbeat_interval = 120
 
 # TLS-шифрование: трафик неотличим от обычного HTTPS
 [server.transport]
