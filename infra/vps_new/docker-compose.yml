@@ -31,7 +31,7 @@ services:
     build: ./push-gateway
     container_name: whoami-push
     restart: unless-stopped
-    # Порты наружу не пробрасываем! Доступ только внутри сети Docker для Nginx / Rathole
+    # Порты наружу не пробрасываем! Доступ только внутри сети Docker для Nginx / FRP
     environment:
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}

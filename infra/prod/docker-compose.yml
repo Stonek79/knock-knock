@@ -15,7 +15,7 @@ services:
       - ../home/pb_hooks:/pb/pb_hooks
       - ../home/pb_schema.json:/pb/pb_schema.json
     env_file:
-      - .env
+      - ../../app/.env
     environment:
       - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-}
       - PB_SMTP_HOST=${PB_SMTP_HOST:-}
@@ -40,7 +40,7 @@ services:
     volumes:
       - ../vps_new/frp/frpc.toml:/etc/frp/frpc.toml
     env_file:
-      - .env
+      - ../../app/.env
     networks:
       - default
 

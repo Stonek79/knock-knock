@@ -15,7 +15,7 @@ services:
       - ../home/pb_hooks:/pb/pb_hooks
       - ../home/pb_schema.json:/pb/pb_schema.json
     env_file:
-      - .env
+      - ../../app/.env
     environment:
       - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-}
       - PB_PUSH_GATEWAY_URL=https://dev-api.whoami.ninja/push/
