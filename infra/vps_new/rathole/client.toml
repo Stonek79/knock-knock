@@ -2,12 +2,12 @@
 # IP-адрес твоего нового VPS в Ирландии и порт Rathole сервера (замаскирован под HTTPS)
 remote_addr = "149.33.42.8:443"
 
-# TLS-шифрование: трафик неотличим от обычного HTTPS
+# Используем легковесный протокол Noise, он не боится ТСПУ и не рвет Yamux-сессии под нагрузкой
 [client.transport]
-type = "tls"
+type = "noise"
 
-[client.transport.tls]
-hostname = "api.whoami.ninja"
+[client.transport.noise]
+pattern = "Noise_XX_25519_ChaChaPoly_BLAKE2s"
 
 [client.services.pocketbase]
 token = "Kx9m2PqL8vY5wR4nJc7t"

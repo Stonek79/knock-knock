@@ -24,7 +24,6 @@ services:
       - "443:2333" # Маскируем Rathole под обычный HTTPS трафик!
     volumes:
       - ./rathole/server.toml:/app/server.toml
-      - /etc/letsencrypt/live/api.whoami.ninja/rathole.p12:/app/rathole.p12:ro
     networks:
       - whoami-net
 
