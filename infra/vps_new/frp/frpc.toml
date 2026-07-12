@@ -4,8 +4,9 @@ serverPort = 7443
 [log]
 level = "trace"
 
-auth.method = "token"
-auth.token = "12345678"
+[auth]
+method = "token"
+token = "{{ .Envs.FRP_TOKEN }}"
 
 [transport]
 # Оборачиваем туннель в чистый TLS для маскировки от ТСПУ
