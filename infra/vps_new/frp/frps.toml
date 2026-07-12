@@ -4,5 +4,8 @@ bindPort = 7443
 method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
+[transport]
+tcpMux = false
+
 [log]
 level = "trace"
