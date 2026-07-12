@@ -17,6 +17,7 @@ services:
   rathole:
     image: rapiz1/rathole:latest
     container_name: whoami-rathole
+    user: root
     restart: unless-stopped
     command: ["--server", "/app/server.toml"]
     ports:
