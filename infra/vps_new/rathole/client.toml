@@ -2,13 +2,6 @@
 # IP-адрес твоего нового VPS в Ирландии и порт Rathole сервера (замаскирован под HTTPS)
 remote_addr = "149.33.42.8:443"
 
-# Используем легковесный протокол Noise, он не боится ТСПУ и не рвет Yamux-сессии под нагрузкой
-[client.transport]
-type = "noise"
-
-[client.transport.noise]
-pattern = "Noise_XX_25519_ChaChaPoly_BLAKE2s"
-
 [client.services.pocketbase]
 token = "Kx9m2PqL8vY5wR4nJc7t"
 # Адрес контейнера PocketBase внутри домашней сети Docker
@@ -16,6 +9,6 @@ local_addr = "whoami-pb:8090"
 nodelay = true
 
 [client.services.pocketbase_dev]
-token = "Qp5z8WbK2nC7xM3vL9rT"
+token = "y2N4vB7mZ9rP1qL5cW8x"
 local_addr = "whoami-pb-dev:8090"
 nodelay = true

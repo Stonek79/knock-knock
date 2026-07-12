@@ -2,13 +2,6 @@
 # Порт, который слушает Rathole на VPS для приема соединений от домашнего сервера
 bind_addr = "0.0.0.0:2333"
 
-# Используем легковесный протокол Noise, он не боится ТСПУ и не рвет Yamux-сессии под нагрузкой
-[server.transport]
-type = "noise"
-
-[server.transport.noise]
-pattern = "Noise_XX_25519_ChaChaPoly_BLAKE2s"
-
 [server.services.pocketbase]
 # Секретный токен (нужно сгенерировать сложную строку и указать тут и у клиента)
 token = "Kx9m2PqL8vY5wR4nJc7t"
