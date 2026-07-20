@@ -6,6 +6,8 @@ method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
 [transport]
+protocol = "websocket"
+poolCount = 10
 tcpMux = false
 tls.enable = true
 
