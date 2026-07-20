@@ -21,6 +21,7 @@ services:
     command: ["-c", "/etc/frp/frps.toml"]
     ports:
       - "7443:7443" # Внешний порт туннеля
+      - "2222:2222" # Порт для SSH доступа к домашнему серверу
     volumes:
       - ./frp/frps.toml:/etc/frp/frps.toml
     env_file:

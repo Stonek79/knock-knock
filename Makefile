@@ -11,6 +11,7 @@ help:
 	@echo "  make start-dev    - Запустить только Development БД"
 	@echo "  make logs-prod    - Смотреть логи Production БД"
 	@echo "  make logs-push    - Смотреть логи Push-шлюза"
+	@echo "  make restart-tunnel - Перезапустить клиент туннеля FRP"
 
 # Создаёт магистральную Docker-сеть (нужно выполнить 1 раз)
 # MTU 1300 нужен для корректной маршрутизации больших пакетов через VPN/Wireguard
@@ -61,6 +62,11 @@ start-all: start-prod start-dev start-mailpit start-push start-web
 
 stop-all: stop-prod stop-dev stop-mailpit stop-push stop-web
 	@echo "🛑 Вся инфраструктура остановлена."
+
+# --- ПЕРЕЗАПУСК ---
+restart-tunnel:
+	cd infra/prod && docker compose restart frpc
+	@echo "🔄 Туннель FRP перезапущен."
 
 # --- ЛОГИ ---
 logs-push:

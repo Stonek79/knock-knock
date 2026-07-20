@@ -6,7 +6,7 @@ method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
 [transport]
-tcpMux = true
+tcpMux = false
 tls.enable = true
 
 [log]
@@ -25,3 +25,10 @@ type = "tcp"
 localIP = "127.0.0.1"
 localPort = 9090
 remotePort = 9090
+
+[[proxies]]
+name = "ssh_home"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 22
+remotePort = 2222
