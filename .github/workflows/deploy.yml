@@ -55,6 +55,14 @@ jobs:
           cd ~/knock-knock
           git pull origin main
           
+          # ВРЕМЕННОЕ РЕШЕНИЕ: Жестко прописываем ключи для первого пробива туннеля
+          export HOME_WG_PRIV="YAzdHLkWc+ksZ7KbValdSIRJcU5wcvlKrne08X7mMEA="
+          export VPS_WG_PUB="sSsrRc5SrjF088bTtUnYebfP2fTCmdUOGJZs64UCImc="
+          
+          # Настраиваем WireGuard туннель
+          chmod +x ./infra/scripts/setup_home_wg.sh
+          ./infra/scripts/setup_home_wg.sh
+          
           # Фронтенд: (раскомментируйте, если фронтенд тоже запускается этим воркфлоу)
           # docker compose pull app 
           # docker compose up -d app
