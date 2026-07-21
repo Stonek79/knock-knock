@@ -37,6 +37,8 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflare-tunnel-home
     command: tunnel run
+    env_file:
+      - ../../app/.env
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_HOME_TOKEN}
     networks:
