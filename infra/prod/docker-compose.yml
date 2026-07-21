@@ -39,9 +39,25 @@ services:
     command: tunnel --protocol http2 run
     env_file:
       - ../../app/.env
+    environment:
+      - http_proxy=socks5://whoami-xray:1080
+      - https_proxy=socks5://whoami-xray:1080
+      - HTTP_PROXY=socks5://whoami-xray:1080
+      - HTTPS_PROXY=socks5://whoami-xray:1080
+    depends_on:
+      - xray
     networks:
       - default
     restart: unless-stopped
+
+  xray:
+    image: teddysun/xray:latest
+    container_name: whoami-xray
+    restart: unless-stopped
+    volumes:
+      - ../../xray-config.json:/etc/xray/config.json
+    networks:
+      - default
 
   web:
     image: ghcr.io/stonek79/knock-knock-app:latest
