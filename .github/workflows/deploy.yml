@@ -35,6 +35,8 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
+        env:
+          VAPID_PUB_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
         with:
           context: .
           file: ./Dockerfile.app
@@ -42,7 +44,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VITE_VAPID_PUBLIC_KEY=${{ secrets.VITE_VAPID_PUBLIC_KEY }}
+            VITE_VAPID_PUBLIC_KEY=${{ env.VAPID_PUB_KEY }}
 
   deploy:
     runs-on: self-hosted
@@ -55,18 +57,6 @@ jobs:
           cd ~/knock-knock
           git pull origin main
           
-          # ВРЕМЕННОЕ РЕШЕНИЕ: Жестко прописываем ключи для первого пробива туннеля
-          export HOME_WG_PRIV="YAzdHLkWc+ksZ7KbValdSIRJcU5wcvlKrne08X7mMEA="
-          export VPS_WG_PUB="sSsrRc5SrjF088bTtUnYebfP2fTCmdUOGJZs64UCImc="
-          
-          # Настраиваем WireGuard туннель
-          chmod +x ./infra/scripts/setup_home_wg.sh
-          ./infra/scripts/setup_home_wg.sh
-          
-          # Фронтенд: (раскомментируйте, если фронтенд тоже запускается этим воркфлоу)
-          # docker compose pull app 
-          # docker compose up -d app
-          
-          # БЭКЕНД И ШЛЮЗ: Закомментировано, так как управляется отдельно!
-          # docker compose -f infra/home/docker-compose.pb.yml pull
-          # docker compose -f infra/home/docker-compose.pb.yml up -d --build
+          # Запускаем/Обновляем инфраструктуру Домашнего сервера (БД, Фронт, Cloudflare Tunnel)
+          docker compose -f infra/prod/docker-compose.yml pull
+          docker compose -f infra/prod/docker-compose.yml up -d

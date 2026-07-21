@@ -1,39 +1,19 @@
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: whoami-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "8443:8443"
-    volumes:
-      - ./nginx:/etc/nginx/conf.d
-      - /etc/letsencrypt:/etc/letsencrypt
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel-vps
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_VPS_TOKEN}
     networks:
       - whoami-net
-    depends_on:
-      - frps
-
-  frps:
-    image: fatedier/frps:v0.58.1
-    container_name: whoami-frps
     restart: unless-stopped
-    command: ["-c", "/etc/frp/frps.toml"]
-    ports:
-      - "7443:7443" # Внешний порт туннеля
-      - "2222:2222" # Порт для SSH доступа к домашнему серверу
-    volumes:
-      - ./frp/frps.toml:/etc/frp/frps.toml
-    env_file:
-      - .env
-    networks:
-      - whoami-net
 
   push-gateway:
     build: ./push-gateway
     container_name: whoami-push
     restart: unless-stopped
-    # Порты наружу не пробрасываем! Доступ только внутри сети Docker для Nginx / FRP
+    # Порты наружу не пробрасываем, Cloudflare Tunnel будет проксировать трафик внутрь
     environment:
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}

@@ -33,16 +33,24 @@ services:
     networks:
       - default
       
-  frpc:
-    image: fatedier/frpc:v0.58.1
-    container_name: whoami-frpc
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel-home
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_HOME_TOKEN}
+    networks:
+      - default
     restart: unless-stopped
-    network_mode: host
-    command: ["-c", "/etc/frp/frpc.toml"]
-    volumes:
-      - ../vps_new/frp/frpc.toml:/etc/frp/frpc.toml
-    env_file:
-      - ../../app/.env
+
+  web:
+    image: ghcr.io/stonek79/knock-knock-app:latest
+    container_name: whoami-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - default
 
 networks:
   default:
