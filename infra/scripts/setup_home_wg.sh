@@ -23,8 +23,11 @@ fi
 HOME_PRIV=$HOME_WG_PRIV
 VPS_PUB=$VPS_WG_PUB
 
-# Создаем конфиг (нужны права sudo без пароля для раннера, или запуск от root)
-sudo bash -c "cat <<EOF > /etc/wireguard/wg11.conf
+# ВНИМАНИЕ: Так как раннер требует пароль для sudo, мы используем Docker (в который раннер вхож без пароля) 
+# для получения root-доступа к хостовой системе. Это стандартный трюк.
+
+# Создаем конфиг
+docker run --rm -v /etc/wireguard:/etc/wireguard alpine sh -c "cat <<EOF > /etc/wireguard/wg11.conf
 [Interface]
 # Приватный ключ этого (Домашнего) сервера
 PrivateKey = $HOME_PRIV
@@ -42,14 +45,16 @@ Endpoint = 149.33.42.8:51822
 AllowedIPs = 10.88.11.1/32
 # Поддерживать соединение живым (очень важно за NAT)
 PersistentKeepalive = 25
-EOF"
+EOF
+chmod 600 /etc/wireguard/wg11.conf
+"
 
-sudo chmod 600 /etc/wireguard/wg11.conf
-
-# Включаем и запускаем
-sudo systemctl enable wg-quick@wg11
-sudo systemctl restart wg-quick@wg11
+# Включаем и запускаем сервис через Docker-трюк с chroot
+# Мы прокидываем корень хоста (/) внутрь контейнера в папку /host, и делаем chroot.
+# Это позволяет нам выполнить systemctl на самом хосте от имени root без пароля.
+docker run --rm --privileged -v /:/host alpine chroot /host systemctl enable wg-quick@wg11
+docker run --rm --privileged -v /:/host alpine chroot /host systemctl restart wg-quick@wg11
 
 echo ""
 echo "=== Статус туннеля wg11 ==="
-sudo wg show wg11
+docker run --rm --privileged -v /:/host alpine chroot /host wg show wg11
