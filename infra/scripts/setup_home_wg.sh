@@ -50,12 +50,12 @@ chmod 600 /etc/wireguard/wg11.conf
 "
 
 # Включаем автозагрузку
-docker run --rm --privileged -v /:/host alpine chroot /host systemctl enable wg-quick@wg11
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host systemctl enable wg-quick@wg11
 
 # Запускаем напрямую через wg-quick, чтобы увидеть точную ошибку прямо в логе GitHub!
-docker run --rm --privileged -v /:/host alpine chroot /host wg-quick down wg11 || true
-docker run --rm --privileged -v /:/host alpine chroot /host wg-quick up wg11 || docker run --rm --privileged -v /:/host alpine chroot /host journalctl -xeu wg-quick@wg11.service --no-pager
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host wg-quick down wg11 || true
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host wg-quick up wg11 || docker run --rm --privileged --net=host -v /:/host alpine chroot /host journalctl -xeu wg-quick@wg11.service --no-pager
 
 echo ""
 echo "=== Статус туннеля wg11 ==="
-docker run --rm --privileged -v /:/host alpine chroot /host wg show wg11
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host wg show wg11
