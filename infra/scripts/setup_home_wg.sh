@@ -56,6 +56,26 @@ docker run --rm --privileged --net=host -v /:/host alpine chroot /host systemctl
 docker run --rm --privileged --net=host -v /:/host alpine chroot /host wg-quick down wg11 || true
 docker run --rm --privileged --net=host -v /:/host alpine chroot /host wg-quick up wg11 || docker run --rm --privileged --net=host -v /:/host alpine chroot /host journalctl -xeu wg-quick@wg11.service --no-pager
 
+# Настраиваем брандмауэр (если есть), чтобы разрешить весь трафик внутри туннеля wg11
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host sh -c "ufw allow in on wg11 to any port 22 proto tcp || true"
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host sh -c "ufw allow in on wg11 to any port 8090 proto tcp || true"
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host sh -c "ufw allow in on wg11 to any port 9090 proto tcp || true"
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host sh -c "iptables -I INPUT 1 -i wg11 -j ACCEPT || true"
+
 echo ""
 echo "=== Статус туннеля wg11 ==="
 docker run --rm --privileged --net=host -v /:/host alpine chroot /host wg show wg11
+
+echo ""
+echo "=== Сетевые интерфейсы и маршруты ==="
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host ip a show wg11 || true
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host ip route || true
+
+echo ""
+echo "=== Какие порты реально слушаются на сервере? ==="
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host ss -tulnp | grep -E '8090|9090|22' || true
+
+echo ""
+echo "=== Статус брандмауэра (UFW/iptables) ==="
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host ufw status || true
+docker run --rm --privileged --net=host -v /:/host alpine chroot /host iptables -L INPUT -v -n | head -n 15 || true
