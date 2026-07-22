@@ -1,13 +1,30 @@
 services:
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflare-tunnel-vps
-    command: tunnel run
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_VPS_TOKEN}
+  nginx:
+    image: nginx:alpine
+    container_name: whoami-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
     networks:
       - whoami-net
+    depends_on:
+      - frps
+
+  frps:
+    image: fatedier/frps:v0.58.1
+    container_name: whoami-frps
     restart: unless-stopped
+    command: ["-c", "/etc/frp/frps.toml"]
+    ports:
+      - "7443:7443" # Внешний порт для FRP туннеля
+    volumes:
+      - ./frps.toml:/etc/frp/frps.toml
+    env_file:
+      - .env
+    networks:
+      - whoami-net
 
   push-gateway:
     build: ./push-gateway

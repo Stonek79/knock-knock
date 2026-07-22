@@ -1,0 +1,34 @@
+serverAddr = "149.33.42.8"
+serverPort = 7443
+
+[auth]
+method = "token"
+token = "{{ .Envs.FRP_TOKEN }}"
+
+[transport]
+tcpMux = true
+tls.enable = true
+
+[log]
+level = "info"
+
+[[proxies]]
+name = "whoami_web"
+type = "tcp"
+localIP = "whoami-web"
+localPort = 3000
+remotePort = 3000
+
+[[proxies]]
+name = "whoami_pb"
+type = "tcp"
+localIP = "whoami-pb"
+localPort = 8090
+remotePort = 8090
+
+[[proxies]]
+name = "whoami_pb_dev"
+type = "tcp"
+localIP = "whoami-pb-dev"
+localPort = 8090
+remotePort = 9090

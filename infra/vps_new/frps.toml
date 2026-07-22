@@ -1,0 +1,5 @@
+bindPort = 7443
+
+[auth]
+method = "token"
+token = "{{ .Envs.FRP_TOKEN }}"
