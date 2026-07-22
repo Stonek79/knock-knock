@@ -36,11 +36,10 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflare-tunnel-home
+    network_mode: "host"
     command: tunnel --protocol http2 run
     env_file:
       - ../../app/.env
-    networks:
-      - default
     restart: unless-stopped
 
   web:
