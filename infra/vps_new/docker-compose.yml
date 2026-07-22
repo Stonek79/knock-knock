@@ -20,7 +20,7 @@ services:
     ports:
       - "7443:7443" # Внешний порт для FRP туннеля
     volumes:
-      - ./frps.toml:/etc/frp/frps.toml
+      - ./frp/frps.toml:/etc/frp/frps.toml
     env_file:
       - .env
     networks:
