@@ -1,60 +1,55 @@
 # Развертывание Knock-Knock
 
-Проект имеет гибридную инфраструктуру: публичный VPS и приватный Home Server, соединенные через WireGuard.
+Проект имеет гибридную инфраструктуру: публичный VPS и приватный Home Server, соединенные через FRP-туннель, завернутый в VPN (например, Hiddify) для защиты от DPI блокировок.
 
 ## 🏗 Архитектура
 
 ```
-[User] -> [VPS: Nginx (8443)] -> [WireGuard] -> [Home Server: PocketBase (8090)]
+[User] -> [Cloudflare Proxy] -> [VPS: Nginx (80)] -> [VPS: FRP Server (7443)]
+                                                               │ (Туннель)
+[Home Server: FRP Client] <- [VPN (Hiddify/happ)] <────────────┘
+        │
+        ├──> [PocketBase Prod (8090)]
+        ├──> [PocketBase Dev (9090)]
+        └──> [Frontend Web (3000)]
 ```
-
----
 
 ## 🛠 Предварительные требования
 
-1. **Домен**: `knok-knok.ru` (настроен через Cloudflare или аналоги).
-2. **VPS**: Ubuntu 22.04+, Docker, Nginx.
-3. **Home Server**: Ubuntu/Debian, Docker, WireGuard.
-4. **SMTP**: Аккаунт в Brevo для отправки почты.
-
----
+1. **Домен**: Настроен через Cloudflare с Flexible SSL.
+2. **VPS**: Ubuntu, Docker, Nginx, FRP Server (`frps`), Push Gateway.
+3. **Home Server**: Docker, FRP Client (`frpc`), включенный VPN-клиент на уровне ОС для защиты от блокировок.
 
 ## 🚀 Порядок развертывания
 
-### 1. Настройка VPN (WireGuard)
-Настройте туннель между VPS и Home Server.
-- VPS IP (внутри VPN): `10.0.0.1`
-- Home Server IP (внутри VPN): `10.0.0.2`
+### 1. Запуск инфраструктуры на публичном сервере (VPS)
+Директория: `infra/vps`
 
-### 2. Настройка бэкенда (Home Server)
+- В `docker-compose.yml` запускаются: Nginx, FRPS, Push Gateway.
+- Nginx перенаправляет запросы с поддоменов API на нужные порты FRP-сервера (8090, 9090), а фронтенд на порт 3000.
 
-```bash
-cd ~/knock-knock/infra/home
-# Отредактируйте .env (укажите PB_ENCRYPTION_KEY)
-docker compose -f docker-compose.pb.yml up -d
-```
-Бэкенд доступен локально на порту `8090`.
+### 2. Запуск инфраструктуры на Домашнем сервере
+Директория: `infra/prod`
 
-### 3. Настройка Nginx (VPS)
-Файл конфигурации: `infra/vps/nginx.api.conf`.
-**Критично для Realtime:**
-- `proxy_buffering off;`
-- `proxy_read_timeout 24h;`
-- Поддержка `http2`.
+- **Критично**: Обязательно должен быть включен VPN-клиент на уровне ОС (например, Hiddify) для защиты туннеля от обрывов провайдером.
+- Запуск:
+  ```bash
+  cd infra/prod
+  docker compose up -d
+  ```
+- FRP-клиент подключается к VPS и пробрасывает порты `3000`, `8090`, `9090` наружу.
+- Для администрирования FRP также может пробрасывать SSH (порт 22) наружу (например, на порт `6000` VPS). Подключение: `ssh -p 6000 user@<VPS_IP>`
 
-### 4. Развертывание фронтенда (Vite PWA)
-Фронтенд может хоститься на VPS (через Nginx) или любом статическом хостинге (Vercel/Netlify).
+## 🚫 Известные проблемы и архитектурные решения (Post-Mortem)
 
-```bash
-cd app
-npm install
-npm run build
-```
-Убедитесь, что `VITE_PB_URL` указывает на `https://api.knok-knok.ru:8443`.
+1. **Cloudflare Tunnel (`cloudflared`) - НЕ ИСПОЛЬЗОВАТЬ**
+   - РКН/ТСПУ жестко режут TLS-handshake туннелей Cloudflare. Ошибка: `TLS handshake with edge error: EOF`.
+   - Даже обертка в сторонний VPN не решает проблему надежно из-за специфических отпечатков.
 
----
+2. **FRP без VPN - НЕ ИСПОЛЬЗОВАТЬ**
+   - FRP-клиент успешно подключается к FRP-серверу на VPS, но провайдер (DPI) обрывает это долгоживущее TCP соединение каждые 40-60 секунд. 
+   - Вызывает частые ошибки 502 Bad Gateway у конечных пользователей.
+   - **Решение:** Трафик FRP-клиента обязательно нужно пропускать через VPN (например, Hiddify с VLESS/Reality), который маскирует туннель под обычный веб-серфинг.
 
-## 🔐 Безопасность
-1. **API Rules**: Всегда проверяйте правила доступа в админке PocketBase.
-2. **Encryption**: `PB_ENCRYPTION_KEY` должен быть надежным и не меняться после запуска (иначе данные в БД станут нечитаемыми).
-3. **Admin**: После первого запуска создайте Superuser в админке `/_/`.
+3. **WireGuard - ОТКАЗ**
+   - Протокол WireGuard хорошо детектируется и блокируется ТСПУ по сигнатурам. Отказались в пользу связки FRP + VPN.

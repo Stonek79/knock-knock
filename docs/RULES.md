@@ -107,8 +107,8 @@ app/src/
 - **Single Source of Truth**: Типы данных, которые валидируются (DTO, Models), должны выводиться из **Zod Schemas** (`z.infer<typeof schema>`), расположенных в `src/lib/schemas`. Не дублируй интерфейсы вручную.
 
 ## 🌐 Инфраструктура и Стабильность
-- **Home Server**: 192.168.1.142 (Manjaro Linux). Использовать `pacman` или `pamac` для управления пакетами.
-- **WireGuard**: Использование IP 10.0.0.2 для связи между VPS и Home Server.
+- **Home Server**: 192.168.1.142
+- **Сетевая связность**: Использование FRP-туннеля (завернутого в VPN) для безопасной связи между VPS (Nginx) и Home Server (PocketBase).
 - **Деплой**: Использовать `Dockerfile.app` и `docker-compose.yml`.
 
 ## 🧪 Качество и Стабильность
