@@ -28,8 +28,8 @@
 ## 🛠 Инфраструктура
 
 ### 1. Настройка DNS (Brevo)
-Для домена `knok-knok.ru` настроены DKIM, SPF и DMARC записи.
-**Sender email:** `admin@knok-knok.ru` (верифицированный отправитель).
+Для домена `whoami.ninja` настроены DKIM, SPF и DMARC записи.
+**Sender email:** `admin@whoami.ninja` (верифицированный отправитель).
 
 ### 2. Настройка PocketBase SMTP (Prod)
 Переменные окружения в `.env.production`:

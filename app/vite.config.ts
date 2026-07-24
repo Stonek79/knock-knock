@@ -65,7 +65,7 @@ export default defineConfig({
     },
     server: {
         host: true,
-        allowedHosts: ["knok-knok.ru", "www.knok-knok.ru", "api.knok-knok.ru"],
+        allowedHosts: ["whoami.ninja", "www.whoami.ninja", "api.whoami.ninja"],
         forwardConsole: true,
     },
     test: {

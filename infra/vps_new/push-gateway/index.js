@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { AccessToken } from "livekit-server-sdk";
 import webpush from "web-push";
 
 const app = express();
@@ -48,7 +49,7 @@ app.post("/api/send-push", async (req, res) => {
 				success: false,
 				error: err.message,
 			});
-			
+
 			// Если статус 410 (Gone) или 404 (Not Found), подписка стала недействительной
 			if (err.statusCode === 410 || err.statusCode === 404) {
 				expired_endpoints.push(sub.endpoint);
@@ -59,6 +60,39 @@ app.post("/api/send-push", async (req, res) => {
 });
 
 const PORT = 4000;
+
+// Эндпоинт генерации токена LiveKit
+app.post("/api/livekit-token", async (req, res) => {
+	const { roomName, participantIdentity } = req.body;
+	if (!roomName || !participantIdentity) {
+		return res
+			.status(400)
+			.json({ error: "roomName and participantIdentity are required" });
+	}
+
+	const apiKey = process.env.LIVEKIT_API_KEY;
+	const apiSecret = process.env.LIVEKIT_API_SECRET;
+
+	if (!apiKey || !apiSecret) {
+		return res.status(500).json({ error: "LiveKit keys are not configured" });
+	}
+
+	try {
+		const at = new AccessToken(apiKey, apiSecret, {
+			identity: participantIdentity,
+			ttl: "10m",
+		});
+
+		at.addGrant({ roomJoin: true, room: roomName });
+		const token = await at.toJwt();
+
+		res.json({ token });
+	} catch (err) {
+		console.error("LiveKit token generation error:", err);
+		res.status(500).json({ error: "Token generation failed" });
+	}
+});
+
 app.listen(PORT, "0.0.0.0", () => {
 	console.log(`🚀 Push Gateway is running on port ${PORT}`);
 });

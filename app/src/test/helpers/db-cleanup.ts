@@ -14,7 +14,7 @@ export async function cleanupDatabase() {
     // 🛡 ЗАЩИТА 1: Не позволяем чистить базу, если URL похож на продуктовый
     // Но разрешаем, если есть явный флаг VITE_ALLOW_DB_CLEANUP=true
     const isProdUrl =
-        pbUrl?.includes("api.knok-knok.ru") && !pbUrl?.includes("staging");
+        pbUrl?.includes("api.whoami.ninja") && !pbUrl?.includes("staging");
     const isCleanupAllowed = import.meta.env.VITE_ALLOW_DB_CLEANUP === "true";
 
     if (isProdUrl && !isCleanupAllowed) {

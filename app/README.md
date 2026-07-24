@@ -26,7 +26,7 @@ npm install
 ### 2. Настройка окружения
 Создайте файл `.env.local` на основе `.env.example`:
 ```env
-VITE_PB_URL=https://dev-api.knok-knok.ru:8443
+VITE_PB_URL=https://dev-api.whoami.ninja:8443
 VITE_TURNSTILE_SITE_KEY=...
 ```
 

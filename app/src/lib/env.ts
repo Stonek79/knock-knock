@@ -4,11 +4,11 @@ import { z } from "zod";
  * Схема валидации переменных окружения приложения.
  */
 const envSchema = z.object({
-    /** URL инстанса PocketBase (например: https://api.knok-knok.ru) */
+    /** URL инстанса PocketBase (например: https://api.whoami.ninja) */
     VITE_PB_URL: z
         .string()
         .min(1)
-        .default("https://api.knok-knok.ru:8443")
+        .default("https://api.whoami.ninja")
         .refine((val) => val.startsWith("http"), {
             message: "URL PocketBase должен начинаться с http:// или https://",
         }),
@@ -33,4 +33,4 @@ if (!_envResult.success) {
 // Экспортируем данные. Если парсинг не удался — берем дефолтные значения из схемы.
 export const env = _envResult.success
     ? _envResult.data
-    : envSchema.parse({ VITE_PB_URL: "https://api.knok-knok.ru:8443" });
+    : envSchema.parse({ VITE_PB_URL: "https://api.whoami.ninja" });

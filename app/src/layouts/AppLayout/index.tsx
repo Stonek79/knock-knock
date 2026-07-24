@@ -6,6 +6,7 @@ import { Flex } from "@/components/layout/Flex";
 import { Heading } from "@/components/ui/Heading";
 import { OnboardingModal } from "@/features/auth/components/OnboardingModal";
 import { VerificationBanner } from "@/features/auth/components/VerificationBanner";
+import { CallsOverlay } from "@/features/calls";
 import { CreateChatDialog, CreateGroupDialog } from "@/features/chat";
 import { MobileHeader, Navigation } from "@/features/navigation";
 import { useChatDialogs } from "@/hooks/chatDialogs";
@@ -167,6 +168,9 @@ export function AppLayout() {
                 open={openDialog === CHAT_TYPE.GROUP}
                 onOpenChange={(open) => !open && closeDialogs()}
             />
+
+            {/* Глобальные компоненты звонков */}
+            <CallsOverlay />
         </div>
     );
 }

@@ -1,12 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { RouteErrorFallback } from "@/components/ui/Error/RouteErrorFallback";
 import { SectionLoader } from "@/components/ui/SectionLoader";
 import { DOM_ROOT_ID } from "@/lib/constants";
 import "./lib/i18n";
 import "./index.css";
+import { PwaInstallPrompt } from "@/components/ui/PwaInstallPrompt";
 
 // Импортируем сгенерированное дерево маршрутов
 import { routeTree } from "./routeTree.gen";
@@ -49,10 +50,6 @@ router.update({
         queryClient,
     },
 });
-
-import { useEffect } from "react";
-
-import { PwaInstallPrompt } from "./components/ui/PwaInstallPrompt";
 
 /**
  * Корневой компонент приложения.

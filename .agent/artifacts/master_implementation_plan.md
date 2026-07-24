@@ -1,204 +1,58 @@
-# Пофайловый План Рефакторинга: Metadata Resistance & Channels (Zero-Knowledge)
+# Master Implementation Plan (Knock-Knock v2 & whoami.ninja Infrastructure)
 
-Этот документ представляет собой пофайловый план реализации новой архитектуры (Бизнес/Приватные профили, Sealed Sender, Key Vault, Каналы, WebRTC и Push).
+## 1. Общий обзор архитектуры и переезда на домен `whoami.ninja`
 
-> **⚠️ ВАЖНО**: В проекте существуют ДВА разных понятия `role`:
-> 1. **Системная роль** (`users.role = "admin"`) — **УДАЛЯЕТСЯ** и выносится в `_superusers`. Затрагивает всю цепочку авторизации.
-> 2. **Роль участника в комнате** (`room_members.role = "owner" | "admin" | "member"`) — **НЕ ТРОГАТЬ**. Это внутренняя иерархия групповых чатов. Функции `updateMemberRole`, `handleUpdateRole` в `GroupInfoPanel` работают именно с ней.
-
----
-
-## 1. Zero-Knowledge Архитектура (Безопасность от Админа БД)
-
-Для пользователей в режиме **Инкогнито (Private)** и для всех критических метаданных чатов реализуется схема **Zero-Knowledge**: администратор базы данных или злоумышленник с полным доступом к PocketBase **не может** прочитать конфиденциальные данные.
-
-### 1.1. Профили Инкогнито (Private)
-- В БД для такого пользователя поля `display_name`, `avatar` и `email` хранятся как `null` (или заменяются случайным UUID).
-- Реальные данные шифруются в JSON-структуру `encrypted_profile` на клиенте с помощью алгоритма AES-GCM.
-- Ключ шифрования профиля (`Profile Key`) генерируется на клиенте и упаковывается в `key_vault`.
-- `key_vault` шифруется с помощью мастер-пароля пользователя (на основе PBKDF2/Scrypt) перед отправкой на сервер. Сервер никогда не получает мастер-пароль в открытом виде (только хэш для авторизации, отличный от ключа шифрования), поэтому **администратор БД не имеет технической возможности расшифровать профили инкогнито-пользователей**.
-
-### 1.2. Переписка и Звонки
-- Все сообщения (`messages`) шифруются E2E на ключах комнат. Поля имени и аватара отправителя (`sender_name`, `sender_avatar`) полностью удаляются из схемы БД.
-- Логи звонков (`call_logs`) полностью скрывают участников: открытый массив `participants` удаляется, список UUID участников шифруется ключом комнаты и сохраняется в `encrypted_metadata`.
-- Статусы активности (`presence_status`) шифруют связь с пользователем: вместо связи `user` хранится `encrypted_user_id` (UUID пользователя, зашифрованный ключом комнаты). Сервер не знает, кто именно печатает или онлайн в конкретной комнате.
-
-### 1.3. Профили Бизнес (Public)
-- Пользователь добровольно публикует свои `display_name` и `avatar` в открытых полях БД для возможности глобального поиска по контактам и участия в публичных каналах. В `public_profile_key` публикуется его открытый ключ.
+Проект **Knock-Knock** переведён на целевую инфраструктуру **`whoami.ninja`** с полным соблюдением концепции **Zero-Knowledge (ZK)**:
+- **Фронтенд (`whoami-web`)**: React 19, TypeScript strict (без `any`), Zustand, TanStack Router/Query, кастомный UI-кит (`src/components/ui/`), подстраиваемый под глобальные CSS-темы (`default`, `neon`, `emerald`).
+- **Бэкенд (`whoami-pb`)**: PocketBase v0.23+ в Docker-контейнере (`ghcr.io/muchobien/pocketbase:latest`). Изолированные JS-хуки (`pb_hooks/`) с соблюдением паттерна *Double Require*, анонимизацией пользователей и шифрованием логов.
+- **WebRTC & Push Шлюз (`whoami-push` / `whoami-livekit`)**: Отдельные сервисы на VPS (`149.33.42.8`) для обхода блокировок NAT/DPI.
+- **Nginx VPS (`infra/vps_new/nginx/default.conf`)**: Обработка SSL/TLS, маршрутизация `/push/` и WSS `/livekit/` с поддержкой заголовков WebSockets (`Upgrade`/`Connection`).
 
 ---
 
-## 2. База Данных и Серверные Хуки (Инфраструктура) [DONE]
-
-### [MODIFY] `infra/home/pb_schema.json` (Схема БД)
-- **Коллекция `users`**:
-  - Сделать поля `display_name` и `avatar` опциональными (`required: false`).
-  - Удалить системное поле `role` (права админа выносятся в `_superusers`).
-  - Добавить поля:
-    - `profile_type` (text/select: `public` | `private`)
-    - `public_profile_key` (text)
-    - `encrypted_profile` (json)
-    - `key_vault` (json)
-- **Коллекция `messages`**: Удалить `sender_name`, `sender_avatar`.
-- **Коллекция `room_members`**: Удалить `user_name`, `user_avatar`.
-- **Коллекция `rooms`**: Добавить `inactivity_timer` (number). Расширить перечень `type` (`public_channel`, `private_channel`, `direct`, `group`, `ephemeral`).
-- **Коллекция `media`**: Удалить метаданные об оригинальном имени/типе файла из открытого вида.
-- **Коллекция `call_logs`**: Удалить поле `participants`, заменить на `encrypted_metadata` (json), шифруемый ключом комнаты.
-- **Коллекция `presence_status`**: Удалить связь `user` (Relation). Добавить `encrypted_user_id` (зашифрованный UUID пользователя ключом комнаты), чтобы скрыть социальный граф.
-
-### [MODIFY] `infra/home/pb_hooks/db.js` (Константы БД)
-- Удалить/переименовать константы полей, связанные с `ROLE`, `sender_name`, `sender_avatar`, `user_name`, `user_avatar`.
-- Добавить константы для новых полей (`PROFILE_TYPE`, `PUBLIC_PROFILE_KEY`, `ENCRYPTED_PROFILE`, `KEY_VAULT`, `ENCRYPTED_USER_ID`, `ENCRYPTED_METADATA`, `INACTIVITY_TIMER`).
-
-### [MODIFY] `infra/home/pb_hooks/main.pb.js` (Бизнес-логика сервера)
-- Переписать проверку прав администратора (6 мест с `user.get("role") === "admin"`) на запросы к системной таблице `_superusers`.
-- **Эндпоинт `/api/custom/users/contacts`**: отдавать `display_name` и `avatar` только если `profile_type === 'public'`, иначе возвращать только UUID.
-- **Поиск пользователей**: изменить поисковый фильтр `display_name ~ ...` так, чтобы он искал только по аккаунтам с `profile_type === 'public'`.
-- **Формирование Push (строка 376)**: Заменить отправку открытых `senderName` и текста на Blind Push (только `{ type: "new_message", room_id }`).
-
-### [MODIFY] `infra/home/pb_hooks/security.pb.js` (RLS правила)
-- Заменить RLS-проверки `authRecord.get("role") === "admin"` для коллекций `room_members` и `messages` на проверки принадлежности к `_superusers`.
-
-### [MODIFY] `infra/home/pb_hooks/tasks.pb.js` (Cron-задачи)
-- Обновить Payload в очереди задач при рассылке уведомлений (исключить утечку открытого текста сообщений, использовать Blind Push формат).
+## 2. Схема коллекций БД и ZK-модель
+- **`users`**: Публичные данные (Бизнес) / Зашифрованный профиль `encrypted_profile` (Инкогнито).
+- **`call_logs`**: Записи звонков с зашифрованными метаданными `encrypted_metadata` (json) без открытых ID участников.
+- **`task_queue`**: Фоновая системная очередь для рассылки Blind Push.
 
 ---
 
-## 3. Глубокий рефакторинг Фронтенда (Пофайловый)
+## 3. Фронтенд — Кастомный UI Звонков и Дизайн-Система
 
-### [MODIFY] `app/src/lib/types/pocketbase-types.ts` & `schemas/*.ts`
-- Обновить генерируемые типы PocketBase: убрать `role`, сделать `display_name` и `avatar` опциональными (`?string`). Добавить новые поля `profile_type`, `key_vault` и т.д.
+### Использование кастомного UI-кита (`src/components/ui/`):
+- Полный отказ от дефолтной верстки сторонних библиотек (LiveKit `<VideoConference />`).
+- Применение собственных компонентов: `Button`, `IconButton`, `Avatar`, `Badge`, `Card`, `Dialog`, `Tooltip`.
 
-### [MODIFY] `app/src/lib/repositories/mappers/userMapper.ts`
-- Проверять `profile_type`. Если `public` — брать `display_name` напрямую. Если `private` — запрашивать дешифровку через `ProfileCryptoService` из локального кэша по UUID.
+### Поддержка Открытых и Приватных/Инкогнито контактов:
+- **Открытый контакт**: Отображение реального аватара и имени из контактов.
+- **Приватный собеседник (Инкогнито / ZK)**: Стилизованная анонимная карточка с неоновым маска-аватаром 🕵️‍♂️, подписью «Приватный собеседник» и бейджем «Зашифрованный E2EE-звонок».
 
-### [MODIFY] `app/src/lib/repositories/mappers/roomMapper.ts` & `messageMapper.ts`
-- Исключить чтение прямых полей `sender_name`/`sender_avatar`, использовать сопоставление по UUID через локальный реестр расшифрованных профилей.
-
-### [MODIFY] `app/src/lib/repositories/user.repository.ts` & `auth.repository.ts`
-- Добавить методы для обновления `profile_type`, шифрования `encrypted_profile` и сохранения `key_vault`.
-
-### [MODIFY] `app/src/stores/auth/index.ts` (Авторизация)
-- Изменить `isAdmin: profile.role === "admin"` на проверку роли через сессию PocketBase (`pb.authStore.isAdmin`).
-- Обеспечить загрузку `key_vault` в память при успешном входе и его дешифровку Мастер-Паролем.
-
-### [MODIFY] `app/src/routes/_auth/admin.tsx` & `admin/broadcast.tsx` & `admin/users.tsx`
-- Заменить проверку `pbUser?.role !== "admin"` на `pb.authStore.isAdmin`.
-
-### [MODIFY] `app/src/features/auth/components/LoginForm/index.tsx` & `RegisterForm/index.tsx`
-- **LoginForm**: поддержка входа администраторов (через `pb.admins.authWithPassword`). Дешифровка `key_vault` при успешном входе с использованием мастер-пароля.
-- **RegisterForm**: шаг выбора типа аккаунта (Бизнес / Инкогнито) с генерацией `Key Vault` и `Profile Key`.
-
-### [MODIFY] `app/src/features/settings/SettingsSidebar/index.tsx` & `SettingsMenu/index.tsx`
-- Оба компонента содержат `pbUser?.role === "admin"` для показа/скрытия админских пунктов навигации.
-- Заменить на `pb.authStore.isAdmin`.
+### Режим Picture-in-Picture (PIP / Компактный плавающий виджет):
+- Сворачивание вызова в угловой виджет `CallPIPWidget.tsx` для параллельной переписки в чатах без разрыва соединения.
 
 ---
 
-## 4. Настройки, Профиль и Favorites
+## 4. Текущий статус выполнения по Модулям
 
-### [MODIFY] `app/src/features/settings/PrivacySettings/index.tsx`
-- Добавить переключатель "Тип аккаунта" (Бизнес / Инкогнито).
-- При переходе в Инкогнито: зашифровать профиль, сохранить в `encrypted_profile`, очистить `display_name` и `avatar` в БД.
-- При переходе в Бизнес: расшифровать локальные данные и записать в открытые поля `users` в БД.
+### [DONE] Инфраструктура и Домен whoami.ninja
+- `[x]` Обновлены все конфигурации: `env.ts`, `index.html` (CSP), `prod/docker-compose.yml`, `dev/docker-compose.yml`, `pb-setup-server.sh`.
+- `[x]` Nginx VPS перенастроен с поддержкой `/push/` и WSS `/livekit/`.
 
-### [MODIFY] `app/src/features/settings/NotificationSettings/index.tsx`
-- Добавить переключатель "Показывать имя и текст сообщения в уведомлениях" (управляет локальной дешифровкой Blind Push на уровне Service Worker).
+### [DONE] Бэкенд Звонков (`calls.pb.js`)
+- `[x]` Паттерн *Double Require* и нативный `$apis.requestInfo(c)`.
+- `[x]` Анонимизация `participantIdentity = anon_${md5}`.
+- `[x]` Запись `call_logs` со статусом `ringing` и `encrypted_metadata`.
+- `[x]` Динамическая загрузка URL push-шлюза из `PB_PUSH_GATEWAY_URL`.
 
-### [MODIFY] `app/src/features/settings/StorageSettings/index.tsx` & `SecuritySettings/index.tsx`
-- Реализовать сброс локального `KeyVault` (полный логаут со сбросом ключей).
-- Защитить ключ комнаты `Favorites` (self-chat) от удаления при очистке медиа-кэша.
-
-### [MODIFY] `app/src/features/settings/ProfileSettings/index.tsx`
-- При редактировании имени/аватара обновлять открытые поля для Бизнес-аккаунта и зашифрованный `encrypted_profile` для Инкогнито-аккаунта.
-
-### [MODIFY] `app/src/features/settings/AccountSettings/ChangePasswordForm/index.tsx`
-- При смене пароля перешифровать `key_vault` пользователя новым мастер-паролем.
-
-### [MODIFY] `app/src/features/settings/AccountSettings/DeleteAccountModal/index.tsx`
-- При удалении аккаунта очищать серверный `key_vault` и удалять ключи всех связанных комнат.
+### [IN PROGRESS] Фронтенд UI/UX Звонков (`features/calls/`)
+- `[ ]` Кастомный `CallControls.tsx` на компонентах `src/components/ui/IconButton`.
+- `[ ]` Плавающий виджет сворачивания `CallPIPWidget.tsx` (PIP).
+- `[ ]` Адаптивная карточка входящего вызова `IncomingCallAlert.tsx` (Открытый / Инкогнито контакт).
+- `[ ]` Кнопка вызова в шапке чата `ChatHeader.tsx`.
 
 ---
 
-## 5. Административный Модуль (`features/admin/`)
-
-> Весь модуль доступен только при входе через `pb.admins.authWithPassword`.
-
-### [MODIFY] `app/src/features/admin/AdminLayout/index.tsx`
-- Заменить проверку `role === "admin"` на проверку сессии `pb.authStore.isAdmin`.
-
-### [MODIFY] `app/src/features/admin/AdminSidebar/index.tsx`
-- Убрать зависимость от `user.role` при рендере элементов навигации.
-
-### [MODIFY] `app/src/features/admin/AdminDashboard/index.tsx` & `TestTools.tsx`
-- Привести к новой схеме авторизации (проверка сессии, а не поля `role`).
-
-### [MODIFY] `app/src/features/admin/UserList/index.tsx`
-- Поле `user.role` в списке пользователей будет отсутствовать. Отображение роли убрать или заменить на факт наличия в `_superusers`.
-
-### [MODIFY] `app/src/features/admin/Broadcast/index.tsx` & `components/BroadcastHistory/index.tsx`
-- Обновить тип `payload` broadcoast-сообщений согласно новой схеме (без `senderName` и открытого текста).
-
-### [MODIFY] `app/src/features/admin/hooks/useUserManagement.ts`
-- Обновить мутации управления пользователями: поле `role` удалено из коллекции `users`, API-вызовы банов/разбанов — привести в соответствие.
-
----
-
-## 6. UI и Логика Чатов
-
-### [MODIFY] `app/src/features/chat/message/components/MessageList/index.tsx` & `MessageBubble/index.tsx` & `RoomHeader/index.tsx`
-- Убрать зависимость от `role` пользователя в чате.
-- Отображение имен и аватарок перевести на расшифрованные мапперами структуры.
-
-### [MODIFY] `app/src/features/chat/message/utils/optimistic.ts` & `hooks/useChatActions.ts`
-- Sealed Sender логика, оптимистичный рендеринг без передачи `sender_name`/`sender_avatar` в API.
-- В `useChatActions.ts` убрать проверку `isAdmin: user.role === USER_ROLE.ADMIN` (системная роль). Роль участника в комнате (`room_members.role`) — не трогать.
-
-### [MODIFY] `app/src/lib/services/chat-crypto.ts`
-- Дешифровка контента сообщения, извлечение упакованных метаданных отправителя.
-
-### [MODIFY] `app/src/features/chat/list/utils/roomUiMapper.ts` (функция `mapRoomToChatItem`)
-- Четвёртый маппер UI-уровня. Формирует `ChatItem` (имя и аватар чата в списке).
-- Привести к новой схеме: если собеседник Инкогнито — подтягивать имя из локального Vault, если Бизнес — из открытых полей БД.
-
-### [MODIFY] `app/src/features/contacts/ContactList/index.tsx`
-- Компонент списка контактов. Зависит от `display_name` и `avatar`.
-- Перевести на расшифрованные данные: Public — из БД, Private — из Vault по UUID.
-
-### [MODIFY] `app/src/features/chat/room/components/GroupInfoPanel/index.tsx` & `components/GroupMemberItem/index.tsx`
-- `GroupMemberItem` отображает имя и аватар участника группы — перевести на Vault-источник.
-- `handleUpdateRole` работает с **ролью участника в комнате** (`room_members.role`) — **НЕ ТРОГАТЬ логику**, только привести типы в соответствие с обновлённым `pocketbase-types.ts`.
-
----
-
-## 7. Звонки, WebRTC и Push-уведомления (BYPASS_STRATEGY)
-
-### [MODIFY] `app/src/features/calls/` & `call_logs`
-- Сокрытие участников звонка: сервер генерирует LiveKit токен, используя UUID участников вместо реальных имен.
-- Запись логов звонков: шифровать участников `call_logs` ключом комнаты.
-
-### [MODIFY] `app/src/sw.ts` (Service Worker)
-- WebSocket-туннелирование для обхода блокировок.
-- Обработка Blind Push: при получении события с `roomId` будить приложение, считывать зашифрованные данные и, если разрешено настройками, показывать уведомление с расшифрованным текстом.
-
-### [MODIFY] `infra/home/push-gateway/index.js` (Миграция) [DONE]
-- **Миграционный тайминг (Фаза 4)**: На этапе Sealed Sender вынести `push-gateway` и настроить прокси-туннель FRP на зарубежный VPS. Трафик FRP завернуть в VPN для защиты от ТСПУ. База данных PocketBase остается в РФ. Миграция успешно завершена.
-
----
-
-## 8. Архитектурные улучшения (Type-Safe Realtime)
-
-### [ADD] `app/src/lib/types/realtime.ts` (Новый файл)
-- Создать единые типы для `RealtimeBusinessEvent` с использованием Discriminated Unions (основанные на сгенерированных `PBMessage`, `PBPresenceStatus` и т.д.). Это не заменяет БД типы, а выступает оберткой для типизации бизнес-логики.
-
-### [MODIFY] `app/src/lib/repositories/message.repository.ts` & `presence.repository.ts`
-- Отрефакторить обработчики подписок (`pb.collection().subscribe`). Маппить сырые события PocketBase в строгий формат `RealtimeBusinessEvent` перед передачей наверх.
-- На уровне UI или Stores использовать блок `switch (event.type)` с исчерпывающей проверкой (exhaustive check).
-
----
-
-## 9. Стратегия тестирования и развертывания
-1. Применить новую схему `pb_schema.json` на dev-БД.
-2. Провести рефакторинг фронтенда (устранить ошибки компиляции в мапперах и компонентах).
-3. Проверить миграцию профиля (Бизнес <-> Инкогнито) и доставку Blind Push в симуляторе Service Worker.
-4. Накатить миграцию на Prod-базу, развернуть зарубежный proxy-шлюз и push-gateway.
+## 5. Валидация и Контроль Качества
+- **Biome Linter**: `0 ошибок`.
+- **TypeScript Compiler**: `0 ошибок`.
+- **Строгая типизация**: `0 использование any` в рабочем коде `app/src/`.

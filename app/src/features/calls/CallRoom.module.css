@@ -1,0 +1,147 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    background: var(--bg-overlay, rgba(0, 0, 0, 0.4));
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn var(--duration-normal) var(--easing-ease-out) forwards;
+}
+
+.window {
+    width: 100%;
+    height: 100%;
+    background: var(--surface);
+    color: var(--foreground);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp var(--duration-normal) var(--easing-ease-out) forwards;
+}
+
+@media (min-width: 768px) {
+    .window {
+        width: 90vw;
+        height: 90vh;
+        max-width: 1200px;
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-xl);
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-4) var(--spacing-6);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+    color: var(--foreground);
+}
+
+.closeBtn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: var(--spacing-2);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--duration-fast) ease;
+}
+
+.closeBtn:hover {
+    background: var(--surface-1);
+    color: var(--color-error);
+}
+
+.content {
+    flex: 1;
+    position: relative;
+    background: var(--bg-app);
+}
+
+/* Переопределение переменных LiveKit для соответствия дизайн-системе */
+.liveKitContainer {
+    --lk-bg: var(--bg-app);
+    --lk-control-bar-bg: var(--surface-2);
+    --lk-border-color: var(--border);
+    --lk-fg: var(--foreground);
+
+    height: 100%;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* IncomingCallAlert Styles */
+.alertWindow {
+    background: var(--surface);
+    color: var(--foreground);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xl);
+    padding: var(--spacing-6);
+    text-align: center;
+    max-width: 400px;
+    width: 90vw;
+    animation: slideUp var(--duration-normal) var(--easing-ease-out) forwards;
+}
+
+.alertHeader {
+    margin-bottom: var(--spacing-6);
+}
+
+.alertTitle {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-2);
+}
+
+.alertSubtitle {
+    color: var(--muted);
+    font-size: var(--font-size-md);
+}
+
+.alertActions {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-4);
+}
+
+.acceptButton {
+    background-color: var(--color-success);
+    color: var(--background);
+}
+
+.acceptButton:hover {
+    background-color: var(--color-success-hover);
+}

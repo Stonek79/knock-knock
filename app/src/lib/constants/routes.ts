@@ -35,4 +35,5 @@ export const API_ROUTES = {
     BROADCAST_SEND: "/api/custom/broadcast",
     BROADCAST_HISTORY: "/api/custom/broadcast/history",
     BROADCAST_DELETE: (id: string) => `/api/custom/broadcast/${id}`,
+    CALLS_TOKEN: "/api/calls/token",
 } as const;

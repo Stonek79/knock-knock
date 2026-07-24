@@ -5,8 +5,11 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx:/etc/nginx/conf.d
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
     networks:
       - whoami-net
     depends_on:
@@ -34,10 +37,23 @@ services:
     environment:
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
     env_file:
       - .env
     networks:
       - whoami-net
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: whoami-livekit
+    restart: unless-stopped
+    command: --config /etc/livekit.yaml
+    network_mode: host
+    environment:
+      - "LIVEKIT_KEYS=${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml
 
 networks:
   whoami-net:

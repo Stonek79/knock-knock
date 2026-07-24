@@ -8,7 +8,7 @@ source app/.env
 
 SERVER_HOST=${1:-"192.168.1.142"}  # Первый аргумент или по умолчанию
 SERVER_USER=${2:-"alex"}           # Второй аргумент или по умолчанию
-REMOTE_DIR="~/knok-knok-bd"
+REMOTE_DIR="~/whoami-bd"
 SOCKET="/tmp/ssh_mux_%h_%p_%r"
 
 echo "🚀 Начинаю деплой PocketBase на $SERVER_USER@$SERVER_HOST..."
@@ -38,7 +38,7 @@ $SCP_CMD infra/home/pb_schema.json $SERVER_USER@$SERVER_HOST:$REMOTE_DIR/
 
 # 3. Создаем .env на сервере
 echo "📝 Создаю .env на сервере..."
-$SSH_CMD $SERVER_USER@$SERVER_HOST "echo 'PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-"knok-knok-secret-key-2026"}' > $REMOTE_DIR/.env"
+$SSH_CMD $SERVER_USER@$SERVER_HOST "echo 'PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-"whoami-secret-key-2026"}' > $REMOTE_DIR/.env"
 
 # 4. Запускаем Docker Compose
 echo "🐳 Запускаю Docker контейнер..."
@@ -51,11 +51,11 @@ sleep 10
 # 6. Создаем суперпользователя через Docker Exec
 echo "👤 Создаем суперпользователя $ADMIN_EMAIL..."
 # Пробуем новую команду superuser (PB v0.23+), если не выйдет - старую admin
-if $SSH_CMD $SERVER_USER@$SERVER_HOST "docker exec knock-knock-pb pocketbase superuser --help" >/dev/null 2>&1; then
-    $SSH_CMD $SERVER_USER@$SERVER_HOST "docker exec knock-knock-pb pocketbase superuser create $ADMIN_EMAIL '$ADMIN_PASSWORD'"
+if $SSH_CMD $SERVER_USER@$SERVER_HOST "docker exec whoami-pb pocketbase superuser --help" >/dev/null 2>&1; then
+    $SSH_CMD $SERVER_USER@$SERVER_HOST "docker exec whoami-pb pocketbase superuser create $ADMIN_EMAIL '$ADMIN_PASSWORD'"
     AUTH_PATH="api/collections/_superusers/auth-with-password"
 else
-    $SSH_CMD $SERVER_USER@$SERVER_HOST "docker exec knock-knock-pb pocketbase admin create $ADMIN_EMAIL '$ADMIN_PASSWORD'"
+    $SSH_CMD $SERVER_USER@$SERVER_HOST "docker exec whoami-pb pocketbase admin create $ADMIN_EMAIL '$ADMIN_PASSWORD'"
     AUTH_PATH="api/admins/auth-with-password"
 fi
 

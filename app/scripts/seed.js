@@ -89,7 +89,7 @@ async function runSeed() {
     console.log(`🚀 Начинаем сидирование базы по адресу: ${POCKETBASE_URL}`);
 
     const isProduction =
-        (POCKETBASE_URL.includes("api.knok-knok.ru") &&
+        (POCKETBASE_URL.includes("api.whoami.ninja") &&
             !POCKETBASE_URL.includes("dev-api")) ||
         process.env.NODE_ENV === "production";
 
