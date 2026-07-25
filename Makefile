@@ -1,13 +1,13 @@
 # Единый пульт управления инфраструктурой Knock-Knock
 # Поднимает контейнеры в соответствующих папках infra/
 
-.PHONY: help network start-all stop-all start-prod start-dev start-mailpit start-web stop-prod stop-dev stop-mailpit stop-web clean-docker restart-tunnel logs-prod logs-dev logs-web
+.PHONY: help network start-all stop-all start-prod start-dev start-mailpit stop-prod stop-dev stop-mailpit clean-docker restart-tunnel logs-prod logs-dev
 
 help:
 	@echo "Доступные команды управления инфраструктурой:"
-	@echo "  make start-all     - Поднять Прод, Дев, Mailpit и Web"
+	@echo "  make start-all     - Поднять Прод, Дев и Mailpit"
 	@echo "  make stop-all      - Остановить всю инфраструктуру"
-	@echo "  make start-prod    - Запустить только Production БД"
+	@echo "  make start-prod    - Запустить Production (БД + Веб + Туннель)"
 	@echo "  make start-dev     - Запустить только Development БД"
 	@echo "  make clean-docker  - Полная очистка Docker (кэш, неиспользуемые контейнеры и образы)"
 	@echo "  make restart-tunnel - Перезапустить клиент туннеля FRP"
@@ -27,12 +27,6 @@ start-dev: network
 start-mailpit: network
 	cd infra/mailpit && docker compose up -d
 
-start-web: network
-	cd infra/web && docker compose up -d
-
-start-web-build: network
-	cd infra/web && docker compose up -d --build
-
 build:
 	cd app && npm run build
 
@@ -46,14 +40,11 @@ stop-dev:
 stop-mailpit:
 	cd infra/mailpit && docker compose down
 
-stop-web:
-	cd infra/web && docker compose down
-
 # --- ГРУППОВЫЕ ---
-start-all: start-prod start-dev start-mailpit start-web
+start-all: start-prod start-dev start-mailpit
 	@echo "✅ Все локальные среды успешно запущены!"
 
-stop-all: stop-prod stop-dev stop-mailpit stop-web
+stop-all: stop-prod stop-dev stop-mailpit
 	@echo "🛑 Вся локальная инфраструктура остановлена."
 
 # --- ОЧИСТКА ---
@@ -72,6 +63,3 @@ logs-prod:
 
 logs-dev:
 	docker logs whoami-pb-dev -f
-
-logs-web:
-	docker logs whoami-web -f
