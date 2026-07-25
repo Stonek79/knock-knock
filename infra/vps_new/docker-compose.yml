@@ -22,6 +22,10 @@ services:
     command: ["-c", "/etc/frp/frps.toml"]
     ports:
       - "7443:7443" # Внешний порт для FRP туннеля
+      - "3000:3000" # Веб-интерфейс React App
+      - "8090:8090" # PocketBase Prod API
+      - "9090:9090" # PocketBase Dev API
+      - "6000:6000" # Безопасный SSH доступ к домашнему серверу
     volumes:
       - ./frp/frps.toml:/etc/frp/frps.toml
     env_file:
