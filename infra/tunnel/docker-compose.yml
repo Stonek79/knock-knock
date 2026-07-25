@@ -3,6 +3,7 @@ services:
     image: fatedier/frpc:v0.58.1
     container_name: whoami-frpc
     restart: always
+    command: ["-c", "/etc/frp/frpc.toml"]
     volumes:
       - ../prod/frpc.toml:/etc/frp/frpc.toml
     network_mode: host
