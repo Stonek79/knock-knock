@@ -14,10 +14,12 @@ serverPort = 7443
 method = "token"
 token = "{{ .Envs.FRP_TOKEN }}"
 
-# Настройки шифрования и TLS-соединения
+# Настройки шифрования, TLS-соединения и поддержания пульса (Heartbeat)
 [transport]
 tcpMux = true
 tls.enable = true
+heartbeatInterval = 10
+heartbeatTimeout = 30
 
 [log]
 level = "info"
