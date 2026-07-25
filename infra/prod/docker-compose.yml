@@ -1,6 +1,7 @@
 services:
   pocketbase:
     image: ghcr.io/muchobien/pocketbase:latest
+    pull_policy: if_not_present
     container_name: whoami-pb
     restart: unless-stopped
     command: 

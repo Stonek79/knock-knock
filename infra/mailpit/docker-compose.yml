@@ -1,6 +1,7 @@
 services:
   mailpit:
     image: axllent/mailpit
+    pull_policy: if_not_present
     container_name: mailpit
     restart: unless-stopped
     ports:
