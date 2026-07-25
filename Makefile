@@ -1,16 +1,15 @@
 # Единый пульт управления инфраструктурой Knock-Knock
 # Поднимает контейнеры в соответствующих папках infra/
 
-.PHONY: help network start-all stop-all start-prod start-dev start-mailpit start-push start-web stop-prod stop-dev stop-mailpit stop-push stop-web logs-push logs-prod logs-web
+.PHONY: help network start-all stop-all start-prod start-dev start-mailpit start-web stop-prod stop-dev stop-mailpit stop-web clean-docker restart-tunnel logs-prod logs-dev logs-web
 
 help:
 	@echo "Доступные команды управления инфраструктурой:"
-	@echo "  make start-all    - Поднять Прод, Дев, Mailpit и Push-Gateway"
-	@echo "  make stop-all     - Остановить всю инфраструктуру"
-	@echo "  make start-prod   - Запустить только Production БД"
-	@echo "  make start-dev    - Запустить только Development БД"
-	@echo "  make logs-prod    - Смотреть логи Production БД"
-	@echo "  make logs-push    - Смотреть логи Push-шлюза"
+	@echo "  make start-all     - Поднять Прод, Дев, Mailpit и Web"
+	@echo "  make stop-all      - Остановить всю инфраструктуру"
+	@echo "  make start-prod    - Запустить только Production БД"
+	@echo "  make start-dev     - Запустить только Development БД"
+	@echo "  make clean-docker  - Полная очистка Docker (кэш, неиспользуемые контейнеры и образы)"
 	@echo "  make restart-tunnel - Перезапустить клиент туннеля FRP"
 
 # Создаёт магистральную Docker-сеть (нужно выполнить 1 раз)
@@ -27,9 +26,6 @@ start-dev: network
 
 start-mailpit: network
 	cd infra/mailpit && docker compose up -d
-
-start-push: network
-	cd infra/home/push-gateway && docker compose up -d
 
 start-web: network
 	cd infra/web && docker compose up -d
@@ -50,18 +46,20 @@ stop-dev:
 stop-mailpit:
 	cd infra/mailpit && docker compose down
 
-stop-push:
-	cd infra/home/push-gateway && docker compose down
-
 stop-web:
 	cd infra/web && docker compose down
 
 # --- ГРУППОВЫЕ ---
-start-all: start-prod start-dev start-mailpit start-push start-web
-	@echo "✅ Все среды и шлюз успешно запущены!"
+start-all: start-prod start-dev start-mailpit start-web
+	@echo "✅ Все локальные среды успешно запущены!"
 
-stop-all: stop-prod stop-dev stop-mailpit stop-push stop-web
-	@echo "🛑 Вся инфраструктура остановлена."
+stop-all: stop-prod stop-dev stop-mailpit stop-web
+	@echo "🛑 Вся локальная инфраструктура остановлена."
+
+# --- ОЧИСТКА ---
+clean-docker:
+	@echo "🧹 Запуск полной очистки Docker..."
+	docker system prune -a --volumes -f
 
 # --- ПЕРЕЗАПУСК ---
 restart-tunnel:
@@ -69,9 +67,6 @@ restart-tunnel:
 	@echo "🔄 Туннель FRP перезапущен."
 
 # --- ЛОГИ ---
-logs-push:
-	docker logs whoami-push -f
-
 logs-prod:
 	docker logs whoami-pb -f
 
