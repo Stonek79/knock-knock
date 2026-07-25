@@ -6,7 +6,7 @@
  * и интеграции с асинхронным Task Runner для уведомлений.
  */
 
-require(`${__hooks}/calls.pb.js`);
+// require(`${__hooks}/calls.pb.js`);
 
 /**
  * 1. ИНИЦИАЛИЗАЦИЯ ИЗБРАННОГО
