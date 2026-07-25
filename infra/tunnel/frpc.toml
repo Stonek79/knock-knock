@@ -5,6 +5,9 @@
 # Работает в изолированном контейнере whoami-frpc (infra/tunnel/docker-compose.yml)
 # ==============================================================================
 
+# Отключаем аварийный выход при задержках первичного подключения
+loginFailExit = false
+
 # Адрес и порт серверного туннеля FRPS на VPS (149.33.42.8)
 serverAddr = "149.33.42.8"
 serverPort = 7443
@@ -18,6 +21,8 @@ token = "{{ .Envs.FRP_TOKEN }}"
 [transport]
 tcpMux = true
 tls.enable = true
+dialServerTimeout = 30
+dialServerKeepAlive = 30
 heartbeatInterval = 10
 heartbeatTimeout = 30
 
