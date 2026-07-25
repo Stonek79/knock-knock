@@ -43,6 +43,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             VITE_VAPID_PUBLIC_KEY=${{ env.VAPID_PUB_KEY }}
 
@@ -57,7 +59,10 @@ jobs:
           cd ~/knock-knock
           git pull origin main
           
-          # Останавливаем старые разрозненные контейнеры (если они есть), чтобы избежать конфликта имён
+          # Гарантируем наличие сети whoami-net на домашнем сервере
+          docker network create --opt com.docker.network.driver.mtu=1300 whoami-net 2>/dev/null || true
+          
+          # Останавливаем старые разрозненные контейнеры (если они есть)
           docker rm -f whoami-web whoami-frpc || true
           
           # Запускаем/Обновляем инфраструктуру Домашнего сервера (БД, Фронт, Cloudflare Tunnel)
