@@ -26,9 +26,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -46,8 +43,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           build-args: |
             VITE_VAPID_PUBLIC_KEY=${{ env.VAPID_PUB_KEY }}
 
@@ -62,12 +57,9 @@ jobs:
           cd ~/knock-knock
           git pull origin main
           
-          # Гарантируем наличие сети whoami-net на домашнем сервере
-          docker network create --opt com.docker.network.driver.mtu=1300 whoami-net 2>/dev/null || true
-          
-          # Останавливаем старые разрозненные контейнеры (если они есть)
+          # Останавливаем старые разрозненные контейнеры (если они есть), чтобы избежать конфликта имён
           docker rm -f whoami-web whoami-frpc || true
           
-          # Запускаем/Обновляем инфраструктуру Домашнего сервера с повторными попытками при сетевых таймаутах
-          for i in 1 2 3; do docker compose -f infra/prod/docker-compose.yml pull && break || (echo "Retry $i failed, retrying in 5s..." && sleep 5); done
+          # Запускаем/Обновляем инфраструктуру Домашнего сервера (БД, Фронт, Cloudflare Tunnel)
+          docker compose -f infra/prod/docker-compose.yml pull
           docker compose -f infra/prod/docker-compose.yml up -d --remove-orphans
