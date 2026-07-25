@@ -6,10 +6,9 @@
  * проверки прав участников и уведомления других пользователей о звонке.
  */
 
-routerAdd("POST", "/api/calls/token", (c) => {
-	// Паттерн "Internal Require" для изоляции вызовов в PocketBase v0.23+
-	const DB = require(`${__hooks}/db.js`);
+const DB = require(`${__hooks}/db.js`);
 
+routerAdd("POST", "/api/calls/token", (c) => {
 	const info = $apis.requestInfo(c);
 	const body = info.data || info.body || {};
 	const room_id = body.room_id;
