@@ -67,8 +67,8 @@ jobs:
           cd ~/knock-knock
           git pull origin main
           
-          # Останавливаем старые разрозненные контейнеры (если они есть), чтобы избежать конфликта имён
-          docker rm -f whoami-web whoami-frpc || true
+          # Останавливаем только старый одиночный веб-контейнер (туннель whoami-frpc НЕ затрагивается!)
+          docker rm -f whoami-web || true
           
           # Запускаем/Обновляем инфраструктуру Домашнего сервера с 3 повторными попытками при таймаутах сети
           for i in 1 2 3; do docker compose -f infra/prod/docker-compose.yml pull && break || (echo "Retry $i failed, retrying in 5s..." && sleep 5); done
