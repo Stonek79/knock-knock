@@ -8,4 +8,6 @@ services:
       - ../../app/.env
     volumes:
       - ./frpc.toml:/etc/frp/frpc.toml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     network_mode: host
