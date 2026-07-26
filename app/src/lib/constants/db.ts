@@ -1,5 +1,8 @@
 import type {
     AuthSystemFields,
+    CallLogsResponse,
+    CallLogsStatusOptions,
+    CallLogsTypeOptions,
     CollectionName,
     MediaRecord,
     MediaTypeOptions,
@@ -45,6 +48,7 @@ export const DB_TABLES = {
     USER_FOLDERS: "user_folders",
     MESSAGE_REPORTS: "message_reports",
     PUSH_SUBSCRIPTIONS: "push_subscriptions",
+    CALL_LOGS: "call_logs",
 } as const satisfies Record<string, CollectionName>;
 
 /** Поля коллекции users */
@@ -139,6 +143,21 @@ export const ROOM_TYPE = {
     PRIVATE_CHANNEL: "private_channel",
     SYSTEM: "system",
 } as const satisfies Record<string, RoomsTypeOptions>;
+
+/** Типы звонков */
+export const CALL_TYPE = {
+    AUDIO: "audio",
+    VIDEO: "video",
+} as const satisfies Record<string, CallLogsTypeOptions>;
+
+/** Статусы звонков */
+export const CALL_STATUS = {
+    RINGING: "ringing",
+    ONGOING: "ongoing",
+    ENDED: "ended",
+    MISSED: "missed",
+    REJECTED: "rejected",
+} as const satisfies Record<string, CallLogsStatusOptions>;
 
 /** Видимость комнат */
 export const ROOM_VISIBILITY = {
@@ -241,6 +260,23 @@ export const PUSH_SUBSCRIPTIONS_FIELDS = {
     CREATED: "created",
     UPDATED: "updated",
 } as const satisfies Record<string, AllFields<PushSubscriptionsResponse>>;
+
+/** Поля коллекции call_logs */
+export const CALL_LOG_FIELDS = {
+    ID: "id",
+    ROOM: "room",
+    INITIATOR: "initiator",
+    TYPE: "type",
+    STATUS: "status",
+    STARTED_AT: "started_at",
+    ENDED_AT: "ended_at",
+    DURATION_SEC: "duration_sec",
+    LIVEKIT_ROOM_NAME: "livekit_room_name",
+    IS_TEST: "is_test",
+    ENCRYPTED_METADATA: "encrypted_metadata",
+    CREATED: "created",
+    UPDATED: "updated",
+} as const satisfies Record<string, AllFields<CallLogsResponse>>;
 
 /** Поля коллекции media */
 export const MEDIA_FIELDS = {

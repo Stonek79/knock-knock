@@ -8,7 +8,8 @@ import { useToast } from "@/components/ui/Toast";
 import { useTypingIndicator } from "@/features/chat/message";
 import { useGroupPresence } from "@/features/presence/hooks/useGroupPresence";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
-import { ROOM_TYPE } from "@/lib/constants";
+import { CALL_TYPE, ROOM_TYPE } from "@/lib/constants";
+import { useCallStore } from "../../../../../../calls/store";
 import { useChatPeer } from "../../../../hooks/useChatPeer";
 import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";
@@ -49,6 +50,7 @@ export function DefaultHeader({ roomId }: DefaultHeaderProps) {
     const setShowGroupInfoPanel = useChatRoomStore(
         (s) => s.setShowGroupInfoPanel,
     );
+    const initiateCall = useCallStore((s) => s.initiateCall);
     const { ending } = useChatRoomActions(roomId);
 
     const { isDM, resolvedPeer, displayName, avatarUrl, isGroup } =
@@ -138,6 +140,8 @@ export function DefaultHeader({ roomId }: DefaultHeaderProps) {
                 onEndSession={() => setShowEndSessionDialog(true)}
                 ending={ending}
                 onInfoClick={isGroup ? handleInfoClick : undefined}
+                onAudioCallClick={() => initiateCall(roomId, CALL_TYPE.AUDIO)}
+                onVideoCallClick={() => initiateCall(roomId, CALL_TYPE.VIDEO)}
             />
         </header>
     );

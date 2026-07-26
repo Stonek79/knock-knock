@@ -17,6 +17,7 @@ const DB = {
 		MESSAGES: "messages",
 		TASK_QUEUE: "task_queue",
 		PUSH_SUBS: "push_subscriptions",
+		CALL_LOGS: "call_logs",
 	},
 
 	/** @type {Object} Имена полей в коллекциях */
@@ -75,6 +76,15 @@ const DB = {
 		STATUS_PROCESSING: "processing",
 		STATUS_COMPLETED: "completed",
 		STATUS_FAILED: "failed",
+
+		// Статусы и типы звонков
+		CALL_STATUS_RINGING: "ringing",
+		CALL_STATUS_ONGOING: "ongoing",
+		CALL_STATUS_ENDED: "ended",
+		CALL_STATUS_MISSED: "missed",
+		CALL_STATUS_REJECTED: "rejected",
+		CALL_TYPE_AUDIO: "audio",
+		CALL_TYPE_VIDEO: "video",
 
 		// Типы задач и уведомлений
 		TASK_TYPE_PUSH: "push",

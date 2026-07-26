@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
-import { ICON_SIZE } from "@/lib/constants";
+import { CALL_TYPE, ICON_SIZE } from "@/lib/constants";
 import styles from "./CallRoom.module.css";
 import { useCallStore } from "./store";
 
@@ -18,7 +18,7 @@ import { useCallStore } from "./store";
  */
 export function CallRoom() {
     const { t } = useTranslation();
-    const { isActive, token, serverUrl, endCall } = useCallStore();
+    const { isActive, token, serverUrl, callType, endCall } = useCallStore();
 
     if (!isActive || !token || !serverUrl) {
         return null;
@@ -48,7 +48,7 @@ export function CallRoom() {
 
                 <div className={styles.content}>
                     <LiveKitRoom
-                        video={true}
+                        video={callType === CALL_TYPE.VIDEO}
                         audio={true}
                         token={token}
                         serverUrl={serverUrl}

@@ -12,6 +12,7 @@ routerAdd("POST", "/api/calls/token", (c) => {
 	const info = $apis.requestInfo(c);
 	const body = info.data || info.body || {};
 	const room_id = body.room_id;
+	const call_type = body.call_type || DB.VALUES.CALL_TYPE_VIDEO;
 
 	if (!room_id) {
 		return c.json(400, { error: "room_id обязателен" });
@@ -91,10 +92,14 @@ routerAdd("POST", "/api/calls/token", (c) => {
 	// 4. Логи звонков без раскрытия участников в открытых полях (ZK metadata)
 	let callLogId = null;
 	try {
-		const callsCollection = $app.findCollectionByNameOrId("call_logs");
+		const callsCollection = $app.findCollectionByNameOrId(
+			DB.TABLES.CALL_LOGS,
+		);
 		const callRecord = new Record(callsCollection, {
 			room: room_id,
-			status: "ringing",
+			initiator: userId,
+			type: call_type,
+			status: DB.VALUES.CALL_STATUS_RINGING,
 			encrypted_metadata: JSON.stringify({
 				type: "call_init",
 				created_at: new Date().toISOString(),
@@ -150,6 +155,7 @@ routerAdd("POST", "/api/calls/token", (c) => {
 						type: "call_incoming",
 						roomId: room_id,
 						callLogId: callLogId,
+						callType: call_type,
 					},
 					subscriptions: subsData,
 				};

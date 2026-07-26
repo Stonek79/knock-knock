@@ -15,6 +15,10 @@ interface RoomHeaderActionsProps {
     ending?: boolean;
     /** Обработчик открытия инфо-панели */
     onInfoClick?: () => void;
+    /** Обработчик аудиозвонка */
+    onAudioCallClick?: () => void;
+    /** Обработчик видеозвонка */
+    onVideoCallClick?: () => void;
 }
 
 /**
@@ -26,6 +30,8 @@ export function RoomHeaderActions({
     onEndSession,
     ending,
     onInfoClick,
+    onAudioCallClick,
+    onVideoCallClick,
 }: RoomHeaderActionsProps) {
     const { t } = useTranslation();
 
@@ -37,6 +43,7 @@ export function RoomHeaderActions({
                 shape="round"
                 className={styles.actionButton}
                 aria-label={t("chat.call", "Позвонить")}
+                onClick={onAudioCallClick}
             >
                 <Phone size={ICON_SIZE.sm} />
             </IconButton>
@@ -46,6 +53,7 @@ export function RoomHeaderActions({
                 shape="round"
                 className={styles.actionButton}
                 aria-label={t("chat.videoCall", "Видеозвонок")}
+                onClick={onVideoCallClick}
             >
                 <Video size={ICON_SIZE.sm} />
             </IconButton>
