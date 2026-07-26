@@ -87,19 +87,19 @@
 - **Генерация токенов:** PocketBase Hook `pb_hooks/calls.pb.js`
 - **Хранение истории:** коллекция `call_logs` в **PocketBase**
 
-- [ ] **Этап 0: Инфраструктура** (2-3 часа):
-  - [ ] `infra/home/docker-compose.livekit.yml` — LiveKit Server
-  - [ ] `infra/vps/nginx.livekit.conf` — проксирование WebSocket + TLS
-  - [ ] Фаервол: порты 7880, 7881, 443, 60000-60100/UDP
-- [ ] **Этап 1: Backend** (3-4 часа):
-  - [ ] `infra/home/pb_hooks/calls.pb.js` — генерация LiveKit JWT токенов
-  - [ ] Коллекция `call_logs` в PocketBase
-- [ ] **Этап 2: Frontend** (6-8 часов):
-  - [ ] `npm install @livekit/components-react livekit-client`
-  - [ ] `features/calls/hooks/useCall.ts` + `useLiveKit.ts`
-  - [ ] `features/calls/components/CallRoom.tsx` + `CallIncoming.tsx`
-  - [ ] `stores/call/index.ts` — Zustand store
-- [ ] **Этап 3: Post-MVP**:
+- [x] **Этап 0: Инфраструктура** (Реализовано на VPS):
+  - [x] `infra/vps_new/docker-compose.yml` — LiveKit Server & Redis
+  - [x] Nginx TCP/UDP Stream + WebSocket проксирование
+  - [x] Фаервол: открыты нужные TCP/UDP порты
+- [x] **Этап 1: Backend** (PocketBase Hooks):
+  - [x] `infra/home/pb_hooks/calls.pb.js` — генерация LiveKit JWT токенов
+  - [x] Системная коллекция для LiveKit Webhooks (если требуется)
+- [x] **Этап 2: Frontend** (LiveKit UI):
+  - [x] Установлены `@livekit/components-react` и `livekit-client`
+  - [x] `features/calls/store.ts` — состояние звонка
+  - [x] `features/calls/CallRoom.tsx` + `IncomingCallAlert.tsx`
+- [ ] **Этап 3: Тестирование и Post-MVP**:
+  - [ ] Сквозное тестирование звонка
   - [ ] Групповые звонки, Screen Sharing, Recording
 
 ### 2. PWA & Offline

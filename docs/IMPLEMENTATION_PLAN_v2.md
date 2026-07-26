@@ -99,8 +99,8 @@
 | **0** | ✅ Дизайн-система — рефакторинг `index.css` + тема `default` | Завершено |
 | **1** | Auth — Schema + Forms + Persistent Session | Завершено |
 | **2** | SMTP / Brevo + Email верификация | Завершено |
-| **3** | Push-уведомления (Web Push + PWA) | 🟠 Backend готов, клиент в процессе |
-| **4** | Audio/Video Calls (LiveKit + WebRTC) | 5–7 дней |
+| **3** | ✅ Push-уведомления (Web Push + PWA) | Завершено |
+| **4** | 🔵 Audio/Video Calls (LiveKit + WebRTC) | В процессе |
 | **5** | Видеозапись и отправка (Media v3) | 3–4 дня |
 | **5.1** | ✅ Task Runner (SQLite-based) | Завершено |
 | **6** | Тестирование (параллельно) | постоянно |
