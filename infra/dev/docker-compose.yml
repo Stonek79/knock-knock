@@ -25,7 +25,7 @@ services:
       - ../../app/.env
     environment:
       - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-}
-      - PB_PUSH_GATEWAY_URL=http://whoami-push:4000
+      - PB_PUSH_GATEWAY_URL=https://dev-api.whoami.ninja/push/
       - PB_SMTP_HOST=mailpit
       - PB_SMTP_PORT=1025
       - PB_SMTP_TLS=false
