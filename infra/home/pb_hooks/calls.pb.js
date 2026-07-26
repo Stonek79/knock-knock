@@ -99,7 +99,7 @@ routerAdd("POST", "/api/calls/token", (e) => {
 		);
 		return e.json(500, {
 			code: "CALL_SERVICE_DOWN",
-			error: "Ошибка соединения с сервисом звонков",
+			error: `Не удалось получить токен (Сетевая ошибка): ${err.message || err}`,
 		});
 	}
 

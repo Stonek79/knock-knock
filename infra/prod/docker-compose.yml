@@ -24,7 +24,7 @@ services:
       - PB_SMTP_USER=${PB_SMTP_USER:-}
       - PB_SMTP_PASS=${PB_SMTP_PASS:-}
       - PB_SMTP_TLS=${PB_SMTP_TLS:-true}
-      - PB_PUSH_GATEWAY_URL=https://api.whoami.ninja/push/
+      - PB_PUSH_GATEWAY_URL=http://whoami-push:4000
     healthcheck:
       test: ["CMD-SHELL", "nc -z 127.0.0.1 8090 || exit 1"]
       interval: 30s
