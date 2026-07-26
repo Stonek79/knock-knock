@@ -109,6 +109,7 @@ export const useCallStore = create<CallState>((set, get) => ({
         } catch (error) {
             logger.error("Ошибка при принятии звонка", error);
             get().rejectCall();
+            throw error;
         }
     },
 
@@ -121,6 +122,7 @@ export const useCallStore = create<CallState>((set, get) => ({
             }
         } catch (error) {
             logger.error("Ошибка при инициировании звонка", error);
+            throw error;
         }
     },
 }));

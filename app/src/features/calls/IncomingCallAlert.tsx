@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
+import { useToast } from "@/components/ui/Toast";
 import { ICON_SIZE } from "@/lib/constants";
 import styles from "./CallRoom.module.css";
 import { useCallStore } from "./store";
@@ -15,10 +16,25 @@ import { useCallStore } from "./store";
 export function IncomingCallAlert() {
     const { t } = useTranslation();
     const { isIncoming, acceptCall, rejectCall } = useCallStore();
+    const toast = useToast();
 
     if (!isIncoming) {
         return null;
     }
+
+    const handleAccept = async () => {
+        try {
+            await acceptCall();
+        } catch (e: unknown) {
+            const message =
+                e instanceof Error ? e.message : "Не удалось принять звонок";
+            toast({
+                title: t("calls.error", "Ошибка звонка"),
+                description: message,
+                variant: "error",
+            });
+        }
+    };
 
     return (
         <div className={styles.overlay}>
@@ -37,7 +53,7 @@ export function IncomingCallAlert() {
                 </div>
                 <div className={styles.alertActions}>
                     <Button
-                        onClick={acceptCall}
+                        onClick={handleAccept}
                         intent="success"
                         className={styles.acceptButton}
                     >

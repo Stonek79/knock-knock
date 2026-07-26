@@ -79,6 +79,38 @@ export function DefaultHeader({ roomId }: DefaultHeaderProps) {
         }
     };
 
+    const handleAudioCall = async () => {
+        try {
+            await initiateCall(roomId, CALL_TYPE.AUDIO);
+        } catch (e: unknown) {
+            const message =
+                e instanceof Error
+                    ? e.message
+                    : "Не удалось инициировать звонок";
+            toast({
+                title: t("calls.error", "Ошибка звонка"),
+                description: message,
+                variant: "error",
+            });
+        }
+    };
+
+    const handleVideoCall = async () => {
+        try {
+            await initiateCall(roomId, CALL_TYPE.VIDEO);
+        } catch (e: unknown) {
+            const message =
+                e instanceof Error
+                    ? e.message
+                    : "Не удалось инициировать видеозвонок";
+            toast({
+                title: t("calls.error", "Ошибка видеозвонка"),
+                description: message,
+                variant: "error",
+            });
+        }
+    };
+
     const getTypingText = (): string | null => {
         if (!typingUsers || typingUsers.length === 0) {
             return null;
@@ -140,8 +172,8 @@ export function DefaultHeader({ roomId }: DefaultHeaderProps) {
                 onEndSession={() => setShowEndSessionDialog(true)}
                 ending={ending}
                 onInfoClick={isGroup ? handleInfoClick : undefined}
-                onAudioCallClick={() => initiateCall(roomId, CALL_TYPE.AUDIO)}
-                onVideoCallClick={() => initiateCall(roomId, CALL_TYPE.VIDEO)}
+                onAudioCallClick={handleAudioCall}
+                onVideoCallClick={handleVideoCall}
             />
         </header>
     );

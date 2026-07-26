@@ -58,7 +58,7 @@ routerAdd("POST", "/api/calls/token", (c) => {
 	try {
 		const envGateway = $os.getenv("PB_PUSH_GATEWAY_URL");
 		const baseUrl = envGateway
-			? envGateway.replace(/\/push\/?$/, "")
+			? envGateway.replace(/\/+$/, "")
 			: "http://whoami-push:4000";
 		const tokenUrl = `${baseUrl}/api/livekit-token`;
 
