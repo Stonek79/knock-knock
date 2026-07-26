@@ -27,7 +27,7 @@ import type {
 } from "../types";
 import { ensureISODate } from "../utils/date";
 import { decryptMessagePayload } from "../utils/decryptPayload";
-import { chatCryptoService } from "./chat-crypto";
+import { chatCryptoService, SealedSenderUtil } from "./chat-crypto";
 import { MessageService } from "./message";
 
 // --- Внутреннее состояние (инкапсулировано в файле) ---
@@ -103,9 +103,17 @@ async function handleMessageEvent({
         });
 
         try {
-            decryptedContent =
-                (await decryptMessagePayload(record, roomKey || undefined)) ||
-                "";
+            const content = await decryptMessagePayload(
+                record,
+                roomKey || undefined,
+            );
+            if (content) {
+                const unpacked = SealedSenderUtil.unpack(content);
+                decryptedContent = unpacked.text;
+                if (unpacked.sender_uuid) {
+                    record.sender = unpacked.sender_uuid;
+                }
+            }
         } catch (e) {
             logger.error("ChatRealtimeService: Ошибка дешифровки сообщения", e);
             decryptedContent = "Ошибка дешифровки";

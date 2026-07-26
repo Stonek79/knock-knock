@@ -1,6 +1,5 @@
 import { DB_TABLES, MESSAGE_STATUS, MESSAGE_TYPE } from "@/lib/constants";
 import { CLIENT_MESSAGE_STATUS } from "@/lib/constants/ui";
-import { SealedSenderUtil } from "@/lib/services/chat-crypto";
 import type { Attachment, ChatMessage } from "@/lib/types";
 
 /**
@@ -51,7 +50,7 @@ export function createOptimisticMessage(
         // --- Поля из MessagesRecord ---
         room: params.roomId,
         sender: params.senderId,
-        content: SealedSenderUtil.pack(params.text || "", params.senderId),
+        content: params.text || "",
         iv: "",
         type: MESSAGE_TYPE.TEXT,
         status: MESSAGE_STATUS.SENT,

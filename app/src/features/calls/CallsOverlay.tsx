@@ -18,6 +18,7 @@ export function CallsOverlay() {
                         .setIncomingCall(
                             event.data.roomId,
                             event.data.callLogId,
+                            event.data.callType,
                         );
                 }
             };
