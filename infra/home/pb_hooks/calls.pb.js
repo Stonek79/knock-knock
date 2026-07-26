@@ -47,7 +47,7 @@ routerAdd("POST", "/api/calls/token", (e) => {
 		);
 		return e.json(500, {
 			code: "INTERNAL_ERROR",
-			error: "Внутренняя ошибка сервера",
+			error: `Внутренняя ошибка сервера: ${err.message || err}`,
 		});
 	}
 
