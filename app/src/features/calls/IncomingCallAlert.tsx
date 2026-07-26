@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { ICON_SIZE } from "@/lib/constants";
 import styles from "./CallRoom.module.css";
 import { useCallStore } from "./store";
+import { parseCallError } from "./utils";
 
 /**
  * Компонент окна входящего звонка.
@@ -26,8 +27,7 @@ export function IncomingCallAlert() {
         try {
             await acceptCall();
         } catch (e: unknown) {
-            const message =
-                e instanceof Error ? e.message : "Не удалось принять звонок";
+            const message = parseCallError(e, t);
             toast({
                 title: t("calls.error", "Ошибка звонка"),
                 description: message,

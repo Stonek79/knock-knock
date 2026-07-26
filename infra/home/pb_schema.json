@@ -355,7 +355,7 @@
 				"name": "unread_count",
 				"type": "number",
 				"system": false,
-				"required": true,
+				"required": false,
 				"noZero": false
 			},
 			{

@@ -8,19 +8,22 @@
 
 const DB = require(`${__hooks}/db.js`);
 
-routerAdd("POST", "/api/calls/token", (c) => {
-	const info = $apis.requestInfo(c);
-	const body = info.data || info.body || {};
+routerAdd("POST", "/api/calls/token", (e) => {
+	const info = e.requestInfo();
+	const body = info.body || {};
 	const room_id = body.room_id;
 	const call_type = body.call_type || DB.VALUES.CALL_TYPE_VIDEO;
 
 	if (!room_id) {
-		return c.json(400, { error: "room_id обязателен" });
+		return e.json(400, {
+			code: "INVALID_REQUEST",
+			error: "room_id обязателен",
+		});
 	}
 
-	const authRecord = c.get("authRecord");
+	const authRecord = e.auth;
 	if (!authRecord) {
-		return c.json(401, { error: "Не авторизован" });
+		return e.json(401, { code: "UNAUTHORIZED", error: "Не авторизован" });
 	}
 	const userId = authRecord.id;
 
@@ -42,11 +45,17 @@ routerAdd("POST", "/api/calls/token", (c) => {
 		console.error(
 			`❌ [CALLS_ERROR] Ошибка проверки участника: ${err.message || err}`,
 		);
-		return c.json(500, { error: "Внутренняя ошибка сервера" });
+		return e.json(500, {
+			code: "INTERNAL_ERROR",
+			error: "Внутренняя ошибка сервера",
+		});
 	}
 
 	if (!isMember) {
-		return c.json(403, { error: "Нет доступа к этой комнате" });
+		return e.json(403, {
+			code: "ROOM_ACCESS_DENIED",
+			error: "Нет доступа к этой комнате",
+		});
 	}
 
 	// 2. Анонимизированный идентификатор участника (Zero-Knowledge)
@@ -80,21 +89,25 @@ routerAdd("POST", "/api/calls/token", (c) => {
 			console.error(
 				`❌ [CALLS_ERROR] Push-шлюз вернул ошибку: ${res.statusCode} ${res.raw}`,
 			);
-			return c.json(500, { error: "Не удалось получить токен" });
+			return e.json(500, {
+				code: "CALL_SERVICE_DOWN",
+				error: "Не удалось получить токен",
+			});
 		}
 	} catch (err) {
 		console.error(
 			`❌ [CALLS_ERROR] Ошибка запроса токена: ${err.message || err}`,
 		);
-		return c.json(500, { error: "Ошибка соединения с сервисом звонков" });
+		return e.json(500, {
+			code: "CALL_SERVICE_DOWN",
+			error: "Ошибка соединения с сервисом звонков",
+		});
 	}
 
 	// 4. Логи звонков без раскрытия участников в открытых полях (ZK metadata)
 	let callLogId = null;
 	try {
-		const callsCollection = $app.findCollectionByNameOrId(
-			DB.TABLES.CALL_LOGS,
-		);
+		const callsCollection = $app.findCollectionByNameOrId(DB.TABLES.CALL_LOGS);
 		const callRecord = new Record(callsCollection, {
 			room: room_id,
 			initiator: userId,
@@ -182,5 +195,5 @@ routerAdd("POST", "/api/calls/token", (c) => {
 		);
 	}
 
-	return c.json(200, { token: token });
+	return e.json(200, { token: token });
 });

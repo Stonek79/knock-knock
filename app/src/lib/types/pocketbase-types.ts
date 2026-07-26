@@ -231,7 +231,7 @@ export type RoomMembersRecord = {
     room: RecordIdString;
     user: RecordIdString;
     role: RoomMembersRoleOptions;
-    unread_count: number;
+    unread_count?: number;
     folder_id?: string;
     pin_position?: number;
     settings?: null | unknown;

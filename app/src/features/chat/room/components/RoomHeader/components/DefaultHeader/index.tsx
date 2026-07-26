@@ -10,6 +10,7 @@ import { useGroupPresence } from "@/features/presence/hooks/useGroupPresence";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { CALL_TYPE, ROOM_TYPE } from "@/lib/constants";
 import { useCallStore } from "../../../../../../calls/store";
+import { parseCallError } from "../../../../../../calls/utils";
 import { useChatPeer } from "../../../../hooks/useChatPeer";
 import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";
@@ -83,10 +84,7 @@ export function DefaultHeader({ roomId }: DefaultHeaderProps) {
         try {
             await initiateCall(roomId, CALL_TYPE.AUDIO);
         } catch (e: unknown) {
-            const message =
-                e instanceof Error
-                    ? e.message
-                    : "Не удалось инициировать звонок";
+            const message = parseCallError(e, t);
             toast({
                 title: t("calls.error", "Ошибка звонка"),
                 description: message,
@@ -99,10 +97,7 @@ export function DefaultHeader({ roomId }: DefaultHeaderProps) {
         try {
             await initiateCall(roomId, CALL_TYPE.VIDEO);
         } catch (e: unknown) {
-            const message =
-                e instanceof Error
-                    ? e.message
-                    : "Не удалось инициировать видеозвонок";
+            const message = parseCallError(e, t);
             toast({
                 title: t("calls.error", "Ошибка видеозвонка"),
                 description: message,

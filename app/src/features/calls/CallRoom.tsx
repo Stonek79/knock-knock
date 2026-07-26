@@ -1,16 +1,70 @@
 import {
     LiveKitRoom,
     RoomAudioRenderer,
+    useConnectionState,
+    useRemoteParticipants,
     VideoConference,
 } from "@livekit/components-react";
+import { ConnectionState } from "livekit-client";
 import { X } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import { CALL_TYPE, ICON_SIZE } from "@/lib/constants";
 import styles from "./CallRoom.module.css";
 import { useCallStore } from "./store";
+
+function CallRoomContent() {
+    const { t } = useTranslation();
+    const toast = useToast();
+    const { endCall } = useCallStore();
+    const connectionState = useConnectionState();
+    const remoteParticipants = useRemoteParticipants();
+
+    // Сохраняем функции в ref, чтобы избежать их добавления в зависимости useEffect
+    // и предотвратить лишние пересоздания таймера
+    const actionsRef = useRef({ endCall, toast, t });
+    useEffect(() => {
+        actionsRef.current = { endCall, toast, t };
+    });
+
+    useEffect(() => {
+        // Мы подключены, но удаленных участников нет
+        if (
+            connectionState === ConnectionState.Connected &&
+            remoteParticipants.length === 0
+        ) {
+            const timer = setTimeout(() => {
+                const { endCall, toast, t } = actionsRef.current;
+                toast({
+                    title: t("calls.error", "Ошибка звонка"),
+                    description: t(
+                        "calls.errors.TIMEOUT",
+                        "Абонент не отвечает или недоступен",
+                    ),
+                    variant: "error",
+                });
+                endCall();
+            }, 60000); // 60 секунд ждем
+
+            return () => clearTimeout(timer);
+        }
+    }, [connectionState, remoteParticipants.length]);
+
+    return (
+        <>
+            {/* 
+              Используем стандартные компоненты LiveKit, 
+              но они наследуют наши CSS-переменные из .liveKitContainer 
+            */}
+            <VideoConference />
+            <RoomAudioRenderer />
+        </>
+    );
+}
 
 /**
  * Компонент окна видеоконференции (LiveKit).
@@ -56,12 +110,7 @@ export function CallRoom() {
                         className={styles.liveKitContainer}
                         data-lk-theme="default"
                     >
-                        {/* 
-                          Используем стандартные компоненты LiveKit, 
-                          но они наследуют наши CSS-переменные из .liveKitContainer 
-                        */}
-                        <VideoConference />
-                        <RoomAudioRenderer />
+                        <CallRoomContent />
                     </LiveKitRoom>
                 </div>
             </Box>

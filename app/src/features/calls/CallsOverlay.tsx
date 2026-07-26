@@ -1,7 +1,23 @@
 import { useEffect } from "react";
+import type { CallLogsTypeOptions } from "@/lib/types";
 import { CallRoom } from "./CallRoom";
 import { IncomingCallAlert } from "./IncomingCallAlert";
 import { useCallStore } from "./store";
+
+export const PUSH_MESSAGE_TYPE = {
+    CALL_INCOMING: "call_incoming",
+} as const;
+
+interface CallIncomingData {
+    type: typeof PUSH_MESSAGE_TYPE.CALL_INCOMING;
+    roomId: string;
+    callLogId: string;
+    callType: CallLogsTypeOptions;
+}
+
+interface ServiceWorkerMessageEvent extends MessageEvent {
+    data: CallIncomingData;
+}
 
 /**
  * Оверлей звонков (LiveKit).
@@ -11,8 +27,8 @@ import { useCallStore } from "./store";
 export function CallsOverlay() {
     useEffect(() => {
         if ("serviceWorker" in navigator) {
-            const handleMessage = (event: MessageEvent) => {
-                if (event.data && event.data.type === "call_incoming") {
+            const handleMessage = (event: ServiceWorkerMessageEvent) => {
+                if (event.data?.type === PUSH_MESSAGE_TYPE.CALL_INCOMING) {
                     useCallStore
                         .getState()
                         .setIncomingCall(
@@ -23,11 +39,14 @@ export function CallsOverlay() {
                 }
             };
 
-            navigator.serviceWorker.addEventListener("message", handleMessage);
+            navigator.serviceWorker.addEventListener(
+                "message",
+                handleMessage as EventListener,
+            );
             return () => {
                 navigator.serviceWorker.removeEventListener(
                     "message",
-                    handleMessage,
+                    handleMessage as EventListener,
                 );
             };
         }
