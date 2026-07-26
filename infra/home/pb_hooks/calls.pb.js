@@ -69,6 +69,7 @@ routerAdd("POST", "/api/calls/token", (e) => {
 			? envGateway.replace(/\/+$/, "")
 			: "http://whoami-push:4000";
 		const tokenUrl = `${baseUrl}/api/livekit-token`;
+		console.error(`[CALLS_DEBUG] Sending token request to: ${tokenUrl}`);
 
 		const res = $http.send({
 			url: tokenUrl,
@@ -90,7 +91,7 @@ routerAdd("POST", "/api/calls/token", (e) => {
 			);
 			return e.json(500, {
 				code: "CALL_SERVICE_DOWN",
-				error: `Не удалось получить токен: ${res.statusCode} ${res.raw}`,
+				error: `Не удалось получить токен от ${tokenUrl}: ${res.statusCode} ${res.raw}`,
 			});
 		}
 	} catch (err) {
