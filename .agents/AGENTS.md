@@ -45,3 +45,8 @@
 - **PocketBase SDK Imports**: NEVER import the `pb` client (`import pb from "@/lib/pb"`) inside UI components, Stores (Zustand), or Hooks. The PocketBase SDK must ONLY be used inside the Data Layer (`src/lib/repositories/` and `src/lib/services/`). All other layers must interact with the Data Layer.
 - **Auto-generated Files**: NEVER manually modify `app/src/lib/types/pocketbase-types.ts`. This is an auto-generated file that serves as the ultimate source of truth for the project's database types. If types need to be updated, run the type generation script `npm run typegen:pb`.
 - **Reviewer Agent Duty**: The reviewer MUST be strict and nitpicky. If there is a single unused variable, implicit `any`, or hardcoded string instead of a constant, the reviewer MUST reject the code.
+
+## Инфраструктура и Логирование (Удаленный сервер)
+- **Сервер работает удаленно**: PocketBase, Nginx и вся инфраструктура развернуты на удаленном сервере (например, `dev-api.whoami.ninja`).
+- **ЗАПРЕЩЕНО**: Никогда не пытайся запускать локально команды типа `docker-compose logs`, `docker exec`, или читать логи Nginx/PocketBase напрямую из локальной файловой системы.
+- **Синхронизация**: Локальный код синхронизируется с сервером через деплой (или rsync пользователем). Для отладки серверных ошибок пробрасывай ошибки в HTTP-ответы или проси пользователя посмотреть логи на сервере.

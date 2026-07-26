@@ -6,9 +6,8 @@
  * проверки прав участников и уведомления других пользователей о звонке.
  */
 
-const DB = require(`${__hooks}/db.js`);
-
 routerAdd("POST", "/api/calls/token", (e) => {
+	const DB = require(`${__hooks}/db.js`);
 	const info = e.requestInfo();
 	const body = info.body || {};
 	const room_id = body.room_id;
