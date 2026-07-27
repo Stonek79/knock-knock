@@ -2,8 +2,9 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-modal);
-    background: color-mix(in srgb, var(--color-black) 60%, transparent);
-    backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--color-black) 75%, transparent);
+    backdrop-filter: blur(var(--space-4));
+    -webkit-backdrop-filter: blur(var(--space-4));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -37,26 +38,33 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--spacing-4) var(--spacing-6);
-    background: var(--surface-2);
+    background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+    backdrop-filter: blur(var(--space-2));
     border-bottom: 1px solid var(--border);
+    z-index: var(--z-sticky);
+}
+
+.headerTitleGroup {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
 }
 
 .title {
     font-size: var(--text-lg);
     font-weight: var(--font-weight-semibold);
     color: var(--foreground);
+    margin: 0;
+}
+
+.statusBadge {
+    font-size: var(--text-xs);
+    padding: var(--spacing-1) var(--spacing-2);
 }
 
 .closeBtn {
-    background: transparent;
-    border: none;
     color: var(--muted);
-    cursor: pointer;
-    padding: var(--spacing-2);
     border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: all var(--transition-base);
 }
 
@@ -69,18 +77,136 @@
     flex: 1;
     position: relative;
     background: var(--bg-app);
+    display: flex;
+    flex-direction: column;
 }
 
-/* Переопределение переменных LiveKit для соответствия дизайн-системе */
+/* ЭКРАН ИСХОДЯЩЕГО ЗВОНКА (ДОЗВОН) */
+.callingScreen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-8) var(--spacing-6);
+    background: radial-gradient(
+        circle at center,
+        color-mix(in srgb, var(--color-accent) 12%, transparent) 0%,
+        var(--bg-app) 70%
+    );
+    text-align: center;
+    gap: var(--spacing-8);
+}
+
+.callingAvatarWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-4);
+}
+
+.callingAvatar {
+    position: relative;
+    z-index: var(--z-raised);
+    box-shadow: var(--shadow-premium);
+    border: var(--space-05) solid var(--border);
+}
+
+.pulseRing,
+.pulseRingSecond {
+    position: absolute;
+    inset: calc(-1 * var(--space-5));
+    border-radius: var(--radius-full);
+    border: var(--space-05) solid var(--color-accent);
+    opacity: 0;
+    animation: pulseRing var(--transition-slow)
+        cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.pulseRingSecond {
+    animation-delay: var(--transition-normal);
+}
+
+.callingHeader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-2);
+    max-width: var(--max-w-prose);
+}
+
+.callingTitle {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--foreground);
+    margin: 0;
+}
+
+.callingSubtitle {
+    color: var(--muted);
+    font-size: var(--text-base);
+}
+
+.callTypeBadge {
+    margin-top: var(--spacing-2);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-4);
+    font-size: var(--text-sm);
+}
+
+.callingFooter {
+    margin-top: var(--spacing-4);
+}
+
+.endCallButton {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4) var(--spacing-8);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: var(--shadow-lg);
+    transition: transform var(--transition-fast);
+}
+
+.endCallButton:hover {
+    transform: scale(1.04);
+}
+
+/* РЕЖИМ КОНФЕРЕНЦИИ */
+.conferenceWrapper {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
 .liveKitContainer {
     --lk-bg: var(--bg-app);
-    --lk-control-bar-bg: var(--surface-2);
+    --lk-control-bar-bg: color-mix(in srgb, var(--surface-2) 90%, transparent);
     --lk-border-color: var(--border);
     --lk-fg: var(--foreground);
     --lk-control-bar-hover-bg: var(--surface-1);
 
     height: 100%;
     width: 100%;
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 0.4;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
 }
 
 @keyframes fadeIn {
@@ -95,7 +221,7 @@
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(var(--spacing-8)) scale(0.95);
+        transform: translateY(var(--spacing-8)) scale(0.96);
     }
     to {
         opacity: 1;
