@@ -1,5 +1,9 @@
 import { callRepository } from "../repositories/call.repository";
-import type { CallLogsResponse, CallLogsTypeOptions } from "../types";
+import type {
+    CallLogsResponse,
+    CallLogsStatusOptions,
+    CallLogsTypeOptions,
+} from "../types";
 
 /**
  * Сервис для работы со звонками.
@@ -17,6 +21,18 @@ export const callService = {
         callType: CallLogsTypeOptions,
     ): Promise<{ token: string }> {
         return await callRepository.getToken(roomId, callType);
+    },
+
+    /**
+     * Обновляет статус записи лога звонка.
+     * @param callLogId - Идентификатор лога звонка
+     * @param status - Новый статус (ringing/accepted/rejected/ended/cancelled)
+     */
+    async updateCallStatus(
+        callLogId: string,
+        status: CallLogsStatusOptions,
+    ): Promise<CallLogsResponse> {
+        return await callRepository.updateCallStatus(callLogId, status);
     },
 
     /**

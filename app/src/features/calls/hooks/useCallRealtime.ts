@@ -5,9 +5,9 @@ import { useAuthStore } from "@/stores/auth";
 import { useCallStore } from "../store";
 
 /**
- * Хук для прослушивания входящих звонков по WebSocket (PocketBase SSE / Event Bus).
- * Выступает как надежный реалтайм-канал для показа входящих звонков.
- * Серверное RLS-правило PocketBase гарантирует, что события вызова доходят только участникам комнаты.
+ * Хук для прослушивания событий звонков по WebSocket (PocketBase SSE / Event Bus).
+ * Обеспечивает мгновенный отклик на входящие вызовы, а также автоматическое
+ * завершение звонка при отмене, сбросе или завершении собеседником.
  */
 export function useCallRealtime() {
     const pbUser = useAuthStore((state) => state.pbUser);
@@ -18,18 +18,37 @@ export function useCallRealtime() {
         }
 
         const unsubscribe = callService.subscribeToIncomingCalls((record) => {
-            // Игнорируем свои же звонки или если статус не 'ringing'
+            const store = useCallStore.getState();
+
+            // 1. Входящий звонок
             if (
-                record.status !== CALL_STATUS.RINGING ||
-                record.initiator === pbUser.id
+                record.status === CALL_STATUS.RINGING &&
+                record.initiator !== pbUser.id
             ) {
+                store.setIncomingCall(record.room, record.id, record.type);
                 return;
             }
 
-            // Мгновенно активируем оверлей входящего вызова у принимающего
-            useCallStore
-                .getState()
-                .setIncomingCall(record.room, record.id, record.type);
+            // 2. Отмена/Сброс/Завершение звонка любой из сторон
+            if (
+                record.status === CALL_STATUS.ENDED ||
+                record.status === CALL_STATUS.REJECTED ||
+                record.status === CALL_STATUS.MISSED
+            ) {
+                // Если у нас открыт оверлей входящего звонка для этой комнаты/записи — закрываем его
+                if (
+                    store.isIncoming &&
+                    (store.incomingCallLogId === record.id ||
+                        store.incomingRoomId === record.room)
+                ) {
+                    store.rejectCall();
+                }
+
+                // Если у нас активен режим звонка/конференции в этой комнате — завершаем его
+                if (store.isActive && store.roomName === record.room) {
+                    store.endCall();
+                }
+            }
         });
 
         return () => {

@@ -1,6 +1,10 @@
 import { API_ROUTES, DB_TABLES, REALTIME_ACTIONS } from "../constants";
 import { pb } from "../pocketbase";
-import type { CallLogsResponse, CallLogsTypeOptions } from "../types";
+import type {
+    CallLogsResponse,
+    CallLogsStatusOptions,
+    CallLogsTypeOptions,
+} from "../types";
 
 export const callRepository = {
     /**
@@ -18,6 +22,20 @@ export const callRepository = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ room_id: roomId, call_type: callType }),
         });
+    },
+
+    /**
+     * Обновляет статус записи звонка в базе данных.
+     * @param callLogId - Идентификатор записи в call_logs
+     * @param status - Новый статус звонка
+     */
+    async updateCallStatus(
+        callLogId: string,
+        status: CallLogsStatusOptions,
+    ): Promise<CallLogsResponse> {
+        return await pb
+            .collection(DB_TABLES.CALL_LOGS)
+            .update<CallLogsResponse>(callLogId, { status });
     },
 
     /**

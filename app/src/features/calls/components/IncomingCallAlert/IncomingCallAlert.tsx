@@ -1,5 +1,7 @@
 import { PhoneIncoming, PhoneOff, ShieldCheck } from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -8,20 +10,43 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Heading } from "@/components/ui/Heading";
 import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
-import { ICON_SIZE } from "@/lib/constants";
+import { CALL_TYPE, ICON_SIZE } from "@/lib/constants";
 import { useCallStore } from "../../store";
 import { parseCallError } from "../../utils";
+import { startRingtone, stopRingtone } from "../../utils/ringtone";
 import styles from "./IncomingCallAlert.module.css";
 
 /**
  * Компонент окна входящего звонка.
  * Использует кастомные UI-компоненты (Dialog, Card, Avatar, Badge, Button)
- * и семантические элементы (header, footer, figure, span) без единого тэга div.
+ * с поддержкой общей темы приложения и встроенного воспроизведения рингтона.
  */
 export function IncomingCallAlert() {
     const { t } = useTranslation();
-    const { isIncoming, acceptCall, rejectCall } = useCallStore();
+    const { isIncoming, acceptCall, rejectCall, callType } = useCallStore();
     const toast = useToast();
+
+    // Запуск/остановка рингтона и 45-секундный таймаут автоотклонения вызова
+    useEffect(() => {
+        let timeoutId: number | null = null;
+
+        if (isIncoming) {
+            startRingtone();
+            timeoutId = window.setTimeout(() => {
+                stopRingtone();
+                rejectCall();
+            }, 45000);
+        } else {
+            stopRingtone();
+        }
+
+        return () => {
+            stopRingtone();
+            if (timeoutId !== null) {
+                clearTimeout(timeoutId);
+            }
+        };
+    }, [isIncoming, rejectCall]);
 
     if (!isIncoming) {
         return null;
@@ -29,11 +54,13 @@ export function IncomingCallAlert() {
 
     const handleOpen = (open: boolean) => {
         if (!open) {
+            stopRingtone();
             rejectCall();
         }
     };
 
     const handleAccept = async () => {
+        stopRingtone();
         try {
             await acceptCall();
         } catch (e: unknown) {
@@ -46,92 +73,91 @@ export function IncomingCallAlert() {
         }
     };
 
+    const handleReject = () => {
+        stopRingtone();
+        rejectCall();
+    };
+
     return (
         <Dialog.Root open={isIncoming} onOpenChange={handleOpen}>
-            <Dialog.Portal>
-                <Dialog.Overlay />
-                <Dialog.Content
-                    hideCloseButton
-                    className={styles.incomingCallContent}
-                >
-                    <Card variant="glass" className={styles.alertContent}>
-                        <figure className={styles.avatarContainer}>
-                            <span
-                                className={styles.avatarPulse}
-                                aria-hidden="true"
-                            />
-                            <Avatar
-                                size="xxl"
-                                fallback="🕵️‍♂️"
-                                className={styles.incognitoAvatar}
-                            />
-                        </figure>
+            <Dialog.Content
+                hideCloseButton
+                className={styles.incomingCallContent}
+            >
+                <Card variant="glass" className={styles.alertCard}>
+                    <Box className={styles.avatarContainer}>
+                        <Box className={styles.avatarPulse} />
+                        <Box className={styles.avatarPulseSecond} />
+                        <Avatar
+                            size="xxl"
+                            fallback={
+                                callType === CALL_TYPE.VIDEO ? "📹" : "📞"
+                            }
+                            className={styles.incognitoAvatar}
+                        />
+                    </Box>
 
-                        <Badge
-                            intent="primary"
-                            variant="soft"
-                            className={styles.e2eeBadge}
+                    <Badge
+                        intent="primary"
+                        variant="soft"
+                        className={styles.e2eeBadge}
+                    >
+                        <ShieldCheck size={ICON_SIZE.sm} />
+                        {t("calls.e2ee_label", "Зашифрованный E2EE-звонок")}
+                    </Badge>
+
+                    <header className={styles.alertHeader}>
+                        <Dialog.Title asChild>
+                            <Heading
+                                as="h2"
+                                size="xl"
+                                className={styles.alertTitle}
+                            >
+                                {t("calls.incoming_title", "Входящий вызов")}
+                            </Heading>
+                        </Dialog.Title>
+                        <Dialog.Description asChild>
+                            <Text
+                                as="p"
+                                intent="neutral"
+                                size="lg"
+                                className={styles.alertSubtitle}
+                            >
+                                {t(
+                                    "calls.incoming_subtitle",
+                                    "Приватное E2EE соединение...",
+                                )}
+                            </Text>
+                        </Dialog.Description>
+                    </header>
+
+                    <footer className={styles.alertActions}>
+                        <Button
+                            size="lg"
+                            intent="success"
+                            variant="solid"
+                            onClick={handleAccept}
+                            className={`${styles.actionButton} ${styles.acceptButton}`}
+                            aria-label={t("calls.accept", "Принять")}
                         >
-                            <ShieldCheck size={ICON_SIZE.sm} />
-                            {t("calls.e2ee_label", "Зашифрованный E2EE-звонок")}
-                        </Badge>
+                            <PhoneIncoming size={ICON_SIZE.md} />
+                            {t("calls.accept", "Принять")}
+                        </Button>
 
-                        <header className={styles.alertHeader}>
-                            <Dialog.Title asChild>
-                                <Heading
-                                    as="h2"
-                                    size="xl"
-                                    className={styles.alertTitle}
-                                >
-                                    {t(
-                                        "calls.incoming_title",
-                                        "Входящий звонок",
-                                    )}
-                                </Heading>
-                            </Dialog.Title>
-                            <Dialog.Description asChild>
-                                <Text
-                                    as="p"
-                                    intent="neutral"
-                                    size="lg"
-                                    className={styles.alertSubtitle}
-                                >
-                                    {t(
-                                        "calls.incoming_subtitle",
-                                        "Приватный собеседник...",
-                                    )}
-                                </Text>
-                            </Dialog.Description>
-                        </header>
-
-                        <footer className={styles.alertActions}>
-                            <Button
-                                size="lg"
-                                intent="success"
-                                variant="solid"
-                                onClick={handleAccept}
-                                className={`${styles.actionButton} ${styles.acceptButton}`}
-                                aria-label={t("calls.accept", "Принять")}
-                            >
-                                <PhoneIncoming size={ICON_SIZE.lg} />
-                                {t("calls.accept", "Принять")}
-                            </Button>
-
-                            <Button
-                                size="lg"
-                                intent="danger"
-                                variant="solid"
-                                onClick={rejectCall}
-                                className={`${styles.actionButton} ${styles.rejectButton}`}
-                                aria-label={t("calls.reject", "Отклонить")}
-                            >
-                                <PhoneOff size={ICON_SIZE.lg} />
-                                {t("calls.reject", "Отклонить")}
-                            </Button>
-                        </footer>
-                    </Card>
-                </Dialog.Content>
-            </Dialog.Portal>
+                        <Button
+                            size="lg"
+                            intent="error"
+                            variant="solid"
+                            onClick={handleReject}
+                            className={`${styles.actionButton} ${styles.rejectButton}`}
+                            aria-label={t("calls.reject", "Отклонить")}
+                        >
+                            <PhoneOff size={ICON_SIZE.md} />
+                            {t("calls.reject", "Отклонить")}
+                        </Button>
+                    </footer>
+                </Card>
+            </Dialog.Content>
         </Dialog.Root>
     );
 }

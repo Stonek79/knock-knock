@@ -1,20 +1,30 @@
 .incomingCallContent {
     max-width: var(--max-w-call-alert);
     width: var(--vw-dialog);
-    padding: var(--spacing-8) var(--spacing-6);
-    border-radius: var(--radius-xl);
+    padding: 0;
+    border-radius: var(--radius-2xl);
     text-align: center;
     position: relative;
     overflow: hidden;
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
-.alertContent {
+.alertCard {
     position: relative;
-    z-index: 1;
+    z-index: var(--z-modal);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-4);
+    gap: var(--space-4);
+    padding: var(--space-8) var(--space-6);
+    background: var(--glass-bg, var(--surface));
+    backdrop-filter: var(--glass-blur, blur(var(--space-4)));
+    -webkit-backdrop-filter: var(--glass-blur, blur(var(--space-4)));
+    border: 1px solid var(--glass-border, var(--border));
+    box-shadow: var(--glass-shadow, var(--shadow-premium));
+    border-radius: var(--radius-2xl);
 }
 
 .avatarContainer {
@@ -22,42 +32,49 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: var(--spacing-2);
-    margin-bottom: var(--spacing-2);
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-2);
 }
 
-.avatarPulse {
+.avatarPulse,
+.avatarPulseSecond {
     position: absolute;
-    inset: calc(-1 * var(--spacing-3));
+    inset: calc(-1 * var(--space-4));
     border-radius: var(--radius-full);
-    background: var(--intent-primary-main);
-    opacity: 0.25;
-    z-index: 0;
-    animation: pulse var(--duration-pulse) infinite ease-in-out;
+    border: var(--space-05) solid var(--color-success);
+    opacity: 0;
+    animation: alertPulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.avatarPulseSecond {
+    animation-delay: var(--transition-normal);
 }
 
 .incognitoAvatar {
     position: relative;
-    z-index: 1;
-    box-shadow: var(--shadow-bubble);
+    z-index: var(--z-raised);
+    box-shadow: var(--shadow-premium);
+    border: var(--space-05) solid var(--color-success);
 }
 
 .e2eeBadge {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-2);
+    gap: var(--space-2);
     font-weight: var(--font-weight-medium);
 }
 
 .alertHeader {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-1);
-    margin-bottom: var(--spacing-4);
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
 }
 
 .alertTitle {
     font-weight: var(--font-weight-bold);
+    color: var(--foreground);
+    text-shadow: var(--title-glow);
 }
 
 .alertSubtitle {
@@ -66,40 +83,58 @@
 
 .alertActions {
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: var(--spacing-6);
+    gap: var(--space-4);
     width: 100%;
+    margin-top: var(--space-4);
 }
 
 .actionButton {
+    flex: 1;
     min-width: var(--min-w-call-action);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-xl);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: var(--shadow-md);
+    transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
 .acceptButton {
-    animation: bounceIcon var(--duration-bounce) infinite ease-in-out;
+    animation: pulseAccept 1.5s infinite ease-in-out;
 }
 
-@keyframes pulse {
+.acceptButton:hover,
+.rejectButton:hover {
+    transform: scale(1.05);
+}
+
+@keyframes alertPulse {
     0% {
-        transform: scale(0.95);
-        opacity: 0.4;
+        transform: scale(0.85);
+        opacity: 0.8;
     }
     50% {
-        transform: scale(1.2);
-        opacity: 0.1;
+        opacity: 0.3;
     }
     100% {
-        transform: scale(0.95);
-        opacity: 0.4;
+        transform: scale(1.4);
+        opacity: 0;
     }
 }
 
-@keyframes bounceIcon {
+@keyframes pulseAccept {
     0%,
     100% {
-        transform: translateY(0);
+        transform: scale(1);
     }
     50% {
-        transform: translateY(calc(-1 * var(--spacing-1)));
+        transform: scale(1.04);
     }
 }

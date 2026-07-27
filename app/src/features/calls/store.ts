@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { CALL_TYPE } from "@/lib/constants";
+import { CALL_STATUS, CALL_TYPE } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { callService } from "@/lib/services/call.service";
@@ -60,7 +60,18 @@ export const useCallStore = create<CallState>((set, get) => ({
             serverUrl,
         }),
 
-    endCall: () =>
+    endCall: () => {
+        const { incomingCallLogId } = get();
+        if (incomingCallLogId) {
+            callService
+                .updateCallStatus(incomingCallLogId, CALL_STATUS.ENDED)
+                .catch((e: unknown) => {
+                    logger.error(
+                        "Ошибка при обновлении статуса завершения звонка",
+                        e,
+                    );
+                });
+        }
         set({
             isActive: false,
             roomName: null,
@@ -70,7 +81,8 @@ export const useCallStore = create<CallState>((set, get) => ({
             isIncoming: false,
             incomingRoomId: null,
             incomingCallLogId: null,
-        }),
+        });
+    },
 
     setIncomingCall: (roomId, callLogId, callType = CALL_TYPE.VIDEO) =>
         set({
@@ -80,20 +92,35 @@ export const useCallStore = create<CallState>((set, get) => ({
             callType,
         }),
 
-    rejectCall: () =>
+    rejectCall: () => {
+        const { incomingCallLogId } = get();
+        if (incomingCallLogId) {
+            callService
+                .updateCallStatus(incomingCallLogId, CALL_STATUS.REJECTED)
+                .catch((e: unknown) => {
+                    logger.error("Ошибка при отклонении звонка", e);
+                });
+        }
         set({
             isIncoming: false,
             incomingRoomId: null,
             incomingCallLogId: null,
-        }),
+        });
+    },
 
     acceptCall: async () => {
-        const { incomingRoomId, callType } = get();
+        const { incomingRoomId, incomingCallLogId, callType } = get();
         if (!incomingRoomId) {
             return;
         }
 
         try {
+            if (incomingCallLogId) {
+                callService
+                    .updateCallStatus(incomingCallLogId, CALL_STATUS.ONGOING)
+                    .catch(() => {});
+            }
+
             const res = await callService.getToken(
                 incomingRoomId,
                 callType || CALL_TYPE.VIDEO,
