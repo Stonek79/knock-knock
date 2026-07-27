@@ -55,48 +55,70 @@ function CallRoomContent() {
         }
     }, [connectionState, remoteParticipants.length]);
 
-    // Режим исходящего звонка (ожидание собеседника)
+    // Режим исходящего звонка в стиле Telegram (ожидание собеседника)
     if (remoteParticipants.length === 0) {
         return (
             <Box className={styles.callingScreen}>
-                <Box className={styles.callingAvatarWrapper}>
-                    <Box className={styles.pulseRing} />
-                    <Box className={styles.pulseRingSecond} />
-                    <Avatar
-                        size="xl"
-                        fallback={callType === CALL_TYPE.VIDEO ? "📹" : "📞"}
-                        className={styles.callingAvatar}
-                    />
+                <Box className={styles.callingBody}>
+                    <Box className={styles.callingAvatarWrapper}>
+                        <Box className={styles.callingPulse1} />
+                        <Box className={styles.callingPulse2} />
+                        <Box className={styles.callingPulse3} />
+                        <Avatar
+                            size="xxl"
+                            fallback={
+                                callType === CALL_TYPE.VIDEO ? "📹" : "📞"
+                            }
+                            className={styles.callingAvatar}
+                        />
+                    </Box>
+
+                    <header className={styles.callingHeader}>
+                        <Heading
+                            as="h2"
+                            size="xl"
+                            className={styles.callingTitle}
+                        >
+                            {t("calls.calling", "Исходящий вызов")}
+                        </Heading>
+                        <Text className={styles.callingSubtitle}>
+                            {connectionState === ConnectionState.Connecting
+                                ? t(
+                                      "calls.connecting",
+                                      "Подключение к серверу...",
+                                  )
+                                : t(
+                                      "calls.waiting_answer",
+                                      "Ожидание ответа собеседника...",
+                                  )}
+                        </Text>
+                        <Badge
+                            variant="soft"
+                            intent="primary"
+                            className={styles.callTypeBadge}
+                        >
+                            {callType === CALL_TYPE.VIDEO ? (
+                                <>
+                                    <Video size={ICON_SIZE.sm} />
+                                    {t(
+                                        "calls.type_video",
+                                        "Зашифрованный видеозвонок",
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <Volume2 size={ICON_SIZE.sm} />
+                                    {t(
+                                        "calls.type_audio",
+                                        "Зашифрованный аудиозвонок",
+                                    )}
+                                </>
+                            )}
+                        </Badge>
+                    </header>
                 </Box>
 
-                <header className={styles.callingHeader}>
-                    <Heading as="h2" size="lg" className={styles.callingTitle}>
-                        {t("calls.calling", "Исходящий вызов")}
-                    </Heading>
-                    <Text className={styles.callingSubtitle}>
-                        {connectionState === ConnectionState.Connecting
-                            ? t("calls.connecting", "Подключение к серверу...")
-                            : t(
-                                  "calls.waiting_answer",
-                                  "Ожидание ответа собеседника...",
-                              )}
-                    </Text>
-                    <Badge variant="outline" className={styles.callTypeBadge}>
-                        {callType === CALL_TYPE.VIDEO ? (
-                            <>
-                                <Video size={ICON_SIZE.sm} />
-                                {t("calls.type_video", "Видеозвонок")}
-                            </>
-                        ) : (
-                            <>
-                                <Volume2 size={ICON_SIZE.sm} />
-                                {t("calls.type_audio", "Аудиозвонок")}
-                            </>
-                        )}
-                    </Badge>
-                </header>
-
-                <footer className={styles.callingFooter}>
+                <footer className={styles.callingDock}>
                     <Button
                         type="button"
                         variant="solid"
@@ -125,7 +147,7 @@ function CallRoomContent() {
 
 /**
  * Компонент окна видеоконференции (LiveKit).
- * Отображает интерфейс звонка поверх приложения с премиальным Mobile-First дизайном на базе UI kit.
+ * Отображает интерфейс звонка поверх приложения в стиле Telegram с поддержкой UI kit и CSS токенов.
  */
 export function CallRoom() {
     const { t } = useTranslation();
@@ -148,28 +170,23 @@ export function CallRoom() {
                     <Box className={styles.headerTitleGroup}>
                         <Heading as="h3" size="md" className={styles.title}>
                             {callType === CALL_TYPE.VIDEO
-                                ? t(
-                                      "calls.room_title_video",
-                                      "Видеоконференция",
-                                  )
-                                : t("calls.room_title_audio", "Аудиозвонок")}
+                                ? t("calls.video_call", "Видеозвонок")
+                                : t("calls.audio_call", "Аудиозвонок")}
                         </Heading>
                         <Badge
-                            variant="soft"
                             intent="success"
+                            variant="soft"
                             className={styles.statusBadge}
                         >
-                            Live
+                            E2EE
                         </Badge>
                     </Box>
-
                     <Button
-                        type="button"
                         variant="ghost"
-                        size="icon"
-                        className={styles.closeBtn}
+                        size="sm"
                         onClick={endCall}
-                        aria-label={t("calls.end_call", "Завершить звонок")}
+                        className={styles.closeBtn}
+                        aria-label={t("common.close", "Закрыть")}
                     >
                         <X size={ICON_SIZE.md} />
                     </Button>
@@ -177,13 +194,11 @@ export function CallRoom() {
 
                 <Box className={styles.content}>
                     <LiveKitRoom
-                        video={callType === CALL_TYPE.VIDEO}
-                        audio={true}
-                        token={token}
                         serverUrl={serverUrl}
-                        onDisconnected={endCall}
-                        className={styles.liveKitContainer}
+                        token={token}
+                        connect={true}
                         data-lk-theme="default"
+                        className={styles.liveKitContainer}
                     >
                         <CallRoomContent />
                     </LiveKitRoom>

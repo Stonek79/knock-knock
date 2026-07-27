@@ -17,13 +17,16 @@ import { startRingtone, stopRingtone } from "../../utils/ringtone";
 import styles from "./IncomingCallAlert.module.css";
 
 /**
- * Компонент окна входящего звонка.
+ * Компонент окна входящего звонка в стиле Telegram.
  * Использует кастомные UI-компоненты (Dialog, Card, Avatar, Badge, Button)
  * с поддержкой общей темы приложения и встроенного воспроизведения рингтона.
  */
 export function IncomingCallAlert() {
     const { t } = useTranslation();
-    const { isIncoming, acceptCall, rejectCall, callType } = useCallStore();
+    const isIncoming = useCallStore((state) => state.isIncoming);
+    const callType = useCallStore((state) => state.callType);
+    const acceptCall = useCallStore((state) => state.acceptCall);
+    const rejectCall = useCallStore((state) => state.rejectCall);
     const toast = useToast();
 
     // Запуск/остановка рингтона и 45-секундный таймаут автоотклонения вызова
@@ -34,7 +37,7 @@ export function IncomingCallAlert() {
             startRingtone();
             timeoutId = window.setTimeout(() => {
                 stopRingtone();
-                rejectCall();
+                useCallStore.getState().rejectCall();
             }, 45000);
         } else {
             stopRingtone();
@@ -46,7 +49,7 @@ export function IncomingCallAlert() {
                 clearTimeout(timeoutId);
             }
         };
-    }, [isIncoming, rejectCall]);
+    }, [isIncoming]);
 
     if (!isIncoming) {
         return null;
@@ -86,8 +89,9 @@ export function IncomingCallAlert() {
             >
                 <Card variant="glass" className={styles.alertCard}>
                     <Box className={styles.avatarContainer}>
-                        <Box className={styles.avatarPulse} />
-                        <Box className={styles.avatarPulseSecond} />
+                        <Box className={styles.avatarPulse1} />
+                        <Box className={styles.avatarPulse2} />
+                        <Box className={styles.avatarPulse3} />
                         <Avatar
                             size="xxl"
                             fallback={
@@ -113,14 +117,22 @@ export function IncomingCallAlert() {
                                 size="xl"
                                 className={styles.alertTitle}
                             >
-                                {t("calls.incoming_title", "Входящий вызов")}
+                                {callType === CALL_TYPE.VIDEO
+                                    ? t(
+                                          "calls.incoming_video_title",
+                                          "Входящий видеовызов",
+                                      )
+                                    : t(
+                                          "calls.incoming_audio_title",
+                                          "Входящий аудиовызов",
+                                      )}
                             </Heading>
                         </Dialog.Title>
                         <Dialog.Description asChild>
                             <Text
                                 as="p"
                                 intent="neutral"
-                                size="lg"
+                                size="md"
                                 className={styles.alertSubtitle}
                             >
                                 {t(
@@ -134,18 +146,6 @@ export function IncomingCallAlert() {
                     <footer className={styles.alertActions}>
                         <Button
                             size="lg"
-                            intent="success"
-                            variant="solid"
-                            onClick={handleAccept}
-                            className={`${styles.actionButton} ${styles.acceptButton}`}
-                            aria-label={t("calls.accept", "Принять")}
-                        >
-                            <PhoneIncoming size={ICON_SIZE.md} />
-                            {t("calls.accept", "Принять")}
-                        </Button>
-
-                        <Button
-                            size="lg"
                             intent="error"
                             variant="solid"
                             onClick={handleReject}
@@ -154,6 +154,18 @@ export function IncomingCallAlert() {
                         >
                             <PhoneOff size={ICON_SIZE.md} />
                             {t("calls.reject", "Отклонить")}
+                        </Button>
+
+                        <Button
+                            size="lg"
+                            intent="success"
+                            variant="solid"
+                            onClick={handleAccept}
+                            className={`${styles.actionButton} ${styles.acceptButton}`}
+                            aria-label={t("calls.accept", "Принять")}
+                        >
+                            <PhoneIncoming size={ICON_SIZE.md} />
+                            {t("calls.accept", "Принять")}
                         </Button>
                     </footer>
                 </Card>

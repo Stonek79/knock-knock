@@ -2,9 +2,9 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-modal);
-    background: color-mix(in srgb, var(--color-black) 75%, transparent);
-    backdrop-filter: var(--glass-blur, blur(12px));
-    -webkit-backdrop-filter: var(--glass-blur, blur(12px));
+    background: color-mix(in srgb, var(--color-black) 80%, transparent);
+    backdrop-filter: var(--glass-blur, blur(16px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -24,10 +24,10 @@
 
 @media (min-width: 768px) {
     .window {
-        width: var(--vw-dialog);
-        height: var(--vh-dialog);
-        max-width: var(--max-w-settings);
-        border-radius: var(--radius-2xl);
+        width: var(--vw-dialog, 90vw);
+        height: var(--vh-dialog, 85vh);
+        max-width: var(--max-w-settings, 680px);
+        border-radius: var(--radius-2xl, 24px);
         border: 1px solid var(--glass-border, var(--border));
         box-shadow: var(--glass-shadow, var(--shadow-premium));
     }
@@ -82,26 +82,33 @@
     flex-direction: column;
 }
 
-/* ЭКРАН ИСХОДЯЩЕГО ЗВОНКА (ДОЗВОН) */
+/* Telegram-Style Outgoing Call Screen (Дозвон) */
 .callingScreen {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     padding: var(--space-8) var(--space-6);
     background: radial-gradient(
-        circle at center,
+        circle at top center,
         color-mix(
                 in srgb,
-                var(--accent-primary, var(--color-accent)) 20%,
+                var(--accent-primary, var(--color-accent)) 25%,
                 transparent
             )
             0%,
-        var(--bg-cosmos, var(--bg-app)) 80%
+        var(--bg-cosmos, var(--bg-app)) 75%
     );
     text-align: center;
-    gap: var(--space-8);
+}
+
+.callingBody {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+    margin: auto 0;
 }
 
 .callingAvatarWrapper {
@@ -109,29 +116,41 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: var(--space-4);
+    width: 160px;
+    height: 160px;
 }
 
 .callingAvatar {
     position: relative;
     z-index: var(--z-raised);
-    box-shadow: var(--shadow-premium);
-    border: var(--space-05) solid var(--accent-primary, var(--border));
+    box-shadow: 0 12px 40px
+        color-mix(
+            in srgb,
+            var(--accent-primary, var(--color-accent)) 50%,
+            transparent
+        );
+    border: 3px solid var(--accent-primary, var(--border));
+    background: var(--surface-2);
 }
 
-.pulseRing,
-.pulseRingSecond {
+/* Telegram Radar Pulse Waves for Outgoing Call */
+.callingPulse1,
+.callingPulse2,
+.callingPulse3 {
     position: absolute;
-    inset: calc(-1 * var(--space-5));
+    inset: 0;
     border-radius: var(--radius-full);
-    border: var(--space-05) solid var(--accent-primary, var(--color-accent));
+    border: 1.5px solid var(--accent-primary, var(--color-accent));
     opacity: 0;
-    animation: pulseRing var(--transition-slow)
-        cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    animation: tgOutgoingWave 2.4s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
 }
 
-.pulseRingSecond {
-    animation-delay: var(--transition-normal);
+.callingPulse2 {
+    animation-delay: 0.8s;
+}
+
+.callingPulse3 {
+    animation-delay: 1.6s;
 }
 
 .callingHeader {
@@ -162,10 +181,24 @@
     gap: var(--space-2);
     padding: var(--space-2) var(--space-4);
     font-size: var(--text-sm);
+    border-radius: var(--radius-full);
 }
 
-.callingFooter {
-    margin-top: var(--space-4);
+/* Telegram Floating Action Dock */
+.callingDock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    width: 100%;
+    max-width: 400px;
+    padding: var(--space-4) var(--space-6);
+    background: var(--glass-bg, var(--surface));
+    backdrop-filter: var(--glass-blur, blur(16px));
+    border: 1px solid var(--glass-border, var(--border));
+    border-radius: var(--radius-2xl, 24px);
+    box-shadow: var(--shadow-premium);
+    margin-bottom: var(--space-4);
 }
 
 .endCallButton {
@@ -175,12 +208,18 @@
     padding: var(--space-4) var(--space-8);
     border-radius: var(--radius-full);
     font-weight: var(--font-weight-semibold);
-    box-shadow: var(--shadow-lg);
-    transition: transform var(--transition-fast);
+    font-size: var(--text-base);
+    box-shadow: 0 4px 20px
+        color-mix(in srgb, var(--color-error) 50%, transparent);
+    transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
 .endCallButton:hover {
     transform: scale(1.05);
+    box-shadow: 0 6px 28px
+        color-mix(in srgb, var(--color-error) 70%, transparent);
 }
 
 /* РЕЖИМ КОНФЕРЕНЦИИ */
@@ -202,16 +241,16 @@
     width: 100%;
 }
 
-@keyframes pulseRing {
+@keyframes tgOutgoingWave {
     0% {
         transform: scale(0.85);
-        opacity: 0.8;
+        opacity: 0.9;
     }
     50% {
         opacity: 0.4;
     }
     100% {
-        transform: scale(1.5);
+        transform: scale(1.8);
         opacity: 0;
     }
 }

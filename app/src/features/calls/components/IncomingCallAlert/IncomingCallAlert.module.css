@@ -1,8 +1,8 @@
 .incomingCallContent {
-    max-width: var(--max-w-call-alert);
-    width: var(--vw-dialog);
+    max-width: var(--max-w-call-alert, 420px);
+    width: var(--vw-dialog, 90vw);
     padding: 0;
-    border-radius: var(--radius-2xl);
+    border-radius: var(--radius-2xl, 24px);
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -17,44 +17,58 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-4);
+    gap: var(--space-5);
     padding: var(--space-8) var(--space-6);
-    background: var(--glass-bg, var(--surface));
-    backdrop-filter: var(--glass-blur, blur(var(--space-4)));
-    -webkit-backdrop-filter: var(--glass-blur, blur(var(--space-4)));
+    background: radial-gradient(
+        circle at top center,
+        color-mix(in srgb, var(--color-success) 15%, transparent) 0%,
+        var(--glass-bg, var(--surface)) 70%
+    );
+    backdrop-filter: var(--glass-blur, blur(20px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(20px));
     border: 1px solid var(--glass-border, var(--border));
     box-shadow: var(--glass-shadow, var(--shadow-premium));
-    border-radius: var(--radius-2xl);
+    border-radius: var(--radius-2xl, 24px);
 }
 
+/* Telegram Radar Pulse Waves */
 .avatarContainer {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: var(--space-2);
-    margin-bottom: var(--space-2);
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-4);
+    width: 140px;
+    height: 140px;
 }
 
-.avatarPulse,
-.avatarPulseSecond {
+.avatarPulse1,
+.avatarPulse2,
+.avatarPulse3 {
     position: absolute;
-    inset: calc(-1 * var(--space-4));
+    inset: 0;
     border-radius: var(--radius-full);
-    border: var(--space-05) solid var(--color-success);
+    border: 1.5px solid var(--color-success);
     opacity: 0;
-    animation: alertPulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    animation: tgRadarWave 2.4s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
 }
 
-.avatarPulseSecond {
-    animation-delay: var(--transition-normal);
+.avatarPulse2 {
+    animation-delay: 0.8s;
+}
+
+.avatarPulse3 {
+    animation-delay: 1.6s;
 }
 
 .incognitoAvatar {
     position: relative;
     z-index: var(--z-raised);
-    box-shadow: var(--shadow-premium);
-    border: var(--space-05) solid var(--color-success);
+    box-shadow: 0 8px 32px
+        color-mix(in srgb, var(--color-success) 40%, transparent);
+    border: 3px solid var(--color-success);
+    background: var(--surface-2);
 }
 
 .e2eeBadge {
@@ -62,44 +76,51 @@
     align-items: center;
     gap: var(--space-2);
     font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-full);
 }
 
 .alertHeader {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
-    margin-bottom: var(--space-2);
+    align-items: center;
+    gap: var(--space-2);
 }
 
 .alertTitle {
     font-weight: var(--font-weight-bold);
     color: var(--foreground);
     text-shadow: var(--title-glow);
+    font-size: var(--text-2xl);
+    letter-spacing: -0.02em;
 }
 
 .alertSubtitle {
     color: var(--muted);
+    font-size: var(--text-sm);
 }
 
+/* Telegram-style Action Dock */
 .alertActions {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
+    justify-content: space-around;
+    gap: var(--space-6);
     width: 100%;
     margin-top: var(--space-4);
+    padding-top: var(--space-2);
 }
 
 .actionButton {
     flex: 1;
-    min-width: var(--min-w-call-action);
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-5);
+    padding: var(--space-4) var(--space-4);
     border-radius: var(--radius-xl);
     font-weight: var(--font-weight-semibold);
+    font-size: var(--text-base);
     box-shadow: var(--shadow-md);
     transition:
         transform var(--transition-fast),
@@ -107,34 +128,38 @@
 }
 
 .acceptButton {
-    animation: pulseAccept 1.5s infinite ease-in-out;
+    box-shadow: 0 4px 20px
+        color-mix(in srgb, var(--color-success) 50%, transparent);
+    animation: tgPulseButton 2s infinite ease-in-out;
 }
 
 .acceptButton:hover,
 .rejectButton:hover {
-    transform: scale(1.05);
+    transform: translateY(-2px) scale(1.03);
 }
 
-@keyframes alertPulse {
+@keyframes tgRadarWave {
     0% {
         transform: scale(0.85);
-        opacity: 0.8;
+        opacity: 0.9;
     }
     50% {
-        opacity: 0.3;
+        opacity: 0.4;
     }
     100% {
-        transform: scale(1.4);
+        transform: scale(1.8);
         opacity: 0;
     }
 }
 
-@keyframes pulseAccept {
+@keyframes tgPulseButton {
     0%,
     100% {
         transform: scale(1);
     }
     50% {
         transform: scale(1.04);
+        box-shadow: 0 6px 28px
+            color-mix(in srgb, var(--color-success) 70%, transparent);
     }
 }
