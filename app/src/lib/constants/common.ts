@@ -47,3 +47,8 @@ export const NOTIFICATION_ACTIONS = {
     OPEN: "open",
     CLOSE: "close",
 } as const;
+
+/** Типы push-сообщений и событий Service Worker */
+export const PUSH_MESSAGE_TYPE = {
+    CALL_INCOMING: "call_incoming",
+} as const;

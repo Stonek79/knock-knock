@@ -253,16 +253,7 @@ async function handleMessageEvent({
             ) {
                 if (_activeRoomId === record.room) {
                     // Если чат сейчас открыт, сразу помечаем как прочитанные
-                    MessageService.markMessagesAsRead({
-                        roomId: record.room,
-                        currentUserId: userId,
-                    }).catch((err) => {
-                        logger.error(
-                            "ChatRealtimeService: Ошибка автопрочтения нового сообщения в активном чате",
-                            err,
-                        );
-                    });
-                    // Обновляем last_read_at нашего участника в БД, чтобы синхронизировать время
+                    // Обновляем last_read_at нашего участника в БД, чтобы синхронизировать время, и только затем помечаем прочитанными
                     roomRepository
                         .getMemberByRoomAndUser(record.room, userId)
                         .then((res) => {
@@ -270,8 +261,20 @@ async function handleMessageEvent({
                                 roomRepository
                                     .updateMember(res.value.id, {
                                         [ROOM_MEMBER_FIELDS.LAST_READ_AT]:
+                                            record.created ||
                                             new Date().toISOString(),
                                         [ROOM_MEMBER_FIELDS.UNREAD_COUNT]: 0,
+                                    })
+                                    .then(() => {
+                                        MessageService.markMessagesAsRead({
+                                            roomId: record.room,
+                                            currentUserId: userId,
+                                        }).catch((err) => {
+                                            logger.error(
+                                                "ChatRealtimeService: Ошибка автопрочтения нового сообщения в активном чате",
+                                                err,
+                                            );
+                                        });
                                     })
                                     .catch((e) => {
                                         logger.error(

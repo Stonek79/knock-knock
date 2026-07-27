@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { ICON_SIZE } from "@/lib/constants";
-import styles from "./callspage.module.css";
+import styles from "./CallsPage.module.css";
 
 /**
  * Страница звонков.

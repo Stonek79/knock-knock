@@ -1,0 +1,105 @@
+.incomingCallContent {
+    max-width: var(--max-w-call-alert);
+    width: var(--vw-dialog);
+    padding: var(--spacing-8) var(--spacing-6);
+    border-radius: var(--radius-xl);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.alertContent {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-4);
+}
+
+.avatarContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+}
+
+.avatarPulse {
+    position: absolute;
+    inset: calc(-1 * var(--spacing-3));
+    border-radius: var(--radius-full);
+    background: var(--intent-primary-main);
+    opacity: 0.25;
+    z-index: 0;
+    animation: pulse var(--duration-pulse) infinite ease-in-out;
+}
+
+.incognitoAvatar {
+    position: relative;
+    z-index: 1;
+    box-shadow: var(--shadow-bubble);
+}
+
+.e2eeBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-weight: var(--font-weight-medium);
+}
+
+.alertHeader {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    margin-bottom: var(--spacing-4);
+}
+
+.alertTitle {
+    font-weight: var(--font-weight-bold);
+}
+
+.alertSubtitle {
+    color: var(--muted);
+}
+
+.alertActions {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-6);
+    width: 100%;
+}
+
+.actionButton {
+    min-width: var(--min-w-call-action);
+}
+
+.acceptButton {
+    animation: bounceIcon var(--duration-bounce) infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.4;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.1;
+    }
+    100% {
+        transform: scale(0.95);
+        opacity: 0.4;
+    }
+}
+
+@keyframes bounceIcon {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(calc(-1 * var(--spacing-1)));
+    }
+}

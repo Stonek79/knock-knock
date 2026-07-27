@@ -1,6 +1,6 @@
 import { useLocation } from "@tanstack/react-router";
 import { AdminSidebar } from "@/features/admin/AdminSidebar";
-import { CallsList } from "@/features/calls/CallsList";
+import { CallsList } from "@/features/calls";
 import { ChatList, FavoritesChatList } from "@/features/chat/list";
 import { ContactList } from "@/features/contacts/ContactList";
 import { SettingsSidebar } from "@/features/settings/SettingsSidebar";

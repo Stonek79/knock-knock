@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
-import { SidebarHeader } from "../../navigation/components/SidebarHeader";
-import styles from "./callslist.module.css";
+import { SidebarHeader } from "../../../navigation/components/SidebarHeader";
+import styles from "./CallsList.module.css";
 
 /**
  * Список звонков (заглушка).

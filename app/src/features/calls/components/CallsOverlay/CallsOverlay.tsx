@@ -1,12 +1,10 @@
 import { useEffect } from "react";
+import { PUSH_MESSAGE_TYPE } from "@/lib/constants";
 import type { CallLogsTypeOptions } from "@/lib/types";
-import { CallRoom } from "./CallRoom";
-import { IncomingCallAlert } from "./IncomingCallAlert";
-import { useCallStore } from "./store";
-
-export const PUSH_MESSAGE_TYPE = {
-    CALL_INCOMING: "call_incoming",
-} as const;
+import { useCallRealtime } from "../../hooks/useCallRealtime";
+import { useCallStore } from "../../store";
+import { CallRoom } from "../CallRoom/CallRoom";
+import { IncomingCallAlert } from "../IncomingCallAlert/IncomingCallAlert";
 
 interface CallIncomingData {
     type: typeof PUSH_MESSAGE_TYPE.CALL_INCOMING;
@@ -25,6 +23,9 @@ interface ServiceWorkerMessageEvent extends MessageEvent {
  * Должен быть подключен в AppLayout, чтобы работать только для авторизованных пользователей.
  */
 export function CallsOverlay() {
+    // Дублирующий канал WebSocket для входящих звонков
+    useCallRealtime();
+
     useEffect(() => {
         if ("serviceWorker" in navigator) {
             const handleMessage = (event: ServiceWorkerMessageEvent) => {

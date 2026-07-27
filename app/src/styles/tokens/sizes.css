@@ -75,4 +75,8 @@
     --vw-dialog: 90vw;
     --vh-dialog: 85vh;
     --min-w-dropdown: 180px;
+
+    /* Call Specific Sizes */
+    --max-w-call-alert: 400px;
+    --min-w-call-action: 120px;
 }

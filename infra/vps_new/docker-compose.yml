@@ -12,6 +12,8 @@ services:
       - /var/www/certbot:/var/www/certbot:ro
     networks:
       - whoami-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - frps
 

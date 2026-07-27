@@ -1,1 +1,1 @@
-export { CallsPage } from "@/features/calls/Calls";
+export { CallsPage } from "@/features/calls";

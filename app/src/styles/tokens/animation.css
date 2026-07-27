@@ -5,4 +5,6 @@
     --transition-fast: 0.15s ease;
     --transition-base: 0.2s ease;
     --transition-slow: 0.3s ease;
+    --duration-pulse: 2s;
+    --duration-bounce: 2s;
 }

@@ -14,8 +14,8 @@ import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { CALL_TYPE, ICON_SIZE } from "@/lib/constants";
+import { useCallStore } from "../../store";
 import styles from "./CallRoom.module.css";
-import { useCallStore } from "./store";
 
 function CallRoomContent() {
     const { t } = useTranslation();

@@ -1,6 +1,4 @@
-/**
- * Публичный API модуля calls.
- */
-
-export { CallsPage } from "./Calls";
-export { CallsOverlay } from "./CallsOverlay";
+export { CallsList } from "./components/CallsList/CallsList";
+export { CallsOverlay } from "./components/CallsOverlay/CallsOverlay";
+export { CallsPage } from "./components/CallsPage/CallsPage";
+export { useCallStore } from "./store";

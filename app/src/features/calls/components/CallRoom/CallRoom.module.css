@@ -2,12 +2,12 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-modal);
-    background: var(--bg-overlay, rgba(0, 0, 0, 0.4));
-    backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--color-black) 60%, transparent);
+    backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: fadeIn var(--duration-normal) var(--easing-ease-out) forwards;
+    animation: fadeIn var(--transition-slow) forwards;
 }
 
 .window {
@@ -18,17 +18,17 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    animation: slideUp var(--duration-normal) var(--easing-ease-out) forwards;
+    animation: slideUp var(--transition-slow) forwards;
 }
 
 @media (min-width: 768px) {
     .window {
-        width: 90vw;
-        height: 90vh;
-        max-width: 1200px;
-        border-radius: var(--radius-xl);
+        width: var(--vw-dialog);
+        height: var(--vh-dialog);
+        max-width: var(--max-w-settings);
+        border-radius: var(--radius-2xl);
         border: 1px solid var(--border);
-        box-shadow: var(--shadow-xl);
+        box-shadow: var(--shadow-premium);
     }
 }
 
@@ -42,8 +42,8 @@
 }
 
 .title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-medium);
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
     color: var(--foreground);
 }
 
@@ -57,7 +57,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--duration-fast) ease;
+    transition: all var(--transition-base);
 }
 
 .closeBtn:hover {
@@ -77,6 +77,7 @@
     --lk-control-bar-bg: var(--surface-2);
     --lk-border-color: var(--border);
     --lk-fg: var(--foreground);
+    --lk-control-bar-hover-bg: var(--surface-1);
 
     height: 100%;
     width: 100%;
@@ -94,54 +95,10 @@
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(20px) scale(0.98);
+        transform: translateY(var(--spacing-8)) scale(0.95);
     }
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
     }
-}
-
-/* IncomingCallAlert Styles */
-.alertWindow {
-    background: var(--surface);
-    color: var(--foreground);
-    border-radius: var(--radius-xl);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-xl);
-    padding: var(--spacing-6);
-    text-align: center;
-    max-width: 400px;
-    width: 90vw;
-    animation: slideUp var(--duration-normal) var(--easing-ease-out) forwards;
-}
-
-.alertHeader {
-    margin-bottom: var(--spacing-6);
-}
-
-.alertTitle {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
-    margin-bottom: var(--spacing-2);
-}
-
-.alertSubtitle {
-    color: var(--muted);
-    font-size: var(--font-size-md);
-}
-
-.alertActions {
-    display: flex;
-    justify-content: center;
-    gap: var(--spacing-4);
-}
-
-.acceptButton {
-    background-color: var(--color-success);
-    color: var(--background);
-}
-
-.acceptButton:hover {
-    background-color: var(--color-success-hover);
 }
