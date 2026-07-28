@@ -8,7 +8,7 @@
     background: color-mix(in oklch, var(--color-success) 15%, transparent);
     color: var(--color-success);
     border: 1px solid color-mix(in oklch, var(--color-success) 30%, transparent);
-    padding: var(--space-1) var(--space-3 0.5);
+    padding: var(--space-1) var(--space-3);
 }
 
 .secondLineBadge {
@@ -21,7 +21,7 @@
     background: color-mix(in oklch, var(--color-warning) 16%, transparent);
     color: var(--color-warning);
     border: 1px solid color-mix(in oklch, var(--color-warning) 35%, transparent);
-    padding: var(--space-1) var(--space-3 0.5);
+    padding: var(--space-1) var(--space-3);
 }
 
 .pulseDotWarning {
