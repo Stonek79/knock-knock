@@ -4,7 +4,7 @@
     gap: var(--space-2);
     font-weight: var(--font-weight-medium);
     font-size: var(--text-xs);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     background: color-mix(in oklch, var(--color-success) 15%, transparent);
     color: var(--color-success);
     border: 1px solid color-mix(in oklch, var(--color-success) 30%, transparent);
@@ -17,7 +17,7 @@
     gap: var(--space-2);
     font-weight: var(--font-weight-medium);
     font-size: var(--text-xs);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     background: color-mix(in oklch, var(--color-warning) 16%, transparent);
     color: var(--color-warning);
     border: 1px solid color-mix(in oklch, var(--color-warning) 35%, transparent);

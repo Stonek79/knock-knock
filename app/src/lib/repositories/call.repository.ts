@@ -9,27 +9,36 @@ import type {
 
 export const callRepository = {
     /**
-     * Запрашивает токен для участия в конференции
+     * Запрашивает токен для участия в конференции.
      * @param roomId - Идентификатор комнаты
      * @param callType - Тип звонка (аудио/видео)
+     * @param isJoin - Флаг присоединения/принятия звонка (не создает новый лог)
+     * @param callLogId - Идентификатор существующего лога вызова
      * @returns Токен для LiveKit и ID записи лога звонка
      */
     async getToken(
         roomId: string,
         callType: CallLogsTypeOptions,
+        isJoin?: boolean,
+        callLogId?: string,
     ): Promise<{ token: string; callLogId?: string }> {
         return pb.send<{ token: string; callLogId?: string }>(
             API_ROUTES.CALLS_TOKEN,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ room_id: roomId, call_type: callType }),
+                body: JSON.stringify({
+                    room_id: roomId,
+                    call_type: callType,
+                    is_join: isJoin,
+                    call_log_id: callLogId,
+                }),
             },
         );
     },
 
     /**
-     * Обновляет статус записи звонка в базе данных.
+     * Безопасно обновляет статус записи звонка через серверный хук PocketBase.
      * @param callLogId - Идентификатор записи в call_logs
      * @param status - Новый статус звонка
      */
@@ -37,9 +46,11 @@ export const callRepository = {
         callLogId: string,
         status: CallLogsStatusOptions,
     ): Promise<CallLogsResponse> {
-        return pb
-            .collection(DB_TABLES.CALL_LOGS)
-            .update<CallLogsResponse>(callLogId, { status });
+        return pb.send<CallLogsResponse>("/api/calls/status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ call_log_id: callLogId, status }),
+        });
     },
 
     /**
@@ -60,8 +71,8 @@ export const callRepository = {
      * @param callback - Функция-обработчик входящей записи лога звонка
      * @returns Функция отписки
      */
-    subscribeToCalls: (callback: (record: CallLogsResponse) => void) => {
-        const unsubscribePromise = pb
+    subscribeToCalls(callback: (record: CallLogsResponse) => void): () => void {
+        const promise = pb
             .collection(DB_TABLES.CALL_LOGS)
             .subscribe<CallLogsResponse>("*", (e) => {
                 if (
@@ -73,7 +84,11 @@ export const callRepository = {
             });
 
         return () => {
-            unsubscribePromise.then((unsub) => unsub()).catch(() => {});
+            promise
+                .then((unsub) => {
+                    unsub();
+                })
+                .catch(() => {});
         };
     },
 };

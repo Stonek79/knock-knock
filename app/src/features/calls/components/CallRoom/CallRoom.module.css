@@ -191,7 +191,7 @@
     gap: var(--space-2);
     padding: var(--space-2) var(--space-4);
     font-size: var(--text-sm);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
 }
 
 /* Telegram Floating Action Dock */
@@ -217,7 +217,7 @@
     align-items: center;
     gap: var(--space-3);
     padding: var(--space-3) var(--space-8);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-xl);
     font-weight: var(--font-weight-semibold);
     font-size: var(--text-base);
     background: var(--color-error);

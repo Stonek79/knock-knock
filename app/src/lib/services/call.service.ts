@@ -15,13 +15,17 @@ export const callService = {
      * Получает токен для комнаты.
      * @param roomId - Идентификатор комнаты
      * @param callType - Тип звонка (аудио/видео)
+     * @param isJoin - Флаг присоединения к звонку
+     * @param callLogId - ID существующего лога звонка
      * @returns Токен для подключения к LiveKit и ID записи звонка
      */
     async getToken(
         roomId: string,
         callType: CallLogsTypeOptions,
+        isJoin?: boolean,
+        callLogId?: string,
     ): Promise<{ token: string; callLogId?: string }> {
-        return callRepository.getToken(roomId, callType);
+        return callRepository.getToken(roomId, callType, isJoin, callLogId);
     },
 
     /**

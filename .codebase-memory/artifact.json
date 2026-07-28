@@ -1,11 +1,11 @@
 {
     "schema_version": 1,
-    "commit": "ab7f076926a675f130a0e8b51e45aa50edb93c10",
-    "indexed_at": "2026-07-28T17:04:00Z",
+    "commit": "c28d0d1423719591239ad9af40278bd0d663081d",
+    "indexed_at": "2026-07-28T17:26:09Z",
     "project": "Users-alexstone-WebstormProjects-knock-knock",
     "nodes": 4179,
-    "edges": 7315,
+    "edges": 7297,
     "original_size": 11468800,
-    "compressed_size": 1842036,
+    "compressed_size": 1841619,
     "compression_level": 3
 }

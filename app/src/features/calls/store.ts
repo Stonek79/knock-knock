@@ -187,6 +187,8 @@ export const useCallStore = create<CallState>((set, get) => ({
             const res = await callService.getToken(
                 incomingRoomId,
                 callType || CALL_TYPE.VIDEO,
+                true,
+                incomingCallLogId || undefined,
             );
 
             if (res.token) {

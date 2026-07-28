@@ -3,7 +3,7 @@
  * @description КНОК-КНОК: Эндпоинты для звонков (LiveKit)
  *
  * Файл содержит логику создания и управления токенами для WebRTC звонков,
- * проверки прав участников и уведомления других пользователей о звонке.
+ * проверки прав участников, обновления статусов и уведомления других пользователей.
  */
 
 routerAdd("POST", "/api/calls/token", (e) => {
@@ -12,6 +12,8 @@ routerAdd("POST", "/api/calls/token", (e) => {
 	const body = info.body || {};
 	const room_id = body.room_id;
 	const call_type = body.call_type || DB.VALUES.CALL_TYPE_VIDEO;
+	const is_join = body.is_join === true || body.is_accept === true;
+	const existing_call_log_id = body.call_log_id;
 
 	if (!room_id) {
 		return e.json(400, {
@@ -58,7 +60,6 @@ routerAdd("POST", "/api/calls/token", (e) => {
 	}
 
 	// 2. Анонимизированный идентификатор участника (Zero-Knowledge)
-	// Не передаем открытый userId в LiveKit token
 	const anonIdentity = `anon_${$security.md5(`${userId}_${room_id}`)}`;
 
 	// 3. Запрашиваем токен у push-шлюза
@@ -104,7 +105,31 @@ routerAdd("POST", "/api/calls/token", (e) => {
 		});
 	}
 
-	// 4. Логи звонков без раскрытия участников в открытых полях (ZK metadata)
+	//Если пользователь присоединяется/отвечает на звонок — не создаем новый лог и не слаем пуши
+	if (is_join) {
+		if (existing_call_log_id) {
+			try {
+				const callRecord = $app.findRecordById(
+					DB.TABLES.CALL_LOGS,
+					existing_call_log_id,
+				);
+				if (callRecord) {
+					callRecord.set("status", DB.VALUES.CALL_STATUS_ONGOING);
+					$app.save(callRecord);
+					console.log(
+						`📞 [CALLS_DEBUG] Звонок ${existing_call_log_id} переведен в статус ongoing`,
+					);
+				}
+			} catch (err) {
+				console.error(
+					`❌ [CALLS_ERROR] Ошибка обновления статуса лога ${existing_call_log_id}: ${err.message || err}`,
+				);
+			}
+		}
+		return e.json(200, { token: token, callLogId: existing_call_log_id });
+	}
+
+	// 4. Логи инициации звонка (только при создании нового звонка)
 	let callLogId = null;
 	try {
 		const callsCollection = $app.findCollectionByNameOrId(DB.TABLES.CALL_LOGS);
@@ -120,7 +145,7 @@ routerAdd("POST", "/api/calls/token", (e) => {
 		});
 		$app.save(callRecord);
 		callLogId = callRecord.id;
-		console.log(`📞 [CALLS_DEBUG] Создан лог звонка: ${callLogId}`);
+		console.log(`📞 [CALLS_DEBUG] Создан новый лог звонка: ${callLogId}`);
 	} catch (err) {
 		console.error(
 			`❌ [CALLS_ERROR] Не удалось создать запись call_logs: ${err.message || err}`,
@@ -196,4 +221,50 @@ routerAdd("POST", "/api/calls/token", (e) => {
 	}
 
 	return e.json(200, { token: token, callLogId: callLogId });
+});
+
+/**
+ * Серверный эндпоинт безопасного обновления статуса вызова от имени суперпользователя
+ */
+routerAdd("POST", "/api/calls/status", (e) => {
+	const DB = require(`${__hooks}/db.js`);
+	const info = e.requestInfo();
+	const body = info.body || {};
+	const call_log_id = body.call_log_id;
+	const status = body.status;
+
+	if (!call_log_id || !status) {
+		return e.json(400, {
+			code: "INVALID_REQUEST",
+			error: "call_log_id и status обязательны",
+		});
+	}
+
+	const authRecord = e.auth;
+	if (!authRecord) {
+		return e.json(401, { code: "UNAUTHORIZED", error: "Не авторизован" });
+	}
+
+	try {
+		const callRecord = $app.findRecordById(DB.TABLES.CALL_LOGS, call_log_id);
+		if (!callRecord) {
+			return e.json(404, { code: "NOT_FOUND", error: "Лог звонка не найден" });
+		}
+
+		callRecord.set("status", status);
+		$app.save(callRecord);
+		console.log(
+			`📞 [CALLS_DEBUG] Статус звонка ${call_log_id} успешно обновлен на ${status}`,
+		);
+
+		return e.json(200, { success: true, id: call_log_id, status: status });
+	} catch (err) {
+		console.error(
+			`❌ [CALLS_ERROR] Ошибка обновления статуса звонка: ${err.message || err}`,
+		);
+		return e.json(500, {
+			code: "INTERNAL_ERROR",
+			error: `Не удалось обновить статус: ${err.message || err}`,
+		});
+	}
 });
