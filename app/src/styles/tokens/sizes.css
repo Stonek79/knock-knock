@@ -76,7 +76,12 @@
     --vh-dialog: 85vh;
     --min-w-dropdown: 180px;
 
-    /* Call Specific Sizes */
-    --max-w-call-alert: 400px;
+    /* Call Specific System Tokens (Scalable) */
+    --max-w-call-alert: 420px;
     --min-w-call-action: 120px;
+    --size-call-btn-main: calc(60px * var(--scale-factor));
+    --size-call-btn-secondary: calc(48px * var(--scale-factor));
+    --size-call-avatar-radar: calc(140px * var(--scale-factor));
+    --size-call-pip-w: calc(120px * var(--scale-factor));
+    --size-call-pip-h: calc(160px * var(--scale-factor));
 }

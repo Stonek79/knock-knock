@@ -1,0 +1,92 @@
+/* Аватар вызова с пульсацией радара */
+.avatarWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-call-avatar-radar, 96px);
+    height: var(--size-call-avatar-radar, 96px);
+    margin-top: var(--space-1);
+    margin-bottom: var(--space-1);
+}
+
+.avatarGradientRing {
+    position: relative;
+    z-index: var(--z-raised);
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-full);
+    padding: var(--space-1);
+    background: linear-gradient(
+        135deg,
+        var(--color-success) 0%,
+        color-mix(in oklch, var(--color-success) 50%, var(--color-primary)) 100%
+    );
+    box-shadow:
+        0 0 var(--space-6)
+        color-mix(in oklch, var(--color-success) 45%, transparent),
+        0 var(--space-2) var(--space-6)
+        color-mix(in oklch, var(--color-black) 60%, transparent);
+}
+
+.avatarInner {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: radial-gradient(
+        circle,
+        color-mix(in oklch, var(--color-success) 20%, transparent) 0%,
+        var(--surface-2) 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-success);
+}
+
+.avatarIcon {
+    width: var(--space-8);
+    height: var(--space-8);
+    color: var(--color-success);
+}
+
+/* 3D Объемные анимированные волны радара */
+.radarWave1,
+.radarWave2,
+.radarWave3 {
+    position: absolute;
+    inset: calc(-1 * var(--space-3));
+    border-radius: var(--radius-full);
+    background: radial-gradient(
+        circle,
+        color-mix(in oklch, var(--color-success) 20%, transparent) 0%,
+        transparent 70%
+    );
+    border: 1px solid color-mix(in oklch, var(--color-success) 40%, transparent);
+    box-shadow: 0 0 var(--space-5)
+        color-mix(in oklch, var(--color-success) 30%, transparent);
+    opacity: 0;
+    animation: tgRadarWave 2.4s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+}
+
+.radarWave2 {
+    animation-delay: 0.8s;
+}
+
+.radarWave3 {
+    animation-delay: 1.6s;
+}
+
+@keyframes tgRadarWave {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.9;
+    }
+    50% {
+        opacity: 0.45;
+    }
+    100% {
+        transform: scale(1.7);
+        opacity: 0;
+    }
+}

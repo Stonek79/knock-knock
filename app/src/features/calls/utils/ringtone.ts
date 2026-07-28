@@ -1,13 +1,10 @@
+import { AUDIO_CONTEXT_STATE } from "@/lib/constants";
+import { useCallStore } from "../store";
+
 /**
  * Утилита для воспроизведения рингтона входящего вызова через нативный Web Audio API.
  * Работает во всех современных браузерах без зависимости от внешних аудиофайлов.
  */
-
-const AUDIO_CONTEXT_STATE = {
-    RUNNING: "running",
-    SUSPENDED: "suspended",
-    CLOSED: "closed",
-} as const;
 
 let audioCtx: AudioContext | null = null;
 let ringtoneInterval: number | null = null;
@@ -38,6 +35,11 @@ export function startRingtone(): void {
         }
 
         const playToneBurst = () => {
+            const { isMutedRingtone } = useCallStore.getState();
+            if (isMutedRingtone) {
+                return;
+            }
+
             if (!audioCtx || audioCtx.state !== AUDIO_CONTEXT_STATE.RUNNING) {
                 return;
             }

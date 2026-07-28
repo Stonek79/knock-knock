@@ -1,35 +1,48 @@
+/* =====================================================
+ * CallRoom CSS Module (Knock-Knock Tokenized)
+ * Mobile-First Adaptive Screen & Centered Desktop Window
+ * ===================================================== */
+
 .overlay {
     position: fixed;
     inset: 0;
-    z-index: var(--z-modal);
-    background: color-mix(in srgb, var(--color-black) 80%, transparent);
-    backdrop-filter: var(--glass-blur, blur(16px));
-    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
+    z-index: var(--z-modal, 1000);
+    background: color-mix(in oklch, var(--color-black) 80%, transparent);
+    backdrop-filter: var(--blur-lg);
+    -webkit-backdrop-filter: var(--blur-lg);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
-    animation: fadeIn var(--transition-slow) forwards;
+    animation: fadeIn var(--transition-fast, 0.2s ease-out) forwards;
+}
+
+@media (min-width: 769px) {
+    .overlay {
+        align-items: center;
+    }
 }
 
 .window {
     width: 100%;
     height: 100%;
-    background: var(--glass-bg, var(--surface));
+    background: var(--surface-1);
     color: var(--foreground);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    animation: slideUp var(--transition-slow) forwards;
+    animation: slideUp var(--transition-fast, 0.25s ease-out) forwards;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .window {
         width: var(--vw-dialog, 90vw);
         height: var(--vh-dialog, 85vh);
         max-width: var(--max-w-settings, 680px);
         border-radius: var(--radius-2xl, 24px);
-        border: 1px solid var(--glass-border, var(--border));
-        box-shadow: var(--glass-shadow, var(--shadow-premium));
+        border: 1px solid
+            color-mix(in oklch, var(--foreground) 15%, transparent);
+        box-shadow: 0 var(--space-6) var(--space-16)
+            color-mix(in oklch, var(--color-black) 70%, transparent);
     }
 }
 
@@ -37,11 +50,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-4) var(--space-6);
-    background: color-mix(in srgb, var(--surface-2) 90%, transparent);
-    backdrop-filter: blur(var(--space-2));
-    border-bottom: 1px solid var(--glass-border, var(--border));
-    z-index: var(--z-sticky);
+    padding: var(--space-3) var(--space-5);
+    background: color-mix(in oklch, var(--surface-2) 90%, transparent);
+    backdrop-filter: var(--glass-blur-sm);
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--foreground) 10%, transparent);
+    z-index: var(--z-sticky, 10);
 }
 
 .headerTitleGroup {
@@ -54,7 +68,6 @@
     font-size: var(--text-lg);
     font-weight: var(--font-weight-semibold);
     color: var(--foreground);
-    text-shadow: var(--title-glow);
     margin: 0;
 }
 
@@ -66,18 +79,20 @@
 .closeBtn {
     color: var(--muted);
     border-radius: var(--radius-full);
-    transition: all var(--transition-base);
+    transition:
+        background var(--transition-fast, 0.15s ease),
+        color var(--transition-fast, 0.15s ease);
 }
 
 .closeBtn:hover {
-    background: var(--surface-1);
+    background: var(--surface-2);
     color: var(--color-error);
 }
 
 .content {
     flex: 1;
     position: relative;
-    background: var(--bg-cosmos, var(--bg-app));
+    background: var(--surface-1);
     display: flex;
     flex-direction: column;
 }
@@ -89,16 +104,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-8) var(--space-6);
+    padding: var(--space-6) var(--space-4);
+    padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
     background: radial-gradient(
         circle at top center,
         color-mix(
-                in srgb,
-                var(--accent-primary, var(--color-accent)) 25%,
+                in oklch,
+                var(--color-primary, var(--color-success)) 20%,
                 transparent
             )
             0%,
-        var(--bg-cosmos, var(--bg-app)) 75%
+        var(--surface-1) 75%
     );
     text-align: center;
 }
@@ -107,7 +123,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-6);
+    gap: var(--space-5);
     margin: auto 0;
 }
 
@@ -116,20 +132,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 160px;
-    height: 160px;
+    width: var(--size-avatar-xxl, 112px);
+    height: var(--size-avatar-xxl, 112px);
 }
 
 .callingAvatar {
     position: relative;
     z-index: var(--z-raised);
-    box-shadow: 0 12px 40px
-        color-mix(
-            in srgb,
-            var(--accent-primary, var(--color-accent)) 50%,
-            transparent
-        );
-    border: 3px solid var(--accent-primary, var(--border));
+    box-shadow: 0 var(--space-3) var(--space-8)
+        color-mix(in oklch, var(--color-success) 40%, transparent);
+    border: 3px solid var(--color-success);
     background: var(--surface-2);
 }
 
@@ -140,7 +152,7 @@
     position: absolute;
     inset: 0;
     border-radius: var(--radius-full);
-    border: 1.5px solid var(--accent-primary, var(--color-accent));
+    border: 1.5px solid var(--color-success);
     opacity: 0;
     animation: tgOutgoingWave 2.4s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
 }
@@ -158,14 +170,12 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-2);
-    max-width: var(--max-w-prose);
 }
 
 .callingTitle {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-bold);
     color: var(--foreground);
-    text-shadow: var(--title-glow);
     margin: 0;
 }
 
@@ -191,35 +201,38 @@
     justify-content: center;
     gap: var(--space-6);
     width: 100%;
-    max-width: 400px;
-    padding: var(--space-4) var(--space-6);
-    background: var(--glass-bg, var(--surface));
-    backdrop-filter: var(--glass-blur, blur(16px));
-    border: 1px solid var(--glass-border, var(--border));
+    max-width: var(--max-w-call-alert, 400px);
+    padding: var(--space-3) var(--space-5);
+    background: color-mix(in oklch, var(--foreground) 6%, transparent);
+    backdrop-filter: var(--blur-md);
+    border: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
     border-radius: var(--radius-2xl, 24px);
-    box-shadow: var(--shadow-premium);
-    margin-bottom: var(--space-4);
+    box-shadow: 0 var(--space-4) var(--space-10)
+        color-mix(in oklch, var(--color-black) 50%, transparent);
+    margin-bottom: var(--space-2);
 }
 
 .endCallButton {
     display: inline-flex;
     align-items: center;
     gap: var(--space-3);
-    padding: var(--space-4) var(--space-8);
+    padding: var(--space-3) var(--space-8);
     border-radius: var(--radius-full);
     font-weight: var(--font-weight-semibold);
     font-size: var(--text-base);
-    box-shadow: 0 4px 20px
-        color-mix(in srgb, var(--color-error) 50%, transparent);
+    background: var(--color-error);
+    color: var(--color-white);
+    box-shadow: 0 var(--space-2) var(--space-6)
+        color-mix(in oklch, var(--color-error) 50%, transparent);
     transition:
-        transform var(--transition-fast),
-        box-shadow var(--transition-fast);
+        transform var(--transition-fast, 0.15s ease),
+        box-shadow var(--transition-fast, 0.15s ease);
 }
 
 .endCallButton:hover {
     transform: scale(1.05);
-    box-shadow: 0 6px 28px
-        color-mix(in srgb, var(--color-error) 70%, transparent);
+    box-shadow: 0 var(--space-3) var(--space-8)
+        color-mix(in oklch, var(--color-error) 70%, transparent);
 }
 
 /* РЕЖИМ КОНФЕРЕНЦИИ */
@@ -232,8 +245,8 @@
 
 .liveKitContainer {
     --lk-bg: transparent;
-    --lk-control-bar-bg: color-mix(in srgb, var(--surface-2) 90%, transparent);
-    --lk-border-color: var(--glass-border, var(--border));
+    --lk-control-bar-bg: color-mix(in oklch, var(--surface-2) 90%, transparent);
+    --lk-border-color: color-mix(in oklch, var(--foreground) 12%, transparent);
     --lk-fg: var(--foreground);
     --lk-control-bar-hover-bg: var(--surface-1);
 

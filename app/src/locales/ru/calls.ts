@@ -3,6 +3,7 @@
  */
 export const calls = {
     title: "Звонки",
+    empty: "История звонков пуста",
     emptyDescription:
         "Здесь будет отображаться история ваших голосовых и видеозвонков.",
     startCall: "Начать звонок",
@@ -10,6 +11,14 @@ export const calls = {
     incoming_subtitle: "Вам звонят...",
     accept: "Принять",
     reject: "Отклонить",
+    mute: "Без звука",
+    unmute: "Включить звук",
+    privateRoom: "Приватная комната",
+    video: "Видео",
+    audio: "Аудио",
+    status_missed: "Пропущенный",
+    e2ee: "End-to-End шифрование",
+    secondLine: "Вторая линия",
     room_title: "Видеоконференция",
     end_call: "Завершить звонок",
     error: "Ошибка звонка",

@@ -4,6 +4,7 @@ import type {
     CallLogsResponse,
     CallLogsStatusOptions,
     CallLogsTypeOptions,
+    RoomsResponse,
 } from "../types";
 
 export const callRepository = {
@@ -11,17 +12,20 @@ export const callRepository = {
      * Запрашивает токен для участия в конференции
      * @param roomId - Идентификатор комнаты
      * @param callType - Тип звонка (аудио/видео)
-     * @returns Токен для LiveKit
+     * @returns Токен для LiveKit и ID записи лога звонка
      */
     async getToken(
         roomId: string,
         callType: CallLogsTypeOptions,
-    ): Promise<{ token: string }> {
-        return await pb.send<{ token: string }>(API_ROUTES.CALLS_TOKEN, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ room_id: roomId, call_type: callType }),
-        });
+    ): Promise<{ token: string; callLogId?: string }> {
+        return pb.send<{ token: string; callLogId?: string }>(
+            API_ROUTES.CALLS_TOKEN,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ room_id: roomId, call_type: callType }),
+            },
+        );
     },
 
     /**
@@ -33,9 +37,22 @@ export const callRepository = {
         callLogId: string,
         status: CallLogsStatusOptions,
     ): Promise<CallLogsResponse> {
-        return await pb
+        return pb
             .collection(DB_TABLES.CALL_LOGS)
             .update<CallLogsResponse>(callLogId, { status });
+    },
+
+    /**
+     * Получает список всех логов звонков (историю звонков)
+     * @returns Массив записей из коллекции call_logs с раскрытием связей room и initiator
+     */
+    async getCallLogs(): Promise<CallLogsResponse<{ room?: RoomsResponse }>[]> {
+        return pb
+            .collection(DB_TABLES.CALL_LOGS)
+            .getFullList<CallLogsResponse<{ room?: RoomsResponse }>>({
+                sort: "-created",
+                expand: "room,initiator",
+            });
     },
 
     /**

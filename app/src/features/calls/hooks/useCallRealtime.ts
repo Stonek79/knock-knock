@@ -35,13 +35,13 @@ export function useCallRealtime() {
                 record.status === CALL_STATUS.REJECTED ||
                 record.status === CALL_STATUS.MISSED
             ) {
-                // Если у нас открыт оверлей входящего звонка для этой комнаты/записи — закрываем его
+                // Если у нас открыт оверлей входящего звонка для этой комнаты/записи — сбрасываем локальный UI
                 if (
                     store.isIncoming &&
                     (store.incomingCallLogId === record.id ||
                         store.incomingRoomId === record.room)
                 ) {
-                    store.rejectCall();
+                    store.resetIncomingCallUI();
                 }
 
                 // Если у нас активен режим звонка/конференции в этой комнате — завершаем его

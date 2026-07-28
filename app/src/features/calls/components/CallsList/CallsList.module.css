@@ -1,8 +1,103 @@
-.icon {
-    color: var(--intent-primary-main);
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.listContent {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.emptyContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8) var(--space-4);
+    text-align: center;
+    gap: var(--space-3);
+}
+
+.emptyIconBox {
+    width: var(--size-icon-box-md, 48px);
+    height: var(--size-icon-box-md, 48px);
+    border-radius: var(--radius-full);
+    background: color-mix(in oklch, var(--foreground) 8%, transparent);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .emptyText {
-    font-size: var(--text-sm);
     color: var(--muted);
+}
+
+.logList {
+    width: 100%;
+}
+
+.logItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-3 0.5);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+    border: 1px solid color-mix(in oklch, var(--foreground) 6%, transparent);
+    cursor: pointer;
+    transition:
+        background var(--transition-fast, 0.15s ease),
+        border-color var(--transition-fast, 0.15s ease);
+}
+
+.logItem:hover {
+    background: var(--surface-2);
+    border-color: color-mix(
+        in oklch,
+        var(--color-primary, var(--foreground)) 20%,
+        transparent
+    );
+}
+
+.iconCol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: var(--radius-full);
+    background: color-mix(in oklch, var(--foreground) 6%, transparent);
+    flex-shrink: 0;
+}
+
+.missedIcon {
+    color: var(--color-error);
+}
+
+.outgoingIcon {
+    color: var(--color-primary, var(--color-success));
+}
+
+.incomingIcon {
+    color: var(--color-success);
+}
+
+.logTitle {
+    color: var(--foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.callActionButton {
+    opacity: 0.8;
+    border-radius: var(--radius-full);
+}
+
+.logItem:hover .callActionButton {
+    opacity: 1;
+    color: var(--color-success);
 }

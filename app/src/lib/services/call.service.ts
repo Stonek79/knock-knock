@@ -3,6 +3,7 @@ import type {
     CallLogsResponse,
     CallLogsStatusOptions,
     CallLogsTypeOptions,
+    RoomsResponse,
 } from "../types";
 
 /**
@@ -14,25 +15,33 @@ export const callService = {
      * Получает токен для комнаты.
      * @param roomId - Идентификатор комнаты
      * @param callType - Тип звонка (аудио/видео)
-     * @returns Токен для подключения к LiveKit
+     * @returns Токен для подключения к LiveKit и ID записи звонка
      */
     async getToken(
         roomId: string,
         callType: CallLogsTypeOptions,
-    ): Promise<{ token: string }> {
-        return await callRepository.getToken(roomId, callType);
+    ): Promise<{ token: string; callLogId?: string }> {
+        return callRepository.getToken(roomId, callType);
     },
 
     /**
      * Обновляет статус записи лога звонка.
      * @param callLogId - Идентификатор лога звонка
-     * @param status - Новый статус (ringing/accepted/rejected/ended/cancelled)
+     * @param status - Новый статус (ringing/ongoing/ended/missed/rejected)
      */
     async updateCallStatus(
         callLogId: string,
         status: CallLogsStatusOptions,
     ): Promise<CallLogsResponse> {
-        return await callRepository.updateCallStatus(callLogId, status);
+        return callRepository.updateCallStatus(callLogId, status);
+    },
+
+    /**
+     * Получает список всех логов звонков (историю звонков).
+     * @returns Массив записей из коллекции call_logs
+     */
+    async getCallLogs(): Promise<CallLogsResponse<{ room?: RoomsResponse }>[]> {
+        return callRepository.getCallLogs();
     },
 
     /**

@@ -12,6 +12,11 @@
     /* =========================================== */
     /* Shadows & Blurs (статичные)                 */
     /* =========================================== */
+    --blur-xs: blur(4px);
+    --blur-sm: blur(10px);
+    --blur-md: blur(16px);
+    --blur-lg: blur(24px);
+    --blur-ambient: blur(60px);
     --glass-blur: blur(12px);
     --glass-blur-sm: blur(10px);
     --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);

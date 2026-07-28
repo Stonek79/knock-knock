@@ -2,12 +2,15 @@ import { Phone, PhoneCall } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
+import { Button } from "@/components/ui/Button";
+import { Heading } from "@/components/ui/Heading";
+import { Text } from "@/components/ui/Text";
 import { ICON_SIZE } from "@/lib/constants";
 import styles from "./CallsPage.module.css";
 
 /**
- * Страница звонков.
- * Заглушка для будущей реализации истории звонков.
+ * Главная страница раздела звонков.
+ * Отображает состояние и историю голосовых и видеозвонков.
  */
 export function CallsPage() {
     const { t } = useTranslation();
@@ -26,19 +29,31 @@ export function CallsPage() {
                 <Phone size={ICON_SIZE.xl} />
             </Box>
 
-            <h2 className={styles.title}>{t("calls.title", "Звонки")}</h2>
+            <Heading as="h2" size="xl" className={styles.title}>
+                {t("calls.title", "Звонки")}
+            </Heading>
 
-            <p className={styles.description}>
+            <Text
+                as="p"
+                intent="neutral"
+                size="md"
+                className={styles.description}
+            >
                 {t(
                     "calls.emptyDescription",
                     "Здесь будет отображаться история ваших голосовых и видеозвонков.",
                 )}
-            </p>
+            </Text>
 
-            <Box className={styles.actionButton}>
+            <Button
+                intent="primary"
+                variant="solid"
+                size="md"
+                className={styles.actionButton}
+            >
                 <PhoneCall size={ICON_SIZE.sm} />
                 {t("calls.startCall", "Начать звонок")}
-            </Box>
+            </Button>
         </Flex>
     );
 }

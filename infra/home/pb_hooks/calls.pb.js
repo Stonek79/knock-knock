@@ -195,5 +195,5 @@ routerAdd("POST", "/api/calls/token", (e) => {
 		);
 	}
 
-	return e.json(200, { token: token });
+	return e.json(200, { token: token, callLogId: callLogId });
 });
