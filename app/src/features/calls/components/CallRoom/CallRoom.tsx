@@ -1,6 +1,10 @@
-import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
+import {
+    LiveKitRoom,
+    RoomAudioRenderer,
+    useLocalParticipant,
+} from "@livekit/components-react";
 import { Minimize2, Settings, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
@@ -13,6 +17,44 @@ import { CallControlBar } from "../CallControlBar/CallControlBar";
 import { CallPiP } from "../CallPiP/CallPiP";
 import { CallVideoView } from "../CallVideoView/CallVideoView";
 import styles from "./CallRoom.module.css";
+
+/**
+ * Синхронизирует Zustand состояние (isMuted, isVideoMuted)
+ * с реальным локальным участником LiveKit после подключения.
+ */
+function LiveKitSync() {
+    const { localParticipant } = useLocalParticipant();
+    const activeSession = useCallStore((state) => state.activeSession);
+
+    useEffect(() => {
+        if (!localParticipant || !activeSession) {
+            return;
+        }
+        localParticipant
+            .setMicrophoneEnabled(!activeSession.isMuted)
+            .catch(console.error);
+    }, [activeSession?.isMuted, localParticipant, activeSession]);
+
+    useEffect(() => {
+        if (!localParticipant || !activeSession) {
+            return;
+        }
+        localParticipant
+            .setCameraEnabled(!activeSession.isVideoMuted)
+            .catch(console.error);
+    }, [activeSession?.isVideoMuted, localParticipant, activeSession]);
+
+    useEffect(() => {
+        if (!localParticipant || !activeSession) {
+            return;
+        }
+        localParticipant
+            .setScreenShareEnabled(!!activeSession.isScreenSharing)
+            .catch(console.error);
+    }, [activeSession?.isScreenSharing, localParticipant, activeSession]);
+
+    return null;
+}
 
 /**
  * Кастомная комната вызова (WebRTC / LiveKit)
@@ -89,7 +131,7 @@ export function CallRoom() {
         typeof token === "string" &&
         typeof serverUrl === "string";
 
-    const hasVideo = type === CALL_TYPE.VIDEO;
+    const hasVideo = type === CALL_TYPE.VIDEO || !isVideoMuted;
 
     const overlayClass = isMobile
         ? `${styles.mobileOverlay} ${hasVideo ? styles.hasVideo : ""}`
@@ -97,7 +139,7 @@ export function CallRoom() {
 
     const modalContent = (
         <Box
-            className={`${isMobile ? styles.modalContent : styles.desktopModal} ${hasVideo ? styles.hasVideo : ""}`}
+            className={`${isMobile ? styles.mobileModal : styles.desktopModal} ${hasVideo ? styles.hasVideo : ""}`}
         >
             {/* Верхняя шапка с кнопками действий */}
             <Flex
@@ -148,6 +190,7 @@ export function CallRoom() {
                         audio={!isMuted}
                         token={token}
                         serverUrl={serverUrl}
+                        connect={true}
                         data-lk-theme="default"
                         style={{
                             height: "100%",
@@ -156,6 +199,7 @@ export function CallRoom() {
                         }}
                         onDisconnected={endCall}
                     >
+                        <LiveKitSync />
                         <CallVideoView
                             displayName={roomName}
                             statusText={statusText}

@@ -84,4 +84,6 @@
     --size-call-avatar-radar: calc(140px * var(--scale-factor));
     --size-call-pip-w: calc(120px * var(--scale-factor));
     --size-call-pip-h: calc(160px * var(--scale-factor));
+    --size-call-pip-video-max-w: calc(140px * var(--scale-factor));
+    --size-call-pip-video-w-desktop: calc(200px * var(--scale-factor));
 }

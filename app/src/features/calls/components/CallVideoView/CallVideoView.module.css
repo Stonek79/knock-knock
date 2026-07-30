@@ -3,53 +3,84 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: var(--color-black, #000000);
+    background: var(--bg-background);
 }
 
-.remoteLayer {
+/* Base layer for full screen video */
+.backgroundLayer {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     z-index: 1;
 }
 
-.remoteVideo {
+.emptyBackground {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Заполняем весь фон видео */
+    background: radial-gradient(
+        circle at center,
+        var(--bg-surface-elevated),
+        var(--bg-background)
+    );
 }
 
-/* Picture-in-Picture: плавающее окошко локального видео */
+.fullScreenVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Avatar layer with glassmorphism to stand out against background video */
+.avatarGlassLayer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Soft dark vignette so white text and avatar look good on any video */
+    background: radial-gradient(
+        circle at center,
+        transparent 0%,
+        color-mix(in oklch, var(--bg-background) 80%, transparent) 100%
+    );
+}
+
+/* Picture-in-Picture */
 .localPipLayer {
     position: absolute;
-    bottom: calc(
-        var(--space-20) +
-        env(safe-area-inset-bottom, 0px)
-    ); /* Поднимем над панелью управления */
+    /* На мобилках PiP находится в верхнем правом углу, как в Telegram */
+    top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
     right: var(--space-4);
-    width: var(--size-28);
-    height: var(--size-40);
+    width: 28vw;
+    max-width: var(--size-call-pip-video-max-w);
+    aspect-ratio: 3 / 4;
     border-radius: var(--radius-xl);
     overflow: hidden;
-    z-index: 5;
-    box-shadow: var(--shadow-2xl);
-    border: var(--border-width-1) solid
-        color-mix(in oklch, var(--color-white) 20%, transparent);
-    background: var(--color-black, #000000);
-    transition: transform var(--transition-medium, 0.3s ease);
+    z-index: 10;
+    box-shadow:
+        var(--shadow-2xl),
+        0 0 0 var(--border-width-1)
+        color-mix(in oklch, var(--foreground) 20%, transparent);
+    background: var(--bg-surface-elevated);
+    transition:
+        transform var(--transition-medium, 0.3s ease),
+        width 0.3s ease,
+        height 0.3s ease;
+    animation: floatPip 6s ease-in-out infinite;
 }
 
-/* На десктопе окно PiP можно сделать побольше */
 @media (min-width: 769px) {
     .localPipLayer {
-        width: var(--size-48);
-        height: var(--size-64);
+        /* На десктопе PiP находится в нижнем правом углу */
+        top: auto;
         bottom: var(--space-24);
         right: var(--space-6);
+        width: var(--size-call-pip-video-w-desktop);
+        max-width: none;
+        aspect-ratio: 16 / 9;
     }
 }
 
@@ -57,4 +88,15 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+}
+
+@keyframes floatPip {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
 }

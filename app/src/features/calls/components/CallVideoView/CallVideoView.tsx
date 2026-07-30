@@ -1,25 +1,24 @@
-import { useTracks, VideoTrack } from "@livekit/components-react";
+import {
+    useLocalParticipant,
+    useTracks,
+    VideoTrack,
+} from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { Box } from "@/components/layout/Box";
 import { CallAvatarView } from "../CallAvatarView/CallAvatarView";
 import styles from "./CallVideoView.module.css";
 
-/**
- * Свойства компонента CallVideoView
- */
 interface CallVideoViewProps {
-    /** Имя или номер собеседника для отображения на аватаре, если камера выключена */
     displayName: string;
-    /** Текущий статус звонка для отображения под аватаром */
     statusText: string;
-    /** Флаг подключения для анимации аватара */
     isConnecting?: boolean;
 }
 
 /**
  * Компонент для отображения видео-звонка.
- * Рендерит удаленного собеседника на весь экран (или его аватар, если камера отключена),
- * а локальное видео пользователя отображает в плавающем окне (Picture-in-Picture).
+ * Рендерит удаленного собеседника на весь экран. Если удаленного видео нет,
+ * на весь экран отображается локальное видео пользователя.
+ * Если оба видео включены, локальное видео отображается в плавающем окне (PiP).
  */
 export function CallVideoView({
     displayName,
@@ -28,36 +27,40 @@ export function CallVideoView({
 }: CallVideoViewProps) {
     // Получаем все треки камер (и локальные, и удаленные)
     const cameraTracks = useTracks([Track.Source.Camera]);
+    const remoteTrackRef = cameraTracks.find((t) => !t.participant.isLocal);
+    const localTrackRef = cameraTracks.find((t) => t.participant.isLocal);
 
-    const remoteTrack = cameraTracks.find((t) => !t.participant.isLocal);
-    const localTrack = cameraTracks.find((t) => t.participant.isLocal);
+    // Получаем статус включения камеры от локального участника
+    const { isCameraEnabled } = useLocalParticipant();
 
-    // Считаем, что собеседник подключен, но выключил видео, если трека нет
-    const isRemoteVideoOff = !remoteTrack;
+    const isRemoteVideoOff = !remoteTrackRef;
+    const isLocalVideoOff = !isCameraEnabled || !localTrackRef;
 
     return (
         <Box className={styles.videoContainer}>
-            {/* Задний фон: удаленный собеседник (или аватар) */}
-            <Box className={styles.remoteLayer}>
+            {/* Background Layer: Remote video or Avatar */}
+            <Box className={styles.backgroundLayer}>
                 {!isRemoteVideoOff ? (
                     <VideoTrack
-                        trackRef={remoteTrack}
-                        className={styles.remoteVideo}
+                        trackRef={remoteTrackRef}
+                        className={styles.fullScreenVideo}
                     />
                 ) : (
-                    <CallAvatarView
-                        displayName={displayName}
-                        statusText={statusText}
-                        isConnecting={isConnecting}
-                    />
+                    <Box className={styles.avatarGlassLayer}>
+                        <CallAvatarView
+                            displayName={displayName}
+                            statusText={statusText}
+                            isConnecting={isConnecting}
+                        />
+                    </Box>
                 )}
             </Box>
 
-            {/* Передний план (Picture-in-Picture): Локальное видео */}
-            {localTrack && (
+            {/* Foreground Layer (Picture-in-Picture): Local video when ON */}
+            {!isLocalVideoOff && localTrackRef && (
                 <Box className={styles.localPipLayer}>
                     <VideoTrack
-                        trackRef={localTrack}
+                        trackRef={localTrackRef}
                         className={styles.localVideo}
                     />
                 </Box>
