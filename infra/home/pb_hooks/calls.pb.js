@@ -167,7 +167,7 @@ routerAdd("POST", "/api/calls/token", (e) => {
 
 		if (otherUserIds.length > 0) {
 			const subsFilter = otherUserIds
-				.map((id) => `user = '${id}'`)
+				.map((id) => `${DB.FIELDS.USER_ID} = '${id}'`)
 				.join(" || ");
 			const subscriptions = $app.findRecordsByFilter(
 				DB.TABLES.PUSH_SUBS,

@@ -10,7 +10,7 @@ import { useGroupPresence } from "@/features/presence/hooks/useGroupPresence";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { CALL_TYPE, ROOM_TYPE } from "@/lib/constants";
 import { useCallStore } from "../../../../../../calls/store";
-import { parseCallError } from "../../../../../../calls/utils";
+import { parseCallError } from "../../../../../../calls/utils/utils";
 import { useChatPeer } from "../../../../hooks/useChatPeer";
 import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";

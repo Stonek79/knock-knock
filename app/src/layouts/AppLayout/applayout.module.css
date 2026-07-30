@@ -1,4 +1,5 @@
 .container {
+    position: relative;
     display: flex;
     height: 100dvh;
     width: 100%;
@@ -52,6 +53,7 @@
     z-index: var(--z-sticky);
     width: 100%;
     height: var(--footer-height);
+    padding: 0 var(--space-2) 0px var(--space-2);
 }
 
 /* Обёртка навигации для десктопа */
@@ -127,7 +129,13 @@
     min-height: var(--header-height);
     position: sticky;
     top: 0;
-    background: var(--glass-bg);
+    background: var(--color-background);
+    margin-top: var(--space-5);
+    border-radius: var(--radius-lg);
+    max-width: 95%;
+    width: 100%;
+    align-self: anchor-center;
+    opacity: var(--opacity-muted);
 }
 
 /* Контент мобильный (занимает всё пространство между header и nav) */
@@ -145,6 +153,11 @@
 @media (max-width: 767px) {
     .navigationWrapper {
         border-top: var(--border-width-base) solid var(--glass-border);
+        border-radius: var(--radius-lg);
+        max-width: 95%;
+        align-self: anchor-center;
+        background: var(--header-bg);
+        margin-bottom: var(--space-5);
     }
 }
 

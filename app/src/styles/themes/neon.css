@@ -100,6 +100,24 @@
         --intent-info-main: var(--color-info);
         --intent-info-text: #000000;
         --intent-info-alpha: rgba(0, 180, 255, 0.15);
+
+        /* Call Tokens */
+        --call-room-bg: linear-gradient(
+            135deg,
+            #010409 0%,
+            #091728 50%,
+            #150a28 100%
+        );
+        --call-overlay-bg: color-mix(
+            in oklch,
+            var(--color-black) 80%,
+            transparent
+        );
+        --call-card-bg: linear-gradient(
+            180deg,
+            var(--surface) 0%,
+            var(--surface-1) 100%
+        );
     }
 
     /* LIGHT MODE: Arctic Glass с неоновыми акцентами */
@@ -184,5 +202,14 @@
         --intent-info-main: var(--color-info);
         --intent-info-text: #ffffff;
         --intent-info-alpha: rgba(2, 132, 199, 0.15);
+
+        /* Call Tokens */
+        --call-room-bg: linear-gradient(135deg, #071926 0%, #0d273a 100%);
+        --call-overlay-bg: color-mix(
+            in oklch,
+            var(--color-black) 68%,
+            transparent
+        );
+        --call-card-bg: var(--surface);
     }
 }

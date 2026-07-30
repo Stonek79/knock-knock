@@ -13,8 +13,18 @@ interface CallIncomingData {
     callType: CallLogsTypeOptions;
 }
 
-interface ServiceWorkerMessageEvent extends MessageEvent {
-    data: CallIncomingData;
+function isCallIncomingData(data: unknown): data is CallIncomingData {
+    if (typeof data !== "object" || data === null) {
+        return false;
+    }
+    return (
+        "type" in data &&
+        data.type === PUSH_MESSAGE_TYPE.CALL_INCOMING &&
+        "roomId" in data &&
+        typeof data.roomId === "string" &&
+        "callLogId" in data &&
+        typeof data.callLogId === "string"
+    );
 }
 
 /**
@@ -28,8 +38,8 @@ export function CallsOverlay() {
 
     useEffect(() => {
         if ("serviceWorker" in navigator) {
-            const handleMessage = (event: ServiceWorkerMessageEvent) => {
-                if (event.data?.type === PUSH_MESSAGE_TYPE.CALL_INCOMING) {
+            const handleMessage = (event: MessageEvent) => {
+                if (isCallIncomingData(event.data)) {
                     useCallStore
                         .getState()
                         .setIncomingCall(
@@ -40,14 +50,11 @@ export function CallsOverlay() {
                 }
             };
 
-            navigator.serviceWorker.addEventListener(
-                "message",
-                handleMessage as EventListener,
-            );
+            navigator.serviceWorker.addEventListener("message", handleMessage);
             return () => {
                 navigator.serviceWorker.removeEventListener(
                     "message",
-                    handleMessage as EventListener,
+                    handleMessage,
                 );
             };
         }

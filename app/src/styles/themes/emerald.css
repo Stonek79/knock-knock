@@ -97,6 +97,24 @@
         --intent-info-main: var(--color-info);
         --intent-info-text: #091c15;
         --intent-info-alpha: rgba(56, 189, 248, 0.15);
+
+        /* Call Tokens */
+        --call-room-bg: linear-gradient(
+            135deg,
+            #091c15 0%,
+            #0d3d2c 50%,
+            #174230 100%
+        );
+        --call-overlay-bg: color-mix(
+            in oklch,
+            var(--color-black) 78%,
+            transparent
+        );
+        --call-card-bg: linear-gradient(
+            180deg,
+            var(--surface) 0%,
+            var(--surface-1) 100%
+        );
     }
 
     /* LIGHT MODE: Mint Sage с золотыми бордерами */
@@ -184,5 +202,14 @@
         --intent-info-main: var(--color-info);
         --intent-info-text: #ffffff;
         --intent-info-alpha: rgba(2, 132, 199, 0.15);
+
+        /* Call Tokens */
+        --call-room-bg: linear-gradient(135deg, #0d3829 0%, #154c37 100%);
+        --call-overlay-bg: color-mix(
+            in oklch,
+            var(--color-black) 65%,
+            transparent
+        );
+        --call-card-bg: var(--surface);
     }
 }

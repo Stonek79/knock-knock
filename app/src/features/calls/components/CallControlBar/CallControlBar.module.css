@@ -1,0 +1,65 @@
+.controlBar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    gap: var(--space-4);
+    padding: var(--space-6) var(--space-4);
+    width: 100%;
+}
+
+.actionItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.actionButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-14);
+    height: var(--size-14);
+    aspect-ratio: 1;
+    border-radius: var(--radius-full);
+    border: none;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    color: var(--foreground);
+    cursor: pointer;
+    transition: all var(--duration-fast, 0.2s) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.actionButton:hover {
+    background: var(--glass-hover-bg);
+    transform: scale(1.05);
+}
+
+.actionButton:active {
+    transform: scale(0.95);
+}
+
+.actionButton.active {
+    background: var(--accent-primary);
+    color: var(--intent-primary-text);
+}
+
+.actionButton.muted {
+    background: color-mix(in oklch, var(--foreground) 18%, transparent);
+    color: var(--muted);
+}
+
+.actionButton.endCall {
+    background: var(--color-error);
+    color: var(--intent-error-text);
+}
+
+.actionButton.endCall:hover {
+    background: var(--intent-error-main);
+}
+
+.actionLabel {
+    color: var(--foreground);
+    text-align: center;
+    white-space: nowrap;
+}

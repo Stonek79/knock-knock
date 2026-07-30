@@ -7,7 +7,6 @@
     border-bottom: var(--border-width-base) solid var(--glass-border);
     background: var(--header-bg);
     backdrop-filter: var(--glass-blur);
-    flex-shrink: 0;
 }
 
 .title {
@@ -21,4 +20,17 @@
     display: flex;
     align-items: center;
     gap: var(--space-1);
+}
+
+@media (max-width: 767px) {
+    .header {
+        background: var(--header-bg);
+        margin-top: var(--space-5);
+        border-radius: var(--radius-lg);
+        max-width: 95%;
+        width: 100%;
+        justify-self: anchor-center;
+        opacity: var(--opacity-muted);
+        border: var(--border-width-base) solid var(--glass-border);
+    }
 }

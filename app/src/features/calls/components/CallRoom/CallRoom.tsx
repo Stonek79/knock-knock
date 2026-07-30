@@ -1,209 +1,195 @@
-import {
-    LiveKitRoom,
-    RoomAudioRenderer,
-    useConnectionState,
-    useRemoteParticipants,
-    VideoConference,
-} from "@livekit/components-react";
-import { ConnectionState } from "livekit-client";
-import { PhoneOff, Video, Volume2, X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
+import { Minimize2, Settings, UserPlus } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
-import { Container } from "@/components/layout/Container";
-import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Heading } from "@/components/ui/Heading";
-import { Text } from "@/components/ui/Text";
-import { useToast } from "@/components/ui/Toast";
+import { Flex } from "@/components/layout/Flex";
+import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { CALL_TYPE, ICON_SIZE } from "@/lib/constants";
+import { ACTIVE_CALL_STATUS } from "@/lib/constants/calls";
 import { useCallStore } from "../../store";
+import { CallAvatarView } from "../CallAvatarView/CallAvatarView";
+import { CallControlBar } from "../CallControlBar/CallControlBar";
+import { CallPiP } from "../CallPiP/CallPiP";
+import { CallVideoView } from "../CallVideoView/CallVideoView";
 import styles from "./CallRoom.module.css";
 
-function CallRoomContent() {
-    const { t } = useTranslation();
-    const toast = useToast();
-    const { endCall, callType } = useCallStore();
-    const connectionState = useConnectionState();
-    const remoteParticipants = useRemoteParticipants();
-
-    const actionsRef = useRef({ endCall, toast, t });
-    useEffect(() => {
-        actionsRef.current = { endCall, toast, t };
-    });
-
-    useEffect(() => {
-        if (
-            connectionState === ConnectionState.Connected &&
-            remoteParticipants.length === 0
-        ) {
-            const timer = setTimeout(() => {
-                const { endCall, toast, t } = actionsRef.current;
-                toast({
-                    title: t("calls.error", "Ошибка звонка"),
-                    description: t(
-                        "calls.errors.TIMEOUT",
-                        "Абонент не отвечает или недоступен",
-                    ),
-                    variant: "error",
-                });
-                endCall();
-            }, 60000);
-
-            return () => clearTimeout(timer);
-        }
-    }, [connectionState, remoteParticipants.length]);
-
-    // Режим исходящего звонка в стиле Telegram (ожидание собеседника)
-    if (remoteParticipants.length === 0) {
-        return (
-            <Box className={styles.callingScreen}>
-                <Box className={styles.callingBody}>
-                    <Box className={styles.callingAvatarWrapper}>
-                        <Box className={styles.callingPulse1} />
-                        <Box className={styles.callingPulse2} />
-                        <Box className={styles.callingPulse3} />
-                        <Avatar
-                            size="xxl"
-                            fallback={
-                                callType === CALL_TYPE.VIDEO ? "📹" : "📞"
-                            }
-                            className={styles.callingAvatar}
-                        />
-                    </Box>
-
-                    <header className={styles.callingHeader}>
-                        <Heading
-                            as="h2"
-                            size="xl"
-                            className={styles.callingTitle}
-                        >
-                            {t("calls.calling", "Исходящий вызов")}
-                        </Heading>
-                        <Text className={styles.callingSubtitle}>
-                            {connectionState === ConnectionState.Connecting
-                                ? t(
-                                      "calls.connecting",
-                                      "Подключение к серверу...",
-                                  )
-                                : t(
-                                      "calls.waiting_answer",
-                                      "Ожидание ответа собеседника...",
-                                  )}
-                        </Text>
-                        <Badge
-                            variant="soft"
-                            intent="primary"
-                            className={styles.callTypeBadge}
-                        >
-                            {callType === CALL_TYPE.VIDEO ? (
-                                <>
-                                    <Video size={ICON_SIZE.sm} />
-                                    {t(
-                                        "calls.type_video",
-                                        "Зашифрованный видеозвонок",
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <Volume2 size={ICON_SIZE.sm} />
-                                    {t(
-                                        "calls.type_audio",
-                                        "Зашифрованный аудиозвонок",
-                                    )}
-                                </>
-                            )}
-                        </Badge>
-                    </header>
-                </Box>
-
-                <footer className={styles.callingDock}>
-                    <Button
-                        type="button"
-                        variant="solid"
-                        intent="error"
-                        size="lg"
-                        className={styles.endCallButton}
-                        onClick={endCall}
-                    >
-                        <PhoneOff size={ICON_SIZE.md} />
-                        {t("calls.cancel", "Отменить вызов")}
-                    </Button>
-                </footer>
-                <RoomAudioRenderer />
-            </Box>
-        );
-    }
-
-    // Режим активного звонка
-    return (
-        <Box className={styles.conferenceWrapper}>
-            <VideoConference />
-            <RoomAudioRenderer />
-        </Box>
-    );
-}
-
 /**
- * Компонент окна видеоконференции (LiveKit).
- * Отображает интерфейс звонка поверх приложения в стиле Telegram с поддержкой UI kit и CSS токенов.
+ * Кастомная комната вызова (WebRTC / LiveKit)
+ * Поддерживает адаптивный интерфейс (мобильный полноэкранный / десктопная модалка)
+ * и свертывание в Picture-in-Picture (PiP).
  */
 export function CallRoom() {
     const { t } = useTranslation();
-    const { isActive, token, serverUrl, callType, endCall } = useCallStore();
+    const isMobile = useMediaQuery(BREAKPOINTS.MOBILE);
 
-    if (!isActive || !token || !serverUrl) {
+    const activeSession = useCallStore((state) => state.activeSession);
+    const endCall = useCallStore((state) => state.endCall);
+    const toggleMute = useCallStore((state) => state.toggleMute);
+    const toggleVideoMuted = useCallStore((state) => state.toggleVideoMuted);
+    const toggleScreenSharing = useCallStore(
+        (state) => state.toggleScreenSharing,
+    );
+
+    const [isMinimized, setIsMinimized] = useState(false);
+
+    if (!activeSession) {
         return null;
     }
 
-    return (
-        <Container className={styles.overlay}>
-            <Box
-                className={styles.window}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-            >
-                <header className={styles.header}>
-                    <Box className={styles.headerTitleGroup}>
-                        <Heading as="h3" size="md" className={styles.title}>
-                            {callType === CALL_TYPE.VIDEO
-                                ? t("calls.video_call", "Видеозвонок")
-                                : t("calls.audio_call", "Аудиозвонок")}
-                        </Heading>
-                        <Badge
-                            intent="success"
-                            variant="soft"
-                            className={styles.statusBadge}
-                        >
-                            E2EE
-                        </Badge>
-                    </Box>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={endCall}
-                        className={styles.closeBtn}
-                        aria-label={t("common.close", "Закрыть")}
-                    >
-                        <X size={ICON_SIZE.md} />
-                    </Button>
-                </header>
+    const {
+        status,
+        type,
+        roomName,
+        token,
+        serverUrl,
+        isMuted,
+        isVideoMuted,
+        isScreenSharing,
+    } = activeSession;
 
-                <Box className={styles.content}>
-                    <LiveKitRoom
-                        serverUrl={serverUrl}
-                        token={token}
-                        connect={true}
-                        data-lk-theme="default"
-                        className={styles.liveKitContainer}
+    // Определяем текст статуса для пользователя через i18n ключи
+    let statusText = t("calls.statusConnecting", "Соединение...");
+    let isConnecting = true;
+
+    if (status === ACTIVE_CALL_STATUS.INITIATING) {
+        statusText = t("calls.statusCalling", "Инициализация...");
+        isConnecting = true;
+    } else if (status === ACTIVE_CALL_STATUS.CALLING) {
+        statusText = t("calls.statusCalling", "Вызов...");
+        isConnecting = true;
+    } else if (status === ACTIVE_CALL_STATUS.ACTIVE) {
+        statusText = t("calls.statusActive", "Звонок активен");
+        isConnecting = false;
+    } else if (status === ACTIVE_CALL_STATUS.RECONNECTING) {
+        statusText = t("calls.statusReconnecting", "Восстановление связи...");
+        isConnecting = true;
+    }
+
+    // Если свернуто в PiP
+    if (isMinimized) {
+        return (
+            <CallPiP
+                displayName={roomName}
+                statusText={statusText}
+                isMuted={isMuted}
+                onExpand={() => {
+                    setIsMinimized(false);
+                }}
+                onToggleMute={toggleMute}
+                onEndCall={endCall}
+            />
+        );
+    }
+
+    // Для любых звонков в активном статусе рендерим LiveKitRoom для аудио/видео
+    const isWebRTCActive =
+        (status === ACTIVE_CALL_STATUS.ACTIVE ||
+            status === ACTIVE_CALL_STATUS.CONNECTING) &&
+        typeof token === "string" &&
+        typeof serverUrl === "string";
+
+    const hasVideo = type === CALL_TYPE.VIDEO;
+
+    const overlayClass = isMobile
+        ? `${styles.mobileOverlay} ${hasVideo ? styles.hasVideo : ""}`
+        : `${styles.desktopOverlay} ${hasVideo ? styles.hasVideo : ""}`;
+
+    const modalContent = (
+        <Box
+            className={`${isMobile ? styles.modalContent : styles.desktopModal} ${hasVideo ? styles.hasVideo : ""}`}
+        >
+            {/* Верхняя шапка с кнопками действий */}
+            <Flex
+                align="center"
+                justify="between"
+                className={`${styles.header} ${hasVideo ? styles.hasVideo : ""}`}
+            >
+                <button
+                    type="button"
+                    className={styles.topIconBtn}
+                    onClick={() => {
+                        setIsMinimized(true);
+                    }}
+                    title={t("calls.minimize", "Свернуть в PiP")}
+                >
+                    <Minimize2 size={ICON_SIZE.sm} />
+                </button>
+
+                {!isMobile && (
+                    <Flex
+                        align="center"
+                        gap="2"
+                        className={styles.headerActions}
                     >
-                        <CallRoomContent />
+                        <button
+                            type="button"
+                            className={styles.topIconBtn}
+                            title={t("contacts.invite", "Пригласить участника")}
+                        >
+                            <UserPlus size={ICON_SIZE.sm} />
+                        </button>
+                        <button
+                            type="button"
+                            className={styles.topIconBtn}
+                            title={t("settings.title", "Настройки")}
+                        >
+                            <Settings size={ICON_SIZE.sm} />
+                        </button>
+                    </Flex>
+                )}
+            </Flex>
+
+            {/* Основной контент */}
+            <Box className={styles.mainContent}>
+                {isWebRTCActive ? (
+                    <LiveKitRoom
+                        video={!isVideoMuted}
+                        audio={!isMuted}
+                        token={token}
+                        serverUrl={serverUrl}
+                        data-lk-theme="default"
+                        style={{
+                            height: "100%",
+                            width: "100%",
+                            position: "relative",
+                        }}
+                        onDisconnected={endCall}
+                    >
+                        <CallVideoView
+                            displayName={roomName}
+                            statusText={statusText}
+                            isConnecting={isConnecting}
+                        />
+                        <RoomAudioRenderer />
                     </LiveKitRoom>
-                </Box>
+                ) : (
+                    <CallAvatarView
+                        displayName={roomName}
+                        statusText={statusText}
+                        isConnecting={isConnecting}
+                    />
+                )}
             </Box>
-        </Container>
+
+            {/* Нижняя панель управления */}
+            <Box
+                className={`${styles.controlBarWrapper} ${hasVideo ? styles.hasVideo : ""}`}
+            >
+                <CallControlBar
+                    isMuted={isMuted}
+                    isVideoMuted={isVideoMuted}
+                    isScreenSharing={isScreenSharing}
+                    onToggleMute={toggleMute}
+                    onToggleVideo={toggleVideoMuted}
+                    onToggleScreenShare={toggleScreenSharing}
+                    onEndCall={endCall}
+                    showVideoOption={true}
+                    showScreenShareOption={!isMobile}
+                />
+            </Box>
+        </Box>
     );
+
+    return <Box className={overlayClass}>{modalContent}</Box>;
 }

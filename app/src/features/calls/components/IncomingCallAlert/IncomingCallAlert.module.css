@@ -65,10 +65,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-4);
+    justify-content: space-between;
     width: 100%;
-    max-width: var(--max-w-call-alert, 400px);
-    padding: var(--space-6) var(--space-5) var(--space-5);
+    height: 100%;
+    max-width: 100%;
+    padding: 10vh var(--space-5) var(--space-8);
     background: linear-gradient(
         180deg,
         color-mix(in oklch, var(--surface-1) 85%, transparent) 0%,
@@ -77,12 +78,7 @@
     );
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid color-mix(in oklch, var(--foreground) 15%, transparent);
-    box-shadow:
-        0 var(--space-6) var(--space-16)
-        color-mix(in oklch, var(--color-black) 80%, transparent),
-        inset 0 1px 0 color-mix(in oklch, var(--foreground) 20%, transparent);
-    border-radius: var(--radius-2xl, 24px);
+    border: none;
     color: var(--foreground);
     box-sizing: border-box;
     text-align: center;
@@ -91,7 +87,16 @@
 
 @media (min-width: 769px) {
     .alertCard {
+        max-width: var(--max-w-call-alert, 400px);
+        height: auto;
         border-radius: var(--radius-2xl, 24px);
+        border: 1px solid
+            color-mix(in oklch, var(--foreground) 15%, transparent);
+        box-shadow:
+            0 var(--space-6) var(--space-16)
+            color-mix(in oklch, var(--color-black) 80%, transparent),
+            inset 0 1px 0
+            color-mix(in oklch, var(--foreground) 20%, transparent);
     }
 }
 

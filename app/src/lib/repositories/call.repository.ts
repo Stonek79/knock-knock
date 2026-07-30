@@ -54,6 +54,16 @@ export const callRepository = {
     },
 
     /**
+     * Получает лог звонка по ID.
+     * @param callLogId - Идентификатор звонка
+     */
+    async getCallLogById(callLogId: string): Promise<CallLogsResponse> {
+        return pb
+            .collection(DB_TABLES.CALL_LOGS)
+            .getOne<CallLogsResponse>(callLogId);
+    },
+
+    /**
      * Получает список всех логов звонков (историю звонков)
      * @returns Массив записей из коллекции call_logs с раскрытием связей room и initiator
      */

@@ -70,6 +70,15 @@
         --intent-info-main: var(--color-info);
         --intent-info-text: #ffffff;
         --intent-info-alpha: rgba(0, 157, 226, 0.15);
+
+        /* Call Tokens */
+        --call-room-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        --call-overlay-bg: color-mix(
+            in oklch,
+            var(--color-black) 70%,
+            transparent
+        );
+        --call-card-bg: var(--surface);
     }
 
     /* DARK MODE: Тёмный, уютный, узнаваемый */
@@ -132,5 +141,14 @@
         --intent-info-main: var(--color-info);
         --intent-info-text: #ffffff;
         --intent-info-alpha: rgba(0, 157, 226, 0.2);
+
+        /* Call Tokens */
+        --call-room-bg: linear-gradient(135deg, #111b21 0%, #1a2930 100%);
+        --call-overlay-bg: color-mix(
+            in oklch,
+            var(--color-black) 75%,
+            transparent
+        );
+        --call-card-bg: var(--surface);
     }
 }

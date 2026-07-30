@@ -44,7 +44,8 @@
 - **Object Formations**: When creating objects bound to specific Zod schemas or TS types, ensure all required properties are present and correctly typed. Do not inject fields that were removed from the schema.
 - **PocketBase SDK Imports**: NEVER import the `pb` client (`import pb from "@/lib/pb"`) inside UI components, Stores (Zustand), or Hooks. The PocketBase SDK must ONLY be used inside the Data Layer (`src/lib/repositories/` and `src/lib/services/`). All other layers must interact with the Data Layer.
 - **Auto-generated Files**: NEVER manually modify `app/src/lib/types/pocketbase-types.ts`. This is an auto-generated file that serves as the ultimate source of truth for the project's database types. If types need to be updated, run the type generation script `npm run typegen:pb`.
-- **Reviewer Agent Duty**: The reviewer MUST be strict and nitpicky. If there is a single unused variable, implicit `any`, or hardcoded string instead of a constant, the reviewer MUST reject the code.
+- **Reviewer Agent Duty**: The reviewer MUST be strict and nitpicky. If there is a single unused variable, implicit `any`, hardcoded string instead of a constant, or raw hardcoded pixels/colors in CSS files instead of design tokens, the reviewer MUST reject the code.
+- **CSS Design Tokens & Styling Validation**: NEVER hardcode raw pixel values (`px`) for margins, paddings, fonts, sizes, or raw HEX/RGB colors directly inside `.module.css` or `.css` files. ALWAYS use project CSS variables and tokens (`var(--space-...)`, `var(--font-size-...)`, `var(--radius-...)`, `var(--accent-primary)`, `var(--foreground)`, `var(--glass-...)`). The Reviewer Agent MUST validate all `.css` / `.module.css` files for token compliance and reject hardcoded styles.
 
 ## Инфраструктура и Логирование (Удаленный сервер)
 - **Сервер работает удаленно**: PocketBase, Nginx и вся инфраструктура развернуты на удаленном сервере (например, `dev-api.whoami.ninja`).

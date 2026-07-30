@@ -6,8 +6,8 @@ import { Text } from "@/components/ui/Text";
 import { useToast } from "@/components/ui/Toast";
 import { CALL_TYPE } from "@/lib/constants";
 import { useCallStore } from "../../store";
-import { parseCallError } from "../../utils";
 import { startRingtone, stopRingtone } from "../../utils/ringtone";
+import { parseCallError } from "../../utils/utils";
 import { IncomingCallActions } from "./components/IncomingCallActions";
 import { IncomingCallAvatar } from "./components/IncomingCallAvatar";
 import { IncomingCallBadges } from "./components/IncomingCallBadges";
@@ -19,9 +19,8 @@ import styles from "./IncomingCallAlert.module.css";
  */
 export function IncomingCallAlert() {
     const { t } = useTranslation();
-    const isIncoming = useCallStore((state) => state.isIncoming);
-    const isActive = useCallStore((state) => state.isActive);
-    const callType = useCallStore((state) => state.callType);
+    const incomingSession = useCallStore((state) => state.incomingSession);
+    const activeSession = useCallStore((state) => state.activeSession);
     const isMutedRingtone = useCallStore((state) => state.isMutedRingtone);
     const toggleMuteRingtone = useCallStore(
         (state) => state.toggleMuteRingtone,
@@ -31,7 +30,11 @@ export function IncomingCallAlert() {
     const rejectCall = useCallStore((state) => state.rejectCall);
     const toast = useToast();
 
-    // Запуск/остановка рингтона и 45-секундный таймаут автоотклонения
+    const isIncoming = incomingSession !== null;
+    const isActive = activeSession !== null;
+    const callType = incomingSession?.type ?? CALL_TYPE.VIDEO;
+
+    // Запуск/остановка рингтона и 45-секундный таймаут автоотклонения с отметкой MISSED
     useEffect(() => {
         let timeoutId: number | null = null;
 
@@ -39,7 +42,7 @@ export function IncomingCallAlert() {
             startRingtone();
             timeoutId = window.setTimeout(() => {
                 stopRingtone();
-                useCallStore.getState().rejectCall();
+                useCallStore.getState().missCall();
             }, 45000);
         } else {
             stopRingtone();
@@ -91,8 +94,7 @@ export function IncomingCallAlert() {
             <Box className={styles.ambientSpot2} />
 
             <Box className={styles.alertCard}>
-                {/* Аватар с 3D неоновым градиентным кольцом и анимированным радаром */}
-                <IncomingCallAvatar callType={callType} />
+                <IncomingCallAvatar displayName={incomingSession.roomId} />
 
                 {/* Е2ЕЕ Шифрование / Бейдж Второй линии */}
                 <IncomingCallBadges isActive={isActive} />

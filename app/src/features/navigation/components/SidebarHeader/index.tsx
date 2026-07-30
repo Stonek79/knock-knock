@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { UserStar } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { ICON_SIZE, ROUTES } from "@/lib/constants";
@@ -23,7 +24,7 @@ export function SidebarHeader({ title, children }: SidebarHeaderProps) {
     const isAdmin = useAuthStore((state) => state.isAdmin);
 
     return (
-        <header className={styles.header}>
+        <Box className={styles.header}>
             <span className={styles.title}>{title}</span>
             <Flex align="center" gap="1" className={styles.actions}>
                 {isAdmin && (
@@ -40,6 +41,6 @@ export function SidebarHeader({ title, children }: SidebarHeaderProps) {
                 )}
                 {children}
             </Flex>
-        </header>
+        </Box>
     );
 }

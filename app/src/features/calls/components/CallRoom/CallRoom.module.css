@@ -1,289 +1,148 @@
-/* =====================================================
- * CallRoom CSS Module (Knock-Knock Tokenized)
- * Mobile-First Adaptive Screen & Centered Desktop Window
- * ===================================================== */
-
-.overlay {
+.desktopOverlay {
     position: fixed;
     inset: 0;
-    z-index: var(--z-modal, 1000);
-    background: color-mix(in oklch, var(--color-black) 80%, transparent);
-    backdrop-filter: var(--blur-lg);
-    -webkit-backdrop-filter: var(--blur-lg);
+    z-index: var(--z-index-modal, 1000);
+    background: var(--call-overlay-bg);
+    backdrop-filter: var(--glass-blur);
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    animation: fadeIn var(--transition-fast, 0.2s ease-out) forwards;
+    padding: var(--space-4);
 }
 
-@media (min-width: 769px) {
-    .overlay {
-        align-items: center;
-    }
-}
-
-.window {
+.desktopModal {
+    position: relative;
     width: 100%;
-    height: 100%;
-    background: var(--surface-1);
-    color: var(--foreground);
+    max-width: var(--size-160);
+    height: var(--size-130);
+    border-radius: var(--radius-2xl);
+    background: var(--call-room-bg);
+    box-shadow: var(--shadow-xl);
+    border: var(--border-width-1) solid var(--glass-border);
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-6);
     overflow: hidden;
-    animation: slideUp var(--transition-fast, 0.25s ease-out) forwards;
+    transition: all var(--duration-medium, 0.3s) ease;
 }
 
-@media (min-width: 769px) {
-    .window {
-        width: var(--vw-dialog, 90vw);
-        height: var(--vh-dialog, 85vh);
-        max-width: var(--max-w-settings, 680px);
-        border-radius: var(--radius-2xl, 24px);
-        border: 1px solid
-            color-mix(in oklch, var(--foreground) 15%, transparent);
-        box-shadow: 0 var(--space-6) var(--space-16)
-            color-mix(in oklch, var(--color-black) 70%, transparent);
-    }
+.desktopModal.hasVideo {
+    max-width: 90vw;
+    height: 85vh;
+    padding: 0;
+    border: none;
+    background: var(--color-black, #000000);
+}
+
+.mobileOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-index-modal, 1000);
+    background: var(--call-room-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-4);
+    overflow: hidden;
+    transition:
+        background var(--duration-medium, 0.3s) ease,
+        padding var(--duration-medium, 0.3s) ease;
+}
+
+.mobileOverlay.hasVideo {
+    padding: 0;
+    background: var(--color-black, #000000);
 }
 
 .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-3) var(--space-5);
-    background: color-mix(in oklch, var(--surface-2) 90%, transparent);
-    backdrop-filter: var(--glass-blur-sm);
-    border-bottom: 1px solid
-        color-mix(in oklch, var(--foreground) 10%, transparent);
-    z-index: var(--z-sticky, 10);
+    width: 100%;
+    z-index: var(--z-index-base, 10);
+    transition: all var(--duration-medium, 0.3s) ease;
 }
 
-.headerTitleGroup {
+.header.hasVideo {
+    position: absolute;
+    top: var(--space-4);
+    left: var(--space-4);
+    right: var(--space-4);
+    width: auto;
+}
+
+.headerActions {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2);
 }
 
-.title {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-semibold);
-    color: var(--foreground);
-    margin: 0;
-}
-
-.statusBadge {
-    font-size: var(--text-xs);
-    padding: var(--space-1) var(--space-2);
-}
-
-.closeBtn {
-    color: var(--muted);
-    border-radius: var(--radius-full);
-    transition:
-        background var(--transition-fast, 0.15s ease),
-        color var(--transition-fast, 0.15s ease);
-}
-
-.closeBtn:hover {
-    background: var(--surface-2);
-    color: var(--color-error);
-}
-
-.content {
-    flex: 1;
-    position: relative;
-    background: var(--surface-1);
-    display: flex;
-    flex-direction: column;
-}
-
-/* Telegram-Style Outgoing Call Screen (Дозвон) */
-.callingScreen {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-6) var(--space-4);
-    padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
-    background: radial-gradient(
-        circle at top center,
-        color-mix(
-                in oklch,
-                var(--color-primary, var(--color-success)) 20%,
-                transparent
-            )
-            0%,
-        var(--surface-1) 75%
-    );
-    text-align: center;
-}
-
-.callingBody {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-5);
-    margin: auto 0;
-}
-
-.callingAvatarWrapper {
-    position: relative;
+.topIconBtn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--size-avatar-xxl, 112px);
-    height: var(--size-avatar-xxl, 112px);
+    width: var(--size-10);
+    height: var(--size-10);
+    border-radius: var(--radius-full);
+    border: none;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur-sm);
+    color: var(--foreground);
+    cursor: pointer;
+    transition: all var(--duration-fast, 0.2s) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.callingAvatar {
-    position: relative;
-    z-index: var(--z-raised);
-    box-shadow: 0 var(--space-3) var(--space-8)
-        color-mix(in oklch, var(--color-success) 40%, transparent);
-    border: 3px solid var(--color-success);
-    background: var(--surface-2);
+.topIconBtn:hover {
+    background: var(--glass-hover-bg);
+    transform: scale(1.05);
 }
 
-/* Telegram Radar Pulse Waves for Outgoing Call */
-.callingPulse1,
-.callingPulse2,
-.callingPulse3 {
+.topIconBtn:active {
+    transform: scale(0.95);
+}
+
+.mediaContainer {
     position: absolute;
     inset: 0;
-    border-radius: var(--radius-full);
-    border: 1.5px solid var(--color-success);
-    opacity: 0;
-    animation: tgOutgoingWave 2.4s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-index-base, 1);
+    background: var(--color-black, #000000);
 }
 
-.callingPulse2 {
-    animation-delay: 0.8s;
-}
-
-.callingPulse3 {
-    animation-delay: 1.6s;
-}
-
-.callingHeader {
+.mainContent {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
-.callingTitle {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--foreground);
-    margin: 0;
-}
-
-.callingSubtitle {
-    color: var(--muted);
-    font-size: var(--text-base);
-}
-
-.callTypeBadge {
-    margin-top: var(--space-2);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-4);
-    font-size: var(--text-sm);
-    border-radius: var(--radius-md);
-}
-
-/* Telegram Floating Action Dock */
-.callingDock {
+.videoGrid {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-6);
+}
+
+.controlBarWrapper {
     width: 100%;
-    max-width: var(--max-w-call-alert, 400px);
-    padding: var(--space-3) var(--space-5);
-    background: color-mix(in oklch, var(--foreground) 6%, transparent);
-    backdrop-filter: var(--blur-md);
-    border: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
-    border-radius: var(--radius-2xl, 24px);
-    box-shadow: 0 var(--space-4) var(--space-10)
-        color-mix(in oklch, var(--color-black) 50%, transparent);
-    margin-bottom: var(--space-2);
+    z-index: var(--z-index-base, 10);
+    transition: all var(--duration-medium, 0.3s) ease;
 }
 
-.endCallButton {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-8);
-    border-radius: var(--radius-xl);
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--text-base);
-    background: var(--color-error);
-    color: var(--color-white);
-    box-shadow: 0 var(--space-2) var(--space-6)
-        color-mix(in oklch, var(--color-error) 50%, transparent);
-    transition:
-        transform var(--transition-fast, 0.15s ease),
-        box-shadow var(--transition-fast, 0.15s ease);
-}
-
-.endCallButton:hover {
-    transform: scale(1.05);
-    box-shadow: 0 var(--space-3) var(--space-8)
-        color-mix(in oklch, var(--color-error) 70%, transparent);
-}
-
-/* РЕЖИМ КОНФЕРЕНЦИИ */
-.conferenceWrapper {
-    flex: 1;
-    position: relative;
-    height: 100%;
-    width: 100%;
-}
-
-.liveKitContainer {
-    --lk-bg: transparent;
-    --lk-control-bar-bg: color-mix(in oklch, var(--surface-2) 90%, transparent);
-    --lk-border-color: color-mix(in oklch, var(--foreground) 12%, transparent);
-    --lk-fg: var(--foreground);
-    --lk-control-bar-hover-bg: var(--surface-1);
-
-    height: 100%;
-    width: 100%;
-}
-
-@keyframes tgOutgoingWave {
-    0% {
-        transform: scale(0.85);
-        opacity: 0.9;
-    }
-    50% {
-        opacity: 0.4;
-    }
-    100% {
-        transform: scale(1.8);
-        opacity: 0;
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(var(--space-8)) scale(0.96);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+.controlBarWrapper.hasVideo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: linear-gradient(
+        to top,
+        color-mix(in oklch, var(--color-black) 80%, transparent) 0%,
+        transparent 100%
+    );
 }

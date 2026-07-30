@@ -110,6 +110,15 @@
     --avatar-border: 1px solid var(--glass-border);
     --avatar-shadow: none;
 
+    /* Call Room & Modal Tokens */
+    --call-room-bg: linear-gradient(135deg, #111b21 0%, #1a2a33 100%);
+    --call-overlay-bg: color-mix(in oklch, var(--color-black) 75%, transparent);
+    --call-card-bg: linear-gradient(
+        180deg,
+        var(--surface) 0%,
+        var(--surface-2, var(--surface)) 100%
+    );
+
     /* =============================================
      * INTENT TOKENS (Fallbacks)
      * ============================================= */

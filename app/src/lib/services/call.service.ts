@@ -41,6 +41,14 @@ export const callService = {
     },
 
     /**
+     * Получает лог звонка по ID.
+     * @param callLogId - Идентификатор лога звонка
+     */
+    async getCallLogById(callLogId: string): Promise<CallLogsResponse> {
+        return callRepository.getCallLogById(callLogId);
+    },
+
+    /**
      * Получает список всех логов звонков (историю звонков).
      * @returns Массив записей из коллекции call_logs
      */

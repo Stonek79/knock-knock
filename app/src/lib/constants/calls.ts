@@ -6,3 +6,14 @@ export const AUDIO_CONTEXT_STATE = {
     SUSPENDED: "suspended",
     CLOSED: "closed",
 } as const;
+
+/**
+ * Константы FSM статусов активного вызова
+ */
+export const ACTIVE_CALL_STATUS = {
+    INITIATING: "INITIATING",
+    CALLING: "CALLING",
+    CONNECTING: "CONNECTING",
+    ACTIVE: "ACTIVE",
+    RECONNECTING: "RECONNECTING",
+} as const;

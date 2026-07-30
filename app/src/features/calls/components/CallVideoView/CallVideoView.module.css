@@ -1,0 +1,60 @@
+.videoContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--color-black, #000000);
+}
+
+.remoteLayer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.remoteVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Заполняем весь фон видео */
+}
+
+/* Picture-in-Picture: плавающее окошко локального видео */
+.localPipLayer {
+    position: absolute;
+    bottom: calc(
+        var(--space-20) +
+        env(safe-area-inset-bottom, 0px)
+    ); /* Поднимем над панелью управления */
+    right: var(--space-4);
+    width: var(--size-28);
+    height: var(--size-40);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    z-index: 5;
+    box-shadow: var(--shadow-2xl);
+    border: var(--border-width-1) solid
+        color-mix(in oklch, var(--color-white) 20%, transparent);
+    background: var(--color-black, #000000);
+    transition: transform var(--transition-medium, 0.3s ease);
+}
+
+/* На десктопе окно PiP можно сделать побольше */
+@media (min-width: 769px) {
+    .localPipLayer {
+        width: var(--size-48);
+        height: var(--size-64);
+        bottom: var(--space-24);
+        right: var(--space-6);
+    }
+}
+
+.localVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
