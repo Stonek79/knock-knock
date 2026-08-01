@@ -1,6 +1,6 @@
 # Radix UI vs CSS Modules: Гайд по выбору
 
-В проекте Knock-Knock мы сочетаем мощь Radix UI в виде кастомных компонентов для структуры и гибкость CSS Modules для уникального дизайна.
+В проекте Nemo мы сочетаем мощь Radix UI в виде кастомных компонентов для структуры и гибкость CSS Modules для уникального дизайна.
 
 ## Не использовать Radix UI Props
 Не используйте встроенные пропсы Radix (`p`, `m`, `gap`, `direction`, `align`, `justify`), используем кастомные:
@@ -47,7 +47,7 @@ import styles from './MyComponent.module.css';
 }
 ```
 
-## Золотое правило (The Knock-Knock Rule)
+## Золотое правило (The Nemo Rule)
 
 1. **Macro-Layout = Radix / Flex / Grid**. Глобальная структура страниц, отступы между крупными блоками. Допустимо использование пропсов (`p`, `m`, `gap`).
 2. **Aesthetics & Micro-Layout = CSS Modules + @container**. 

@@ -1,4 +1,4 @@
-# Дизайн-система Knock-Knock
+# Дизайн-система Nemo
 
 > Базовый стандарт оформления
 
@@ -6,7 +6,7 @@
 
 ## 🏗️ Архитектурный принцип
 
-Knock-Knock использует **кастомную дизайн-систему поверх Radix UI**.
+Nemo использует **кастомную дизайн-систему поверх Radix UI**.
 
 ### Правило слоёв
 
@@ -113,7 +113,7 @@ import { Text } from "@radix-ui";
 
 ## 🎨 Цветовая палитра и Темы
 
-Knock-Knock поддерживает темы **Default**, **Neon** и **Emerald** в режимах **Dark** и **Light**.
+Nemo поддерживает темы **Default**, **Neon** и **Emerald** в режимах **Dark** и **Light**.
 Все цвета — CSS-переменные в `src/index.css`, переключаются через `data-theme` и `data-mode`.
 
 ### Темы проекта
@@ -295,7 +295,7 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 ## 📱 Адаптивность и Breakpoints (Mobile First)
 
-В Knock-Knock используется гибридный подход: **Global Breakpoints** для макета и **Container Queries** для компонентов.
+В Nemo используется гибридный подход: **Global Breakpoints** для макета и **Container Queries** для компонентов.
 
 ### Global Media Queries (Layout)
 Используются для глобальных изменений (скрытие Sidebar, изменение навигации).

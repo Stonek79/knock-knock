@@ -98,7 +98,7 @@ docker logs knok-knok-pb-dev
 ### Работа с логами
 ```bash
 # Логи основного PocketBase
-docker logs knock-knock-pb -f
+docker logs whoami-pb -f
 
 # Логи почтового сервера
 docker logs mailpit -f

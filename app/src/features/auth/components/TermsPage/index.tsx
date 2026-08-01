@@ -6,11 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { Heading } from "@/components/ui/Heading";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Text } from "@/components/ui/Text";
+import { APP_NAME } from "@/lib/constants/common";
 import { ROUTES } from "@/lib/constants/routes";
 import styles from "./termsPage.module.css";
-
-// TODO: доработать, добавить локали
-
 export function TermsPage() {
     const { t } = useTranslation();
     const navigation = useNavigate();
@@ -44,54 +42,40 @@ export function TermsPage() {
                         <Flex direction="column" gap="6" p="2">
                             <Flex direction="column" gap="3">
                                 <Heading as="h3" size="sm">
-                                    ⚖️ Основные правила
+                                    {t("auth.terms.rules")}
                                 </Heading>
                                 <Text>
-                                    Knock-Knock Messenger — это современное
-                                    приложение для общения, ориентированное на
-                                    приватность и безопасность данных (E2EE).
-                                    Используя наше приложение, вы соглашаетесь с
-                                    правилами использования.
+                                    {t("auth.terms.desc", {
+                                        appName: APP_NAME,
+                                    })}
                                 </Text>
                             </Flex>
 
                             <Flex direction="column" gap="2">
                                 <Heading as="h4" size="sm">
-                                    1. Безопасность и Конфиденциальность
+                                    {t("auth.terms.sec1Title")}
                                 </Heading>
-                                <Text>
-                                    Мы используем оконечное шифрование
-                                    (End-to-End Encryption) для ваших сообщений.
-                                    Ваши приватные ключи никогда не покидают
-                                    ваше устройство.
-                                </Text>
+                                <Text>{t("auth.terms.sec1Desc")}</Text>
                             </Flex>
 
                             <Flex direction="column" gap="2">
                                 <Heading as="h4" size="sm">
-                                    2. Использование сервиса
+                                    {t("auth.terms.sec2Title")}
                                 </Heading>
-                                <Text>
-                                    Пользователь обязуется не использовать
-                                    сервис для распространения вредоносного ПО,
-                                    спама или противоправного контента.
-                                </Text>
+                                <Text>{t("auth.terms.sec2Desc")}</Text>
                             </Flex>
 
                             <Flex direction="column" gap="2">
                                 <Heading as="h4" size="sm">
-                                    3. Ответственность
+                                    {t("auth.terms.sec3Title")}
                                 </Heading>
-                                <Text>
-                                    Мы не несем ответственности за содержание
-                                    сообщений пользователей, так как не имеем к
-                                    ним доступа в расшифрованном виде.
-                                </Text>
+                                <Text>{t("auth.terms.sec3Desc")}</Text>
                             </Flex>
 
                             <Text size="xs" color="muted">
-                                Последнее обновление:{" "}
-                                {new Date().toLocaleDateString()}
+                                {t("auth.terms.lastUpdate", {
+                                    date: new Date().toLocaleDateString(),
+                                })}
                             </Text>
                         </Flex>
                     </ScrollArea>

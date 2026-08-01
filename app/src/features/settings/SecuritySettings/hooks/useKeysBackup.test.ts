@@ -67,7 +67,7 @@ describe("useKeysBackup", () => {
             expect(mockExportKeys).toHaveBeenCalledWith("secure-pass");
             expect(mockDownloadJson).toHaveBeenCalledWith(
                 mockBackupData,
-                expect.stringContaining("knock-backup-"),
+                expect.stringContaining("nemo-backup-"),
             );
             expect(result.current.backupPassword).toBe("");
             expect(result.current.statusMessage?.type).toBe("success");

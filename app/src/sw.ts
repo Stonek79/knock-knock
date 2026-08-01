@@ -23,15 +23,16 @@ if (manifest) {
 
 precacheAndRoute(manifest);
 
-interface KnockNotificationAction {
+interface NemoNotificationAction {
     action: string;
     title: string;
     icon?: string;
 }
 
-interface KnockNotificationOptions extends NotificationOptions {
+interface NemoNotificationOptions extends NotificationOptions {
     vibrate?: number[];
-    actions?: KnockNotificationAction[];
+    data?: unknown;
+    actions?: NemoNotificationAction[];
 }
 
 /**
@@ -105,7 +106,7 @@ self.addEventListener("push", (event) => {
                 }
             }
 
-            const options: KnockNotificationOptions = {
+            const options: NemoNotificationOptions = {
                 body,
                 icon: NOTIFICATION_CONFIG.ICON,
                 badge: NOTIFICATION_CONFIG.BADGE,

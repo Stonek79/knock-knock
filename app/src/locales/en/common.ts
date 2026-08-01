@@ -3,6 +3,7 @@ export const common = {
     save: "Save",
     saving: "Saving...",
     cancel: "Cancel",
+    close: "Close",
     signOut: "Sign Out",
     loading: "Loading...",
     error: "Error",
@@ -31,6 +32,14 @@ export const common = {
             title: "📱 PWA Ready",
             desc: "Install on any device. Works offline.",
         },
+    },
+    pwa: {
+        installTitle: "Install Application",
+        installDesc:
+            "For notifications and video calls to work, add {{appName}} to your Home screen.",
+        step1: "1. Tap the icon",
+        step2: "2. Select",
+        addToHome: "Add to Home Screen",
     },
     landing: {
         badge: "In Development",

@@ -224,7 +224,7 @@ async function runSeed() {
         // 3. Group Chats (5 чатов)
         console.log("👥 Создаем 5 Group чатов...");
         const groupNames = [
-            "Knock-Knock Проект",
+            "Nemo Проект",
             "Разработка (Backend)",
             "Дизайн-система",
             "Флудилка",

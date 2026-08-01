@@ -41,7 +41,7 @@ export const getMediaDB = (userId: string) => {
     const dbKey = `${getDbPrefix()}_${userId}`;
 
     if (!dbInstances[dbKey]) {
-        const db = new Dexie(`KnockKnock_Media_${dbKey}`) as Dexie & {
+        const db = new Dexie(`Nemo_Media_${dbKey}`) as Dexie & {
             media_cache: Table<DBCacheItem>;
         };
 

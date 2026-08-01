@@ -35,7 +35,7 @@ services:
       - default
 
   web:
-    image: ghcr.io/stonek79/knock-knock-app:latest
+    image: ghcr.io/stonek79/nemo-app:latest
     container_name: whoami-web
     restart: unless-stopped
     ports:

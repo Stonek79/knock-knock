@@ -98,12 +98,12 @@ onRecordAfterCreateSuccess((e) => {
 			}
 		}
 
-		// Создание системной комнаты (Knock-Knock)
+		// Создание системной комнаты (Nemo)
 		const sysDeterministicId = $security.md5(`${user.id}system`).substring(0, 15);
 		const sysRoom = new Record(roomCollection, {
 			[DB.FIELDS.ID]: sysDeterministicId,
 			[DB.FIELDS.TYPE]: "system",
-			[DB.FIELDS.NAME]: "Knock-Knock System",
+			[DB.FIELDS.NAME]: "Nemo System",
 			[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
 			[DB.FIELDS.CREATED_BY]: user.id,
 		});
@@ -516,7 +516,7 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 						const newRoom = new Record(roomCollection, {
 							[DB.FIELDS.ID]: deterministicId,
 							[DB.FIELDS.TYPE]: "system",
-							[DB.FIELDS.NAME]: "Knock-Knock System",
+							[DB.FIELDS.NAME]: "Nemo System",
 							[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
 							[DB.FIELDS.CREATED_BY]: u.id,
 						});
@@ -874,7 +874,7 @@ routerAdd(
 					const sysRoom = new Record(roomCollection, {
 						[DB.FIELDS.ID]: deterministicId,
 						[DB.FIELDS.TYPE]: "system",
-						[DB.FIELDS.NAME]: "Knock-Knock System",
+						[DB.FIELDS.NAME]: "Nemo System",
 						[DB.FIELDS.VISIBILITY]: DB.VALUES.VISIBILITY_PRIVATE,
 						[DB.FIELDS.CREATED_BY]: u.id,
 					});

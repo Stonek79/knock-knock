@@ -8,7 +8,7 @@ const meta: Meta = {
     component: () => <div />, // Placeholder
     decorators: [
         (Story) => (
-            <div className="knock-root" data-theme="emerald" data-mode="dark">
+            <div className="nemo-root" data-theme="emerald" data-mode="dark">
                 <div
                     style={{
                         padding: "var(--space-4)",

@@ -1,4 +1,4 @@
-# Knock-Knock: Frontend App
+# Nemo: Frontend App
 
 Мессенджер с фокусом на приватность и сквозное шифрование (E2EE), построенный на React 19, PocketBase и Web Crypto API.
 

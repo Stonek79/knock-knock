@@ -16,6 +16,7 @@ import {
     MESSAGE_STATUS,
     ROOM_TYPE,
 } from "@/lib/constants";
+import { APP_NAME } from "@/lib/constants/common";
 import type {
     Attachment,
     MessagePosition,
@@ -132,7 +133,7 @@ export function MessageBubble({
     const touchStartY = useRef<number | null>(null);
 
     // Подменяем имя и аватар для системных сообщений
-    const finalSenderName = isSystem ? "Knock-Knock" : senderName;
+    const finalSenderName = isSystem ? APP_NAME : senderName;
     const finalSenderAvatar = isSystem ? undefined : senderAvatar;
 
     const handleTouchStart = (e: React.TouchEvent) => {

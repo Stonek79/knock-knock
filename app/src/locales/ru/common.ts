@@ -3,6 +3,7 @@ export const common = {
     save: "Сохранить",
     saving: "Сохранение...",
     cancel: "Отмена",
+    close: "Закрыть",
     signOut: "Выйти",
     loading: "Загрузка...",
     error: "Ошибка",
@@ -33,6 +34,14 @@ export const common = {
             title: "📱 PWA Ready",
             desc: "Устанавливается на любое устройство. Работает оффлайн.",
         },
+    },
+    pwa: {
+        installTitle: "Установите приложение",
+        installDesc:
+            "Для работы уведомлений и видеозвонков добавьте {{appName}} на экран «Домой».",
+        step1: "1. Нажмите иконку",
+        step2: "2. Выберите",
+        addToHome: "На экран «Домой»",
     },
     landing: {
         badge: "В разработке",

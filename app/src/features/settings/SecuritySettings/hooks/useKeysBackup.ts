@@ -59,7 +59,7 @@ export function useKeysBackup() {
             }
             const backup = result.value;
 
-            const filename = `knock-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            const filename = `nemo-backup-${new Date().toISOString().slice(0, 10)}.json`;
             downloadJson(backup, filename);
 
             setBackupPassword("");

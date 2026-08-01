@@ -1,4 +1,4 @@
-# Тестирование Knock-Knock
+# Тестирование Nemo
 
 > Статус: ✅ Актуальный стандарт качества
 
@@ -13,7 +13,7 @@
 | Среда | PocketBase URL | Контейнер | Назначение |
 |-------|----------------|-----------|------------|
 | **Development (Dev)** | `https://dev-api.knok-knok.ru:8443` | `knok-knok-pb-dev` | Разработка, Unit-тесты, ручное ломание |
-| **Production (Prod)** | `https://api.knok-knok.ru:8443` | `knock-knock-pb` | Реальные пользователи, высокая стабильность |
+| **Production (Prod)** | `https://api.knok-knok.ru:8443` | `whoami-pb` | Реальные пользователи, высокая стабильность |
 
 ---
 

@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env.test") });
 // TODO передалать с учетом переезда на pocketbase и новых переменных окружения
 
 /**
- * Playwright конфигурация для Knock-Knock
+ * Playwright конфигурация для Nemo
  *
  * Поддерживает три среды тестирования:
  * - mock: локальные тесты с mock-данными

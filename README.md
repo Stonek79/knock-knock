@@ -1,4 +1,4 @@
-# Knock-Knock (PrivMessenger)
+# Nemo (PrivMessenger)
 
 PWA мессенджер с фокусом на безопасность, Ghost Mode и WebRTC звонки.
 

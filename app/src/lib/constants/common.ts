@@ -1,10 +1,10 @@
 import type { RoomType } from "../types";
 
 /** Название приложения */
-export const APP_NAME = "KnokKnok";
-export const APP_NAME_RU = "Тук-Тук";
+export const APP_NAME = "Nemo";
+export const APP_NAME_RU = "Немо";
 
-export const FULL_APP_NAME = "Knock Knock";
+export const FULL_APP_NAME = "Nemo";
 
 /** ID корневого элемента в DOM */
 export const DOM_ROOT_ID = "root";
@@ -30,8 +30,8 @@ export const IS_DEV = import.meta.env.DEV;
 
 export const NOTIFICATION_CONFIG = {
     VAPID_KEY_ENV: "VITE_VAPID_PUBLIC_KEY",
-    ICON: "/images/favicon-en.png",
-    BADGE: "/images/favicon-en.png",
+    ICON: "/images/nemo-n-dark.png",
+    BADGE: "/images/nemo-n-light.png",
     VIBRATE_PATTERN: [100, 50, 100],
     USER_VISIBLE_ONLY: true,
 } as const;

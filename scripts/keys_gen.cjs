@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const secret = "KnockKnockStagingSecretSafe2025Alpha";
+const secret = "NemoStagingSecretSafe2025Alpha";
 
 if (!secret) {
 	console.error("❌ Ошибка: JWT_SECRET не найден в .env.test");

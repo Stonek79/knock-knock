@@ -67,7 +67,7 @@ export function LoginPage() {
                 </div>
 
                 <footer className={styles.footer}>
-                    <p>© {new Date().getFullYear()} Knock-Knock Messenger</p>
+                    <p>© {new Date().getFullYear()} Nemo Messenger</p>
                 </footer>
             </Flex>
         </main>

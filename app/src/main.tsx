@@ -82,7 +82,7 @@ function Root() {
     }, []);
 
     return (
-        <div data-theme={theme} data-mode={mode} className="knock-root">
+        <div data-theme={theme} data-mode={mode} className="nemo-root">
             <QueryClientProvider client={queryClient}>
                 <RouterProvider router={router} />
                 <PwaInstallPrompt />

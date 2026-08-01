@@ -341,7 +341,7 @@ export const DB_FIELDS = {
 
 /** Константы для Keystore (IndexedDB) */
 export const KEYSTORE_CONFIG = {
-    DB_NAME: "knock-knock-keystore",
+    DB_NAME: "nemo-keystore",
     TABLES: {
         KEYS: "keys",
     },

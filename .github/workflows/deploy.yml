@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: stonek79/knock-knock-app
+  IMAGE_NAME: stonek79/nemo-app
 
 jobs:
   build-and-push:
@@ -64,7 +64,7 @@ jobs:
 
       - name: Pull and Restart App AND PocketBase infrastructure
         run: |
-          cd ~/knock-knock
+          cd ~/nemo
           git pull origin main
           
           # Останавливаем только старый одиночный веб-контейнер (туннель whoami-frpc НЕ затрагивается!)

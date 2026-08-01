@@ -1,4 +1,4 @@
-# Единый пульт управления инфраструктурой Knock-Knock
+# Единый пульт управления инфраструктурой Nemo
 # Поднимает контейнеры в соответствующих папках infra/
 
 .PHONY: help network start-all stop-all start-prod start-dev start-mailpit start-tunnel stop-tunnel stop-prod stop-dev stop-mailpit clean-docker restart-tunnel logs-prod logs-dev

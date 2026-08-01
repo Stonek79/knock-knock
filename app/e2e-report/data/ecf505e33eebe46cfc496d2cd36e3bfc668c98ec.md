@@ -4,7 +4,7 @@
 - generic [ref=e3]:
   - generic [ref=e6]:
     - banner [ref=e10]:
-      - generic [ref=e11]: Knock Knock
+      - generic [ref=e11]: Nemo
       - button "Создать чат" [ref=e12] [cursor=pointer]:
         - img [ref=e13]
     - navigation [ref=e58]:

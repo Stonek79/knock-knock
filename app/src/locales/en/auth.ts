@@ -73,4 +73,18 @@ export const auth = {
     welcomeTitle: "Welcome!",
     welcomeDesc: "Let's set up your profile so friends can find you.",
     onboardingComplete: "Start Chatting!",
+    terms: {
+        rules: "⚖️ Basic Rules",
+        desc: "{{appName}} is a modern communication app focused on privacy and data security (E2EE). By using our app, you agree to these terms of use.",
+        sec1Title: "1. Security & Privacy",
+        sec1Desc:
+            "We use End-to-End Encryption for your messages. Your private keys never leave your device.",
+        sec2Title: "2. Service Usage",
+        sec2Desc:
+            "Users agree not to use the service to distribute malware, spam, or illegal content.",
+        sec3Title: "3. Liability",
+        sec3Desc:
+            "We are not responsible for the content of user messages, as we do not have access to them in decrypted form.",
+        lastUpdate: "Last updated: {{date}}",
+    },
 } as const;

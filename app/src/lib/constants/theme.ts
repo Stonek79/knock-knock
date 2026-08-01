@@ -13,7 +13,7 @@ export const THEME_MODE = {
     DARK: "dark",
 } as const;
 
-export const THEME_STORAGE_KEY = "knock-knock-theme";
+export const THEME_STORAGE_KEY = "nemo-theme";
 
 export const THEME_ATTRIBUTES = {
     DATA_THEME: "data-theme",

@@ -13,7 +13,6 @@ export * from "./queries";
 export * from "./routes";
 export * from "./storage";
 export * from "./theme";
-export * from "./theme";
 export * from "./ui";
 export * from "./user";
 export * from "./validation";
