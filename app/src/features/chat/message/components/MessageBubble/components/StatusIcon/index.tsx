@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, CheckCheck, Loader } from "lucide-react";
+import { AlertTriangle, Check, CheckCheck, Clock, Loader } from "lucide-react";
 import { CLIENT_MESSAGE_STATUS, MESSAGE_STATUS } from "@/lib/constants";
 import type { UIMessageStatus } from "@/lib/types/message";
 import styles from "./status-icon.module.css";
@@ -52,6 +52,8 @@ export function StatusIcon({
                     className={`${iconClassName} ${sentClassName} ${styles.spinAnimation}`}
                 />
             );
+        case CLIENT_MESSAGE_STATUS.QUEUED:
+            return <Clock className={`${iconClassName} ${sentClassName}`} />;
         case CLIENT_MESSAGE_STATUS.FAILED:
             return (
                 <AlertTriangle

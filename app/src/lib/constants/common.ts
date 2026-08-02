@@ -51,6 +51,18 @@ export const NOTIFICATION_ACTIONS = {
 /** Типы push-сообщений и событий Service Worker */
 export const PUSH_MESSAGE_TYPE = {
     CALL_INCOMING: "call_incoming",
+    NAVIGATE: "NAVIGATE",
+} as const;
+
+export const SW_FALLBACK_MESSAGES = {
+    NEW_MESSAGE: "Новое сообщение",
+    NEW_ENCRYPTED_MESSAGE: "Новое зашифрованное сообщение",
+    DECRYPTION_ERROR: "Новое сообщение (ошибка дешифрации)",
+} as const;
+
+export const SW_ACTION_TITLES = {
+    OPEN: "Открыть",
+    CLOSE: "Закрыть",
 } as const;
 
 export const NETWORK_EVENTS = {

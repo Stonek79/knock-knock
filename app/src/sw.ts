@@ -5,10 +5,14 @@ import {
     FULL_APP_NAME,
     NOTIFICATION_ACTIONS,
     NOTIFICATION_CONFIG,
+    PUSH_MESSAGE_TYPE,
     ROUTES,
+    SW_ACTION_TITLES,
+    SW_FALLBACK_MESSAGES,
 } from "@/lib/constants";
 import { getRoomMasterKey } from "@/lib/crypto/keystore";
 import { decryptMessage } from "@/lib/crypto/messages";
+import { setupRuntimeCaching } from "@/lib/pwa/runtime-caching";
 
 declare const self: ServiceWorkerGlobalScope & {
     __WB_MANIFEST: Array<{ url: string; revision: string | null }>;
@@ -22,6 +26,9 @@ if (manifest) {
 }
 
 precacheAndRoute(manifest);
+
+// Настройка runtime-кэширования (Stage 2: Runtime Caching & Offline Fallback)
+setupRuntimeCaching();
 
 interface NemoNotificationAction {
     action: string;
@@ -63,7 +70,9 @@ self.addEventListener("push", (event) => {
                     ? data.title
                     : FULL_APP_NAME;
             let body =
-                typeof data.body === "string" ? data.body : "Новое сообщение";
+                typeof data.body === "string"
+                    ? data.body
+                    : SW_FALLBACK_MESSAGES.NEW_MESSAGE;
 
             // Дешифрация Blind Push
             const roomId =
@@ -86,7 +95,7 @@ self.addEventListener("push", (event) => {
                                 const parsed = JSON.parse(decrypted);
                                 body =
                                     parsed.text ||
-                                    "Новое зашифрованное сообщение";
+                                    SW_FALLBACK_MESSAGES.NEW_ENCRYPTED_MESSAGE;
                             } catch {
                                 body = decrypted; // Фолбэк для старых сообщений
                             }
@@ -95,14 +104,14 @@ self.addEventListener("push", (event) => {
                         console.warn(
                             `[SW] Ключ комнаты ${roomId} не найден в Keystore`,
                         );
-                        body = "Новое зашифрованное сообщение";
+                        body = SW_FALLBACK_MESSAGES.NEW_ENCRYPTED_MESSAGE;
                     }
                 } catch (e) {
                     console.error(
                         "[SW] Ошибка дешифрации PUSH-уведомления:",
                         e,
                     );
-                    body = "Новое сообщение (ошибка дешифрации)";
+                    body = SW_FALLBACK_MESSAGES.DECRYPTION_ERROR;
                 }
             }
 
@@ -113,8 +122,14 @@ self.addEventListener("push", (event) => {
                 vibrate: [100, 50, 100],
                 data, // передаём данные целиком для использования в notificationclick
                 actions: [
-                    { action: NOTIFICATION_ACTIONS.OPEN, title: "Открыть" },
-                    { action: NOTIFICATION_ACTIONS.CLOSE, title: "Закрыть" },
+                    {
+                        action: NOTIFICATION_ACTIONS.OPEN,
+                        title: SW_ACTION_TITLES.OPEN,
+                    },
+                    {
+                        action: NOTIFICATION_ACTIONS.CLOSE,
+                        title: SW_ACTION_TITLES.CLOSE,
+                    },
                 ],
             };
             await self.registration.showNotification(title, options);
@@ -140,17 +155,19 @@ self.addEventListener("notificationclick", (event) => {
         self.clients
             .matchAll({ type: "window", includeUncontrolled: true })
             .then(async (clientList) => {
+                const isWindowClient = (
+                    client: Client,
+                ): client is WindowClient => "focus" in client;
+
                 // 1. Пытаемся найти уже открытое окно приложения
                 for (const client of clientList) {
                     const isSameOrigin = client.url.includes(location.origin);
-                    if (isSameOrigin && "focus" in client) {
+                    if (isSameOrigin && isWindowClient(client)) {
                         // Фокусируемся
-                        const focusedClient = await (
-                            client as WindowClient
-                        ).focus();
+                        const focusedClient = await client.focus();
                         // Отправляем сообщение для программного перехода без перезагрузки страницы
                         focusedClient.postMessage({
-                            type: "NAVIGATE",
+                            type: PUSH_MESSAGE_TYPE.NAVIGATE,
                             url: urlToOpen,
                         });
                         return focusedClient;

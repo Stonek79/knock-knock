@@ -336,8 +336,12 @@ export function useSendMessage({
                                 ...m,
                                 id: serverId,
                                 attachments: serverAttachments,
-                                _uiStatus: undefined,
-                                _tempId: undefined,
+                                _uiStatus: !navigator.onLine
+                                    ? CLIENT_MESSAGE_STATUS.QUEUED
+                                    : undefined,
+                                _tempId: !navigator.onLine
+                                    ? m._tempId
+                                    : undefined,
                                 _retryFiles: undefined,
                                 _retryAudioBlob: undefined,
                             };

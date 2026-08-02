@@ -36,4 +36,6 @@ export const CLIENT_MESSAGE_STATUS = {
     SENDING: "sending",
     /** Ошибка отправки (сеть / сервер) — доступен retry */
     FAILED: "failed",
+    /** В очереди на отправку (оффлайн) */
+    QUEUED: "queued",
 } as const;

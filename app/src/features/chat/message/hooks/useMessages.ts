@@ -55,6 +55,7 @@ export function useMessages({ roomId, roomKey }: UseMessagesProps) {
                 return (
                     m._uiStatus === CLIENT_MESSAGE_STATUS.FAILED ||
                     m._uiStatus === CLIENT_MESSAGE_STATUS.SENDING ||
+                    m._uiStatus === CLIENT_MESSAGE_STATUS.QUEUED ||
                     m.id.startsWith(OPTIMISTIC_ID_PREFIX)
                 );
             });

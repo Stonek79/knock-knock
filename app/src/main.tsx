@@ -33,7 +33,7 @@ declare module "@tanstack/react-router" {
 }
 
 /** Клиент для TanStack Query с оптимизированными настройками кэширования */
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             staleTime: 1000 * 60 * 5, // Данные считаются свежими 5 минут
