@@ -59,7 +59,7 @@
     background: var(--surface-2);
     border-color: color-mix(
         in oklch,
-        var(--color-primary, var(--foreground)) 20%,
+        var(--accent-primary, var(--foreground)) 20%,
         transparent
     );
 }
@@ -80,7 +80,7 @@
 }
 
 .outgoingIcon {
-    color: var(--color-info, var(--color-primary));
+    color: var(--color-info, var(--accent-primary));
 }
 
 .missedIcon {

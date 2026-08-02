@@ -3,7 +3,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: var(--bg-background);
+    background: var(--color-background);
 }
 
 /* Base layer for full screen video */
@@ -20,8 +20,8 @@
     height: 100%;
     background: radial-gradient(
         circle at center,
-        var(--bg-surface-elevated),
-        var(--bg-background)
+        var(--surface-1),
+        var(--color-background)
     );
 }
 
@@ -44,7 +44,7 @@
     background: radial-gradient(
         circle at center,
         transparent 0%,
-        color-mix(in oklch, var(--bg-background) 80%, transparent) 100%
+        color-mix(in oklch, var(--color-background) 80%, transparent) 100%
     );
 }
 
@@ -61,12 +61,12 @@
     overflow: hidden;
     z-index: 10;
     box-shadow:
-        var(--shadow-2xl),
-        0 0 0 var(--border-width-1)
+        var(--shadow-premium),
+        0 0 0 var(--border-width-base)
         color-mix(in oklch, var(--foreground) 20%, transparent);
-    background: var(--bg-surface-elevated);
+    background: var(--surface-1);
     transition:
-        transform var(--transition-medium, 0.3s ease),
+        transform var(--transition-base, 0.3s ease),
         width 0.3s ease,
         height 0.3s ease;
     animation: floatPip 6s ease-in-out infinite;

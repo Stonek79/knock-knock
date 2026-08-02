@@ -18,8 +18,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--size-14);
-    height: var(--size-14);
+    width: var(--space-3);
+    height: var(--space-3);
     aspect-ratio: 1;
     border-radius: var(--radius-full);
     border: none;
@@ -27,7 +27,7 @@
     backdrop-filter: var(--glass-blur);
     color: var(--foreground);
     cursor: pointer;
-    transition: all var(--duration-fast, 0.2s) cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all var(--transition-fast, 0.2s) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .actionButton:hover {
