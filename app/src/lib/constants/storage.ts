@@ -3,6 +3,7 @@ export const STORAGE_CONFIG = {
     AVATARS_COLLECTION: "users",
     MEDIA_COLLECTION: "media",
     TASK_QUEUE_COLLECTION: "task_queue",
+    PWA_PROMPT_DISMISSED: "pwa_prompt_dismissed",
 } as const;
 
 /** Префиксы MIME-типов для определения категории файла */

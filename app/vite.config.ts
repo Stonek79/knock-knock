@@ -45,11 +45,36 @@ export default defineConfig({
                         src: "images/nemo-n-dark.png",
                         sizes: "192x192",
                         type: "image/png",
+                        purpose: "any maskable",
                     },
                     {
                         src: "images/nemo-n-dark.png",
                         sizes: "512x512",
                         type: "image/png",
+                        purpose: "any maskable",
+                    },
+                ],
+                screenshots: [
+                    {
+                        src: "images/nemo-n-dark.png",
+                        sizes: "512x512",
+                        type: "image/png",
+                        form_factor: "wide",
+                    },
+                    {
+                        src: "images/nemo-n-dark.png",
+                        sizes: "512x512",
+                        type: "image/png",
+                        form_factor: "narrow",
+                    },
+                ],
+                shortcuts: [
+                    {
+                        name: "Новый чат",
+                        url: "/",
+                        icons: [
+                            { src: "images/nemo-n-dark.png", sizes: "192x192" },
+                        ],
                     },
                 ],
             },

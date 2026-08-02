@@ -52,3 +52,31 @@ export const NOTIFICATION_ACTIONS = {
 export const PUSH_MESSAGE_TYPE = {
     CALL_INCOMING: "call_incoming",
 } as const;
+
+export const NETWORK_EVENTS = {
+    ONLINE: "online",
+    OFFLINE: "offline",
+} as const;
+
+export const PWA_EVENTS = {
+    BEFORE_INSTALL_PROMPT: "beforeinstallprompt",
+} as const;
+
+export const PWA_PROMPT_OUTCOME = {
+    ACCEPTED: "accepted",
+    DISMISSED: "dismissed",
+} as const;
+
+export const PWA_DISPLAY_MODE = {
+    STANDALONE: "(display-mode: standalone)",
+} as const;
+
+export const BROWSER_CONSTANTS = {
+    MS_STREAM: "MSStream",
+} as const;
+
+export const NETWORK_INDICATOR_STATES = {
+    IDLE: "idle",
+    OFFLINE: "offline",
+    RESTORED: "restored",
+} as const;

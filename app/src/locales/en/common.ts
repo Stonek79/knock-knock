@@ -48,4 +48,9 @@ export const common = {
             "The application is in closed beta. We will open access to everyone soon.",
         devLogin: "Developer Login",
     },
+    network: {
+        disconnected: "Connection lost",
+        waiting: "Waiting for network",
+        restored: "Connection restored",
+    },
 } as const;

@@ -44,3 +44,11 @@ export type IconSize = ComponentSize;
  * Форма компонентов.
  */
 export type ComponentShape = "round" | "square" | "pill" | "circle";
+
+import type { NETWORK_INDICATOR_STATES } from "@/lib/constants";
+
+/**
+ * Состояния индикатора сети
+ */
+export type NetworkIndicatorState =
+    (typeof NETWORK_INDICATOR_STATES)[keyof typeof NETWORK_INDICATOR_STATES];

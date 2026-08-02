@@ -1,0 +1,37 @@
+.container {
+    position: fixed;
+    top: var(--space-md);
+    left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    z-index: var(--z-overlay);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    opacity: 0;
+    transition:
+        transform 0.3s var(--ease-out),
+        opacity 0.3s var(--ease-out);
+    pointer-events: none;
+    box-shadow: var(--shadow-bubble);
+}
+
+.container.offline {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    background-color: var(--color-error);
+    color: var(--color-white);
+}
+
+.container.restored {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    background-color: var(--color-success);
+    color: var(--color-white);
+}
+
+.container.idle {
+    /* Return to hidden state */
+    transform: translateX(-50%) translateY(-150%);
+    opacity: 0;
+}
