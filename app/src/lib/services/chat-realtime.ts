@@ -91,6 +91,23 @@ async function handleMessageEvent({
     const qc = _queryClient;
     const userId = _currentUser.id;
 
+    // Синхронизация с локальной БД
+    try {
+        if (
+            event.action === REALTIME_ACTIONS.CREATE ||
+            event.action === REALTIME_ACTIONS.UPDATE
+        ) {
+            await messageRepository.putLocalMessage(userId, record);
+        } else if (event.action === REALTIME_ACTIONS.DELETE) {
+            await messageRepository.deleteLocalMessage(userId, record.id);
+        }
+    } catch (dbError) {
+        logger.error(
+            "ChatRealtimeService: Ошибка синхронизации с локальной БД",
+            dbError,
+        );
+    }
+
     // 1. Расшифровываем сообщение на лету (нужно и для чата, и для превью в списке комнат)
     let decryptedContent = "";
     if (

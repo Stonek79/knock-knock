@@ -5,6 +5,7 @@ import {
     ROOM_MEMBER_FIELDS,
 } from "../constants";
 import { pb } from "../pocketbase";
+import { chatHistoryDb } from "../services/chat-history-db";
 import type {
     MessageRepoError,
     MessageRow,
@@ -68,6 +69,91 @@ export const messageRepository = {
                 );
             },
         ).map((res) => res.items.map((item) => MessageMapper.toRow(item)));
+    },
+
+    /**
+     * Получить историю сообщений из локальной БД
+     */
+    getLocalRoomMessages: async (
+        roomId: string,
+        userId: string,
+    ): Promise<Result<MessageRow[], MessageRepoError>> => {
+        return fromPromise(
+            chatHistoryDb.getRoomMessages(userId, roomId),
+            (e: unknown) => {
+                return appError(
+                    ERROR_CODES.DB_ERROR,
+                    "Ошибка при чтении из локальной БД",
+                    e,
+                );
+            },
+        ).map((messages) => {
+            // chatHistoryDb.getRoomMessages возвращает уже отсортированные по created данные
+            // но на всякий случай можно оставить как есть
+            return messages.sort((a, b) => {
+                return (
+                    new Date(b.created).getTime() -
+                    new Date(a.created).getTime()
+                );
+            });
+        });
+    },
+
+    /**
+     * Сохранить список сообщений в локальную БД
+     */
+    saveLocalMessages: async (
+        userId: string,
+        messages: MessageRow[],
+    ): Promise<Result<void, MessageRepoError>> => {
+        return fromPromise(
+            chatHistoryDb.addBatch(userId, messages),
+            (e: unknown) => {
+                return appError(
+                    ERROR_CODES.DB_ERROR,
+                    "Ошибка при сохранении в локальную БД",
+                    e,
+                );
+            },
+        );
+    },
+
+    /**
+     * Сохранить одно сообщение в локальную БД
+     */
+    putLocalMessage: async (
+        userId: string,
+        message: MessageRow,
+    ): Promise<Result<void, MessageRepoError>> => {
+        return fromPromise(
+            chatHistoryDb.putMessage(userId, message),
+            (e: unknown) => {
+                return appError(
+                    ERROR_CODES.DB_ERROR,
+                    "Ошибка при сохранении сообщения в локальную БД",
+                    e,
+                );
+            },
+        );
+    },
+
+    /**
+     * Удалить сообщение из локальной БД
+     */
+    deleteLocalMessage: async (
+        userId: string,
+        messageId: string,
+    ): Promise<Result<void, MessageRepoError>> => {
+        return fromPromise(
+            chatHistoryDb.removeMessage(userId, messageId),
+            (e: unknown) => {
+                return appError(
+                    ERROR_CODES.DB_ERROR,
+                    "Ошибка при удалении сообщения из локальной БД",
+                    e,
+                );
+            },
+        );
     },
 
     /**

@@ -9,7 +9,7 @@ import { logger } from "@/lib/logger";
 import { messageRepository } from "@/lib/repositories/message.repository";
 import { SealedSenderUtil } from "@/lib/services/chat-crypto";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
-import type { ChatMessage } from "@/lib/types";
+import type { ChatMessage, MessageRow } from "@/lib/types";
 import { decryptMessagePayload } from "@/lib/utils/decryptPayload";
 import { useAuthStore } from "@/stores/auth";
 
@@ -60,62 +60,106 @@ export function useMessages({ roomId, roomKey }: UseMessagesProps) {
                 );
             });
 
-            const result = await messageRepository.getRoomMessages(roomId);
-            if (result.isErr()) {
-                logger.error(
-                    `useMessages [${roomId}]: load failed`,
-                    result.error,
-                );
-                throw new Error(result.error.message);
-            }
-
-            const records = result.value;
-            const decrypted: ChatMessage[] = [];
-
-            for (const record of records) {
-                // 1. Глобально удаленные (старые артефакты Soft Delete из прошлых версий)
-                if (record.is_deleted) {
-                    continue;
-                }
-
-                // 2. Локальное скрытие (Local Hide) - если пользователь сам скрыл сообщение
-                const rawDeletedBy = record.metadata?.deleted_by;
-                const deletedBy = Array.isArray(rawDeletedBy)
-                    ? rawDeletedBy
-                    : [];
-                if (deletedBy.includes(pbUser.id)) {
-                    continue;
-                }
-
-                // Дешифровка контента для истории через общую утилиту
-                const content = await decryptMessagePayload(record, roomKey);
-
-                let finalContent = content;
-                if (content) {
-                    const unpacked = SealedSenderUtil.unpack(content);
-                    finalContent = unpacked.text;
-                    if (unpacked.sender_uuid) {
-                        record.sender = unpacked.sender_uuid;
+            const processAndDecryptMessages = async (
+                records: MessageRow[],
+            ): Promise<ChatMessage[]> => {
+                const decrypted: ChatMessage[] = [];
+                for (const record of records) {
+                    if (record.is_deleted) {
+                        continue;
                     }
+
+                    const rawDeletedBy = record.metadata?.deleted_by;
+                    const deletedBy = Array.isArray(rawDeletedBy)
+                        ? rawDeletedBy
+                        : [];
+                    if (deletedBy.includes(pbUser.id)) {
+                        continue;
+                    }
+
+                    const content = await decryptMessagePayload(
+                        record,
+                        roomKey,
+                    );
+
+                    let finalContent = content;
+                    if (content) {
+                        const unpacked = SealedSenderUtil.unpack(content);
+                        finalContent = unpacked.text;
+                        if (unpacked.sender_uuid) {
+                            record.sender = unpacked.sender_uuid;
+                        }
+                    }
+
+                    decrypted.push({
+                        ...record,
+                        content: finalContent,
+                    });
                 }
+                return decrypted;
+            };
 
-                // Используем маппер для создания доменного объекта
-                decrypted.push({
-                    ...record,
-                    content: finalContent,
-                });
-            }
+            const localResult = await messageRepository.getLocalRoomMessages(
+                roomId,
+                pbUser.id,
+            );
+            const localRecords = localResult.isOk() ? localResult.value : [];
+            const decryptedLocal =
+                await processAndDecryptMessages(localRecords);
 
-            // Объединяем успешные сообщения с сервера и локальные упавшие/отправляющиеся сообщения
-            const allMessages = [...decrypted, ...failedOrSendingMessages];
-
-            // Сортируем объединенный список по дате
-            return allMessages.sort((a, b) => {
-                return (
+            const allLocal = [
+                ...decryptedLocal,
+                ...failedOrSendingMessages,
+            ].sort(
+                (a, b) =>
                     new Date(a.created).getTime() -
-                    new Date(b.created).getTime()
-                );
-            });
+                    new Date(b.created).getTime(),
+            );
+
+            // Асинхронно синхронизируем с сервером
+            (async () => {
+                try {
+                    const serverResult =
+                        await messageRepository.getRoomMessages(roomId);
+                    if (serverResult.isErr()) {
+                        logger.error(
+                            `useMessages [${roomId}]: background sync failed`,
+                            serverResult.error,
+                        );
+                        return;
+                    }
+
+                    const serverRecords = serverResult.value;
+
+                    // Сохраняем новые данные в локальную БД
+                    await messageRepository.saveLocalMessages(
+                        pbUser.id,
+                        serverRecords,
+                    );
+
+                    const decryptedServer =
+                        await processAndDecryptMessages(serverRecords);
+
+                    const allServer = [
+                        ...decryptedServer,
+                        ...failedOrSendingMessages,
+                    ].sort(
+                        (a, b) =>
+                            new Date(a.created).getTime() -
+                            new Date(b.created).getTime(),
+                    );
+
+                    // Обновляем кэш TanStack Query
+                    queryClient.setQueryData(
+                        QUERY_KEYS.messages(roomId),
+                        allServer,
+                    );
+                } catch (e) {
+                    logger.error(`useMessages [${roomId}]: sync error`, e);
+                }
+            })();
+
+            return allLocal;
         },
         enabled: !!roomId && !!roomKey && !!pbUser,
     });
