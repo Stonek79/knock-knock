@@ -5,7 +5,7 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import { useLightboxSlides } from "../../../../hooks/useLightboxSlides";
 import "yet-another-react-lightbox/styles.css";
 import { Forward, Star } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { Attachment, RoomType } from "@/lib/types";
 
@@ -84,6 +84,14 @@ export const ZoomBlock = ({
     const starBtnTitle = t("chat.star", "В избранное");
     const forwardBtnTitle = t("chat.forward", "Переслать");
 
+    const handleStarClick = useCallback(() => {
+        // Кнопка в разработке
+    }, []);
+
+    const handleForwardClick = useCallback(() => {
+        // Кнопка в разработке
+    }, []);
+
     const lightboxToolbar = useMemo(
         () => ({
             buttons: [
@@ -91,9 +99,7 @@ export const ZoomBlock = ({
                     key="star"
                     type="button"
                     className="yarl__button"
-                    onClick={() => {
-                        // Кнопка в разработке
-                    }}
+                    onClick={handleStarClick}
                     title={starBtnTitle}
                 >
                     <Star size={24} />
@@ -102,9 +108,7 @@ export const ZoomBlock = ({
                     key="forward"
                     type="button"
                     className="yarl__button"
-                    onClick={() => {
-                        // Кнопка в разработке
-                    }}
+                    onClick={handleForwardClick}
                     title={forwardBtnTitle}
                 >
                     <Forward size={24} />
@@ -114,7 +118,7 @@ export const ZoomBlock = ({
                 "close",
             ],
         }),
-        [starBtnTitle, forwardBtnTitle],
+        [starBtnTitle, forwardBtnTitle, handleForwardClick, handleStarClick],
     );
 
     if (isDeleted || mediaAttachments.length <= 0) {

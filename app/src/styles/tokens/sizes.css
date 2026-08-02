@@ -86,4 +86,8 @@
     --size-call-pip-h: calc(160px * var(--scale-factor));
     --size-call-pip-video-max-w: calc(140px * var(--scale-factor));
     --size-call-pip-video-w-desktop: calc(200px * var(--scale-factor));
+
+    /* Video Messages */
+    --size-video-circle-player: calc(240px * var(--scale-factor));
+    --size-video-circle-record: calc(200px * var(--scale-factor));
 }

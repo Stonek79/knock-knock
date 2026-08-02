@@ -1,6 +1,6 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { ChevronUp, Pause, Play } from "lucide-react";
-import type { MouseEvent } from "react";
+import { type MouseEvent, type PointerEvent, useCallback } from "react";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
@@ -67,17 +67,32 @@ export function AudioMessagePlayer({
     const buttonVariant = isOwn ? "soft" : "solid";
     const buttonIntent = isOwn ? "primary" : "neutral";
 
+    const handlePointerDownCapture = useCallback(
+        (e: PointerEvent<HTMLDivElement>) => {
+            e.stopPropagation();
+        },
+        [],
+    );
+
+    const handleClick = useCallback((e: MouseEvent<HTMLDivElement>) => {
+        e.stopPropagation();
+    }, []);
+
+    const handleToggleTranscriptClick = useCallback(
+        (e: MouseEvent<HTMLButtonElement>) => {
+            e.stopPropagation();
+            onToggleTranscript?.();
+        },
+        [onToggleTranscript],
+    );
+
     return (
         <Flex
             className={styles.container}
             align="center"
             gap="3"
-            onPointerDownCapture={(e) => {
-                e.stopPropagation();
-            }}
-            onClick={(e) => {
-                e.stopPropagation();
-            }}
+            onPointerDownCapture={handlePointerDownCapture}
+            onClick={handleClick}
         >
             {decryptedSrc && (
                 <audio ref={audioRef} src={decryptedSrc} preload="metadata">
@@ -138,10 +153,7 @@ export function AudioMessagePlayer({
                             intent="neutral"
                             size="xs"
                             className={styles.transcriptToggle}
-                            onClick={(e: MouseEvent) => {
-                                e.stopPropagation();
-                                onToggleTranscript();
-                            }}
+                            onClick={handleToggleTranscriptClick}
                             aria-label={
                                 isTranscriptExpanded
                                     ? "Свернуть транскрипцию"

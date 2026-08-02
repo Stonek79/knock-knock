@@ -5,7 +5,7 @@ import {
     Smile,
     X,
 } from "lucide-react";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
@@ -76,6 +76,10 @@ const FilePreview = memo(function FilePreview({
 
     const uniqueKey = `${file.name}-${file.size}-${index}`;
 
+    const handleRemove = useCallback(() => {
+        onRemove(index);
+    }, [index, onRemove]);
+
     return (
         <Box key={uniqueKey} className={styles.mediaItem}>
             {isImage && objectUrl ? (
@@ -110,7 +114,7 @@ const FilePreview = memo(function FilePreview({
                     shape="round"
                     size="xs"
                     className={styles.removeButton}
-                    onClick={() => onRemove(index)}
+                    onClick={handleRemove}
                     disabled={isSending}
                     aria-label={t("chat.removeAttachment", "Удалить")}
                 >
@@ -136,12 +140,38 @@ export function AttachmentPreviewModal({
 }: AttachmentPreviewModalProps) {
     const { t } = useTranslation();
 
+    const handleOpenChange = useCallback(
+        (open: boolean) => {
+            if (!open) {
+                onClose();
+            }
+        },
+        [onClose],
+    );
+
+    const handleChangeCaption = useCallback(
+        (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+            onCaptionChange(e.target.value);
+        },
+        [onCaptionChange],
+    );
+
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                onSend();
+            }
+        },
+        [onSend],
+    );
+
     if (!isOpen || attachments.length === 0) {
         return null;
     }
 
     return (
-        <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
             <Dialog.Content
                 className={styles.content}
                 hideCloseButton
@@ -212,19 +242,14 @@ export function AttachmentPreviewModal({
                 <Flex align="center" gap="3" className={styles.footer}>
                     <TextArea
                         value={caption}
-                        onChange={(e) => onCaptionChange(e.target.value)}
+                        onChange={handleChangeCaption}
                         placeholder={t(
                             "chat.addCaptionShort",
                             "Добавить подпись...",
                         )}
                         disabled={isSending}
                         className={styles.captionInput}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                onSend();
-                            }
-                        }}
+                        onKeyDown={handleKeyDown}
                     />
 
                     <IconButton

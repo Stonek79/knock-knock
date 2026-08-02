@@ -37,6 +37,63 @@ function parseBroadcastPayload(payload: unknown): BroadcastTaskPayload | null {
     return null;
 }
 
+interface BroadcastHistoryItemProps {
+    item: TaskQueueResponse;
+    onDeleteClick: (id: string) => void;
+    isLoadingHistory: boolean;
+}
+
+function BroadcastHistoryItem({
+    item,
+    onDeleteClick,
+    isLoadingHistory,
+}: BroadcastHistoryItemProps) {
+    const payload = parseBroadcastPayload(item.payload);
+    const attachments: Attachment[] | null = payload?.mediaAttachments
+        ? payload.mediaAttachments.map((att) => {
+              return {
+                  id: att.id,
+                  file_name: att.file_name,
+                  file_size: att.file_size,
+                  content_type: att.content_type,
+                  type: att.type,
+                  url: mediaRepository.getSystemFileUrl(att.id, att.file_name),
+              };
+          })
+        : null;
+
+    const handleDelete = () => {
+        onDeleteClick(item.task_key);
+    };
+
+    return (
+        <Card className={styles.historyItem}>
+            <Flex justify="between" align="start" gap="3" width="100%">
+                <div className={styles.bubblePreviewWrapper}>
+                    <MessageBubble
+                        content={payload?.text || null}
+                        isOwn={true}
+                        userId={payload?.adminId || ""}
+                        timestamp={item.created}
+                        attachments={attachments}
+                        isSystem={true}
+                    />
+                </div>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    intent={COMPONENT_INTENT.DANGER}
+                    onClick={handleDelete}
+                    disabled={isLoadingHistory}
+                    className={styles.deleteBtn}
+                >
+                    <Trash2 size={ICON_SIZE.sm} />
+                </Button>
+            </Flex>
+        </Card>
+    );
+}
+
 /**
  * Компонент списка истории рассылок.
  * Рендерит сообщения рассылок в виде прокручиваемой ленты.
@@ -69,62 +126,14 @@ export function BroadcastHistory({
     return (
         <Box className={styles.scrollArea}>
             <Flex direction="column" gap="4" className={styles.list}>
-                {history.map((item) => {
-                    const payload = parseBroadcastPayload(item.payload);
-                    const attachments: Attachment[] | null =
-                        payload?.mediaAttachments
-                            ? payload.mediaAttachments.map((att) => {
-                                  return {
-                                      id: att.id,
-                                      file_name: att.file_name,
-                                      file_size: att.file_size,
-                                      content_type: att.content_type,
-                                      type: att.type,
-                                      url: mediaRepository.getSystemFileUrl(
-                                          att.id,
-                                          att.file_name,
-                                      ),
-                                  };
-                              })
-                            : null;
-
-                    return (
-                        <Card
-                            key={item.task_key}
-                            className={styles.historyItem}
-                        >
-                            <Flex
-                                justify="between"
-                                align="start"
-                                gap="3"
-                                width="100%"
-                            >
-                                <div className={styles.bubblePreviewWrapper}>
-                                    <MessageBubble
-                                        content={payload?.text || null}
-                                        isOwn={true}
-                                        userId={payload?.adminId || ""}
-                                        timestamp={item.created}
-                                        attachments={attachments}
-                                        isSystem={true}
-                                    />
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    intent={COMPONENT_INTENT.DANGER}
-                                    onClick={() => {
-                                        onDeleteClick(item.task_key);
-                                    }}
-                                    disabled={isLoadingHistory}
-                                    className={styles.deleteBtn}
-                                >
-                                    <Trash2 size={ICON_SIZE.sm} />
-                                </Button>
-                            </Flex>
-                        </Card>
-                    );
-                })}
+                {history.map((item) => (
+                    <BroadcastHistoryItem
+                        key={item.task_key}
+                        item={item}
+                        onDeleteClick={onDeleteClick}
+                        isLoadingHistory={isLoadingHistory}
+                    />
+                ))}
             </Flex>
         </Box>
     );

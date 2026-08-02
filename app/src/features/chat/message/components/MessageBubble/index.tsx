@@ -1,6 +1,13 @@
 import clsx from "clsx";
 import { Forward, RefreshCw, Star } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import {
+    type MouseEvent as ReactMouseEvent,
+    type PointerEvent as ReactPointerEvent,
+    useCallback,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import "yet-another-react-lightbox/styles.css";
 import { Box } from "@/components/layout/Box";
@@ -24,6 +31,8 @@ import type {
     UIMessageStatus,
 } from "@/lib/types";
 import { getUserColor } from "@/lib/utils/colors";
+import { useSwipeToReply } from "../../hooks/useSwipeToReply";
+import { VideoMessagePlayer } from "../VideoMessagePlayer";
 import { AttachmentRenderer } from "./components/AttachmentRenderer";
 import { ReplyBlock, type ReplyBlockData } from "./components/ReplyBlock";
 import { StatusIcon } from "./components/StatusIcon";
@@ -57,6 +66,7 @@ interface MessageBubbleProps {
     roomType?: RoomType;
     userId: string;
     isSystem?: boolean;
+    isVideoMessage?: boolean;
 }
 
 /**
@@ -88,6 +98,7 @@ export function MessageBubble({
     roomType,
     userId,
     isSystem = false,
+    isVideoMessage = false,
 }: MessageBubbleProps) {
     const { t } = useTranslation();
     const [lightboxIndex, setLightboxIndex] = useState<number>(-1);
@@ -127,58 +138,10 @@ export function MessageBubble({
     // Отмечаем цветом разных пользователей
     const userColor = senderName ? getUserColor(senderName) : undefined;
 
-    // Логика Swipe-to-Reply (мобильные устройства)
-    const [swipeOffset, setSwipeOffset] = useState(0);
-    const touchStartX = useRef<number | null>(null);
-    const touchStartY = useRef<number | null>(null);
-
-    // Подменяем имя и аватар для системных сообщений
-    const finalSenderName = isSystem ? APP_NAME : senderName;
-    const finalSenderAvatar = isSystem ? undefined : senderAvatar;
-
-    const handleTouchStart = (e: React.TouchEvent) => {
-        if (isEditing || isSelectionMode) {
-            return;
-        }
-
-        touchStartX.current = e.touches[0].clientX;
-        touchStartY.current = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e: React.TouchEvent) => {
-        if (touchStartX.current === null || touchStartY.current === null) {
-            return;
-        }
-
-        if (isEditing || isSelectionMode) {
-            return;
-        }
-
-        const deltaX = e.touches[0].clientX - touchStartX.current;
-        const deltaY = e.touches[0].clientY - touchStartY.current;
-
-        // Определяем, что это именно горизонтальный свайп, а не вертикальный скролл
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-            if (deltaX < 0) {
-                // Разрешаем свайп только влево
-                setSwipeOffset(Math.max(deltaX, -60)); // Ограничиваем максимальное натяжение
-            }
-        }
-    };
-
-    const handleTouchEnd = () => {
-        if (swipeOffset <= -40) {
-            onReply?.();
-            // Легкая вибрация, если поддерживается браузером
-            if (typeof navigator !== "undefined" && navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-        }
-
-        setSwipeOffset(0);
-        touchStartX.current = null;
-        touchStartY.current = null;
-    };
+    const { onTouchStart, onTouchMove, onTouchEnd } = useSwipeToReply({
+        onReply,
+        disabled: isEditing || isSelectionMode,
+    });
 
     // Long Press для выделения сообщения (мобилка)
     const { onPointerDown, onPointerUp, onPointerLeave } = useLongPress(
@@ -190,6 +153,76 @@ export function MessageBubble({
         },
         { delay: 400 },
     );
+
+    const handleClickCapture = useCallback(
+        (e: ReactMouseEvent<HTMLDivElement, MouseEvent>) => {
+            // 1. Блокируем "фантомный" клик, который браузер генерирует сразу после отпускания пальца
+            if (hasLongPressedRef.current) {
+                e.preventDefault();
+                e.stopPropagation();
+                setTimeout(() => {
+                    hasLongPressedRef.current = false;
+                }, 50);
+                return;
+            }
+
+            // 2. Если режим выделения УЖЕ активен, перехватываем любой клик (даже по фото или файлу)
+            if (isSelectionMode && !isEditing && onToggleSelection) {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleSelection();
+            }
+        },
+        [isSelectionMode, isEditing, onToggleSelection],
+    );
+
+    const handlePointerDown = useCallback(
+        (e: ReactPointerEvent<HTMLDivElement>) => {
+            const target = e.target;
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+
+            // Медиа-элементы: картинки, видео, или кастомные медиа-контейнеры (data-media)
+            const isMedia = target.closest("img, video, [data-media]");
+
+            // Интерактивные: нативные кнопки, ссылки, инпуты и кастомные контролы (data-interactive)
+            const isInteractive = target.closest(
+                "button, a, input, textarea, select, [data-interactive]",
+            );
+
+            // Блокируем лонг-пресс только если это "чистый" интерактивный элемент (без медиа внутри)
+            if (isInteractive && !isMedia) {
+                return;
+            }
+            onPointerDown(e as ReactPointerEvent<HTMLDivElement>);
+        },
+        [onPointerDown],
+    );
+
+    // Подменяем имя и аватар для системных сообщений
+    const finalSenderName = isSystem ? APP_NAME : senderName;
+    const finalSenderAvatar = isSystem ? undefined : senderAvatar;
+
+    const handleRetry = useCallback(
+        (e: ReactMouseEvent<HTMLButtonElement>) => {
+            e.stopPropagation();
+            onRetry?.();
+        },
+        [onRetry],
+    );
+
+    const handleToggleTranscript = useCallback(() => {
+        setIsTranscriptExpanded((prev) => !prev);
+    }, []);
+
+    const handleMediaError = useCallback(() => {
+        setHasMediaError(true);
+    }, []);
+
+    const handleCloseZoom = useCallback(() => {
+        setLightboxIndex(-1);
+    }, []);
 
     const wrapper = clsx(styles.bubbleWrapper, {
         [styles.own]: isOwn,
@@ -213,10 +246,7 @@ export function MessageBubble({
             {showError ? (
                 <Button
                     className={styles.retryBtn}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onRetry?.();
-                    }}
+                    onClick={handleRetry}
                     title={t("chat.retry", "Повторить")}
                 >
                     <RefreshCw size={ICON_SIZE.xs} />
@@ -239,51 +269,14 @@ export function MessageBubble({
             className={wrapper}
             data-group-position={groupPosition}
             data-testid="message-bubble"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
             // Гибридный подход: мобилка = Long Press, десктоп = клик
-            // TODO пока это костыль, нужно будет сделать отдельный компонент для десктопа и мобилки, чтобы не плодить кучу условий
-            onPointerDown={(e) => {
-                const target = e.target;
-                if (!(target instanceof HTMLElement)) {
-                    return;
-                }
-
-                // Медиа-элементы: картинки, видео, или кастомные медиа-контейнеры (data-media)
-                const isMedia = target.closest("img, video, [data-media]");
-
-                // Интерактивные: нативные кнопки, ссылки, инпуты и кастомные контролы (data-interactive)
-                const isInteractive = target.closest(
-                    "button, a, input, textarea, select, [data-interactive]",
-                );
-
-                // Блокируем лонг-пресс только если это "чистый" интерактивный элемент (без медиа внутри)
-                if (isInteractive && !isMedia) {
-                    return;
-                }
-                onPointerDown(e);
-            }}
+            onPointerDown={handlePointerDown}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerLeave}
-            onClickCapture={(e) => {
-                // 1. Блокируем "фантомный" клик, который браузер генерирует сразу после отпускания пальца
-                if (hasLongPressedRef.current) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setTimeout(() => {
-                        hasLongPressedRef.current = false;
-                    }, 50);
-                    return;
-                }
-
-                // 2. Если режим выделения УЖЕ активен, перехватываем любой клик (даже по фото или файлу)
-                if (isSelectionMode && !isEditing && onToggleSelection) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onToggleSelection();
-                }
-            }}
+            onClickCapture={handleClickCapture}
         >
             {!isOwn && roomType !== ROOM_TYPE.DIRECT && !isSystem && (
                 <Box className={styles.avatarContainer}>
@@ -329,23 +322,29 @@ export function MessageBubble({
                 {replyTo && (
                     <ReplyBlock replyData={replyTo} onClick={onReplyClick} />
                 )}
-                {!isDeleted && (
-                    <AttachmentRenderer
-                        attachments={attachments || []}
-                        setLightboxIndex={setLightboxIndex}
-                        isOwn={isOwn}
-                        hasTranscript={!!content && hasAudioAttachment}
-                        isTranscriptExpanded={isTranscriptExpanded}
-                        onToggleTranscript={() =>
-                            setIsTranscriptExpanded((prev) => !prev)
-                        }
-                        roomKey={roomKey}
-                        userId={userId}
-                        onMediaError={setHasMediaError}
-                        isFailed={showError}
-                        isSystem={isSystem}
-                    />
-                )}
+                {!isDeleted &&
+                    (isVideoMessage && attachments && attachments.length > 0 ? (
+                        <VideoMessagePlayer
+                            attachment={attachments[0]}
+                            roomKey={roomKey}
+                            userId={userId}
+                            onError={handleMediaError}
+                        />
+                    ) : (
+                        <AttachmentRenderer
+                            attachments={attachments || []}
+                            setLightboxIndex={setLightboxIndex}
+                            isOwn={isOwn}
+                            hasTranscript={!!content && hasAudioAttachment}
+                            isTranscriptExpanded={isTranscriptExpanded}
+                            onToggleTranscript={handleToggleTranscript}
+                            roomKey={roomKey}
+                            userId={userId}
+                            onMediaError={setHasMediaError}
+                            isFailed={showError}
+                            isSystem={isSystem}
+                        />
+                    ))}
                 {isDeleted ? (
                     <Text className={styles.deletedContent}>
                         {t("chat.messageDeleted", "Сообщение удалено")}
@@ -385,7 +384,7 @@ export function MessageBubble({
                 userId={userId}
                 isDeleted={isDeleted}
                 open={lightboxIndex >= 0}
-                close={() => setLightboxIndex(-1)}
+                close={handleCloseZoom}
                 index={lightboxIndex}
             />
         </Flex>

@@ -14,6 +14,7 @@ export const messageMetadataSchema = z
         forward_from_name: z.string().optional(), // Имя оригинального автора при пересылке
         forward_from_id: z.string().optional(), // ID оригинального автора при пересылке
         broadcast_id: z.string().optional(), // ID рассылки (broadcast) для системных сообщений
+        is_video_message: z.boolean().optional(), // Флаг: является ли сообщение видеокружочком
     })
     .strict()
     .default({ deleted_by: [] });

@@ -68,11 +68,19 @@ export function useChatRoomActions(roomId: string) {
      * Если активен режим редактирования — обновляет сообщение.
      * Иначе — отправляет новое.
      */
-    const handleSend = async (
-        text: string,
-        files?: File[],
-        audioBlob?: Blob,
-    ) => {
+    const handleSend = async ({
+        text,
+        files,
+        audioBlob,
+        videoBlob,
+        isVideoMessage,
+    }: {
+        text: string;
+        files?: File[];
+        audioBlob?: Blob;
+        videoBlob?: Blob;
+        isVideoMessage?: boolean;
+    }) => {
         try {
             if (editingId) {
                 await updateMessage({ messageId: editingId, newContent: text });
@@ -98,14 +106,17 @@ export function useChatRoomActions(roomId: string) {
                 const hasContent =
                     text.trim().length > 0 ||
                     (files && files.length > 0) ||
-                    !!audioBlob;
+                    !!audioBlob ||
+                    !!videoBlob;
 
                 if (hasContent || replyingToId) {
                     sendMutation.mutate({
                         text,
                         files,
                         audioBlob,
+                        videoBlob,
                         replyToId: replyingToId,
+                        isVideoMessage,
                     });
                 }
 

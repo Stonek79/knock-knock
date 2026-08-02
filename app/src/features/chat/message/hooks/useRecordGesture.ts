@@ -1,15 +1,17 @@
 import { useCallback, useRef, useState } from "react";
 
-interface UseAudioRecordingParams {
+interface UseRecordGestureParams {
     /** Начало записи (срабатывает после 400мс удержания) */
     onStartRecording: () => void | Promise<void>;
     /** Остановка записи с сохранением (когда отпустили кнопку) */
     onStopAndFinish: () => void;
     /** Отмена записи (когда увели курсор с кнопки) */
     onCancelRecording?: () => void;
+    /** Короткое нажатие (для переключения режима) */
+    onQuickTap?: () => void;
 }
 
-interface UseAudioRecordingReturn {
+interface UseRecordGestureReturn {
     /** Обработчик нажатия на кнопку */
     onPointerDown: () => void;
     /** Обработчик отпускания кнопки */
@@ -27,11 +29,12 @@ interface UseAudioRecordingReturn {
  * Запись начинается мгновенно при касании (для обхода блокировок Safari).
  * Если отпустить быстрее чем через 400мс - запись отменяется.
  */
-export function useAudioRecording({
+export function useRecordGesture({
     onStartRecording,
     onStopAndFinish,
     onCancelRecording,
-}: UseAudioRecordingParams): UseAudioRecordingReturn {
+    onQuickTap,
+}: UseRecordGestureParams): UseRecordGestureReturn {
     const [isRecording, setIsRecording] = useState(false);
     const isRecordingRef = useRef(false);
     const startTimeRef = useRef<number>(0);
@@ -56,11 +59,12 @@ export function useAudioRecording({
         if (duration < 400) {
             // Слишком быстрый тап — отменяем (защита от случайных кликов)
             onCancelRecording?.();
+            onQuickTap?.();
         } else {
             // Успешная запись
             onStopAndFinish();
         }
-    }, [onStopAndFinish, onCancelRecording]);
+    }, [onStopAndFinish, onCancelRecording, onQuickTap]);
 
     const handlePointerLeave = useCallback(() => {
         if (!isRecordingRef.current) {

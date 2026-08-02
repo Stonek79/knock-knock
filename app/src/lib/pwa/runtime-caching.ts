@@ -1,6 +1,6 @@
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { ExpirationPlugin } from "workbox-expiration";
-import { createHandlerBoundToURL } from "workbox-precaching";
+import { createHandlerBoundToURL, getCacheKeyForURL } from "workbox-precaching";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
 import { SW_CACHE_CONSTANTS } from "@/lib/constants";
@@ -54,12 +54,23 @@ export function setupRuntimeCaching() {
     try {
         // Указываем URL для фоллбэка. При использовании injectManifest
         // workbox-precaching умеет отдавать закэшированный index.html
-        const handler = createHandlerBoundToURL("/");
-        const navigationRoute = new NavigationRoute(handler, {
-            // Исключаем пути API, чтобы не ломать оффлайн-запросы к PocketBase
-            denylist: [/^\/api\//],
-        });
-        registerRoute(navigationRoute);
+        let fallbackUrl = "/";
+        if (!getCacheKeyForURL(fallbackUrl)) {
+            fallbackUrl = "index.html";
+        }
+
+        if (getCacheKeyForURL(fallbackUrl)) {
+            const handler = createHandlerBoundToURL(fallbackUrl);
+            const navigationRoute = new NavigationRoute(handler, {
+                // Исключаем пути API, чтобы не ломать оффлайн-запросы к PocketBase
+                denylist: [/^\/api\//],
+            });
+            registerRoute(navigationRoute);
+        } else {
+            console.info(
+                "[SW] NavigationRoute не инициализирован: index.html отсутствует в precache (обычно в dev-режиме).",
+            );
+        }
     } catch (e) {
         console.warn("[SW] Ошибка инициализации NavigationRoute:", e);
     }

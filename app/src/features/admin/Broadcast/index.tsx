@@ -73,11 +73,15 @@ export function Broadcast() {
     /**
      * Обработчик отправки новой рассылки
      */
-    const handleSend = async (
-        text: string,
-        files?: File[],
-        audioBlob?: Blob,
-    ) => {
+    const handleSend = async ({
+        text,
+        files,
+        audioBlob,
+    }: {
+        text: string;
+        files?: File[];
+        audioBlob?: Blob;
+    }) => {
         if (!text.trim() && (!files || files.length === 0) && !audioBlob) {
             return;
         }

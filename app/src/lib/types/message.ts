@@ -116,6 +116,10 @@ export type ChatMessage = DecryptedMessageWithProfile & {
     _retryFiles?: File[];
     /** Голосовое сообщение для повторной отправки при ошибке */
     _retryAudioBlob?: Blob;
+    /** Видеосообщение для повторной отправки при ошибке */
+    _retryVideoBlob?: Blob;
+    /** Флаг видеосообщения */
+    _isVideoMessage?: boolean;
 };
 
 /**

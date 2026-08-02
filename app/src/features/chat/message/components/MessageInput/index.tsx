@@ -11,9 +11,10 @@ import {
     Reply,
     SendHorizontal,
     Smile,
+    Video,
     X,
 } from "lucide-react";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
@@ -21,21 +22,24 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Slider } from "@/components/ui/Slider";
 import { Text } from "@/components/ui/Text";
 import { TextArea } from "@/components/ui/TextArea";
-import { useToast } from "@/components/ui/Toast";
-import { ICON_SIZE } from "@/lib/constants";
+import { ICON_SIZE, RECORDING_MODE } from "@/lib/constants";
 import { RECORDING_LIMITS } from "@/lib/constants/storage";
-import { useAudioRecording } from "../../hooks/useAudioRecording";
 import { useFileAttachments } from "../../hooks/useFileAttachments";
 import { useMessageInput } from "../../hooks/useMessageInput";
+import { useRecordGesture } from "../../hooks/useRecordGesture";
 import { AttachmentPreviewModal } from "./../AttachmentPreviewModal";
 import type { ReplyBlockData } from "../MessageBubble/components/ReplyBlock";
 import styles from "./message-input.module.css";
 
-// TODO: большой и сложный компонент, надо подумать над декомпозицией и вынесением логики в отдельные хуки и утилиты.
-
 interface MessageInputProps {
     /** Коллбэк отправки сообщения */
-    onSend: (text: string, files?: File[], audioBlob?: Blob) => Promise<void>;
+    onSend: (params: {
+        text: string;
+        files?: File[];
+        audioBlob?: Blob;
+        videoBlob?: Blob;
+        isVideoMessage?: boolean;
+    }) => Promise<void>;
     /** Коллбэк отмены (Escape) */
     onCancel?: () => void;
     /** Флаг блокировки ввода */
@@ -73,7 +77,6 @@ export function MessageInput({
     onClearForward,
 }: MessageInputProps) {
     const { t } = useTranslation();
-    const toast = useToast();
 
     const {
         message,
@@ -91,6 +94,18 @@ export function MessageInput({
         stopAndFinishRecording,
         recordedAudio,
         setRecordedAudio,
+
+        isRecordingVideo,
+        videoRecordingTime,
+        startVideoRecording,
+        stopVideoRecording,
+        stopAndFinishVideoRecording,
+        videoStream,
+        recordedVideo,
+        setRecordedVideo,
+
+        recordingMode,
+        setRecordingMode,
     } = useMessageInput({
         onSend,
         onCancel,
@@ -99,10 +114,11 @@ export function MessageInput({
     });
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
     // Хук для записи аудио по долгому нажатию (Long Press)
     const { onPointerDown, onPointerUp, onPointerLeave, onPointerCancel } =
-        useAudioRecording({
+        useRecordGesture({
             onStartRecording: () => {
                 void startRecording();
             },
@@ -114,6 +130,28 @@ export function MessageInput({
             },
         });
 
+    // Хук для записи видео (сначала пробовал объединить, но лучше оставить отдельно,
+    // так как видео использует свои собственные ref для MediaRecorder)
+    const {
+        onPointerDown: onPointerDownVideo,
+        onPointerUp: onPointerUpVideo,
+        onPointerLeave: onPointerLeaveVideo,
+        onPointerCancel: onPointerCancelVideo,
+    } = useRecordGesture({
+        onStartRecording: () => {
+            void startVideoRecording();
+        },
+        onStopAndFinish: () => {
+            stopAndFinishVideoRecording();
+        },
+        onCancelRecording: () => {
+            stopVideoRecording();
+        },
+        onQuickTap: () => {
+            setRecordingMode(RECORDING_MODE.AUDIO);
+        },
+    });
+
     const {
         attachments,
         attachmentCaption,
@@ -121,7 +159,7 @@ export function MessageInput({
         handleFileChange,
         removeAttachment,
         resetAttachments,
-    } = useFileAttachments({ toast, t });
+    } = useFileAttachments();
 
     const handleSendAttachments = async () => {
         if (attachments.length === 0 || sending || disabled) {
@@ -129,7 +167,10 @@ export function MessageInput({
         }
         setSending(true);
         try {
-            await onSend(attachmentCaption.trim(), attachments);
+            await onSend({
+                text: attachmentCaption.trim(),
+                files: attachments,
+            });
             resetAttachments();
         } finally {
             setSending(false);
@@ -147,14 +188,52 @@ export function MessageInput({
             forwardingCount &&
             forwardingCount > 0
         ) {
-            void onSend("", []);
+            void onSend({ text: "" });
             return;
         }
         handleSend();
     };
 
+    useEffect(() => {
+        if (isRecordingVideo && videoStream && videoPreviewRef.current) {
+            videoPreviewRef.current.srcObject = videoStream;
+            videoPreviewRef.current.play().catch(console.error);
+        }
+    }, [isRecordingVideo, videoStream]);
+
+    const handleFileButtonClick = useCallback(() => {
+        fileInputRef.current?.click();
+    }, []);
+
+    const handleMessageChange = useCallback(
+        (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+            setMessage(e.target.value);
+            onInputChange?.();
+            onTyping?.(e.target.value.length > 0);
+        },
+        [setMessage, onInputChange, onTyping],
+    );
+
+    const handleClearMedia = useCallback(() => {
+        setRecordedAudio(null);
+        setRecordedVideo(null);
+        setMessage("");
+    }, [setRecordedAudio, setRecordedVideo, setMessage]);
+
     return (
         <Flex direction="column" className={styles.inputContainer}>
+            {/* Видео превью (кружочек) */}
+            {isRecordingVideo && (
+                <Box className={styles.videoCircleOverlay}>
+                    <video
+                        ref={videoPreviewRef}
+                        className={styles.videoCirclePreview}
+                        muted
+                        playsInline
+                    />
+                </Box>
+            )}
+
             {/* Модальное окно предпросмотра вложений */}
             <AttachmentPreviewModal
                 isOpen={attachments.length > 0}
@@ -236,7 +315,9 @@ export function MessageInput({
                     variant="ghost"
                     size="md"
                     shape="round"
-                    disabled={disabled || isRecording || sending}
+                    disabled={
+                        disabled || isRecording || isRecordingVideo || sending
+                    }
                     type="button"
                     className={styles.actionButton}
                     aria-label={t("chat.emoji", "Эмодзи")}
@@ -249,11 +330,13 @@ export function MessageInput({
                     variant="ghost"
                     size="md"
                     shape="round"
-                    disabled={disabled || isRecording || sending}
+                    disabled={
+                        disabled || isRecording || isRecordingVideo || sending
+                    }
                     type="button"
                     className={styles.actionButton}
                     aria-label={t("chat.attachFile", "Прикрепить файл")}
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={handleFileButtonClick}
                 >
                     <Paperclip size={ICON_SIZE.sm} />
                 </IconButton>
@@ -263,11 +346,13 @@ export function MessageInput({
                     className={styles.textAreaContainer}
                     data-replicated-value={message}
                 >
-                    {isRecording ? (
+                    {isRecording || isRecordingVideo ? (
                         (() => {
+                            const recTime = isRecording
+                                ? recordingTime
+                                : videoRecordingTime;
                             const remainingTime =
-                                RECORDING_LIMITS.MAX_DURATION_SECONDS -
-                                recordingTime;
+                                RECORDING_LIMITS.MAX_DURATION_SECONDS - recTime;
                             const isWarning = remainingTime <= 5;
                             const formattedTime = `00:${remainingTime.toString().padStart(2, "0")}`;
                             return (
@@ -288,7 +373,7 @@ export function MessageInput({
                                     </Text>
                                     <Slider
                                         disabled
-                                        value={[recordingTime]}
+                                        value={[recTime]}
                                         max={
                                             RECORDING_LIMITS.MAX_DURATION_SECONDS
                                         }
@@ -306,11 +391,7 @@ export function MessageInput({
                             ref={textareaRef}
                             placeholder={t("chat.typeMessage", "Сообщение")}
                             value={message}
-                            onChange={(e) => {
-                                setMessage(e.target.value);
-                                onInputChange?.();
-                                onTyping?.(e.target.value.length > 0);
-                            }}
+                            onChange={handleMessageChange}
                             onKeyDown={handleKeyDown}
                             disabled={disabled || sending}
                             className={styles.textArea}
@@ -319,17 +400,14 @@ export function MessageInput({
                     )}
                 </Box>
 
-                {/* Кнопка удаления аудио + Отправки */}
-                {recordedAudio ? (
+                {/* Кнопка удаления аудио/видео + Отправки */}
+                {recordedAudio || recordedVideo ? (
                     <Flex align="center" gap="1">
                         <IconButton
                             size="md"
                             shape="round"
                             variant="ghost"
-                            onClick={() => {
-                                setRecordedAudio(null);
-                                setMessage("");
-                            }}
+                            onClick={handleClearMedia}
                             disabled={disabled || sending}
                             className={styles.actionButton}
                             aria-label={t("chat.removeAudio", "Удалить аудио")}
@@ -376,18 +454,40 @@ export function MessageInput({
                         type="button"
                         className={clsx(
                             styles.actionButton,
-                            isRecording && styles.recordingBtnActive,
+                            (isRecording || isRecordingVideo) &&
+                                styles.recordingBtnActive,
                         )}
-                        aria-label={t(
-                            "chat.voiceMessage",
-                            "Голосовое сообщение",
-                        )}
-                        onPointerDown={onPointerDown}
-                        onPointerUp={onPointerUp}
-                        onPointerLeave={onPointerLeave}
-                        onPointerCancel={onPointerCancel}
+                        aria-label={
+                            recordingMode === RECORDING_MODE.AUDIO
+                                ? t("chat.voiceMessage", "Голосовое сообщение")
+                                : t("chat.videoMessage", "Видеосообщение")
+                        }
+                        onPointerDown={
+                            recordingMode === RECORDING_MODE.AUDIO
+                                ? onPointerDown
+                                : onPointerDownVideo
+                        }
+                        onPointerUp={
+                            recordingMode === RECORDING_MODE.AUDIO
+                                ? onPointerUp
+                                : onPointerUpVideo
+                        }
+                        onPointerLeave={
+                            recordingMode === RECORDING_MODE.AUDIO
+                                ? onPointerLeave
+                                : onPointerLeaveVideo
+                        }
+                        onPointerCancel={
+                            recordingMode === RECORDING_MODE.AUDIO
+                                ? onPointerCancel
+                                : onPointerCancelVideo
+                        }
                     >
-                        <Mic size={ICON_SIZE.md} />
+                        {recordingMode === RECORDING_MODE.AUDIO ? (
+                            <Mic size={ICON_SIZE.md} />
+                        ) : (
+                            <Video size={ICON_SIZE.md} />
+                        )}
                     </IconButton>
                 )}
             </Flex>

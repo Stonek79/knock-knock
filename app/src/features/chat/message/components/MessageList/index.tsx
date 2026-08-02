@@ -186,6 +186,7 @@ export function MessageList({
                         groupPosition={groupPosition}
                         replyTo={replyToData}
                         forwardFromName={msg.metadata?.forward_from_name}
+                        isVideoMessage={msg.metadata?.is_video_message}
                         onReplyClick={handleOnReplyClick}
                         attachments={msg.attachments}
                         roomKey={roomKey}

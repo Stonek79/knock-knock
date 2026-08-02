@@ -18,6 +18,7 @@ export const MIME_PREFIXES = {
 export const DEFAULT_MIME_TYPES = {
     OCTET_STREAM: "application/octet-stream",
     WEBM_AUDIO: "audio/webm",
+    WEBM_VIDEO: "video/webm",
     WEBP: "image/webp",
     BIN_EXT: ".bin",
 } as const;
@@ -112,6 +113,12 @@ export const RECORDING_LIMITS = {
     DATA_TIMESLICE_MS: 250,
     /** Интервал таймера обратного отсчёта (мс) */
     TIMER_INTERVAL_MS: 1000,
+} as const;
+
+/** Режимы записи (аудио/видео) */
+export const RECORDING_MODE = {
+    AUDIO: "audio",
+    VIDEO: "video",
 } as const;
 
 /** Настройки аудиоплеера */

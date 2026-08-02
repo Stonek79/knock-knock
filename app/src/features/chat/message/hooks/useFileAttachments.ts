@@ -1,17 +1,15 @@
 import { type ChangeEvent, useCallback, useState } from "react";
-import type { useToast } from "@/components/ui/Toast";
+import { useTranslation } from "react-i18next";
+import { useToast } from "@/components/ui/Toast";
 import { MEDIA_LIMITS, MIME_PREFIXES } from "@/lib/constants/storage";
-
-interface UseFileAttachmentsProps {
-    toast: ReturnType<typeof useToast>;
-    t: (key: string, defaultValue: string) => string;
-}
 
 /**
  * Хук для управления вложениями (выбор, валидация по размеру, лимиты).
  * Логика сжатия и шифрования вынесена в MediaService.
  */
-export function useFileAttachments({ toast, t }: UseFileAttachmentsProps) {
+export function useFileAttachments() {
+    const { t } = useTranslation();
+    const toast = useToast();
     const [attachments, setAttachments] = useState<File[]>([]);
     const [attachmentCaption, setAttachmentCaption] = useState("");
 

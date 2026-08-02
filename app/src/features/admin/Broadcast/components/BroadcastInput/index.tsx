@@ -7,7 +7,13 @@ import styles from "./broadcast-input.module.css";
 
 interface BroadcastInputProps {
     /** Колбэк отправки сообщения */
-    onSend: (text: string, files?: File[], audioBlob?: Blob) => Promise<void>;
+    onSend: (params: {
+        text: string;
+        files?: File[];
+        audioBlob?: Blob;
+        videoBlob?: Blob;
+        isVideoMessage?: boolean;
+    }) => Promise<void>;
     /** Флаг загрузки (отправки) */
     isLoading: boolean;
     /** Текущий статус отправки */

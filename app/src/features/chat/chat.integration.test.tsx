@@ -57,7 +57,7 @@ describe("Интеграция чата", () => {
     });
 
     it("отправка сообщения вызывает MessageService.sendMessage", async () => {
-        const handleSend = async (text: string) => {
+        const handleSend = async ({ text }: { text: string }) => {
             await MessageService.sendMessage({
                 roomId: "room-1",
                 senderId: "user-1",
@@ -110,7 +110,7 @@ describe("Интеграция чата", () => {
         fireEvent.click(sendButton);
 
         await waitFor(() => {
-            expect(handleSend).toHaveBeenCalledWith("New Content");
+            expect(handleSend).toHaveBeenCalledWith({ text: "New Content" });
         });
     });
 

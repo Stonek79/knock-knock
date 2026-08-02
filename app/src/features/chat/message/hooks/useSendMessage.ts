@@ -1,17 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
-import {
-    ATTACHMENT_TYPES,
-    CLIENT_MESSAGE_STATUS,
-    DEFAULT_MIME_TYPES,
-    MIME_PREFIXES,
-    OPTIMISTIC_ID_PREFIX,
-    QUERY_KEYS,
-} from "@/lib/constants";
+import { CLIENT_MESSAGE_STATUS, QUERY_KEYS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { SealedSenderUtil } from "@/lib/services/chat-crypto";
-import { mediaService } from "@/lib/services/media";
 import { MessageService } from "@/lib/services/message";
 import type {
     Attachment,
@@ -20,6 +12,10 @@ import type {
     RoomWithMembers,
 } from "@/lib/types";
 import { createOptimisticMessage } from "../utils/optimistic";
+import {
+    generateOptimisticAttachments,
+    uploadMessageMedia,
+} from "../utils/upload";
 
 /**
  * Параметры инициализации хука useSendMessage
@@ -49,6 +45,10 @@ type SendMessageVariables = {
     forwardFromName?: string;
     /** ID оригинального автора (для пересылки) */
     forwardFromId?: string;
+    /** Видео-сообщение (видеокружочек blob) */
+    videoBlob?: Blob;
+    /** Флаг, является ли это видеокружочком */
+    isVideoMessage?: boolean;
 };
 
 /**
@@ -88,9 +88,11 @@ export function useSendMessage({
             text,
             files,
             audioBlob,
+            videoBlob,
             replyToId,
             forwardFromName,
             forwardFromId,
+            isVideoMessage,
         }) => {
             if (!roomId || !roomKey || !user) {
                 throw new Error(
@@ -98,77 +100,15 @@ export function useSendMessage({
                 );
             }
 
-            const attachments: Attachment[] = [];
-
             // 1. Загружаем медиа через единый сервис оркестрации
-            if (audioBlob) {
-                const uploadResult = await mediaService.uploadMedia({
-                    file: audioBlob,
-                    userId: user.id,
-                    roomId,
-                    cryptoKey: roomKey,
-                });
-
-                if (uploadResult.isErr()) {
-                    throw new Error(uploadResult.error.message);
-                }
-
-                const record = uploadResult.value;
-
-                // Определяем правильное расширение для Safari (mp4/m4a)
-                const isMp4 = audioBlob.type.includes("mp4");
-                const extension = isMp4 ? "m4a" : "webm";
-
-                attachments.push({
-                    id: record.id,
-                    file_name: `voice-message.${extension}`,
-                    file_size: audioBlob.size,
-                    content_type:
-                        audioBlob.type || DEFAULT_MIME_TYPES.WEBM_AUDIO,
-                    url: mediaService.getFileUrl(record, record.file),
-                    type: ATTACHMENT_TYPES.AUDIO,
-                });
-            }
-
-            if (files && files.length > 0) {
-                const uploadPromises = files.map(async (file) => {
-                    const uploadResult = await mediaService.uploadMedia({
-                        file,
-                        userId: user.id,
-                        roomId,
-                        cryptoKey: roomKey,
-                    });
-
-                    if (uploadResult.isErr()) {
-                        throw new Error(uploadResult.error.message);
-                    }
-
-                    const record = uploadResult.value;
-
-                    const type = file.type.startsWith(MIME_PREFIXES.IMAGE)
-                        ? ATTACHMENT_TYPES.IMAGE
-                        : file.type.startsWith(MIME_PREFIXES.VIDEO)
-                          ? ATTACHMENT_TYPES.VIDEO
-                          : ATTACHMENT_TYPES.DOCUMENT;
-
-                    const attachment: Attachment = {
-                        id: record.id,
-                        file_name: file.name,
-                        file_size: file.size,
-                        content_type: file.type,
-                        url: mediaService.getFileUrl(record, record.file),
-                        thumbnail_url: record.thumbnail
-                            ? mediaService.getFileUrl(record, record.thumbnail)
-                            : undefined,
-                        type,
-                    };
-
-                    return attachment;
-                });
-
-                const uploaded = await Promise.all(uploadPromises);
-                attachments.push(...uploaded);
-            }
+            const attachments = await uploadMessageMedia({
+                audioBlob,
+                videoBlob,
+                files,
+                userId: user.id,
+                roomId,
+                cryptoKey: roomKey,
+            });
 
             // 2. Шифруем и отправляем на сервер
             const result = await MessageService.sendMessage({
@@ -179,8 +119,9 @@ export function useSendMessage({
                 attachments: attachments.length > 0 ? attachments : undefined,
                 metadata: {
                     reply_to_id: replyToId ?? undefined,
-                    forward_from_name: forwardFromName ?? undefined,
-                    forward_from_id: forwardFromId ?? undefined,
+                    forward_from_name: forwardFromName,
+                    forward_from_id: forwardFromId,
+                    is_video_message: isVideoMessage,
                 },
             });
 
@@ -212,47 +153,14 @@ export function useSendMessage({
                 ) ?? [];
 
             const tempId = crypto.randomUUID();
-            const blobUrls: string[] = [];
-            const optimisticAttachments: Attachment[] = [];
 
-            if (variables.audioBlob) {
-                const blobUrl = URL.createObjectURL(variables.audioBlob);
-                blobUrls.push(blobUrl);
-
-                const isMp4 = variables.audioBlob.type.includes("mp4");
-                const extension = isMp4 ? "m4a" : "webm";
-
-                optimisticAttachments.push({
-                    id: `${OPTIMISTIC_ID_PREFIX}audio-${tempId}`,
-                    file_name: `voice-message.${extension}`,
-                    file_size: variables.audioBlob.size,
-                    content_type: DEFAULT_MIME_TYPES.WEBM_AUDIO,
-                    url: blobUrl,
-                    type: ATTACHMENT_TYPES.AUDIO,
+            const { attachments: optimisticAttachments, blobUrls } =
+                generateOptimisticAttachments({
+                    tempId,
+                    audioBlob: variables.audioBlob,
+                    videoBlob: variables.videoBlob,
+                    files: variables.files,
                 });
-            }
-
-            if (variables.files) {
-                for (const file of variables.files) {
-                    const blobUrl = URL.createObjectURL(file);
-                    blobUrls.push(blobUrl);
-
-                    const type = file.type.startsWith(MIME_PREFIXES.IMAGE)
-                        ? ATTACHMENT_TYPES.IMAGE
-                        : file.type.startsWith(MIME_PREFIXES.VIDEO)
-                          ? ATTACHMENT_TYPES.VIDEO
-                          : ATTACHMENT_TYPES.DOCUMENT;
-
-                    optimisticAttachments.push({
-                        id: `${OPTIMISTIC_ID_PREFIX}file-${tempId}-${file.name}`,
-                        file_name: file.name,
-                        file_size: file.size,
-                        content_type: file.type,
-                        url: blobUrl,
-                        type,
-                    });
-                }
-            }
 
             // Создаем единый объект оптимистичного сообщения с полной метадатой
             const optimisticMsg: ChatMessage = {
@@ -272,11 +180,14 @@ export function useSendMessage({
                 metadata: {
                     deleted_by: [],
                     reply_to_id: variables.replyToId ?? undefined,
-                    forward_from_name: variables.forwardFromName ?? undefined,
-                    forward_from_id: variables.forwardFromId ?? undefined,
+                    forward_from_name: variables.forwardFromName,
+                    forward_from_id: variables.forwardFromId,
+                    is_video_message: variables.isVideoMessage,
                 },
                 _retryFiles: variables.files,
                 _retryAudioBlob: variables.audioBlob,
+                _retryVideoBlob: variables.videoBlob,
+                _isVideoMessage: variables.isVideoMessage,
             };
 
             queryClient.setQueryData<ChatMessage[]>(
@@ -344,6 +255,7 @@ export function useSendMessage({
                                     : undefined,
                                 _retryFiles: undefined,
                                 _retryAudioBlob: undefined,
+                                _retryVideoBlob: undefined,
                             };
                         }
                         return m;
@@ -448,7 +360,11 @@ export function useSendMessage({
             text: message.content || "",
             files: message._retryFiles,
             audioBlob: message._retryAudioBlob,
+            videoBlob: message._retryVideoBlob,
             replyToId: message.metadata?.reply_to_id,
+            forwardFromName: message.metadata?.forward_from_name,
+            forwardFromId: message.metadata?.forward_from_id,
+            isVideoMessage: message.metadata?.is_video_message,
         });
     };
 

@@ -1,5 +1,5 @@
 import { Camera, FileText, Mic, Video } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
@@ -59,14 +59,16 @@ export function ReplyBlock({ replyData, onClick }: ReplyBlockProps) {
 
     const ActiveIcon = isDeleted ? null : Icon;
 
+    const handleClick = useCallback(
+        (e: React.MouseEvent<HTMLDivElement>) => {
+            e.stopPropagation();
+            onClick?.(replyData.id);
+        },
+        [onClick, replyData.id],
+    );
+
     return (
-        <Box
-            className={styles.replyWrapper}
-            onClick={(e) => {
-                e.stopPropagation();
-                onClick?.(replyData.id);
-            }}
-        >
+        <Box className={styles.replyWrapper} onClick={handleClick}>
             <Box
                 className={styles.replyLine}
                 style={userColor ? { backgroundColor: userColor } : undefined}
