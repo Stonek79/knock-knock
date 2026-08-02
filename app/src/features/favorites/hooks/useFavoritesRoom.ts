@@ -19,7 +19,7 @@ export function useFavoritesRoom() {
         queryFn: async () => {
             if (!profile) {
                 throw appError(
-                    ERROR_CODES.UNAUTHORIZED,
+                    ERROR_CODES.UNAUTHORIZED_ERROR,
                     t(
                         "auth.errors.unauthorized",
                         "Пожалуйста, войдите в систему",

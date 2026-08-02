@@ -14,6 +14,7 @@ import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { IconButton } from "@/components/ui/IconButton";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Search } from "@/components/ui/Search";
+import { Text } from "@/components/ui/Text";
 import { CHAT_TYPE, ICON_SIZE } from "@/lib/constants";
 import type { ChatType } from "@/lib/types";
 import { SidebarHeader } from "../../../navigation/components/SidebarHeader";
@@ -50,7 +51,7 @@ export function ChatList() {
     );
 
     return (
-        <div className={styles.container}>
+        <Box className={styles.container}>
             <Box>
                 <SidebarHeader title={t("chat.title", "Чаты")}>
                     <DropdownMenu.Root>
@@ -127,10 +128,10 @@ export function ChatList() {
                     align="center"
                 >
                     <MessageSquareOff className={styles.emptyIcon} />
-                    <span className={styles.emptyTitle}>
+                    <Text className={styles.emptyTitle}>
                         {t("chat.noRooms", "У вас пока нет чатов")}
-                    </span>
-                    <span className={styles.emptySubtitle}>
+                    </Text>
+                    <Text className={styles.emptySubtitle}>
                         {searchQuery
                             ? t(
                                   "chat.noSearchResults",
@@ -140,7 +141,7 @@ export function ChatList() {
                                   "chat.startChattingDescription",
                                   "Начните общение, создав новый чат",
                               )}
-                    </span>
+                    </Text>
                     <Button
                         onClick={() => setOpenDialog(CHAT_TYPE.DIRECT)}
                         variant="outline"
@@ -190,6 +191,6 @@ export function ChatList() {
                 open={isGroupDialogOpen}
                 onOpenChange={setIsGroupDialogOpen}
             />
-        </div>
+        </Box>
     );
 }

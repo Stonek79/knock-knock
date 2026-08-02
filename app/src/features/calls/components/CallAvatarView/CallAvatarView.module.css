@@ -11,8 +11,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 160px; /* Крупный аватар как в Telegram/WhatsApp */
-    height: 160px;
+    width: var(--size-avatar-xxl); /* Крупный аватар как в Telegram/WhatsApp */
+    height: var(--size-avatar-xxl);
     border-radius: var(--radius-full);
     margin-bottom: var(--space-4);
 }

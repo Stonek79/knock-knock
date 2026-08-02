@@ -1,4 +1,4 @@
-import { ERROR_CODES } from "@/lib/constants";
+import { ERROR_CODES, ROOM_VISIBILITY } from "@/lib/constants";
 import { generateRoomId, generateRoomKey } from "@/lib/crypto/rooms";
 import { logger } from "@/lib/logger";
 import { mediaDb } from "@/lib/mediadb/media-db";
@@ -8,6 +8,7 @@ import type {
     Result,
     RoomError,
     RoomMembersRoleOptions,
+    RoomsVisibilityOptions,
     RoomType,
 } from "@/lib/types";
 import { appError, err, ok } from "@/lib/utils/result";
@@ -19,6 +20,7 @@ import { encryptRoomKeysForMembers } from "./crypto";
 export interface CreateRoomOptions {
     name?: string | null;
     type: RoomType;
+    visibility?: RoomsVisibilityOptions;
     myUserId: string;
     peerIds: string[];
     isEphemeral?: boolean;
@@ -35,6 +37,7 @@ export interface CreateRoomOptions {
 export async function createRoom({
     name = null,
     type,
+    visibility,
     myUserId,
     peerIds,
     isEphemeral = false,
@@ -51,7 +54,7 @@ export async function createRoom({
         if (allMemberIds.length === 0) {
             return err(
                 appError(
-                    ERROR_CODES.MISSING_KEYS,
+                    ERROR_CODES.MISSING_KEYS_ERROR,
                     "Нет участников для создания комнаты",
                     {
                         userIds: [],
@@ -86,7 +89,7 @@ export async function createRoom({
 
             return err(
                 appError(
-                    ERROR_CODES.MISSING_KEYS,
+                    ERROR_CODES.MISSING_KEYS_ERROR,
                     "Некоторые пользователи не найдены",
                     {
                         userIds: missingIds,
@@ -119,7 +122,7 @@ export async function createRoom({
                 type,
                 name: name ?? undefined,
                 created_by: myUserId,
-                visibility: "private",
+                visibility: visibility || ROOM_VISIBILITY.PRIVATE,
             },
             membersData: roomMembers,
             keysData: encryptedKeys,
@@ -251,7 +254,7 @@ export async function addMembersToGroup({
             );
             return err(
                 appError(
-                    ERROR_CODES.MISSING_KEYS,
+                    ERROR_CODES.MISSING_KEYS_ERROR,
                     "Некоторые пользователи не найдены",
                     {
                         userIds: missingIds,

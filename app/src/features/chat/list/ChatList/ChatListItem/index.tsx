@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Avatar } from "@/components/ui/Avatar";
+import { Text } from "@/components/ui/Text";
 import { ROUTES } from "@/lib/constants";
 import styles from "./chatlist-item.module.css";
 
@@ -73,13 +74,13 @@ function ChatListItemContent({ chat }: { chat: ChatItem }) {
     return (
         <Flex width="100%" minWidth={0} gap="3" data-testid="chat-item">
             {chat.isSystem ? (
-                <div className={styles.systemAvatarWrapper}>
+                <Box className={styles.systemAvatarWrapper}>
                     <Avatar
                         size="md"
                         name={chat.name}
                         fallback="📢" // Рупор для системного чата
                     />
-                </div>
+                </Box>
             ) : (
                 <Avatar
                     size="md"
@@ -88,16 +89,16 @@ function ChatListItemContent({ chat }: { chat: ChatItem }) {
                 />
             )}
             <Box className={styles.chatInfo}>
-                <div className={styles.name}>
-                    <span
+                <Flex className={styles.name} align="center" justify="between">
+                    <Text
                         className={styles.chatName}
                         data-testid="chat-item-name"
                     >
                         {chat.name}
-                    </span>
-                    <span className={styles.chatTime}>{chat.time}</span>
-                </div>
-                <span className={styles.lastMessage}>{chat.lastMessage}</span>
+                    </Text>
+                    <Text className={styles.chatTime}>{chat.time}</Text>
+                </Flex>
+                <Text className={styles.lastMessage}>{chat.lastMessage}</Text>
             </Box>
             {chat?.unread && chat.unread > 0 ? (
                 <Box className={styles.unreadBadge}>{chat?.unread}</Box>

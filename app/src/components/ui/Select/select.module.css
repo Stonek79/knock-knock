@@ -1,0 +1,116 @@
+.trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: var(--kk-radius-sm);
+    padding: 0 var(--space-3);
+    font-size: var(--text-sm);
+    line-height: 1;
+    height: var(--size-input-h);
+    gap: var(--space-2);
+    background-color: var(--background);
+    color: var(--foreground);
+    border: 1px solid var(--border-subtle);
+    cursor: default;
+    transition: all 0.2s ease;
+}
+
+.trigger:hover {
+    background-color: var(--surface-2);
+}
+
+.trigger:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.trigger[data-placeholder] {
+    color: var(--muted-foreground);
+}
+
+.icon {
+    color: var(--muted-foreground);
+}
+
+.content {
+    overflow: hidden;
+    background-color: var(--background);
+    border-radius: var(--kk-radius-md);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-dropdown);
+    min-width: var(--radix-select-trigger-width);
+}
+
+.popper {
+    animation-duration: 400ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+}
+
+.viewport {
+    padding: var(--space-1);
+}
+
+.popperViewport {
+    width: 100%;
+    min-width: var(--radix-select-trigger-width);
+}
+
+.item {
+    font-size: var(--text-sm);
+    line-height: 1;
+    color: var(--foreground);
+    border-radius: var(--kk-radius-sm);
+    display: flex;
+    align-items: center;
+    height: var(--size-btn-h-2);
+    padding: 0 var(--space-6) 0 var(--space-5);
+    position: relative;
+    user-select: none;
+    cursor: default;
+}
+
+.item[data-disabled] {
+    color: var(--muted-foreground);
+    pointer-events: none;
+}
+
+.item[data-highlighted] {
+    outline: none;
+    background-color: var(--accent-primary-alpha);
+    color: var(--accent-primary);
+}
+
+.itemIndicatorWrapper {
+    position: absolute;
+    left: var(--space-1);
+    width: var(--size-icon-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.label {
+    padding: 0 var(--space-5);
+    font-size: var(--text-xs);
+    line-height: var(--size-btn-h-5);
+    color: var(--muted-foreground);
+    font-weight: var(--font-weight-medium);
+}
+
+.separator {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin: var(--space-1) var(--space-2);
+}
+
+.scrollButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--size-icon-md);
+    background-color: var(--background);
+    color: var(--foreground);
+    cursor: default;
+}

@@ -49,6 +49,7 @@ export const DB_TABLES = {
     MESSAGE_REPORTS: "message_reports",
     PUSH_SUBSCRIPTIONS: "push_subscriptions",
     CALL_LOGS: "call_logs",
+    INVITES: "invites",
 } as const satisfies Record<string, CollectionName>;
 
 /** Поля коллекции users */

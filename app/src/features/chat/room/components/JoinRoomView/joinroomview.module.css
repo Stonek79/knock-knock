@@ -1,0 +1,116 @@
+.container {
+    width: 100%;
+    min-height: 100vh;
+    background: var(--surface-1);
+    /* Анимированный градиентный фон (15s строго необходимо для медленного визуального эффекта пульсации, токенов подходящей длительности нет) */
+    background: linear-gradient(
+        -45deg,
+        var(--surface-1),
+        var(--surface-2),
+        var(--accent-primary),
+        var(--surface-2)
+    );
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Декоративные элементы (светящиеся сферы) */
+.container::before,
+.container::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: var(--blur-ambient);
+    z-index: 0;
+    opacity: 0.3;
+}
+
+.container::before {
+    top: -10%;
+    left: -10%;
+    /* 50vw строго необходимо для создания адаптивной полусферы на пол экрана (соответствующего токена в sizes.css нет) */
+    width: 50vw;
+    height: 50vw;
+    background: var(--accent-primary);
+}
+
+.container::after {
+    bottom: -10%;
+    right: -10%;
+    /* 40vw строго необходимо для создания декоративной сферы */
+    width: 40vw;
+    height: 40vw;
+    background: var(--accent-secondary);
+}
+
+.cardWrapper {
+    z-index: 1; /* Чтобы быть поверх блюра и декораций */
+    width: 100%;
+    max-width: var(
+        --max-w-auth,
+        400px
+    ); /* Используем токен, фолбэк для совместимости */
+    padding: var(--space-4);
+}
+
+.card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: var(--space-8) var(--space-6);
+    border-radius: var(--radius-lg);
+    border: var(--border-width-base) solid var(--glass-border);
+    box-shadow: var(--shadow-premium);
+    width: 100%;
+    text-align: center;
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-premium), var(--shadow-glow);
+    transform: translateY(calc(var(--space-1) * -1));
+}
+
+.actions {
+    width: 100%;
+    margin-top: var(--space-2);
+}
+
+.joinBtn {
+    width: 100%;
+}
+
+.cancelBtn {
+    width: 100%;
+}
+
+.fadeIn {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(calc(var(--space-5))) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

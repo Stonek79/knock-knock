@@ -51,6 +51,7 @@ export const lastMessagePreviewSchema = z
         content: z.string().nullable().optional(),
         created: z.string(),
         is_deleted: z.boolean().optional(),
+        iv: z.string().optional(),
         attachments: z
             .array(
                 z.object({

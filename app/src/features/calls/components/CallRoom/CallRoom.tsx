@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
+import { IconButton } from "@/components/ui/IconButton";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { CALL_TYPE, ICON_SIZE } from "@/lib/constants";
 import { ACTIVE_CALL_STATUS } from "@/lib/constants/calls";
@@ -94,18 +95,26 @@ export function CallRoom() {
     let statusText = t("calls.statusConnecting", "Соединение...");
     let isConnecting = true;
 
-    if (status === ACTIVE_CALL_STATUS.INITIATING) {
-        statusText = t("calls.statusCalling", "Инициализация...");
-        isConnecting = true;
-    } else if (status === ACTIVE_CALL_STATUS.CALLING) {
-        statusText = t("calls.statusCalling", "Вызов...");
-        isConnecting = true;
-    } else if (status === ACTIVE_CALL_STATUS.ACTIVE) {
-        statusText = t("calls.statusActive", "Звонок активен");
-        isConnecting = false;
-    } else if (status === ACTIVE_CALL_STATUS.RECONNECTING) {
-        statusText = t("calls.statusReconnecting", "Восстановление связи...");
-        isConnecting = true;
+    switch (status) {
+        case ACTIVE_CALL_STATUS.INITIATING:
+            statusText = t("calls.statusCalling", "Инициализация...");
+            isConnecting = true;
+            break;
+        case ACTIVE_CALL_STATUS.CALLING:
+            statusText = t("calls.statusCalling", "Вызов...");
+            isConnecting = true;
+            break;
+        case ACTIVE_CALL_STATUS.ACTIVE:
+            statusText = t("calls.statusActive", "Звонок активен");
+            isConnecting = false;
+            break;
+        case ACTIVE_CALL_STATUS.RECONNECTING:
+            statusText = t(
+                "calls.statusReconnecting",
+                "Восстановление связи...",
+            );
+            isConnecting = true;
+            break;
     }
 
     // Если свернуто в PiP
@@ -147,16 +156,15 @@ export function CallRoom() {
                 justify="between"
                 className={`${styles.header} ${hasVideo ? styles.hasVideo : ""}`}
             >
-                <button
-                    type="button"
+                <IconButton
                     className={styles.topIconBtn}
                     onClick={() => {
                         setIsMinimized(true);
                     }}
-                    title={t("calls.minimize", "Свернуть в PiP")}
+                    tooltip={t("calls.minimize", "Свернуть в PiP")}
                 >
                     <Minimize2 size={ICON_SIZE.sm} />
-                </button>
+                </IconButton>
 
                 {!isMobile && (
                     <Flex
@@ -164,20 +172,21 @@ export function CallRoom() {
                         gap="2"
                         className={styles.headerActions}
                     >
-                        <button
-                            type="button"
+                        <IconButton
                             className={styles.topIconBtn}
-                            title={t("contacts.invite", "Пригласить участника")}
+                            tooltip={t(
+                                "contacts.invite",
+                                "Пригласить участника",
+                            )}
                         >
                             <UserPlus size={ICON_SIZE.sm} />
-                        </button>
-                        <button
-                            type="button"
+                        </IconButton>
+                        <IconButton
                             className={styles.topIconBtn}
-                            title={t("settings.title", "Настройки")}
+                            tooltip={t("settings.title", "Настройки")}
                         >
                             <Settings size={ICON_SIZE.sm} />
-                        </button>
+                        </IconButton>
                     </Flex>
                 )}
             </Flex>
@@ -192,11 +201,7 @@ export function CallRoom() {
                         serverUrl={serverUrl}
                         connect={true}
                         data-lk-theme="default"
-                        style={{
-                            height: "100%",
-                            width: "100%",
-                            position: "relative",
-                        }}
+                        className={styles.liveKitRoom}
                         onDisconnected={endCall}
                     >
                         <LiveKitSync />

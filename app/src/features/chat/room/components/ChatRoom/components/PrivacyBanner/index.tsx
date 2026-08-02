@@ -5,6 +5,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
+import { Text } from "@/components/ui/Text";
 import styles from "./privacy-banner.module.css";
 
 export function PrivacyBanner() {
@@ -12,13 +13,13 @@ export function PrivacyBanner() {
 
     return (
         <Box className={styles.privacyBanner}>
-            <span className={styles.privacyText}>
+            <Text as="span" className={styles.privacyText}>
                 🔒{" "}
                 {t(
                     "chat.privacyWarning",
                     "Этот чат зашифрован и будет удален после закрытия",
                 )}
-            </span>
+            </Text>
         </Box>
     );
 }

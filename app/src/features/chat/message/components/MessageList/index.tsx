@@ -8,12 +8,9 @@ import { type RefObject, useImperativeHandle, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
+import { Text } from "@/components/ui/Text";
 import { CLIENT_MESSAGE_STATUS, MESSAGE_TYPE } from "@/lib/constants";
-import type {
-    ChatMessage,
-    DecryptedMessageWithProfile,
-    RoomType,
-} from "@/lib/types";
+import type { ChatMessage, RoomType } from "@/lib/types";
 import { getMessageGroupPosition } from "@/lib/utils/messageGrouping";
 import { useChatScroll } from "../../../room/hooks/useChatScroll";
 import { MessageBubble } from "../../components/MessageBubble";
@@ -24,7 +21,7 @@ import { ScrollButton } from "./ScrollButton";
 
 interface MessageListProps {
     /** Список сообщений */
-    messages?: DecryptedMessageWithProfile[];
+    messages?: ChatMessage[];
     /** Состояние загрузки */
     messagesLoading?: boolean;
     /** Состояние загрузки комнаты */
@@ -58,7 +55,7 @@ interface MessageListProps {
     /** ID комнаты чата */
     roomId?: string;
     /** Обработчик прочтения сообщения */
-    onMarkMessageAsRead?: (message: DecryptedMessageWithProfile) => void;
+    onMarkMessageAsRead?: (message: ChatMessage) => void;
 }
 
 export function MessageList({
@@ -111,7 +108,17 @@ export function MessageList({
         // Режим выделения активируется, если выбрано хотя бы одно сообщение
         const isSelectionMode = (selectedMessageIds?.size ?? 0) > 0;
 
-        return messages?.map((msg: DecryptedMessageWithProfile, index) => {
+        const handleOnReplyClick = (id: string) => {
+            const element = document.querySelector(`[data-message-id="${id}"]`);
+            if (element) {
+                element.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                });
+            }
+        };
+
+        return messages?.map((msg: ChatMessage, index) => {
             const isOwn = userId === msg.sender;
             const isEditing = editingId === msg.id && isOwn;
             const isFirstUnread = msg.id === unreadDividerId;
@@ -179,27 +186,16 @@ export function MessageList({
                         groupPosition={groupPosition}
                         replyTo={replyToData}
                         forwardFromName={msg.metadata?.forward_from_name}
-                        onReplyClick={(id) => {
-                            const element = document.querySelector(
-                                `[data-message-id="${id}"]`,
-                            );
-                            if (element) {
-                                element.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "center",
-                                });
-                            }
-                        }}
+                        onReplyClick={handleOnReplyClick}
                         attachments={msg.attachments}
                         roomKey={roomKey}
                         roomType={roomType}
                         isFailed={
-                            (msg as ChatMessage)._uiStatus ===
-                            CLIENT_MESSAGE_STATUS.FAILED
+                            msg._uiStatus === CLIENT_MESSAGE_STATUS.FAILED
                         }
                         onRetry={() => {
                             if (onRetry) {
-                                onRetry(msg as ChatMessage);
+                                onRetry(msg);
                             }
                         }}
                     />
@@ -224,11 +220,11 @@ export function MessageList({
     if (messagesLoading) {
         return (
             <Flex justify="center" align="center" className={styles.loadingBox}>
-                <span className={styles.statusText}>
+                <Text className={styles.statusText}>
                     {userId
                         ? t("chat.loadingMessages", "Загрузка сообщений...")
                         : t("common.authorizing", "Авторизация...")}
-                </span>
+                </Text>
             </Flex>
         );
     }
@@ -237,14 +233,14 @@ export function MessageList({
     if (messages?.length === 0) {
         return (
             <Flex justify="center" align="center" className={styles.emptyBox}>
-                <span className={styles.statusText}>
+                <Text className={styles.statusText}>
                     {isFavoritesView
                         ? t(
                               "chat.noFavoritesInThisChat",
                               "В этом чате нет избранных сообщений",
                           )
                         : t("chat.noMessages", "Нет сообщений")}
-                </span>
+                </Text>
             </Flex>
         );
     }

@@ -59,7 +59,7 @@ async function provisionSelfChatKey(
         if (!prekey) {
             return err(
                 appError(
-                    ERROR_CODES.MISSING_KEYS,
+                    ERROR_CODES.MISSING_KEYS_ERROR,
                     "Prekey не инициализирован. Невозможно создать ключ комнаты.",
                 ),
             );
@@ -126,7 +126,7 @@ async function provisionSelfChatKey(
             if (!identity) {
                 return err(
                     appError(
-                        ERROR_CODES.MISSING_KEYS,
+                        ERROR_CODES.MISSING_KEYS_ERROR,
                         "Identity не инициализирован при fallback-расшифровке",
                     ),
                 );
@@ -190,7 +190,7 @@ export async function findOrCreateDM({
 
         return err(
             appError(
-                ERROR_CODES.NOT_FOUND,
+                ERROR_CODES.NOT_FOUND_ERROR,
                 "Комната Избранное не найдена. Она должна быть создана при регистрации.",
             ),
         );
@@ -344,7 +344,10 @@ export async function getChatRoomData({
 
         if (!identity) {
             return err(
-                appError(ERROR_CODES.MISSING_KEYS, "Ключи не инициализированы"),
+                appError(
+                    ERROR_CODES.MISSING_KEYS_ERROR,
+                    "Ключи не инициализированы",
+                ),
             );
         }
 

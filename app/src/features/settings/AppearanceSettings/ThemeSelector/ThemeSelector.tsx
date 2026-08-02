@@ -4,6 +4,7 @@ import { useShallow } from "zustand/shallow";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { DESIGN_THEME, THEME_MODE } from "@/lib/constants/theme";
 import { useThemeStore } from "@/stores/theme";
 import styles from "./theme-selector.module.css";
@@ -180,27 +181,42 @@ export const ThemeSelector = () => {
                 <span className={styles.sectionTitle}>
                     {t("settings.appearance.wallpaper", "Обои чата")}
                 </span>
-                <select
-                    className={styles.wallpaperSelect}
-                    value={chatWallpaper || ""}
-                    onChange={(e) => setChatWallpaper(e.target.value || null)}
+                <Select.Root
+                    value={chatWallpaper || "none"}
+                    onValueChange={(value) =>
+                        setChatWallpaper(value === "none" ? null : value)
+                    }
                 >
-                    <option value="">
-                        {t("settings.appearance.wallpaperNone", "Нет")}
-                    </option>
-                    <option value="/backgrounds/default_desktop_1783166503530.jpg">
-                        Default Desktop
-                    </option>
-                    <option value="/backgrounds/emerald_desktop_1783166494421.jpg">
-                        Emerald Desktop
-                    </option>
-                    <option value="/backgrounds/neon_desktop_1783166511720.jpg">
-                        Neon Desktop
-                    </option>
-                    <option value="/backgrounds/neon_chat_mobile_1783166485187.jpg">
-                        Neon Mobile
-                    </option>
-                </select>
+                    <Select.Trigger className={styles.wallpaperSelect}>
+                        <Select.Value />
+                    </Select.Trigger>
+                    <Select.Content>
+                        <Select.Item value="none">
+                            {t("settings.appearance.wallpaperNone", "Нет")}
+                        </Select.Item>
+                        <Select.Item value="/backgrounds/default_desktop_1783166503530.jpg">
+                            {t(
+                                "settings.appearance.defaultDesktop",
+                                "Default Desktop",
+                            )}
+                        </Select.Item>
+                        <Select.Item value="/backgrounds/emerald_desktop_1783166494421.jpg">
+                            {t(
+                                "settings.appearance.emeraldDesktop",
+                                "Emerald Desktop",
+                            )}
+                        </Select.Item>
+                        <Select.Item value="/backgrounds/neon_desktop_1783166511720.jpg">
+                            {t(
+                                "settings.appearance.neonDesktop",
+                                "Neon Desktop",
+                            )}
+                        </Select.Item>
+                        <Select.Item value="/backgrounds/neon_chat_mobile_1783166485187.jpg">
+                            {t("settings.appearance.neonMobile", "Neon Mobile")}
+                        </Select.Item>
+                    </Select.Content>
+                </Select.Root>
             </Flex>
         </Flex>
     );

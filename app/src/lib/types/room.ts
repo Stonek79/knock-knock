@@ -51,9 +51,9 @@ export type PeerUser = z.infer<typeof peerUserSchema>;
  */
 export type RoomError =
     | AppError<typeof ERROR_CODES.DB_ERROR, Error>
-    | AppError<typeof ERROR_CODES.MISSING_KEYS, { userIds: string[] }>
+    | AppError<typeof ERROR_CODES.MISSING_KEYS_ERROR, { userIds: string[] }>
     | AppError<typeof ERROR_CODES.CRYPTO_ERROR, Error>
-    | AppError<typeof ERROR_CODES.NOT_FOUND>;
+    | AppError<typeof ERROR_CODES.NOT_FOUND_ERROR>;
 
 /** Алиас для обратной совместимости (ChatType === RoomType) */
 export type ChatType = RoomType;

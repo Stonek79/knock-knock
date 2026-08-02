@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
+import { Text } from "@/components/ui/Text";
 import { usePresence } from "@/features/presence";
 import { USER_WEB_STATUS } from "@/lib/constants";
 import type { PeerUser } from "@/lib/types/room";
@@ -43,28 +44,28 @@ export function RoomHeaderTitle({
     const renderSubtitle = () => {
         if (typingText) {
             return (
-                <span className={`${styles.subtitle} ${styles.typingText}`}>
+                <Text className={`${styles.subtitle} ${styles.typingText}`}>
                     {typingText}
-                </span>
+                </Text>
             );
         }
 
         if (isDM && peer) {
             return (
-                <span className={styles.subtitle}>
+                <Text className={styles.subtitle}>
                     {onlineUsers[peer.id] === USER_WEB_STATUS.ONLINE ? (
                         <Flex align="center" gap="1" pl="1">
-                            <span className={styles.onlineDot} />
-                            <span className={styles.onlineText}>
+                            <Text className={styles.onlineDot} />
+                            <Text className={styles.onlineText}>
                                 {t("chat.online", "в сети")}
-                            </span>
+                            </Text>
                         </Flex>
                     ) : peer.username ? (
                         `@${peer.username}`
                     ) : (
                         t("chat.offline", "не в сети")
                     )}
-                </span>
+                </Text>
             );
         }
 
@@ -75,10 +76,10 @@ export function RoomHeaderTitle({
                     : "";
 
             return (
-                <span className={styles.subtitle}>
+                <Text className={styles.subtitle}>
                     {membersCount} {t("chat.group.membersCount", "участников")}
                     {onlineText}
-                </span>
+                </Text>
             );
         }
 
@@ -92,10 +93,10 @@ export function RoomHeaderTitle({
             onClick={onClick}
             className={styles.titleArea}
         >
-            <h2 className={styles.displayName}>
+            <Text as="h2" className={styles.displayName}>
                 {isEphemeral ? "🔒 " : ""}
                 {displayName}
-            </h2>
+            </Text>
             {renderSubtitle()}
         </Flex>
     );

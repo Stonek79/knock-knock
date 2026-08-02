@@ -1,5 +1,7 @@
 import { MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
+import { Text } from "@/components/ui/Text";
 import { ChatList } from "@/features/chat/list";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
 import { ICON_SIZE } from "@/lib/constants";
@@ -12,20 +14,20 @@ export function Placeholder() {
     const { t } = useTranslation();
 
     return (
-        <div className={styles.chatContainer}>
-            <div className={styles.emptyIconBox}>
+        <Box className={styles.chatContainer}>
+            <Box className={styles.emptyIconBox}>
                 <MessageCircle size={ICON_SIZE.xl} strokeWidth={1.5} />
-            </div>
-            <h2 className={styles.placeholderTitle}>
+            </Box>
+            <Text as="h2" className={styles.placeholderTitle}>
                 {t("chat.selectChat", "Выберите чат")}
-            </h2>
-            <p className={styles.placeholderText}>
+            </Text>
+            <Text as="p" className={styles.placeholderText}>
                 {t(
                     "chat.selectChatDesc",
                     "Выберите пользователя из списка слева, чтобы начать общение.",
                 )}
-            </p>
-        </div>
+            </Text>
+        </Box>
     );
 }
 

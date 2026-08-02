@@ -65,7 +65,7 @@ describe("RoomService (PocketBase)", () => {
 
             expect(result.isErr()).toBe(true);
             if (result.isErr()) {
-                expect(result.error.kind).toBe(ERROR_CODES.MISSING_KEYS);
+                expect(result.error.kind).toBe(ERROR_CODES.MISSING_KEYS_ERROR);
                 expect(result.error.details).toEqual({ userIds: ["peer-id"] });
             }
         });

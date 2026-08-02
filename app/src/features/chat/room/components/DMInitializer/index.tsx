@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { Text } from "@/components/ui/Text";
 import { ROUTES } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { useAuthStore } from "@/stores/auth";
@@ -24,6 +25,14 @@ export function DMInitializer() {
     const [error, setError] = useState<string | null>(null);
     const initializing = useRef(false);
 
+    const tRef = useRef(t);
+    const navigateRef = useRef(navigate);
+    const createDMRef = useRef(createDM);
+
+    tRef.current = t;
+    navigateRef.current = navigate;
+    createDMRef.current = createDM;
+
     // Эффект инициализации чата при монтировании
     useEffect(() => {
         // Проверяем наличие необходимых данных и отсутствие запущенного процесса
@@ -37,7 +46,7 @@ export function DMInitializer() {
             try {
                 logger.info("Инициализация DM чата", { targetUserId: userId });
 
-                const roomId = await createDM.mutateAsync({
+                const roomId = await createDMRef.current.mutateAsync({
                     currentUserId: user.id,
                     targetUserId: userId,
                     isPrivate,
@@ -45,7 +54,7 @@ export function DMInitializer() {
 
                 logger.info("Чат успешно инициализирован", { roomId });
 
-                navigate({
+                navigateRef.current({
                     to: ROUTES.CHAT_ROOM,
                     params: { roomId },
                     replace: true,
@@ -55,7 +64,7 @@ export function DMInitializer() {
                 setError(
                     err instanceof Error
                         ? err.message
-                        : t(
+                        : tRef.current(
                               "chat.errors.createFailed",
                               "Не удалось создать чат",
                           ),
@@ -65,7 +74,7 @@ export function DMInitializer() {
         };
 
         initializeDM();
-    }, [user, userId, isPrivate, navigate, t, createDM]);
+    }, [user, userId, isPrivate]);
 
     if (error) {
         return (
@@ -81,9 +90,9 @@ export function DMInitializer() {
     return (
         <Box className={styles.container}>
             <Spinner size="lg" />
-            <span className={styles.initText}>
+            <Text as="span" className={styles.initText}>
                 {t("chat.initializing", "Инициализация чата...")}
-            </span>
+            </Text>
         </Box>
     );
 }

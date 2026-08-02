@@ -18,7 +18,7 @@
 }
 
 .pipWidget:hover {
-    transform: translateY(-2px);
+    transform: translateY(calc(var(--space-1) / -2));
     border-color: var(--glass-border-active, var(--accent-primary));
 }
 

@@ -20,8 +20,13 @@ import type { MessageRow } from "@/lib/types/message";
  * }
  * ```
  */
+export type DecryptMessagePayloadInput = Pick<
+    MessageRow,
+    "is_deleted" | "content" | "iv"
+>;
+
 export async function decryptMessagePayload(
-    msg: MessageRow,
+    msg: DecryptMessagePayloadInput,
     roomKey: CryptoKey | undefined,
 ): Promise<string | null> {
     // Удалённое сообщение — возвращаем null

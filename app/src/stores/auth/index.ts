@@ -105,7 +105,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     return;
                 }
                 // 2. Явный 401 — сессия протухла, выходим
-                if (error.kind === ERROR_CODES.UNAUTHORIZED) {
+                if (error.kind === ERROR_CODES.UNAUTHORIZED_ERROR) {
                     logger.error("Сессия недействительна (401):", error);
                     get().signOut();
                     set({ loading: false });

@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Container } from "@/components/layout/Container";
 import { Flex } from "@/components/layout/Flex";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { Text } from "@/components/ui/Text";
 import { ROOM_TYPE } from "@/lib/constants";
 import { getErrorMessage } from "@/lib/utils/result";
 import { RoomHeader } from "../..";
@@ -43,7 +44,7 @@ function ChatRoomInternal({ roomId }: { roomId: string }) {
     if (isLoading) {
         return (
             <Flex justify="center" align="center" height="100%">
-                <span>{t("common.loading", "Загрузка чата...")}</span>
+                <Text>{t("common.loading", "Загрузка чата...")}</Text>
             </Flex>
         );
     }

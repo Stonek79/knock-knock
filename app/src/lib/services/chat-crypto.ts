@@ -111,7 +111,9 @@ class ChatCryptoService {
         message,
         userId,
     }: {
-        message: MessageRow;
+        message: Pick<MessageRow, "room" | "is_deleted" | "content" | "iv"> & {
+            attachments?: { type?: string }[] | null;
+        };
         userId: string;
     }): Promise<{ content: string; isDecrypted: boolean }> {
         const key = await this.getRoomKey({ roomId: message.room, userId });

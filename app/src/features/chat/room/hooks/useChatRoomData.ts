@@ -11,11 +11,14 @@ import { useAuthStore } from "@/stores/auth";
  * Инкапсулирует логику получения метаданных и E2E ключей через сервис.
  */
 export function useChatRoomData(propRoomId?: string) {
-    const params = useParams({ strict: false }) as Record<
-        string,
-        string | undefined
-    >;
-    const roomId = propRoomId ?? params?.roomId;
+    const params = useParams({ strict: false });
+    let paramsRoomId: string | undefined;
+    if (params && typeof params === "object" && "roomId" in params) {
+        if (typeof params.roomId === "string") {
+            paramsRoomId = params.roomId;
+        }
+    }
+    const roomId = propRoomId ?? paramsRoomId;
     const pbUser = useAuthStore((state) => state.pbUser);
 
     return useQuery({

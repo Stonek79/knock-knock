@@ -6,11 +6,11 @@ import type PocketBase from "pocketbase";
 import type { RecordService } from "pocketbase";
 
 export type CollectionName =
+    | "_superusers"
     | "_mfas"
     | "_otps"
     | "_externalAuths"
     | "_authOrigins"
-    | "_superusers"
     | "users"
     | "rooms"
     | "room_members"
@@ -107,17 +107,20 @@ export type CallLogsStatusOptions =
     | "missed"
     | "rejected";
 
-export type InvitesStatusOptions = "active" | "used" | "revoked";
+// ---------------------------------------------------------------------------
+// Коллекция: _superusers
+// ---------------------------------------------------------------------------
+
+export type SuperusersRecord = Record<string, never>;
+
+export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> &
+    AuthSystemFields<Texpand>;
 
 // ---------------------------------------------------------------------------
 // Коллекция: _mfas
 // ---------------------------------------------------------------------------
 
-export type MfasRecord = {
-    collectionRef: string;
-    recordRef: string;
-    method: string;
-};
+export type MfasRecord = Record<string, never>;
 
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> &
     BaseSystemFields<Texpand>;
@@ -126,12 +129,7 @@ export type MfasResponse<Texpand = unknown> = Required<MfasRecord> &
 // Коллекция: _otps
 // ---------------------------------------------------------------------------
 
-export type OtpsRecord = {
-    collectionRef: string;
-    recordRef: string;
-    password: string;
-    sentTo?: string;
-};
+export type OtpsRecord = Record<string, never>;
 
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> &
     BaseSystemFields<Texpand>;
@@ -141,8 +139,7 @@ export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> &
 // ---------------------------------------------------------------------------
 
 export type ExternalAuthsRecord = {
-    collectionRef: string;
-    recordRef: string;
+    recordId: string;
     provider: string;
     providerId: string;
 };
@@ -155,25 +152,12 @@ export type ExternalAuthsResponse<Texpand = unknown> =
 // ---------------------------------------------------------------------------
 
 export type AuthOriginsRecord = {
-    collectionRef: string;
-    recordRef: string;
+    recordId: string;
     fingerprint: string;
 };
 
 export type AuthOriginsResponse<Texpand = unknown> =
     Required<AuthOriginsRecord> & BaseSystemFields<Texpand>;
-
-// ---------------------------------------------------------------------------
-// Коллекция: _superusers
-// ---------------------------------------------------------------------------
-
-export type SuperusersRecord = {
-    password: string;
-    email: string;
-};
-
-export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> &
-    AuthSystemFields<Texpand>;
 
 // ---------------------------------------------------------------------------
 // Коллекция: users
@@ -186,12 +170,12 @@ export type UsersRecord = {
     avatar?: string;
     username?: string;
     status?: UsersStatusOptions;
-    last_seen?: string;
-    settings?: null | unknown;
+    last_seen?: IsoDateString;
+    settings?: Record<string, unknown> | null;
     is_agreed_to_rules?: boolean;
     public_key_x25519?: string;
     public_key_signing?: string;
-    banned_until?: string;
+    banned_until?: IsoDateString;
     invite_code?: RecordIdString;
     profile_type?: UsersProfileTypeOptions;
     public_profile_key?: string;
@@ -234,12 +218,12 @@ export type RoomMembersRecord = {
     unread_count?: number;
     folder_id?: string;
     pin_position?: number;
-    settings?: null | unknown;
+    settings?: Record<string, unknown> | null;
     permissions?: null | unknown;
     is_hidden?: boolean;
-    last_read_at?: string;
+    last_read_at?: IsoDateString;
     is_test?: boolean;
-    history_cutoff?: string;
+    history_cutoff?: IsoDateString;
     is_muted?: boolean;
 };
 
@@ -262,7 +246,7 @@ export type MessagesRecord = {
     is_deleted?: boolean;
     is_edited?: boolean;
     deleted_by?: RecordIdString[];
-    deleted_at?: string;
+    deleted_at?: IsoDateString;
     is_system?: boolean;
     is_starred?: boolean;
     attachments?: null | unknown;
@@ -307,7 +291,7 @@ export type PresenceStatusRecord = {
     is_online?: boolean;
     is_typing?: boolean;
     room_id?: string;
-    last_ping?: string;
+    last_ping?: IsoDateString;
     is_test?: boolean;
     encrypted_user_id?: string;
 };
@@ -404,7 +388,7 @@ export type TaskQueueRecord = {
     status?: TaskQueueStatusOptions;
     attempts?: number;
     last_error?: string;
-    run_at: string;
+    run_at: IsoDateString;
 };
 
 export type TaskQueueResponse<Texpand = unknown> = Required<TaskQueueRecord> &
@@ -419,12 +403,12 @@ export type CallLogsRecord = {
     initiator: RecordIdString;
     type: CallLogsTypeOptions;
     status: CallLogsStatusOptions;
-    started_at?: string;
-    ended_at?: string;
+    started_at?: IsoDateString;
+    ended_at?: IsoDateString;
     duration_sec?: number;
     livekit_room_name?: string;
     is_test?: boolean;
-    encrypted_metadata?: null | unknown;
+    encrypted_metadata?: Record<string, unknown> | null;
 };
 
 export type CallLogsResponse<Texpand = unknown> = Required<CallLogsRecord> &
@@ -435,21 +419,23 @@ export type CallLogsResponse<Texpand = unknown> = Required<CallLogsRecord> &
 // ---------------------------------------------------------------------------
 
 export type InvitesRecord = {
-    code: string;
+    room: RecordIdString;
+    token: string;
+    expires_at?: IsoDateString;
     created_by: RecordIdString;
-    used_by?: RecordIdString;
-    status: InvitesStatusOptions;
+    max_uses?: number;
+    uses_count?: number;
 };
 
 export type InvitesResponse<Texpand = unknown> = Required<InvitesRecord> &
     BaseSystemFields<Texpand>;
 
 export type CollectionRecords = {
+    _superusers: SuperusersRecord;
     _mfas: MfasRecord;
     _otps: OtpsRecord;
     _externalAuths: ExternalAuthsRecord;
     _authOrigins: AuthOriginsRecord;
-    _superusers: SuperusersRecord;
     users: UsersRecord;
     rooms: RoomsRecord;
     room_members: RoomMembersRecord;
@@ -468,11 +454,11 @@ export type CollectionRecords = {
 };
 
 export type CollectionResponses = {
+    _superusers: SuperusersResponse;
     _mfas: MfasResponse;
     _otps: OtpsResponse;
     _externalAuths: ExternalAuthsResponse;
     _authOrigins: AuthOriginsResponse;
-    _superusers: SuperusersResponse;
     users: UsersResponse;
     rooms: RoomsResponse;
     room_members: RoomMembersResponse;
@@ -492,13 +478,13 @@ export type CollectionResponses = {
 
 export type TypedPocketBase = PocketBase & {
     collection(idOrName: string): RecordService; // fallback
+    collection(idOrName: "_superusers"): RecordService<SuperusersResponse>;
     collection(idOrName: "_mfas"): RecordService<MfasResponse>;
     collection(idOrName: "_otps"): RecordService<OtpsResponse>;
     collection(
         idOrName: "_externalAuths",
     ): RecordService<ExternalAuthsResponse>;
     collection(idOrName: "_authOrigins"): RecordService<AuthOriginsResponse>;
-    collection(idOrName: "_superusers"): RecordService<SuperusersResponse>;
     collection(idOrName: "users"): RecordService<UsersResponse>;
     collection(idOrName: "rooms"): RecordService<RoomsResponse>;
     collection(idOrName: "room_members"): RecordService<RoomMembersResponse>;

@@ -26,21 +26,19 @@ interface SpeechRecognitionInstance {
     start: () => void;
     stop: () => void;
     abort: () => void;
-    onresult: (event: SpeechRecognitionEvent | unknown) => void;
-    onerror: (event: unknown) => void;
+    onresult: (event: SpeechRecognitionEvent) => void;
+    onerror: (event: { error: string; message?: string }) => void;
     lang: string;
     continuous: boolean;
     interimResults: boolean;
 }
 
-/**
- * Тип для конструктора SpeechRecognition в глобальном объекте window.
- */
-type WindowWithSpeech = Window &
-    typeof globalThis & {
+declare global {
+    interface Window {
         SpeechRecognition?: new () => SpeechRecognitionInstance;
         webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
-    };
+    }
+}
 
 /**
  * Хук для транскрибации речи в текст с использованием Web Speech API.
@@ -54,18 +52,22 @@ export function useSpeechRecognition(lang = SPEECH_CONFIG.DEFAULT_LANG) {
     const interimRef = useRef("");
     const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
+    const tRef = useRef(t);
+    const toastRef = useRef(toast);
+    tRef.current = t;
+    toastRef.current = toast;
+
     const startRecognition = useCallback(() => {
         try {
-            const w = window as unknown as WindowWithSpeech;
             const SpeechRecognition =
-                w.SpeechRecognition || w.webkitSpeechRecognition;
+                window.SpeechRecognition || window.webkitSpeechRecognition;
 
             if (!SpeechRecognition) {
                 console.warn(
                     "Speech Recognition API is not supported in this browser.",
                 );
-                toast({
-                    title: t(
+                toastRef.current({
+                    title: tRef.current(
                         "chat.speechNotSupported",
                         "Распознавание речи не поддерживается в этом браузере.",
                     ),
@@ -79,10 +81,9 @@ export function useSpeechRecognition(lang = SPEECH_CONFIG.DEFAULT_LANG) {
             recognition.continuous = true;
             recognition.interimResults = true;
 
-            recognition.onresult = (event: unknown) => {
+            recognition.onresult = (speechEvent: SpeechRecognitionEvent) => {
                 let finalStr = "";
                 let interimStr = "";
-                const speechEvent = event as SpeechRecognitionEvent;
                 const results = speechEvent.results;
                 const resultIndex = speechEvent.resultIndex;
 
@@ -102,24 +103,23 @@ export function useSpeechRecognition(lang = SPEECH_CONFIG.DEFAULT_LANG) {
                 setInterimTranscript(interimStr);
             };
 
-            recognition.onerror = (event: unknown) => {
-                const speechError = event as {
-                    error: string;
-                    message?: string;
-                };
+            recognition.onerror = (speechError: {
+                error: string;
+                message?: string;
+            }) => {
                 console.error(
                     "Speech recognition error:",
                     speechError.error,
                     speechError.message || "",
                 );
 
-                let errorMessage = t(
+                let errorMessage = tRef.current(
                     "chat.speechError",
                     "Произошла ошибка при распознавании речи.",
                 );
 
                 if (speechError.error === SPEECH_CONFIG.ERROR_NOT_ALLOWED) {
-                    errorMessage = t(
+                    errorMessage = tRef.current(
                         "chat.speechNotAllowed",
                         "Доступ к микрофону запрещен. Пожалуйста, разрешите доступ в настройках браузера.",
                     );
@@ -130,7 +130,7 @@ export function useSpeechRecognition(lang = SPEECH_CONFIG.DEFAULT_LANG) {
                     return;
                 }
 
-                toast({
+                toastRef.current({
                     title: errorMessage,
                     variant: "error",
                 });
@@ -140,15 +140,15 @@ export function useSpeechRecognition(lang = SPEECH_CONFIG.DEFAULT_LANG) {
             recognitionRef.current = recognition;
         } catch (err) {
             console.error("Failed to start speech recognition", err);
-            toast({
-                title: t(
+            toastRef.current({
+                title: tRef.current(
                     "chat.speechStartFailed",
                     "Не удалось запустить распознавание речи.",
                 ),
                 variant: "error",
             });
         }
-    }, [lang, t, toast]);
+    }, [lang]);
 
     const stopRecognition = useCallback(() => {
         if (recognitionRef.current) {

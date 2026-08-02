@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ERROR_CODES } from "@/lib/constants";
 import { UserMapper } from "@/lib/repositories/mappers/userMapper";
 import { AuthService } from "@/lib/services/auth";
 import type { UserRecord as AuthUser } from "@/lib/types";
@@ -83,7 +84,7 @@ describe("Хук useAuthStore (Refactored)", () => {
             id: "user-1",
         } as unknown as AuthUser);
         vi.mocked(AuthService.refreshSession).mockResolvedValue(
-            err(appError("NetworkError", "Network Error")),
+            err(appError(ERROR_CODES.NETWORK_ERROR, "Network Error")),
         );
 
         await useAuthStore.getState().initialize();

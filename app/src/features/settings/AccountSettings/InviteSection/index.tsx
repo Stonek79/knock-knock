@@ -2,13 +2,14 @@ import { Copy, QrCode, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
+import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Text } from "@/components/ui/Text";
 import { ICON_SIZE } from "@/lib/constants";
 import { logger } from "@/lib/logger";
-import { InviteService } from "@/lib/services/invite";
+import { inviteService } from "@/lib/services/invite.service";
 import styles from "../accountsettings.module.css";
 
 export function InviteSection() {
@@ -22,7 +23,7 @@ export function InviteSection() {
         setErrorMsg(null);
         setInviteCode(null);
 
-        const result = await InviteService.generateInvite();
+        const result = await inviteService.generateUserInvite();
         if (result.isOk()) {
             setInviteCode(result.value.code);
         } else {
@@ -89,18 +90,12 @@ export function InviteSection() {
                             )}
                         </Text>
 
-                        <div
-                            style={{
-                                background: "white",
-                                padding: "16px",
-                                borderRadius: "8px",
-                            }}
-                        >
+                        <Box className={styles.qrContainer}>
                             <QRCode
                                 value={`${window.location.origin}/login?invite=${inviteCode}`}
                                 size={150}
                             />
-                        </div>
+                        </Box>
 
                         <Flex
                             direction="column"

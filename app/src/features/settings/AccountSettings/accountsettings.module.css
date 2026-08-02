@@ -17,3 +17,9 @@
     gap: var(--space-3);
     width: 100%;
 }
+
+.qrContainer {
+    background: var(--color-white);
+    padding: var(--space-4);
+    border-radius: var(--radius-2);
+}

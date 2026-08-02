@@ -130,9 +130,9 @@ export async function createBackup(
  * Ошибки, возможные при восстановлении бэкапа
  */
 export type RecoveryError =
-    | AppError<typeof ERROR_CODES.UNSUPPORTED_VERSION>
-    | AppError<typeof ERROR_CODES.DECRYPT_FAILED, Error>
-    | AppError<typeof ERROR_CODES.INVALID_BACKUP, Error>;
+    | AppError<typeof ERROR_CODES.UNSUPPORTED_VERSION_ERROR>
+    | AppError<typeof ERROR_CODES.DECRYPT_FAILED_ERROR, Error>
+    | AppError<typeof ERROR_CODES.INVALID_BACKUP_ERROR, Error>;
 
 /**
  * Быстрый тип для возврата восстановленных ключей
@@ -152,7 +152,7 @@ export async function restoreBackup(
     if (backup.version !== 1) {
         return err(
             appError(
-                ERROR_CODES.UNSUPPORTED_VERSION,
+                ERROR_CODES.UNSUPPORTED_VERSION_ERROR,
                 "Неподдерживаемая версия бэкапа",
             ),
         );
@@ -223,7 +223,7 @@ export async function restoreBackup(
         if (e instanceof Error && e.name === "OperationError") {
             return err(
                 appError(
-                    ERROR_CODES.DECRYPT_FAILED,
+                    ERROR_CODES.DECRYPT_FAILED_ERROR,
                     "Не удалось расшифровать бэкап. Неверный пароль?",
                     e,
                 ),
@@ -231,7 +231,7 @@ export async function restoreBackup(
         }
         return err(
             appError(
-                ERROR_CODES.INVALID_BACKUP,
+                ERROR_CODES.INVALID_BACKUP_ERROR,
                 "Ошибка парсинга данных бэкапа",
                 e instanceof Error ? e : undefined,
             ),

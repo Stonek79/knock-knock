@@ -32,7 +32,7 @@ export const ScrollButton = ({
                 <ArrowDown size={ICON_SIZE.sm} />
             </IconButton>
             {unreadCount > 0 && (
-                <div className={styles.unreadBadge}>{unreadCount}</div>
+                <Box className={styles.unreadBadge}>{unreadCount}</Box>
             )}
         </Box>
     );

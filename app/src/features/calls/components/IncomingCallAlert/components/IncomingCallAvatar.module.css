@@ -62,7 +62,8 @@
         color-mix(in oklch, var(--color-success) 20%, transparent) 0%,
         transparent 70%
     );
-    border: 1px solid color-mix(in oklch, var(--color-success) 40%, transparent);
+    border: var(--border-width-base) solid
+        color-mix(in oklch, var(--color-success) 40%, transparent);
     box-shadow: 0 0 var(--space-5)
         color-mix(in oklch, var(--color-success) 30%, transparent);
     opacity: 0;

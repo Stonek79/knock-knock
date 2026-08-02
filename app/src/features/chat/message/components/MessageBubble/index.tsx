@@ -206,10 +206,10 @@ export function MessageBubble({
     const metadataContent = (
         <>
             {isStarred && <Star size={ICON_SIZE.xs} className={styles.star} />}
-            <span className={styles.time}>
+            <Text className={styles.time} as="span">
                 {timeString}
                 {isEdited && !isDeleted && ` • ${t("chat.edited", "изм.")}`}
-            </span>
+            </Text>
             {showError ? (
                 <Button
                     className={styles.retryBtn}
@@ -243,8 +243,12 @@ export function MessageBubble({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             // Гибридный подход: мобилка = Long Press, десктоп = клик
+            // TODO пока это костыль, нужно будет сделать отдельный компонент для десктопа и мобилки, чтобы не плодить кучу условий
             onPointerDown={(e) => {
-                const target = e.target as HTMLElement;
+                const target = e.target;
+                if (!(target instanceof HTMLElement)) {
+                    return;
+                }
 
                 // Медиа-элементы: картинки, видео, или кастомные медиа-контейнеры (data-media)
                 const isMedia = target.closest("img, video, [data-media]");
@@ -300,13 +304,14 @@ export function MessageBubble({
                     finalSenderName &&
                     (groupPosition === MESSAGE_POSITION.SINGLE ||
                         groupPosition === MESSAGE_POSITION.START) && (
-                        <span
+                        <Text
+                            as="span"
                             className={clsx(styles.senderName, {
                                 color: userColor,
                             })}
                         >
                             {finalSenderName}
-                        </span>
+                        </Text>
                     )}
                 {forwardFromName && (
                     <Flex
@@ -317,7 +322,7 @@ export function MessageBubble({
                         <Forward size={ICON_SIZE.xs} />
                         <Text className={styles.forwardText}>
                             {t("chat.forwardedFrom", "Переслано от:")}{" "}
-                            <span>{forwardFromName}</span>
+                            <Text as="span">{forwardFromName}</Text>
                         </Text>
                     </Flex>
                 )}

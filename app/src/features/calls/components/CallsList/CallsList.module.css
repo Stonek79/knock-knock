@@ -47,7 +47,8 @@
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-lg);
     background: var(--surface-1);
-    border: 1px solid color-mix(in oklch, var(--foreground) 6%, transparent);
+    border: var(--border-width-base) solid
+        color-mix(in oklch, var(--foreground) 6%, transparent);
     cursor: pointer;
     transition:
         background var(--transition-fast, 0.15s ease),

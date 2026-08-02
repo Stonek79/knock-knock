@@ -1,15 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { Box } from "@/components/layout/Box";
+import { Flex } from "@/components/layout/Flex";
 import { ListLoadingState } from "@/components/ui/Skeleton";
+import { Text } from "@/components/ui/Text";
 import { ChatListLoadingState } from "./ChatListItemSkeleton";
 
 // Обертка для историй, задающая базовые стили
 const meta: Meta = {
     title: "UI/Skeletons",
-    component: () => <div />, // Placeholder
+    component: () => <Box />, // Placeholder
     decorators: [
         (Story) => (
-            <div className="nemo-root" data-theme="emerald" data-mode="dark">
-                <div
+            <Box className="nemo-root" data-theme="emerald" data-mode="dark">
+                <Box
                     style={{
                         padding: "var(--space-4)",
                         maxWidth: "400px",
@@ -18,8 +21,8 @@ const meta: Meta = {
                     }}
                 >
                     <Story />
-                </div>
-            </div>
+                </Box>
+            </Box>
         ),
     ],
 };
@@ -40,34 +43,19 @@ export const ContactsList: StoryObj = {
 
 export const FavoritesRoom: StoryObj = {
     render: () => (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--space-4)",
-            }}
-        >
-            <header
+        <Flex direction="column" gap="4">
+            <Flex
+                align="center"
                 style={{
                     height: "var(--header-height)",
                     borderBottom:
                         "var(--border-width-base) solid var(--glass-border)",
-                    display: "flex",
-                    alignItems: "center",
                 }}
             >
-                <span style={{ fontWeight: "var(--font-weight-bold)" }}>
-                    Избранное
-                </span>
-            </header>
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "var(--space-2)",
-                }}
-            >
-                <div
+                <Text weight="bold">Избранное</Text>
+            </Flex>
+            <Flex direction="column" gap="2">
+                <Box
                     style={{
                         height: "var(--space-10)",
                         width: "60%",
@@ -75,7 +63,7 @@ export const FavoritesRoom: StoryObj = {
                         borderRadius: "var(--kk-radius-md)",
                     }}
                 />
-                <div
+                <Box
                     style={{
                         height: "calc(var(--space-12) + var(--space-2))",
                         width: "40%",
@@ -84,7 +72,7 @@ export const FavoritesRoom: StoryObj = {
                         alignSelf: "flex-end",
                     }}
                 />
-            </div>
-        </div>
+            </Flex>
+        </Flex>
     ),
 };

@@ -21,6 +21,22 @@ export const DEFAULT_MIME_TYPES = {
     BIN_EXT: ".bin",
 } as const;
 
+/** Популярные расширения файлов для UI */
+export const FILE_EXTENSIONS = {
+    PDF: "pdf",
+    ZIP: "zip",
+    RAR: "rar",
+    SEVEN_ZIP: "7z",
+    TAR: "tar",
+    DOC: "doc",
+    DOCX: "docx",
+    TXT: "txt",
+    RTF: "rtf",
+    XLS: "xls",
+    XLSX: "xlsx",
+    CSV: "csv",
+} as const;
+
 /** Префиксы имен файлов для медиа */
 export const MEDIA_FILE_PREFIXES = {
     ENCRYPTED: "enc_",

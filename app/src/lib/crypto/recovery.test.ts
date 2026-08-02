@@ -65,7 +65,7 @@ describe("Recovery Service", () => {
 
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
-            expect(result.error.kind).toBe(ERROR_CODES.DECRYPT_FAILED);
+            expect(result.error.kind).toBe(ERROR_CODES.DECRYPT_FAILED_ERROR);
         }
     });
 
@@ -90,8 +90,8 @@ describe("Recovery Service", () => {
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
             expect([
-                ERROR_CODES.INVALID_BACKUP,
-                ERROR_CODES.DECRYPT_FAILED,
+                ERROR_CODES.INVALID_BACKUP_ERROR,
+                ERROR_CODES.DECRYPT_FAILED_ERROR,
             ]).toContain(result.error.kind);
         }
     });
@@ -108,7 +108,9 @@ describe("Recovery Service", () => {
 
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
-            expect(result.error.kind).toBe(ERROR_CODES.UNSUPPORTED_VERSION);
+            expect(result.error.kind).toBe(
+                ERROR_CODES.UNSUPPORTED_VERSION_ERROR,
+            );
         }
     });
 });

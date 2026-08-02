@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
+import { Text } from "@/components/ui/Text";
 import styles from "./unread-divider.module.css";
 
 /**
@@ -11,9 +12,9 @@ export function UnreadDivider() {
     return (
         <Box className={styles.container} data-unread-divider>
             <Box className={styles.line} />
-            <span className={styles.text}>
+            <Text className={styles.text}>
                 {t("chat.unreadMessages", "Непрочитанные сообщения")}
-            </span>
+            </Text>
             <Box className={styles.line} />
         </Box>
     );

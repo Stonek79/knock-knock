@@ -41,7 +41,7 @@ export async function encryptRoomKeysForMembers({
             logger.warn(`У пользователя ${profile.id} нет публичного ключа`);
             return err(
                 appError(
-                    ERROR_CODES.MISSING_KEYS,
+                    ERROR_CODES.MISSING_KEYS_ERROR,
                     `У пользователя ${profile.id} нет публичного ключа`,
                     {
                         userIds: [profile.id],

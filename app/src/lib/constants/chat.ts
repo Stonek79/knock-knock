@@ -45,3 +45,19 @@ export const SPEECH_CONFIG = {
 
 /** Префикс временных ID для оптимистичных сообщений */
 export const OPTIMISTIC_ID_PREFIX = "temp-" as const;
+
+/** Шаги создания группы */
+export const CREATE_GROUP_STEPS = {
+    SETTINGS: "settings",
+    RESULT: "result",
+} as const;
+
+export type CreateGroupStep =
+    (typeof CREATE_GROUP_STEPS)[keyof typeof CREATE_GROUP_STEPS];
+
+/** Настройки инвайтов */
+export const INVITE_EXPIRATION = {
+    FIFTEEN_MINS: 15 * 60,
+    ONE_HOUR: 60 * 60,
+    ONE_DAY: 24 * 60 * 60,
+} as const;

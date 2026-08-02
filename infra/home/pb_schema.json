@@ -435,7 +435,7 @@
 		],
 		"listRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
 		"viewRule": "@request.auth.id != \"\" && room.room_members_via_room.user ?= @request.auth.id",
-		"createRule": "@request.auth.id != \"\" && user = @request.auth.id",
+		"createRule": "@request.auth.id != '' && (user = @request.auth.id || room.created_by = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role ?= 'owner' || room.room_members_via_room.role ?= 'admin')))",
 		"updateRule": "user = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role = \"owner\" || room.room_members_via_room.role = \"admin\"))",
 		"deleteRule": "user = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role = \"owner\" || room.room_members_via_room.role = \"admin\"))"
 	},
@@ -668,7 +668,7 @@
 		],
 		"listRule": "@request.auth.id != '' && user = @request.auth.id",
 		"viewRule": "@request.auth.id != '' && user = @request.auth.id",
-		"createRule": "@request.auth.id != '' && user = @request.auth.id",
+		"createRule": "@request.auth.id != '' && (user = @request.auth.id || room.created_by = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role ?= 'owner' || room.room_members_via_room.role ?= 'admin')))",
 		"updateRule": null,
 		"deleteRule": "@request.auth.id != '' && user = @request.auth.id"
 	},
@@ -1462,16 +1462,33 @@
 				"autogeneratePattern": "[a-z0-9]{15}"
 			},
 			{
-				"id": "inv_code_id",
-				"name": "code",
+				"id": "inv_room_id",
+				"name": "room",
+				"type": "relation",
+				"system": false,
+				"required": true,
+				"collectionId": "pbc_rooms_id",
+				"maxSelect": 1,
+				"cascadeDelete": true
+			},
+			{
+				"id": "inv_token_id",
+				"name": "token",
 				"type": "text",
 				"system": false,
 				"required": true,
 				"options": {
-					"min": 6,
-					"max": 30,
-					"pattern": ""
+					"min": 16,
+					"max": 64,
+					"pattern": "^[A-Za-z0-9_-]+$"
 				}
+			},
+			{
+				"id": "inv_expires_at_id",
+				"name": "expires_at",
+				"type": "date",
+				"system": false,
+				"required": false
 			},
 			{
 				"id": "inv_cb_id",
@@ -1484,22 +1501,18 @@
 				"cascadeDelete": false
 			},
 			{
-				"id": "inv_ub_id",
-				"name": "used_by",
-				"type": "relation",
+				"id": "inv_max_uses_id",
+				"name": "max_uses",
+				"type": "number",
 				"system": false,
-				"required": false,
-				"collectionId": "_pb_users_auth_",
-				"maxSelect": 1,
-				"cascadeDelete": false
+				"required": false
 			},
 			{
-				"id": "inv_status_id",
-				"name": "status",
-				"type": "select",
+				"id": "inv_uses_count_id",
+				"name": "uses_count",
+				"type": "number",
 				"system": false,
-				"required": true,
-				"values": ["active", "used", "revoked"]
+				"required": false
 			},
 			{
 				"id": "autodate2990389176",
@@ -1518,11 +1531,13 @@
 				"onUpdate": true
 			}
 		],
-		"indexes": ["CREATE UNIQUE INDEX `idx_invite_code` ON `invites` (`code`)"],
-		"listRule": "@request.auth.id != \"\" && (created_by = @request.auth.id || @request.auth.role ?= \"admin\")",
-		"viewRule": "@request.auth.id != \"\" && (created_by = @request.auth.id || @request.auth.role ?= \"admin\")",
-		"createRule": null,
-		"updateRule": null,
-		"deleteRule": null
+		"indexes": [
+			"CREATE UNIQUE INDEX `idx_invite_token` ON `invites` (`token`)"
+		],
+		"listRule": "",
+		"viewRule": "",
+		"createRule": "@request.auth.id != '' && (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role ?= 'owner' || room.room_members_via_room.role ?= 'admin'))",
+		"updateRule": "@request.auth.id != '' && (created_by = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role ?= 'owner' || room.room_members_via_room.role ?= 'admin')))",
+		"deleteRule": "@request.auth.id != '' && (created_by = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role ?= 'owner' || room.room_members_via_room.role ?= 'admin')))"
 	}
 ]

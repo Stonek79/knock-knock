@@ -33,6 +33,7 @@ import { Route as AuthSettingsPrivacyRouteImport } from './routes/_auth/settings
 import { Route as AuthSettingsNotificationsRouteImport } from './routes/_auth/settings/notifications'
 import { Route as AuthSettingsAppearanceRouteImport } from './routes/_auth/settings/appearance'
 import { Route as AuthSettingsAccountRouteImport } from './routes/_auth/settings/account'
+import { Route as AuthJoinTokenRouteImport } from './routes/_auth.join.$token'
 import { Route as AuthFavoritesRoomIdRouteImport } from './routes/_auth/favorites.$roomId'
 import { Route as AuthDmUserIdRouteImport } from './routes/_auth/dm.$userId'
 import { Route as AuthChatRoomIdRouteImport } from './routes/_auth/chat/$roomId'
@@ -159,6 +160,11 @@ const AuthSettingsAccountRoute = AuthSettingsAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthSettingsRoute,
 } as any)
+const AuthJoinTokenRoute = AuthJoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthFavoritesRoomIdRoute = AuthFavoritesRoomIdRouteImport.update({
   id: '/$roomId',
   path: '/$roomId',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/chat/$roomId': typeof AuthChatRoomIdRoute
   '/dm/$userId': typeof AuthDmUserIdRoute
   '/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
+  '/join/$token': typeof AuthJoinTokenRoute
   '/settings/account': typeof AuthSettingsAccountRoute
   '/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/chat/$roomId': typeof AuthChatRoomIdRoute
   '/dm/$userId': typeof AuthDmUserIdRoute
   '/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
+  '/join/$token': typeof AuthJoinTokenRoute
   '/settings/account': typeof AuthSettingsAccountRoute
   '/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/settings/notifications': typeof AuthSettingsNotificationsRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/_auth/chat/$roomId': typeof AuthChatRoomIdRoute
   '/_auth/dm/$userId': typeof AuthDmUserIdRoute
   '/_auth/favorites/$roomId': typeof AuthFavoritesRoomIdRoute
+  '/_auth/join/$token': typeof AuthJoinTokenRoute
   '/_auth/settings/account': typeof AuthSettingsAccountRoute
   '/_auth/settings/appearance': typeof AuthSettingsAppearanceRoute
   '/_auth/settings/notifications': typeof AuthSettingsNotificationsRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/chat/$roomId'
     | '/dm/$userId'
     | '/favorites/$roomId'
+    | '/join/$token'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/notifications'
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/chat/$roomId'
     | '/dm/$userId'
     | '/favorites/$roomId'
+    | '/join/$token'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/notifications'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/_auth/chat/$roomId'
     | '/_auth/dm/$userId'
     | '/_auth/favorites/$roomId'
+    | '/_auth/join/$token'
     | '/_auth/settings/account'
     | '/_auth/settings/appearance'
     | '/_auth/settings/notifications'
@@ -541,6 +553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSettingsAccountRouteImport
       parentRoute: typeof AuthSettingsRoute
     }
+    '/_auth/join/$token': {
+      id: '/_auth/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof AuthJoinTokenRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/favorites/$roomId': {
       id: '/_auth/favorites/$roomId'
       path: '/$roomId'
@@ -669,6 +688,7 @@ interface AuthRouteChildren {
   AuthProfileRoute: typeof AuthProfileRoute
   AuthSettingsRoute: typeof AuthSettingsRouteWithChildren
   AuthDmUserIdRoute: typeof AuthDmUserIdRoute
+  AuthJoinTokenRoute: typeof AuthJoinTokenRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -681,6 +701,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthProfileRoute: AuthProfileRoute,
   AuthSettingsRoute: AuthSettingsRouteWithChildren,
   AuthDmUserIdRoute: AuthDmUserIdRoute,
+  AuthJoinTokenRoute: AuthJoinTokenRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { QUERY_KEYS, TYPING_CONFIG } from "@/lib/constants";
 import { presenceRepository } from "@/lib/repositories/presence.repository";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
-import type { PBUser } from "@/lib/types/pocketbase";
 import { useAuthStore } from "@/stores/auth";
 
 type UseTypingIndicatorProps = {
@@ -48,10 +47,26 @@ export function useTypingIndicator({
             if (result.isOk()) {
                 return result.value.map((r) => {
                     // Здесь record.expand.user — это объект профиля
-                    const userData = r.expand?.user as PBUser | undefined;
+                    const userData = r.expand?.user;
+                    let displayName: string | undefined;
+                    let username: string | undefined;
+                    if (userData && typeof userData === "object") {
+                        if (
+                            "display_name" in userData &&
+                            typeof userData.display_name === "string"
+                        ) {
+                            displayName = userData.display_name;
+                        }
+                        if (
+                            "username" in userData &&
+                            typeof userData.username === "string"
+                        ) {
+                            username = userData.username;
+                        }
+                    }
                     return (
-                        userData?.display_name ||
-                        userData?.username ||
+                        displayName ||
+                        username ||
                         t("chat.unknownUser", "Неизвестный")
                     );
                 });

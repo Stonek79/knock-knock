@@ -1,8 +1,9 @@
 import { Download, File, FileArchive, FileText, Loader2 } from "lucide-react";
+import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
 import { Text } from "@/components/ui/Text";
-import { ICON_SIZE } from "@/lib/constants";
+import { FILE_EXTENSIONS, ICON_SIZE } from "@/lib/constants";
 import { useMedia } from "@/lib/mediadb/useMedia";
 import type { Attachment } from "@/lib/types";
 import { formatBytes } from "@/lib/utils/format";
@@ -18,21 +19,21 @@ export interface DocumentAttachmentCardProps {
 function getFileIcon(name: string) {
     const ext = name.split(".").pop()?.toLowerCase() || "";
     switch (ext) {
-        case "pdf":
+        case FILE_EXTENSIONS.PDF:
             return <FileText size={28} className={styles.pdfIcon} />;
-        case "zip":
-        case "rar":
-        case "7z":
-        case "tar":
+        case FILE_EXTENSIONS.ZIP:
+        case FILE_EXTENSIONS.RAR:
+        case FILE_EXTENSIONS.SEVEN_ZIP:
+        case FILE_EXTENSIONS.TAR:
             return <FileArchive size={28} className={styles.zipIcon} />;
-        case "doc":
-        case "docx":
-        case "txt":
-        case "rtf":
+        case FILE_EXTENSIONS.DOC:
+        case FILE_EXTENSIONS.DOCX:
+        case FILE_EXTENSIONS.TXT:
+        case FILE_EXTENSIONS.RTF:
             return <FileText size={28} className={styles.docIcon} />;
-        case "xls":
-        case "xlsx":
-        case "csv":
+        case FILE_EXTENSIONS.XLS:
+        case FILE_EXTENSIONS.XLSX:
+        case FILE_EXTENSIONS.CSV:
             return <File size={28} className={styles.xlsIcon} />;
         default:
             return <File size={28} className={styles.defaultIcon} />;
@@ -75,7 +76,7 @@ export function DocumentAttachmentCard({
 
     return (
         <Flex align="center" gap="3" className={styles.card}>
-            <div className={styles.iconWrapper}>{icon}</div>
+            <Box className={styles.iconWrapper}>{icon}</Box>
 
             <Flex direction="column" className={styles.infoWrapper}>
                 <Text

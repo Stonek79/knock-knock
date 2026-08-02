@@ -2,6 +2,7 @@ import { Copy, Forward, Pencil, Reply, Trash2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Flex } from "@/components/layout/Flex";
 import { IconButton } from "@/components/ui/IconButton";
+import { Text } from "@/components/ui/Text";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ICON_SIZE } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
@@ -57,7 +58,7 @@ export function SelectionHeader({ roomId }: SelectionHeaderProps) {
                 >
                     <X size={ICON_SIZE.md} />
                 </IconButton>
-                <span className={styles.selectionCount}>{selectedCount}</span>
+                <Text className={styles.selectionCount}>{selectedCount}</Text>
             </Flex>
 
             <Flex align="center" gap="5">

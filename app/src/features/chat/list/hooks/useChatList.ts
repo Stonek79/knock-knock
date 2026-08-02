@@ -4,11 +4,7 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { chatCryptoService } from "@/lib/services/chat-crypto";
 import { getUserRooms } from "@/lib/services/room";
-import type {
-    ExtendedChatItem,
-    MessageRow,
-    RoomWithMembers,
-} from "@/lib/types";
+import type { ExtendedChatItem, RoomWithMembers } from "@/lib/types";
 import { useAuthStore } from "@/stores/auth";
 import { mapRoomToChatItem } from "../utils/roomUiMapper";
 
@@ -59,7 +55,10 @@ export function useChatList() {
                                 message: {
                                     ...room.last_message,
                                     room: room.id,
-                                } as unknown as MessageRow,
+                                    content: room.last_message.content || "",
+                                    iv: room.last_message.iv || "",
+                                    is_deleted: !!room.last_message.is_deleted,
+                                },
                                 userId: pbUser.id,
                             });
                         room.last_message.content = content;

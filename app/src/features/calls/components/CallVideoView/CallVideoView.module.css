@@ -52,7 +52,7 @@
 .localPipLayer {
     position: absolute;
     /* На мобилках PiP находится в верхнем правом углу, как в Telegram */
-    top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
+    top: calc(var(--space-4) + env(safe-area-inset-top, 0));
     right: var(--space-4);
     width: 28vw;
     max-width: var(--size-call-pip-video-max-w);
@@ -97,6 +97,6 @@
         transform: translateY(0);
     }
     50% {
-        transform: translateY(-8px);
+        transform: translateY(calc(var(--space-2) * -1));
     }
 }

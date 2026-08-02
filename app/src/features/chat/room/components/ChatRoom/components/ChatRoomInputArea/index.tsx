@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Box } from "@/components/layout/Box";
 import { MessageInput, useTypingIndicator } from "@/features/chat/message";
 import { useChatRoomActions } from "../../../../hooks/useChatRoomActions";
 import { useChatRoomData } from "../../../../hooks/useChatRoomData";
@@ -60,7 +61,7 @@ export function ChatRoomInputArea({ roomId }: ChatRoomInputAreaProps) {
         : null;
 
     return (
-        <div className={styles.inputArea}>
+        <Box className={styles.inputArea}>
             <MessageInput
                 onSend={handleSend}
                 onCancel={cancelEdit}
@@ -72,6 +73,6 @@ export function ChatRoomInputArea({ roomId }: ChatRoomInputAreaProps) {
                 forwardingCount={forwardingMessageIds.size}
                 onClearForward={clearForwarding}
             />
-        </div>
+        </Box>
     );
 }

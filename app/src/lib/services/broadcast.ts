@@ -42,7 +42,7 @@ export const broadcastService = {
             if (!userId) {
                 return err(
                     appError(
-                        ERROR_CODES.UNAUTHORIZED,
+                        ERROR_CODES.UNAUTHORIZED_ERROR,
                         "Необходима авторизация",
                     ),
                 );

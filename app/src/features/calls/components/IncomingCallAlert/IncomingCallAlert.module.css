@@ -14,7 +14,7 @@
     align-items: flex-end;
     justify-content: center;
     padding: var(--space-4);
-    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0));
     animation: fadeIn var(--transition-fast, 0.2s ease-out) forwards;
     overflow: hidden;
 }
@@ -87,16 +87,14 @@
 
 @media (min-width: 769px) {
     .alertCard {
-        max-width: var(--max-w-call-alert, 400px);
-        height: auto;
-        border-radius: var(--radius-2xl, 24px);
-        border: 1px solid
-            color-mix(in oklch, var(--foreground) 15%, transparent);
+        max-width: var(--max-w-call-alert);
+        border-radius: var(--radius-2xl);
+        border: var(--border-width-base) solid
+            color-mix(in oklch, var(--foreground) 10%, transparent);
         box-shadow:
-            0 var(--space-6) var(--space-16)
-            color-mix(in oklch, var(--color-black) 80%, transparent),
-            inset 0 1px 0
-            color-mix(in oklch, var(--foreground) 20%, transparent);
+            var(--shadow-xl),
+            inset 0 var(--border-width-base) 0
+            color-mix(in oklch, var(--color-white) 5%, transparent);
     }
 }
 

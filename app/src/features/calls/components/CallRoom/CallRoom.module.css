@@ -32,7 +32,7 @@
     height: 85vh;
     padding: 0;
     border: none;
-    background: var(--color-black, #000000);
+    background: var(--color-black);
 }
 
 .mobileOverlay {
@@ -52,7 +52,7 @@
 
 .mobileOverlay.hasVideo {
     padding: 0;
-    background: var(--color-black, #000000);
+    background: var(--color-black);
 }
 
 .header {
@@ -108,7 +108,7 @@
     width: 100%;
     height: 100%;
     z-index: var(--z-index-base, 1);
-    background: var(--color-black, #000000);
+    background: var(--color-black);
 }
 
 .mainContent {
@@ -139,7 +139,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0);
     background: linear-gradient(
         to top,
         color-mix(in oklch, var(--color-black) 80%, transparent) 0%,
@@ -153,4 +153,10 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
+}
+
+.liveKitRoom {
+    height: 100%;
+    width: 100%;
+    position: relative;
 }
