@@ -6,6 +6,7 @@ import {
 } from "../constants";
 import { pb } from "../pocketbase";
 import { chatHistoryDb } from "../services/chat-history-db";
+import { realtimeGateway } from "../services/RealtimeGateway";
 import type {
     MessageRepoError,
     MessageRow,
@@ -355,17 +356,23 @@ export const messageRepository = {
     subscribeToMessages: (
         callback: (event: PBRealtimeEvent<PBMessage>) => void,
     ): (() => void) => {
-        const unsubscribePromise = pb
-            .collection(DB_TABLES.MESSAGES)
-            .subscribe<PBMessage>("*", (e) => {
+        let unsub: (() => void) | undefined;
+        realtimeGateway
+            .subscribe<PBMessage>(DB_TABLES.MESSAGES, (e) => {
                 callback({
                     action: e.action as PBRealtimeAction,
                     record: e.record,
                 });
-            });
+            })
+            .then((unsubscribeFn) => {
+                unsub = unsubscribeFn;
+            })
+            .catch(() => {});
 
         return () => {
-            unsubscribePromise.then((unsub) => unsub());
+            if (unsub) {
+                unsub();
+            }
         };
     },
 

@@ -7,7 +7,6 @@ import { SectionLoader } from "@/components/ui/SectionLoader";
 import { DOM_ROOT_ID } from "@/lib/constants";
 import "./lib/i18n";
 import "./index.css";
-import { PwaInstallPrompt } from "@/components/ui/PwaInstallPrompt";
 
 // Импортируем сгенерированное дерево маршрутов
 import { routeTree } from "./routeTree.gen";
@@ -85,7 +84,6 @@ function Root() {
         <div data-theme={theme} data-mode={mode} className="nemo-root">
             <QueryClientProvider client={queryClient}>
                 <RouterProvider router={router} />
-                <PwaInstallPrompt />
             </QueryClientProvider>
         </div>
     );

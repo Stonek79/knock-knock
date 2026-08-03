@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { clientsClaim } from "workbox-core";
 import { precacheAndRoute } from "workbox-precaching";
+import { uploadMessageMedia } from "@/features/chat/message/utils/upload";
 import {
     FULL_APP_NAME,
     NOTIFICATION_ACTIONS,
@@ -12,7 +13,11 @@ import {
 } from "@/lib/constants";
 import { getRoomMasterKey } from "@/lib/crypto/keystore";
 import { decryptMessage } from "@/lib/crypto/messages";
+import { type OutboxMessage, outboxDb } from "@/lib/mediadb/media-db";
+import { pb } from "@/lib/pocketbase";
 import { setupRuntimeCaching } from "@/lib/pwa/runtime-caching";
+import { SealedSenderUtil } from "@/lib/services/chat-crypto";
+import { MessageService } from "@/lib/services/message";
 
 declare const self: ServiceWorkerGlobalScope & {
     __WB_MANIFEST: Array<{ url: string; revision: string | null }>;
@@ -181,3 +186,122 @@ self.addEventListener("notificationclick", (event) => {
             }),
     );
 });
+
+/**
+ * Обработка Background Sync для Outbox (отложенная отправка)
+ */
+self.addEventListener("sync", (event: Event) => {
+    const syncEvent = event as Event & {
+        tag: string;
+        waitUntil: (promise: Promise<unknown>) => void;
+    };
+    if (syncEvent.tag === "sync-outbox") {
+        syncEvent.waitUntil(processOutbox());
+    }
+});
+
+async function processOutbox() {
+    try {
+        const dbs = await indexedDB.databases();
+        for (const dbInfo of dbs) {
+            if (dbInfo.name?.startsWith("Nemo_Media_")) {
+                const parts = dbInfo.name.split("_");
+                const userId = parts[parts.length - 1];
+                if (!userId) {
+                    continue;
+                }
+
+                try {
+                    const pending = await outboxDb.getPending(userId);
+                    for (const msg of pending) {
+                        await processOutboxMessage(userId, msg);
+                    }
+                } catch (e) {
+                    console.error(
+                        `[SW] Ошибка обработки outbox для ${userId}`,
+                        e,
+                    );
+                }
+            }
+        }
+    } catch (e) {
+        console.error("[SW] Ошибка получения баз данных", e);
+    }
+}
+
+async function processOutboxMessage(userId: string, msg: OutboxMessage) {
+    try {
+        // Устанавливаем токен для API запросов
+        pb.authStore.save(msg.token, null);
+
+        const roomKey = await getRoomMasterKey(msg.roomId);
+        if (!roomKey) {
+            throw new Error("Не найден ключ комнаты");
+        }
+
+        let audioBlob: Blob | undefined;
+        let videoBlob: Blob | undefined;
+        let files: File[] | undefined;
+
+        if (msg.payload.audioBlob) {
+            audioBlob = new Blob([msg.payload.audioBlob]);
+        }
+        if (msg.payload.videoBlob) {
+            videoBlob = new Blob([msg.payload.videoBlob]);
+        }
+        if (msg.payload.files && msg.payload.files.length > 0) {
+            files = msg.payload.files.map((buf, i) => {
+                const name = msg.payload.fileNames?.[i] || "file";
+                const type =
+                    msg.payload.fileTypes?.[i] || "application/octet-stream";
+                return new File([buf], name, { type });
+            });
+        }
+
+        const attachments = await uploadMessageMedia({
+            audioBlob,
+            videoBlob,
+            files,
+            userId,
+            roomId: msg.roomId,
+            cryptoKey: roomKey,
+        });
+
+        const result = await MessageService.sendMessage({
+            roomId: msg.roomId,
+            senderId: userId,
+            content: SealedSenderUtil.pack(msg.payload.text, userId),
+            roomKey,
+            attachments: attachments.length > 0 ? attachments : undefined,
+            metadata: {
+                reply_to_id: msg.payload.replyToId ?? undefined,
+                forward_from_name: msg.payload.forwardFromName,
+                forward_from_id: msg.payload.forwardFromId,
+                is_video_message: msg.payload.isVideoMessage,
+            },
+        });
+
+        if (result.isErr()) {
+            throw new Error(result.error.message);
+        }
+
+        // Если успешно, удаляем
+        await outboxDb.remove(userId, msg.id);
+    } catch (err: unknown) {
+        const e = err as Error;
+        console.error(
+            `[SW] Ошибка отправки отложенного сообщения ${msg.id}`,
+            e,
+        );
+        if (msg.retryCount >= 5) {
+            await outboxDb.updateStatus(userId, msg.id, "failed");
+        } else {
+            await outboxDb.updateStatus(
+                userId,
+                msg.id,
+                "pending",
+                msg.retryCount + 1,
+            );
+        }
+    }
+}

@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/Toast";
 import { CLIENT_MESSAGE_STATUS, QUERY_KEYS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { type OutboxMessage, outboxDb } from "@/lib/mediadb/media-db";
+import { pb } from "@/lib/pocketbase";
 import { SealedSenderUtil } from "@/lib/services/chat-crypto";
 import { MessageService } from "@/lib/services/message";
 import type {
@@ -98,6 +100,59 @@ export function useSendMessage({
                 throw new Error(
                     "Невозможно отправить: параметры не инициализированы",
                 );
+            }
+
+            if (!navigator.onLine) {
+                const fileBuffers = files
+                    ? await Promise.all(files.map((f) => f.arrayBuffer()))
+                    : undefined;
+                const fileNames = files?.map((f) => f.name);
+                const fileTypes = files?.map((f) => f.type);
+                const audioBuffer = audioBlob
+                    ? await audioBlob.arrayBuffer()
+                    : undefined;
+                const videoBuffer = videoBlob
+                    ? await videoBlob.arrayBuffer()
+                    : undefined;
+
+                const outboxMsg: OutboxMessage = {
+                    id: crypto.randomUUID(),
+                    roomId,
+                    userId: user.id,
+                    token: pb.authStore.token,
+                    payload: {
+                        text,
+                        files: fileBuffers,
+                        fileNames,
+                        fileTypes,
+                        audioBlob: audioBuffer,
+                        videoBlob: videoBuffer,
+                        replyToId: replyToId ?? undefined,
+                        forwardFromName,
+                        forwardFromId,
+                        isVideoMessage,
+                    },
+                    timestamp: Date.now(),
+                    status: "pending",
+                    retryCount: 0,
+                };
+
+                await outboxDb.add(user.id, outboxMsg);
+
+                try {
+                    if (
+                        "serviceWorker" in navigator &&
+                        "SyncManager" in window
+                    ) {
+                        const reg = await navigator.serviceWorker.ready;
+                        // @ts-expect-error - SyncManager types are missing in some setups
+                        await reg.sync.register("sync-outbox");
+                    }
+                } catch (e) {
+                    logger.error("Failed to register sync-outbox", e);
+                }
+
+                return { serverId: outboxMsg.id, serverAttachments: null };
             }
 
             // 1. Загружаем медиа через единый сервис оркестрации

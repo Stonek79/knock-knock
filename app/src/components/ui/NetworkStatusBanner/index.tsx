@@ -11,7 +11,7 @@ import styles from "./styles.module.css";
  * Индикатор отсутствия сети.
  * Плавно появляется при потере сети и исчезает через пару секунд после её восстановления.
  */
-export function NetworkIndicator() {
+export function NetworkStatusBanner() {
     const { t } = useTranslation();
     const { isOnline } = useNetworkStatus();
     const [state, setState] = useState<NetworkIndicatorState>(

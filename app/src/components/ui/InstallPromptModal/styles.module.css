@@ -3,8 +3,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding: var(--size-md);
-    z-index: 1000;
+    padding: var(--space-md);
+    z-index: var(--z-overlay);
     display: flex;
     justify-content: center;
     pointer-events: none;
@@ -14,59 +14,59 @@
     background-color: var(--color-bg-base);
     border: 1px solid var(--color-border-subtle);
     border-radius: var(--radius-lg);
-    padding: var(--size-md);
+    padding: var(--space-md);
     box-shadow: var(--shadow-xl);
-    max-width: 400px;
+    max-width: var(--max-w-dialog);
     width: 100%;
     pointer-events: auto;
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: slideUp 0.3s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--size-xs);
+    margin-bottom: var(--space-xs);
 }
 
 .content {
     display: flex;
     flex-direction: column;
-    gap: var(--size-sm);
+    gap: var(--space-sm);
 }
 
 .instructions {
     display: flex;
     flex-direction: column;
-    gap: var(--size-xs);
+    gap: var(--space-xs);
     background-color: var(--color-bg-subtle);
-    padding: var(--size-sm);
+    padding: var(--space-sm);
     border-radius: var(--radius-md);
-    margin-top: var(--size-xs);
+    margin-top: var(--space-xs);
 }
 
 .step {
     display: flex;
     align-items: center;
-    gap: var(--size-xs);
+    gap: var(--space-xs);
 }
 
 .icon {
     color: var(--color-text-brand);
-    width: 18px;
-    height: 18px;
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
 }
 
 .badge {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
     background-color: var(--color-bg-base);
     border: 1px solid var(--color-border-subtle);
-    padding: 2px 6px;
+    padding: var(--space-05) var(--space-1);
     border-radius: var(--radius-sm);
-    font-size: var(--text-xs);
-    font-weight: 500;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
 }
 
 @keyframes slideUp {

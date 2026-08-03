@@ -1,5 +1,6 @@
 import { DB_TABLES, ERROR_CODES, PRESENCE_FIELDS } from "@/lib/constants";
 import { pb } from "@/lib/pocketbase";
+import { realtimeGateway } from "@/lib/services/RealtimeGateway";
 import type {
     PBPresenceStatus,
     PBRealtimeAction,
@@ -161,17 +162,23 @@ export const presenceRepository = {
     subscribeToPresence: (
         callback: (event: PBRealtimeEvent<PBPresenceStatus>) => void,
     ) => {
-        const unsubscribePromise = pb
-            .collection(DB_TABLES.PRESENCE_STATUS)
-            .subscribe<PBPresenceStatus>("*", (e) => {
+        let unsub: (() => void) | undefined;
+        realtimeGateway
+            .subscribe<PBPresenceStatus>(DB_TABLES.PRESENCE_STATUS, (e) => {
                 callback({
                     action: e.action as PBRealtimeAction,
                     record: e.record,
                 });
-            });
+            })
+            .then((unsubscribeFn) => {
+                unsub = unsubscribeFn;
+            })
+            .catch(() => {});
 
         return () => {
-            unsubscribePromise.then((u) => u()).catch(() => {});
+            if (unsub) {
+                unsub();
+            }
         };
     },
 };

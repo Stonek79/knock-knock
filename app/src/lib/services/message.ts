@@ -6,7 +6,6 @@ import type { Attachment, MessageError, Result } from "@/lib/types";
 import { appError, err, ok } from "@/lib/utils/result";
 import { messageRepository } from "../repositories/message.repository";
 import { mediaService } from "./media";
-import { outboxDb } from "./outbox-db";
 
 /**
  * Параметры для отправки сообщения
@@ -71,32 +70,6 @@ export const MessageService = {
                     e instanceof Error ? e : undefined,
                 ),
             );
-        }
-
-        if (!navigator.onLine) {
-            const tempId = crypto.randomUUID();
-            try {
-                await outboxDb.add(senderId, {
-                    id: tempId,
-                    roomId,
-                    senderId,
-                    content: ciphertext,
-                    iv,
-                    attachments,
-                    metadata: customMetadata,
-                    createdAt: Date.now(),
-                });
-                return ok(tempId);
-            } catch (e) {
-                logger.error("Ошибка при сохранении сообщения в outbox", e);
-                return err(
-                    appError(
-                        ERROR_CODES.DB_ERROR,
-                        "Не удалось сохранить сообщение в очередь",
-                        e instanceof Error ? e : undefined,
-                    ),
-                );
-            }
         }
 
         const result = await messageRepository.sendMessage({

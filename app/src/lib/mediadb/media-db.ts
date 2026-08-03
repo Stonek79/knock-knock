@@ -3,6 +3,30 @@ import { MEDIA_CACHE_FIELDS, MEDIA_REFERENCE_TYPES } from "../constants";
 import { env } from "../env";
 import type { MediaCacheItem, MediaReference } from "../types";
 
+export interface OutboxPayload {
+    text: string;
+    files?: ArrayBuffer[];
+    fileNames?: string[];
+    fileTypes?: string[];
+    audioBlob?: ArrayBuffer;
+    videoBlob?: ArrayBuffer;
+    replyToId?: string | null;
+    forwardFromName?: string;
+    forwardFromId?: string;
+    isVideoMessage?: boolean;
+}
+
+export interface OutboxMessage {
+    id: string; // uuid
+    roomId: string;
+    userId: string;
+    token: string;
+    payload: OutboxPayload;
+    timestamp: number;
+    status: "pending" | "failed";
+    retryCount: number;
+}
+
 /**
  * Внутренний тип для представления записи в IndexedDB.
  * Blob/File хранятся как ArrayBuffer для полной совместимости со всеми браузерами (включая Safari).
@@ -15,8 +39,10 @@ type DBCacheItem = Omit<MediaCacheItem, "blob" | "thumbnail"> & {
 /**
  * Пул экземпляров БД для избежания повторных инициализаций
  */
-const dbInstances: Record<string, Dexie & { media_cache: Table<DBCacheItem> }> =
-    {};
+const dbInstances: Record<
+    string,
+    Dexie & { media_cache: Table<DBCacheItem>; outbox: Table<OutboxMessage> }
+> = {};
 
 /**
  * Возвращает префикс для базы данных на основе URL PocketBase для разделения сред Dev/Prod
@@ -43,6 +69,7 @@ export const getMediaDB = (userId: string) => {
     if (!dbInstances[dbKey]) {
         const db = new Dexie(`Nemo_Media_${dbKey}`) as Dexie & {
             media_cache: Table<DBCacheItem>;
+            outbox: Table<OutboxMessage>;
         };
 
         db.version(1).stores({
@@ -50,6 +77,10 @@ export const getMediaDB = (userId: string) => {
             // *references.id - мульти-индекс для поиска по ID связей (messageId/roomId)
             // roomId - индекс для поиска всех медиа комнаты (в т.ч. эфемерных)
             media_cache: `${MEDIA_CACHE_FIELDS.ID}, *${MEDIA_CACHE_FIELDS.REFERENCES}.id, ${MEDIA_CACHE_FIELDS.ROOM_ID}, ${MEDIA_CACHE_FIELDS.LAST_ACCESSED_AT}, ${MEDIA_CACHE_FIELDS.SYNC_STATUS}`,
+        });
+
+        db.version(2).stores({
+            outbox: "id, roomId, timestamp, status",
         });
 
         dbInstances[dbKey] = db;
@@ -435,5 +466,33 @@ export const mediaDb = {
                 await db.media_cache.bulkDelete(toDelete);
             }
         });
+    },
+};
+
+export const outboxDb = {
+    add: async (userId: string, message: OutboxMessage): Promise<void> => {
+        const db = getMediaDB(userId);
+        await db.outbox.put(message);
+    },
+    getPending: async (userId: string): Promise<OutboxMessage[]> => {
+        const db = getMediaDB(userId);
+        return db.outbox.where("status").equals("pending").toArray();
+    },
+    updateStatus: async (
+        userId: string,
+        id: string,
+        status: "pending" | "failed",
+        retryCount?: number,
+    ): Promise<void> => {
+        const db = getMediaDB(userId);
+        const updates: Partial<OutboxMessage> = { status };
+        if (retryCount !== undefined) {
+            updates.retryCount = retryCount;
+        }
+        await db.outbox.update(id, updates);
+    },
+    remove: async (userId: string, id: string): Promise<void> => {
+        const db = getMediaDB(userId);
+        await db.outbox.delete(id);
     },
 };

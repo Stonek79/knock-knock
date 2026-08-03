@@ -5,7 +5,6 @@ import { MainLayoutSkeleton } from "@/components/ui/Skeleton";
 import { AppLayout } from "@/layouts/AppLayout";
 import { ROUTES } from "@/lib/constants";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
-import { SyncService } from "@/lib/services/sync.service";
 import { useAuthStore } from "@/stores/auth";
 
 /**
@@ -20,7 +19,6 @@ export function AuthLayout() {
     useEffect(() => {
         if (pbUser) {
             ChatRealtimeService.init({ qc: queryClient, user: pbUser });
-            SyncService.init(pbUser.id);
         }
     }, [pbUser, queryClient]);
 

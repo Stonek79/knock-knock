@@ -7,6 +7,7 @@ import {
     ROOM_TYPE,
 } from "../constants";
 import { pb } from "../pocketbase";
+import { realtimeGateway } from "../services/RealtimeGateway";
 import type {
     PBRealtimeAction,
     PBRealtimeEvent,
@@ -183,17 +184,23 @@ export const roomRepository = {
     subscribeToMemberChanges: (
         callback: (event: PBRealtimeEvent<RoomMemberRecord>) => void,
     ): (() => void) => {
-        const unsubscribePromise = pb
-            .collection(DB_TABLES.ROOM_MEMBERS)
-            .subscribe<RoomMemberRecord>("*", (e) => {
+        let unsub: (() => void) | undefined;
+        realtimeGateway
+            .subscribe<RoomMemberRecord>(DB_TABLES.ROOM_MEMBERS, (e) => {
                 callback({
                     action: e.action as PBRealtimeAction,
                     record: e.record,
                 });
-            });
+            })
+            .then((unsubscribeFn) => {
+                unsub = unsubscribeFn;
+            })
+            .catch(() => {});
 
         return () => {
-            unsubscribePromise.then((unsub) => unsub());
+            if (unsub) {
+                unsub();
+            }
         };
     },
 
@@ -203,17 +210,23 @@ export const roomRepository = {
     subscribeToRooms: (
         callback: (event: PBRealtimeEvent<RoomRecord>) => void,
     ): (() => void) => {
-        const unsubscribePromise = pb
-            .collection(DB_TABLES.ROOMS)
-            .subscribe<RoomRecord>("*", (e) => {
+        let unsub: (() => void) | undefined;
+        realtimeGateway
+            .subscribe<RoomRecord>(DB_TABLES.ROOMS, (e) => {
                 callback({
                     action: e.action as PBRealtimeAction,
                     record: e.record,
                 });
-            });
+            })
+            .then((unsubscribeFn) => {
+                unsub = unsubscribeFn;
+            })
+            .catch(() => {});
 
         return () => {
-            unsubscribePromise.then((unsub) => unsub());
+            if (unsub) {
+                unsub();
+            }
         };
     },
 

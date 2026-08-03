@@ -1,5 +1,6 @@
 import { API_ROUTES, DB_TABLES, REALTIME_ACTIONS } from "../constants";
 import { pb } from "../pocketbase";
+import { realtimeGateway } from "../services/RealtimeGateway";
 import type {
     CallLogsResponse,
     CallLogsStatusOptions,
@@ -82,23 +83,25 @@ export const callRepository = {
      * @returns Функция отписки
      */
     subscribeToCalls(callback: (record: CallLogsResponse) => void): () => void {
-        const promise = pb
-            .collection(DB_TABLES.CALL_LOGS)
-            .subscribe<CallLogsResponse>("*", (e) => {
+        let unsub: (() => void) | undefined;
+        realtimeGateway
+            .subscribe<CallLogsResponse>(DB_TABLES.CALL_LOGS, (e) => {
                 if (
                     e.action === REALTIME_ACTIONS.CREATE ||
                     e.action === REALTIME_ACTIONS.UPDATE
                 ) {
                     callback(e.record);
                 }
-            });
+            })
+            .then((unsubscribeFn) => {
+                unsub = unsubscribeFn;
+            })
+            .catch(() => {});
 
         return () => {
-            promise
-                .then((unsub) => {
-                    unsub();
-                })
-                .catch(() => {});
+            if (unsub) {
+                unsub();
+            }
         };
     },
 };

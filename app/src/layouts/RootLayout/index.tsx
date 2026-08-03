@@ -1,7 +1,8 @@
 import { Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
-import { NetworkIndicator } from "@/components/ui/NetworkIndicator";
+import { InstallPromptModal } from "@/components/ui/InstallPromptModal";
+import { NetworkStatusBanner } from "@/components/ui/NetworkStatusBanner";
 import { ToastProvider } from "@/components/ui/Toast";
 import { useAuthRefresh } from "@/hooks/useAuthRefresh";
 import { useAuthStore } from "@/stores/auth";
@@ -30,7 +31,8 @@ export function RootLayout() {
 
     return (
         <ToastProvider>
-            <NetworkIndicator />
+            <NetworkStatusBanner />
+            <InstallPromptModal />
             <div id="root-container" className={styles.container}>
                 <Outlet />
             </div>
