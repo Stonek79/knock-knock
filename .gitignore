@@ -19,3 +19,6 @@ dist/
 build/
 .agent/logs/
 .agent/**/logs/
+
+# Local codebase-memory index (machine-specific, never commit)
+.codebase-memory/
