@@ -1,0 +1,20 @@
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-06T17-38-46Z
+    container_name: nemo-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    env_file:
+      - .env
+    volumes:
+      - /home/alex/nemo-data/minio:/data
+    ports:
+      # Доступен только локально: FRP-клиент работает в host network.
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    networks:
+      - whoami-net
+
+networks:
+  whoami-net:
+    external: true

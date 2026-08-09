@@ -1,1206 +1,452 @@
-# 📋 Подробный план интеграции Tauri v2 + VLESS/Reality (обход ТСПУ)
+# План Tauri v2 для Nemo: desktop-клиент и встроенный обход блокировок
 
-> **Статус:** 📝 Утверждённый план реализации
-> **Автор:** Анализ на основе истории проекта (`.agent/artifacts/`) и текущего состояния кода
-> **Дата:** Август 2026
-> **Главные критерии:** Надёжность и Приватность
+> **Статус:** проектирование; реализация начинается с обязательного сетевого spike
+> **Первый scope:** Windows, macOS и Linux
+> **Отдельный post-MVP scope:** Android и iOS
+> **Критерии:** работоспособность, проверяемая безопасность и воспроизводимый публичный релиз
 
----
+## 1. Цель
 
-## 📌 Содержание
+Собрать desktop-клиент Nemo на Tauri v2, который:
 
-1. [Executive Summary](#1-executive-summary)
-2. [Контекст и предыстория](#2-контекст-и-предыстория)
-3. [Обоснование выбора технологий](#3-обоснование-выбора-технологий)
-4. [Почему НЕ Shadowsocks-rust](#4-почему-не-shadowsocks-rust)
-5. [Почему НЕ маскировка под "Макс"](#5-почему-не-маскировка-под-макс)
-6. [Архитектура решения](#6-архитектура-решения)
-7. [Используемые инструменты и технологии](#7-используемые-инструменты-и-технологии)
-8. [План реализации по этапам](#8-план-реализации-по-этапам)
-9. [Безопасность и приватность](#9-безопасность-и-приватность)
-10. [Анализ рисков](#10-анализ-рисков)
-11. [Двойная стратегия: PWA + Tauri](#11-двойная-стратегия-pwa--tauri)
-12. [Выявленные проблемы PWA ↔ Tauri и варианты их решения](#12-выявленные-проблемы-pwa--tauri-и-варианты-их-решения)
-13. [Контрольный список готовности](#13-контрольный-список-готовности)
+- использует существующий React UI;
+- не зависит от браузерного Service Worker;
+- при необходимости направляет API/realtime/media трафик через встроенный xray-core VLESS/Reality;
+- сохраняет WebRTC-маршрут управляемым и имеет проверенный TURN fallback;
+- публикуется из очищенного публичного репозитория как подписанный artifact;
+- не требует build или автоматического deployment на production VPS.
 
----
+План не обещает «невидимость» для DPI или полную анонимность. Устойчивость маршрута подтверждается только тестами из целевых сетей и пересматривается при изменении блокировок.
 
-## 1. Executive Summary
+## 2. Текущее подтверждённое состояние
 
-### Цель
-Завернуть существующее PWA-приложение Nemo в нативный десктопный и мобильный клиент на базе **Tauri v2**, со встроенным на уровне Rust-бэкенда прокси-клиентом **VLESS/Reality** (xray-core) для обхода блокировок ТСПУ РКН.
+В `app/src-tauri/` уже есть:
 
-### Ключевые решения
+- Tauri v2 skeleton;
+- desktop window и tray menu;
+- плагины log, notification, dialog, fs, http и os;
+- icons и базовые capabilities;
+- GitHub Actions matrix для macOS, Linux и Windows.
 
-| Параметр | Решение | Обоснование |
-|---|---|---|
-| Фреймворк | **Tauri v2** | Уже инициализирован в проекте; поддерживает Windows, macOS, Linux, Android, iOS |
-| Протокол обхода | **VLESS/Reality** | Единственный протокол, прошедший проверку боем в проекте (через Hiddify) |
-| Прокси-движок | **xray-core как sidecar** | Зрелый, активно поддерживается, уже используется в инфраструктуре |
-| Маскировка под "Макс" | ❌ **Отклонено** | Рискованно, легко обнаруживается, привлекает внимание |
-| WebRTC/LiveKit | **Bypass прокси** | Прямые соединения для минимизации задержек в звонках |
-| PWA fallback | **Service Worker + WS-туннель** | Для пользователей без нативного приложения |
+Пока отсутствуют:
 
-### Ожидаемый результат
-- Нативные приложения для Windows, macOS, Linux, Android, iOS
-- Встроенный прокси-клиент, работающий прозрачно для пользователя
-- Автоматический обход блокировок ТСПУ без системного VPN
-- Разделение трафика: API через прокси, WebRTC напрямую
+- Tauri commands и proxy manager;
+- `tauri-plugin-shell` и xray sidecar;
+- доказанный способ направить PocketBase SDK HTTP/SSE/media через локальный прокси;
+- Stronghold и схема bootstrap/rotation credentials;
+- production CSP;
+- `tauri:dev`/`tauri:build` scripts;
+- code signing/notarization и проверенный release pipeline;
+- подтверждённые desktop builds на чистых машинах.
 
----
+Следовательно, Tauri нельзя считать готовым только потому, что skeleton и workflow уже существуют.
 
-## 2. Контекст и предыстория
+## 3. Исправленные архитектурные допущения
 
-### Текущее состояние Tauri-кода
+### 3.1. Desktop и mobile — разные проекты
 
-Проект `knock-knock` (Nemo) уже содержит базовый каркас Tauri v2 в `app/src-tauri/`:
+`externalBin` и обычный дочерний процесс подходят для desktop-модели. Нельзя автоматически переносить desktop xray sidecar на Android/iOS:
 
-```
-app/src-tauri/
-├── Cargo.toml          # Tauri 2.11.3 + 5 плагинов
-├── tauri.conf.json     # productName "Nemo", CSP: null
-├── build.rs            # Стандартный tauri_build
-├── capabilities/
-│   └── default.json    # Разрешения: core, fs, dialog, http, notification, os
-├── icons/              # Все платформы (iOS, Android, desktop)
-└── src/
-    ├── main.rs         # Точка входа → app_lib::run()
-    └── lib.rs          # Базовый Builder + tray icon + 5 плагинов
-```
+- mobile имеет другой lifecycle и ограничения фоновой работы;
+- Android обычно требует архитектуры на основе `VpnService` или нативной библиотеки;
+- iOS требует отдельного Network Extension подхода, entitlements и проверки правил распространения;
+- desktop tray и «процесс всегда жив» не являются mobile push-моделью.
 
-**Степень готовности:** ~10%. Каркас есть, но:
-- 0 Tauri-команд (`#[tauri::command]`)
-- 0 импортов Tauri API во фронтенде
-- 0 скриптов сборки (`tauri dev`/`tauri build`)
-- 0 прокси-кода
-- CSP отключён
+Первый релиз ограничивается desktop. Android/iOS получают отдельный feasibility document после desktop MVP.
 
-### История обхода блокировок в проекте
+### 3.2. SOCKS-порт не является PocketBase API
 
-Из архивов `.agent/artifacts/.archive/` восстановлена следующая хронология:
+Нельзя заменить `https://api.example` на `http://127.0.0.1:<socks-port>`: SOCKS5 не является HTTP origin, а WebView/PocketBase SDK не начнут использовать его автоматически.
 
-| # | Технология | Период | Результат | Причина отказа |
-|---|---|---|---|---|
-| 1 | **WireGuard VPN** | Ранний этап | ❌ Заблокирован | TSPU определяет отпечаток WireGuard, режет UDP |
-| 2 | **Cloudflare Tunnel** (`cloudflared`) | Июль 2026 | ❌ Заблокирован | TSPU рвёт TLS-хэндшейки Cloudflare (`EOF`), даже через VPN |
-| 3 | **Чистый FRP** (без VPN) | Июль 2026 | ❌ Обрывы 40 сек | DPI определяет долгоживущий TCP нетипичного протокола |
-| 4 | **FRP + Hiddify (VLESS/Reality)** | Июль 2026 | ✅ **Работает** | Трафик FRP завёрнут в VLESS/Reality, ТСПУ не отличает от легитимного |
+Перед основной реализацией необходимо выбрать и доказать один транспорт:
 
-**Ключевой урок:** Только VLESS/Reality прошёл проверку боем. Все остальные протоколы были заблокированы.
+1. **Local application bridge — предпочтительный кандидат.** Локальный HTTP/SSE/WebSocket bridge принимает только разрешённые Nemo routes и отправляет upstream через xray SOCKS.
+2. **Native network layer.** HTTP, realtime и uploads выполняются Rust-кодом через proxy-aware client, а UI вызывает узкие Tauri commands. Безопаснее по поверхности API, но требует большого рефакторинга PocketBase SDK.
+3. **WebView proxy configuration.** Допускается только после одинакового proof на Windows/macOS/Linux; нельзя считать переносимой возможностью по умолчанию.
 
-### Текущая рабочая архитектура (серверная)
+Выбор фиксируется ADR после Gate 0.
 
-```
-[Пользователь из РФ]
-      │
-      ▼ (HTTPS → Cloudflare Proxy → DNS Only → Финский сервер)
-[Финский сервер (iptables DNAT/MASQUERADE)]
-      │
-      ▼ (Перекидывает пакеты на Ninja VPS)
-[Ninja VPS (Nginx + FRPS + Push-Gateway + LiveKit)]
-      │
-      ▲ (Зашифрованный FRP-туннель через Hiddify VPN)
-      │
-[Домашний сервер (PocketBase + FRPC + MinIO)]
-```
+### 3.3. Push и local notifications — разные функции
 
-**Проблема текущей архитектуры:** Обход работает на уровне **сервера**, но пользователь должен включать системный VPN (Hiddify) вручную. Нативное Tauri-приложение решит эту проблему — прокси будет встроен в само приложение.
+`tauri-plugin-notification` показывает локальное OS notification, но сам по себе не принимает APNs/FCM remote push.
 
----
+Desktop MVP:
 
-## 3. Обоснование выбора технологий
+- пока приложение работает в tray, realtime listener может инициировать local notification;
+- при явном Quit процесс завершается и уведомления не гарантируются;
+- startup-at-login может быть отдельной opt-in функцией;
+- payload дешифруется только на клиенте, если это совместимо с текущей E2E-моделью.
 
-### 3.1. Почему Tauri v2, а не Electron
+Полноценный remote push для закрытого mobile-приложения — отдельная platform-specific задача.
 
-| Критерий | Tauri v2 | Electron |
-|---|---|---|
-| Размер бинарника | ~3-10 МБ | ~100-200 МБ |
-| Потребление RAM | ~50-100 МБ | ~200-500 МБ |
-| Backend язык | **Rust** (безопасный, быстрый) | JavaScript/Node.js |
-| Мобильные платформы | ✅ Android, iOS | ❌ Только десктоп |
-| Доступ к нативным API | ✅ Через Rust-плагины | ⚠️ Через Node.js |
-| Интеграция прокси | ✅ Нативный Rust-поток | ⚠️ Через child_process |
-| Безопасность | ✅ Rust memory safety | ⚠️ Node.js уязвимости |
+### 3.4. Sidecar lifecycle не даёт абсолютной гарантии
 
-**Решение:** Tauri v2 — идеальный выбор. Rust-бэкенд позволяет интегрировать прокси-клиент на уровне ядра, без накладных расходов JavaScript.
+`tauri-plugin-shell` используется из-за scoped capabilities и стандартного bundling API. Однако нельзя утверждать, что любой `kill -9`, crash или OS failure гарантированно уничтожит дочерний процесс.
 
-### 3.2. Почему VLESS/Reality, а не Shadowsocks
+Нужны:
 
-| Критерий | Shadowsocks | VLESS/Reality |
-|---|---|---|
-| Механизм маскировки | Нет (просто шифрование) | "Кража" TLS-рукопожатия реального сайта |
-| Детектируемость ТСПУ | ⚠️ Высокая (ML-анализ энтропии) | ✅ Низкая (неотличим от HTTPS) |
-| Проверка активным зондом | ❌ Проваливается | ✅ Проходит (реальный сайт отвечает) |
-| SNI совпадает с IP? | N/A (нет SNI) | ✅ Да (реальный сайт) |
-| TLS-сертификат валидный? | N/A | ✅ Да (украдён у реального сайта) |
-| Опыт в проекте | Нет | ✅ Есть (Hiddify/happ) |
-| Активное развитие | ⚠️ Замедлилось | ✅ Активно (xray-core) |
+- хранение handle и штатный stop/kill;
+- cleanup при normal exit;
+- проверка stale PID/process identity при следующем запуске;
+- OS-specific tests для crash/forced termination;
+- watchdog с ограниченным restart budget и backoff.
 
-**Решение:** VLESS/Reality — единственный протокол с доказанной эффективностью против ТСПУ в реальных условиях этого проекта.
+### 3.5. Reality-параметры нельзя рандомизировать произвольно
 
-### 3.3. Почему xray-core как sidecar, а не Rust-крейт
+SNI/serverName, fingerprint, short ID и серверная конфигурация должны быть совместимы. Случайный выбор неподдерживаемого SNI приведёт к отказу подключения и может ухудшить fingerprint.
 
-| Вариант | Описание | Плюсы | Минусы |
-|---|---|---|---|
-| **A: xray-core sidecar** (рекомендуется) | Бинарник xray-core запускается как дочерний процесс Tauri | ✅ Зрелый, протестирован, уже используется в проекте, активная поддержка | ⚠️ Внешний бинарник (Go), ~20 МБ |
-| B: shadowsocks-rust крейт | Rust-брейт, встроенный в Cargo.toml | ✅ Нативный Rust, малый размер | ❌ Shadowsocks детектируется ТСПУ |
-| C: Rust VLESS клиент | Ручная реализация VLESS на Rust | ✅ Нативный Rust | ❌ Незрелый, сложный, высокий риск багов |
+Клиент использует только подписанный сервером набор profiles. Ротация выполняется как атомарное обновление profile с fallback на предыдущий, а не независимой случайной заменой полей.
 
-**Решение:** Вариант A (xray-core sidecar). Tauri v2 имеет нативную поддержку sidecar-бинарников через `tauri.conf.json` → `bundle.externalBin`. xray-core — это тот же движок, что работает в Hiddify/happ на домашнем сервере.
+## 4. Целевая desktop-архитектура
 
----
+```text
+React UI / PocketBase-facing adapter
+               │
+               ▼
+Local application bridge или native network layer
+               │
+               ▼
+xray local SOCKS inbound
+               │
+               ▼
+VLESS/Reality endpoint
+               │
+               ├── PocketBase API + realtime
+               └── media endpoints
 
-## 4. Почему НЕ Shadowsocks-rust
-
-### Технические причины
-
-1. **ТСПУ умеет распознавать Shadowsocks:**
-   - Используется ML-анализ трафика (энтропия Шеннона, распределение размеров пакетов, тайминги)
-   - Shadowsocks шифрует, но **не маскирует** — сам факт зашифрованного нетипичного трафика к зарубежному IP уже красный флаг
-   - Статья: "Shadowsocks traffic detection using machine learning" (множество публикаций 2023-2025)
-
-2. **Отсутствие маскировки под легитимный трафик:**
-   - Shadowsocks не имитирует TLS-рукопожатие
-   - ТСПУ видит "голый" зашифрованный поток — это сразу подозрительно
-   - VLESS/Reality, напротив, выглядит как обычный HTTPS к реальному сайту
-
-3. **Проверка активным зондом (active probing):**
-   - ТСПУ может подключиться к тому же IP:порту и проверить, что там отвечает
-   - Shadowsocks-сервер ответит случайным мусором → провал
-   - Reality-сервер ответит как реальный сайт (например, microsoft.com) → проходит
-
-4. **История проекта:**
-   - В проекте уже попробовали WireGuard, Cloudflare Tunnel, чистый FRP — всё заблокировано
-   - Только VLESS/Reality (через Hiddify) работает
-   - Нет смысла откатываться к менее эффективному протоколу
-
-### Когда Shadowsocks-rust был бы уместен
-- В странах с менее агрессивным DPI (без ТСПУ)
-- Для обхода простых блокировок по доменам/IP
-- НЕ в РФ с ТСПУ
-
----
-
-## 5. Почему НЕ маскировка под "Макс"
-
-### Идея
-Сделать так, чтобы трафик приложения выглядел как подключение к российскому государственному мессенджеру "Макс" (max.ru).
-
-### Почему это провалится
-
-#### Проблема 1: Несовпадение SNI и IP-адреса
-ТСПУ сверяет SNI (Server Name Indication) в TLS-хэндшейке с реальным IP-адресом назначения:
-- Если SNI = `max.ru`, но IP не принадлежит серверам "Макса" → **мгновенная блокировка**
-- ТСПУ имеет whitelist IP-адресов российских сервисов
-- Невозможно подключиться к своему VPS с SNI `max.ru` — это очевидный обман
-
-#### Проблема 2: Невозможность подделки TLS-сертификата
-- Сертификат `max.ru` выдан конкретному серверу и защищён приватным ключом
-- Подделать TLS-сертификат невозможно без компрометации Удостоверяющего центра или приватного ключа
-- ТСПУ может проверить сертификат → сразу спалят
-
-#### Проблема 3: Поведенческий анализ
-- "Макс" использует конкретные API-эндпоинты, порты, паттерны пакетов
-- Трафик к PocketBase будет выглядеть иначе, даже если SNI совпадёт
-- ТСПУ использует DPI для анализа протоколов прикладного уровня
-
-#### Проблема 4: Проверка активным зондом
-- ТСПУ подключается к тому же IP:порту и проверяет ответ
-- Если сервер не отвечает как "Макс" → блокировка
-- Reality решает эту проблему: сервер отвечает как реальный сайт (microsoft.com)
-
-#### Проблема 5: Юридический риск
-- Маскировка под государственный мессенджер — это **имперсонация**
-- Может привлечь повышенное внимание ФСБ/МВД
-- В случае обнаружения — реакция будет жёстче, чем на обычный VPN
-- Возможна уголовная ответственность (ст. 274.1 УК РФ — воздействие на критическую информационную инфраструктуру)
-
-### Почему Reality лучше
-Reality "крадёт" TLS-рукопожатие **реального популярного международного сайта** (например, `microsoft.com`, `apple.com`, `gateway.icloud.com`). Когда ТСПУ проверяет:
-- SNI совпадает с IP? ✅ Да (реальный сайт)
-- TLS-сертификат валидный? ✅ Да (украдён у реального сайта)
-- Активный зонд получает ответ? ✅ Да (реальный сайт отвечает)
-- Трафик выглядит как HTTPS? ✅ Да
-
-**Вердикт: Маскировка под "Макс" — технически невозможна, юридически опасна, и не нужна. Reality уже решает эту задачу лучше.**
-
----
-
-## 6. Архитектура решения
-
-### 6.1. Общая схема
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Tauri Application                     │
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │              React UI (WebView)                  │   │
-│  │                                                  │   │
-│  │  ┌─────────────┐  ┌──────────────┐  ┌────────┐ │   │
-│  │  │ PocketBase   │  │ LiveKit/WebRTC│  │ Media  │ │   │
-│  │  │ API Client   │  │ (Calls)      │  │ (S3)   │ │   │
-│  │  └──────┬───────┘  └──────┬───────┘  └───┬────┘ │   │
-│  │         │                 │              │       │   │
-│  │         ▼                 │              ▼       │   │
-│  │  127.0.0.1:local_port     │     127.0.0.1:port   │   │
-│  └─────────┼─────────────────┼──────────────┼───────┘   │
-│            │                 │              │            │
-│  ┌─────────▼─────────────────▼──────────────▼───────┐   │
-│  │           Tauri Rust Backend (lib.rs)             │   │
-│  │                                                    │   │
-│  │  ┌──────────────────┐  ┌──────────────────────┐  │   │
-│  │  │  Proxy Manager    │  │  Routing Rules       │  │   │
-│  │  │  (proxy.rs)      │  │  (routing.rs)        │  │   │
-│  │  │                  │  │                      │  │   │
-│  │  │  - start/stop    │  │  - API → proxy       │  │   │
-│  │  │  - port alloc    │  │  - WebRTC → direct   │  │   │
-│  │  │  - health check  │  │  - Media → proxy     │  │   │
-│  │  └────────┬─────────┘  └──────────────────────┘  │   │
-│  │           │                                        │   │
-│  │  ┌────────▼─────────────────────────────────────┐ │   │
-│  │  │         xray-core (sidecar процесс)          │ │   │
-│  │  │                                              │ │   │
-│  │  │  Protocol: VLESS + Reality                   │ │   │
-│  │  │  SNI: microsoft.com (или другой реальный)    │ │   │
-│  │  │  Local: SOCKS5 127.0.0.1:random_port         │ │   │
-│  │  │  Remote: VPS_NINJA_IP:443                    │ │   │
-│  │  └──────────────────────────────────────────────┘ │   │
-│  └────────────────────────────────────────────────────┘   │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-                         │
-                         ▼ (VLESS/Reality туннель)
-                  [Зашифрованный трафик]
-                         │
-                         ▼
-              [VPS Ninja (за рубежом)]
-                         │
-                    ┌────┴────┐
-                    ▼         ▼
-            [PocketBase]  [LiveKit]
-             (через FRP)   (напрямую)
+LiveKit/WebRTC ── отдельная проверяемая policy:
+                 direct UDP → LiveKit TCP/TURN fallback
 ```
 
-### 6.2. Поток данных
+Local bridge, если выбран, должен:
 
-| Тип трафика | Маршрут | Обоснование |
-|---|---|---|
-| API PocketBase (текст, настройки) | UI → SOCKS5 → xray → VLESS/Reality → VPS → FRP → Home PB | Должен идти через прокси (блокировки) |
-| Медиа (S3/MinIO) | UI → SOCKS5 → xray → VLESS/Reality → VPS → FRP → Home MinIO | Должен идти через прокси |
-| WebRTC/LiveKit (звонки) | UI → **напрямую** → VPS LiveKit | Минимум задержки, UDP не маскируется |
-| Push-уведомления | xray → VPS Push-Gateway → APNs/FCM | Через прокси (зарубежный IP для push) |
+- bind только на loopback и случайный свободный порт;
+- принимать только allowlist upstream hosts/routes;
+- использовать per-session capability token;
+- ограничивать методы, headers, body size и redirects;
+- поддерживать streaming uploads/downloads, SSE и WebSocket;
+- не логировать auth tokens, plaintext messages или media;
+- завершаться вместе с приложением и не предоставлять общий open proxy.
 
-### 6.3. Жизненный цикл прокси
+API adapter и UI не должны узнать VLESS credentials. Rust-слой отвечает за lifecycle, profile storage и route selection.
 
-```
-[Запуск приложения]
-       │
-       ▼
-[Tauri setup()]
-       │
-       ├──> 1. Генерация случайного локального порта (1024-65535)
-       ├──> 2. Загрузка конфигурации VLESS/Reality (с сервера или из bundled-файла)
-       ├──> 3. Запуск xray-core как sidecar-процесса
-       ├──> 4. Ожидание готовности SOCKS5-прокси (health check)
-       ├──> 5. Настройка WebView proxy на 127.0.0.1:local_port
-       ├──> 6. Настройка bypass-правил для IP LiveKit
-       └──> 7. Уведомление фронтенда: "прокси готов"
-              │
-              ▼
-[Приложение работает]
-       │
-       ├──> Мониторинг состояния xray-core (перезапуск при падении)
-       ├──> Переключение API-адреса PocketBase на 127.0.0.1:local_port
-       └──> WebRTC-трафик идёт напрямую (bypass)
-              │
-              ▼
-[Закрытие приложения]
-       │
-       └──> Остановка xray-core, освобождение порта
-```
+## 5. Gate 0: сетевой feasibility spike
 
----
+До добавления UI и полного proxy manager создать минимальный desktop prototype только для одной платформы.
 
-## 7. Используемые инструменты и технологии
+### Обязательные сценарии
 
-### 7.1. Rust-сторона (Tauri backend)
+- [ ] Запустить pinned xray sidecar через `tauri-plugin-shell`.
+- [ ] Дождаться готовности SOCKS через timeout и проверку реального запроса, а не только открытого TCP-порта.
+- [ ] Выполнить PocketBase health/auth request через выбранный transport.
+- [ ] Получить список records.
+- [ ] Поддержать realtime subscription и reconnect.
+- [ ] Загрузить и скачать media streaming без помещения всего файла в память.
+- [ ] Подтвердить, что DNS resolution для upstream не обходит выбранный proxy route.
+- [ ] Проверить отказ при неверном/отозванном profile.
+- [ ] Проверить normal shutdown, xray crash и restart budget.
+- [ ] Зафиксировать latency и memory overhead относительно PWA.
 
-| Инструмент | Версия | Назначение |
-|---|---|---|
-| **Tauri** | 2.11.3+ | Фреймворк нативных приложений |
-| **xray-core** | 25.x+ (latest) | Прокси-движок VLESS/Reality (sidecar) |
-| **tauri-plugin-shell** | 2.x | Управление sidecar-процессами |
-| **tauri-plugin-http** | 2.5.9 | HTTP-запросы (health check) |
-| **tauri-plugin-os** | 2.3.2 | Определение ОС (разные бинарники xray) |
-| **tauri-plugin-fs** | 2.5.1 | Чтение/запись конфигов прокси |
-| **tauri-plugin-dialog** | 2.7.2 | Диалоги (настройки прокси) |
-| **tauri-plugin-notification** | 2.x | Уведомления о статусе прокси |
-| **serde** | 1.0 | Сериализация конфигов |
-| **log** | 0.4 | Логирование |
-| **tauri-plugin-log** | 2.x | Логирование в файл |
+### Решение Gate 0
 
-### 7.2. JavaScript/TypeScript-сторона (Frontend)
+По результату создаётся ADR:
 
-| Инструмент | Версия | Назначение |
-|---|---|---|
-| **@tauri-apps/api** | 2.11.1 | Базовый API Tauri (invoke, events) |
-| **@tauri-apps/plugin-shell** | 2.x | Управление sidecar (из JS) |
-| **@tauri-apps/plugin-os** | 2.3.2 | Определение платформы |
-| **@tauri-apps/plugin-http** | 2.5.9 | HTTP через Tauri (вне браузера) |
-| **@tauri-apps/plugin-fs** | 2.5.1 | Файловая система (чтение конфигов) |
-| **@tauri-apps/plugin-notification** | 2.3.3 | Нативные уведомления |
-| **@tauri-apps/cli** | 2.11.4 | CLI для сборки (`tauri dev`, `tauri build`) |
+- выбранный transport;
+- покрываемые протоколы HTTP/SSE/WebSocket/media;
+- известные platform differences;
+- threat boundaries localhost bridge;
+- критерии отказа и fallback UX.
 
-### 7.3. Инфраструктура
+Если Gate 0 не пройден, встроенный xray исключается из первого desktop-релиза; Tauri может выпускаться как обычная оболочка с явным требованием внешнего VPN.
 
-| Инструмент | Назначение |
-|---|---|
-| **xray-core** (Go-бинарник) | Прокси-клиент VLESS/Reality |
-| **VPS Ninja** | Точка назначения туннеля (entrypoint) |
-| **Hiddify/happ** | Текущий системный VPN (эталон для конфига xray) |
-| **FRP** | Проброс портов от VPS к домашнему серверу |
-| **Cloudflare** | DNS + проксирование (серые тучки) |
-| **Финский сервер** | NAT-транзит (iptables DNAT/MASQUERADE) |
+## 6. Этап 1: desktop proxy core
 
-### 7.4. Сборка и CI/CD
+### 6.1. Зависимости
 
-| Инструмент | Назначение |
-|---|---|
-| **@tauri-apps/cli** | Локальная сборка (`tauri build`) |
-| **GitHub Actions** | CI/CD для сборки под все платформы |
-| **cross** (Rust) | Кросс-компиляция (если нужна) |
-| **Makefile** | Команды `make tauri-dev`, `make tauri-build` |
+Добавить после Gate 0:
 
----
+- `tauri-plugin-shell` для scoped sidecar spawn;
+- async runtime/network dependencies, выбранные ADR;
+- `tauri-plugin-stronghold` только после определения password bootstrap;
+- минимальные serialization/error dependencies.
 
-## 8. План реализации по этапам
+Не добавлять `sysinfo`, если задача решается сохранённым child handle и platform-specific lifecycle без глобального поиска процессов.
 
-### Этап 1: Rust-ядро прокси (критичный, 1-2 недели)
+### 6.2. Модули Rust
 
-#### 1.1. Добавление зависимостей в `Cargo.toml`
+Рекомендуемое разделение:
 
-```toml
-[dependencies]
-# Существующие
-tauri = { version = "2.11.3", features = [] }
-tauri-plugin-log = "2"
-tauri-plugin-notification = "2"
-tauri-plugin-dialog = "2.7.2"
-tauri-plugin-fs = "2.5.1"
-tauri-plugin-http = "2.5.9"
-tauri-plugin-os = "2.3.2"
-
-# Новые
-tauri-plugin-shell = "2"    # Управление sidecar-процессом xray-core
-rand = "0.8"                # Генерация случайного порта
-sysinfo = "0.31"            # Проверка состояния процесса xray
+```text
+src-tauri/src/
+├── proxy/
+│   ├── manager.rs      # state machine и lifecycle
+│   ├── profile.rs      # validation и rotation
+│   ├── sidecar.rs      # spawn, stdout/stderr, stop
+│   ├── readiness.rs    # end-to-end readiness
+│   └── bridge.rs       # только если выбран local bridge
+├── notifications.rs
+└── lib.rs
 ```
 
-#### 1.2. Создание модуля `proxy.rs`
+State machine:
 
-Новый файл: `app/src-tauri/src/proxy.rs`
-
-Ответственности:
-- Генерация случайного локального порта (проверка, что порт свободен)
-- Формирование конфигурации xray-core (JSON-конфиг VLESS/Reality)
-- Запуск xray-core как sidecar-процесса через `tauri-plugin-shell`
-- Мониторинг состояния процесса (health check)
-- Перезапуск при падении (с экспоненциальной задержкой)
-- Остановка при закрытии приложения
-
-Ключевые функции:
-```rust
-// Tauri-команды для вызова из фронтенда
-#[tauri::command]
-fn start_proxy(app: AppHandle, config: ProxyConfig) -> Result<ProxyStatus, String>
-
-#[tauri::command]
-fn stop_proxy(app: AppHandle) -> Result<(), String>
-
-#[tauri::command]
-fn get_proxy_status(app: AppHandle) -> Result<ProxyStatus, String>
-
-#[tauri::command]
-fn get_proxy_port(app: AppHandle) -> Result<u16, String>
-
-#[tauri::command]
-fn restart_proxy(app: AppHandle) -> Result<ProxyStatus, String>
+```text
+Stopped → Starting → Ready → Degraded → Restarting
+                 ↘ Failed
 ```
 
-Структуры данных:
-```rust
-#[derive(Serialize, Deserialize)]
-struct ProxyConfig {
-    server: String,           // IP VPS
-    server_port: u16,         // 443
-    uuid: String,              // UUID пользователя
-    flow: String,             // "xtls-rprx-vision"
-    security: String,          // "reality"
-    sni: String,              // "microsoft.com" (реальный сайт)
-    fingerprint: String,       // "chrome" (uTLS)
-    public_key: String,        // Публичный ключ Reality
-    short_id: String,          // Short ID Reality
-}
+`start_proxy` становится идемпотентным. Одновременные вызовы не создают несколько процессов. Команда возвращает Ready только после end-to-end request через туннель.
 
-#[derive(Serialize, Deserialize)]
-struct ProxyStatus {
-    running: bool,
-    local_port: u16,
-    pid: Option<u32>,
-    uptime_seconds: u64,
-    bytes_sent: u64,
-    bytes_received: u64,
-}
-```
+### 6.3. Sidecar bundling
 
-#### 1.3. Конфигурация xray-core
-
-Генерируемый JSON-конфиг xray-core:
-```json
-{
-  "inbounds": [{
-    "port": "<random_local_port>",
-    "protocol": "socks",
-    "settings": { "udp": true }
-  }],
-  "outbounds": [{
-    "protocol": "vless",
-    "settings": {
-      "vnext": [{
-        "address": "<vps_ip>",
-        "port": 443,
-        "users": [{
-          "id": "<uuid>",
-          "flow": "xtls-rprx-vision",
-          "encryption": "none"
-        }]
-      }]
-    },
-    "streamSettings": {
-      "network": "tcp",
-      "security": "reality",
-      "realitySettings": {
-        "serverName": "microsoft.com",
-        "fingerprint": "chrome",
-        "publicKey": "<public_key>",
-        "shortId": "<short_id>"
-      }
-    }
-  }],
-  "routing": {
-    "rules": [{
-      "type": "field",
-      "ip": ["<livekit_vps_ip>"],
-      "outboundTag": "direct"
-    }]
-  }
-}
-```
-
-**Важно:** Routing rules обеспечивают bypass для WebRTC/LiveKit трафика — он идёт напрямую, не через прокси.
-
-#### 1.4. Регистрация sidecar в `tauri.conf.json`
+В `tauri.conf.json` указывается один base path:
 
 ```json
 {
   "bundle": {
-    "externalBin": [
-      "binaries/xray-x86_64-pc-windows-msvc",
-      "binaries/xray-x86_64-apple-darwin",
-      "binaries/xray-aarch64-apple-darwin",
-      "binaries/xray-x86_64-unknown-linux-gnu",
-      "binaries/xray-aarch64-linux-android",
-      "binaries/xray-aarch64-apple-ios"
-    ]
+    "externalBin": ["binaries/xray"]
   }
 }
 ```
 
-Tauri автоматически добавит суффикс платформы при сборке.
-
-#### 1.5. Обновление `lib.rs`
-
-Интеграция модуля `proxy` в `run()`:
-- Регистрация Tauri-команд через `.invoke_handler()`
-- Инициализация прокси в `.setup()`
-- Обработка события закрытия (остановка xray)
-
-#### 1.6. Обновление `capabilities/default.json`
-
-Добавление разрешений для `shell` (запуск sidecar):
-```json
-{
-  "permissions": [
-    "core:default",
-    "fs:default",
-    "dialog:default",
-    "http:default",
-    "notification:default",
-    "os:default",
-    "shell:allow-execute",
-    "shell:allow-spawn",
-    "shell:allow-kill"
-  ]
-}
-```
+Build preparation создаёт файл `xray-<target-triple>` для текущего target. Нельзя перечислять каждый suffixed binary как отдельный `externalBin`.
 
----
-
-### Этап 2: Фронтенд-интеграция (1 неделя)
+Capabilities предоставляют только `shell:allow-spawn`/kill для конкретного sidecar и допустимых аргументов. Общие `shell:allow-execute` и произвольные args не выдаются frontend-коду.
 
-#### 2.1. Хук `useTauri()`
+### 6.4. Readiness и recovery
 
-Новый файл: `app/src/hooks/useTauri.ts`
+Readiness состоит из двух уровней:
 
-```typescript
-// Определение, запущено ли приложение в Tauri
-export function useTauri() {
-  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
-  // ...
-}
-```
+1. локальный port/process отвечает;
+2. тестовый upstream request успешно проходит через нужный outbound.
 
-#### 2.2. Сервис `TauriProxyService`
+При timeout процесс останавливается, временный config удаляется, а UI получает типизированную ошибку. Restart использует exponential backoff с jitter, верхним пределом и circuit breaker.
 
-Новый файл: `app/src/lib/services/tauriProxyService.ts`
+## 7. Этап 2: credentials и profile delivery
 
-```typescript
-// Управление прокси через Tauri-команды
-export class TauriProxyService {
-  async startProxy(): Promise<ProxyStatus>
-  async stopProxy(): Promise<void>
-  async getStatus(): Promise<ProxyStatus>
-  async getPort(): Promise<number>
-  async restart(): Promise<ProxyStatus>
-}
-```
+### 7.1. Что является секретом
 
-#### 2.3. Динамическое переключение API-адреса
+- client UUID/token и другие данные, дающие право подключения, считаются credentials;
+- Reality public key и SNI сами по себе не являются секретами;
+- E2E message keys не смешиваются с proxy profile без отдельного решения threat model.
 
-Модификация: `app/src/lib/pocketbase.ts`
+### 7.2. Bootstrap-проблема
 
-```typescript
-// В нативной сборке — 127.0.0.1:local_port
-// В PWA — api.whoami.ninja
-const apiUrl = isTauri 
-  ? `http://127.0.0.1:${proxyPort}` 
-  : 'https://api.whoami.ninja';
-```
+Фраза «скачать proxy config с заблокированного API» создаёт циклическую зависимость. До реализации необходимо определить bootstrap channel:
 
-#### 2.4. UI-компонент статуса прокси
+- bundled bootstrap endpoints без user credential;
+- user-imported signed profile;
+- несколько независимых discovery endpoints;
+- ограниченный enrollment token.
 
-Новый компонент: `app/src/components/common/ProxyStatusIndicator.tsx`
+Profile должен быть подписан сервером, иметь version, expiry и rollback protection. Клиент валидирует signature до применения.
 
-- Индикатор "Обход активен" / "Обход отключён" / "Ошибка подключения"
-- Кнопка перезапуска прокси
-- Настройки (выбор сервера, протокола)
+### 7.3. Stronghold
 
----
+Stronghold подходит для encrypted local storage, но не решает автоматически происхождение master password. Нужно выбрать и протестировать:
 
-### Этап 3: Сборка и конфигурация (3-5 дней)
+- user PIN/passphrase;
+- OS-protected secret, из которого открывается Stronghold;
+- другой platform-specific key storage.
 
-#### 3.1. Скрипты в `package.json`
+Нельзя использовать захардкоженный или детерминированный «device-derived password» без анализа его извлекаемости. Capabilities ограничиваются `stronghold:default` или ещё более узким набором.
 
-```json
-{
-  "scripts": {
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "tauri:build:debug": "tauri build --debug"
-  }
-}
-```
+### 7.4. Rotation
 
-#### 3.2. Настройка CSP в `tauri.conf.json`
+- хранить current и last-known-good profiles;
+- загрузить и проверить новый profile;
+- проверить соединение;
+- атомарно переключить current;
+- при ошибке вернуть last-known-good;
+- не логировать credentials.
 
-```json
-{
-  "app": {
-    "security": {
-      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:* https://api.whoami.ninja wss://api.whoami.ninja; img-src 'self' data: blob: https://*.whoami.ninja; media-src 'self' blob:; style-src 'self' 'unsafe-inline'"
-    }
-  }
-}
-```
+## 8. Этап 3: frontend integration
 
-#### 3.3. Команды в `Makefile`
+- [ ] Создать единый runtime detector без прямого чтения нестабильных globals в разных местах.
+- [ ] Отключить регистрацию Service Worker в Tauri runtime.
+- [ ] Отключить VitePWA plugin для Tauri build mode.
+- [ ] Ввести network adapter; не создавать новый PocketBase singleton до Ready.
+- [ ] Исключить гонку между app startup, profile unlock и API requests.
+- [ ] Добавить состояния UI: Starting, Ready, Degraded, Failed, External VPN required.
+- [ ] Реализовать явный retry и диагностический export без secrets.
+- [ ] Проверить logout: очистка session, subscriptions и чувствительных временных файлов.
 
-```makefile
-tauri-dev:
-	cd app && npm run tauri:dev
+IndexedDB/Dexie и Web Crypto требуют platform tests. Поддержка в базовом WebView не гарантирует одинаковые quota, persistence и background semantics на всех ОС.
 
-tauri-build:
-	cd app && npm run tauri:build
+## 9. Этап 4: notifications и lifecycle
 
-tauri-build:android:
-	cd app && npm run tauri:build -- --target aarch64-linux-android
+### Desktop MVP
 
-tauri-build:ios:
-	cd app && npm run tauri:build -- --target aarch64-apple-ios
-```
+- [ ] Перехватывать close окна и скрывать его в tray только после явного согласия пользователя.
+- [ ] Tray menu содержит Open, Connection status и Quit.
+- [ ] Quit штатно закрывает listener, bridge и xray.
+- [ ] Realtime listener использует существующую auth/session model.
+- [ ] Local notification не содержит plaintext на locked screen по умолчанию.
+- [ ] Клик открывает нужный экран без доверия к произвольному route payload.
+- [ ] Поведение при sleep/resume и смене сети протестировано.
 
-#### 3.4. Скачивание бинарников xray-core
+### Не входит в desktop MVP
 
-Скрипт: `app/src-tauri/scripts/download-xray.sh`
+- получение уведомлений после явного Quit;
+- APNs/FCM remote push через один только `tauri-plugin-notification`;
+- mobile background service.
 
-- Скачивает xray-core с GitHub Releases для каждой платформы
-- Кладёт в `app/src-tauri/binaries/` с правильными суффиксами
-- Проверяет SHA256
+## 10. Этап 5: LiveKit и TURN
 
----
+LiveKit уже содержит встроенный TURN; добавлять отдельный coturn без причины не требуется. Выбор должен учитывать текущий Nginx на `443`.
 
-### Этап 4: Безопасность и конфигурация (2-3 дня)
+### Требуемое решение
 
-#### 4.1. Безопасное хранение конфигурации прокси
+- [ ] Проверить direct UDP и LiveKit TCP fallback.
+- [ ] Включить и протестировать embedded TURN/TLS либо документировать отдельный coturn.
+- [ ] Использовать доверенный сертификат и совпадающий TURN domain.
+- [ ] Разрешить необходимые media ports в firewall.
+- [ ] Решить конфликт `IP:443`: отдельный public IP, L4 load balancer или другой проверенный topology.
+- [ ] Не размещать Nginx HTTPS и TURN/TLS на одном `IP:443` без L4 multiplexing.
+- [ ] Проверить принудительный relay mode как privacy/compatibility diagnostic.
+- [ ] Зафиксировать, какие IP видят LiveKit/VPS/другие клиенты; не обещать отсутствие WebRTC IP leakage без измерения.
 
-**НЕ хардкодить** UUID, ключи, IP-адреса в бинарнике!
+TURN/TLS повышает совместимость с ограничительными сетями, но не гарантирует неразличимость от любого HTTPS и не отменяет полевые тесты.
 
-Схема:
-1. При первом запуске приложение запрашивает конфиг у сервера (через временный токен)
-2. Конфиг сохраняется в зашифрованном виде в хранилище ОС (Keychain на macOS, Credential Manager на Windows, Keystore на Android)
-3. При последующих запусках — читается из хранилища
+## 11. Этап 6: CSP и capabilities
 
-#### 4.2. Ротация ключей
+- [ ] Заменить `csp: null` на минимальный production CSP.
+- [ ] Разделить PWA и Tauri CSP/build modes.
+- [ ] Разрешить localhost только для выбранного bridge port/schema.
+- [ ] Удалить неиспользуемые fs/http/dialog/os capabilities.
+- [ ] Scoped shell permission разрешает только bundled xray и фиксированный набор args.
+- [ ] Frontend не получает путь к secrets/profile и не может запускать произвольные commands.
+- [ ] Проверить CSP в packaged application, а не только Vite dev server.
 
-- UUID и Reality public_key периодически меняются
-- Сервер раздаёт новые конфиги через API
-- Приложение автоматически обновляет конфиг
+## 12. Этап 7: xray supply chain
 
-#### 4.3. Anti-fingerprinting
+Sidecar не хранится в Git, но его получение должно быть воспроизводимым:
 
-- Случайный выбор "украденного" сайта из списка (microsoft.com, apple.com, gateway.icloud.com, etc.)
-- Рандомизация fingerprint (chrome, firefox, safari)
-- Рандомизация shortId
+- pin точной версии xray-core;
+- отдельный manifest `target → URL → SHA-256`;
+- fail closed при несовпадении checksum;
+- download в уникальную временную директорию;
+- запрет `latest` URLs;
+- platform-specific preparation для Bash/PowerShell или единый Node/Rust script;
+- архив/лицензии xray отражены в NOTICE/SBOM;
+- CI artifact provenance связывает sidecar checksum с релизом Nemo.
 
----
+`beforeBuildCommand` не должен слепо скачивать сетью при каждом локальном запуске. Предпочтительно иметь отдельную idempotent-команду preparation и кеш CI, проверяемый checksum.
 
-### Этап 5: Тестирование (3-5 дней)
+## 13. Этап 8: build и публичный release
 
-#### 5.1. Юнит-тесты Rust
-- Тест генерации конфига xray
-- Тест выделения/освобождения порта
-- Тест health check
+### Build scripts
 
-#### 5.2. Интеграционные тесты
-- Запуск xray-core sidecar
-- Проверка SOCKS5-прокси
-- Проверка bypass-правил для WebRTC
+- [ ] Добавить `tauri:dev`, `tauri:build` и `tauri:check`.
+- [ ] Использовать `npm ci`, `cargo ... --locked` и pinned toolchains.
+- [ ] Собирать каждую desktop-платформу на соответствующем runner.
+- [ ] Не считать cross-compilation заменой platform test.
 
-#### 5.3. E2E тесты
-- Запуск приложения в Tauri
-- Проверка подключения к PocketBase через прокси
-- Проверка звонков напрямую (bypass)
+### Release artifacts
 
-#### 5.4. Тесты обхода ТСПУ
-- Запуск из РФ без системного VPN
-- Проверка доступности API
-- Проверка скорости/задержки
-- Проверка звонков
+- [ ] macOS universal или отдельные arm64/x64 artifacts подписаны и notarized.
+- [ ] Windows installer подписан доверенным code-signing certificate.
+- [ ] Linux packages имеют задокументированные форматы и зависимости.
+- [ ] Каждый artifact имеет SHA-256, SBOM и source tag/commit.
+- [ ] GitHub Release сначала draft; публикация только после manual approval.
+- [ ] Workflow не имеет SSH key, self-hosted production runner или deploy job.
+- [ ] Third-party Actions закреплены по полным commit SHA.
 
----
+Artifacts собираются только из очищенного публичного репозитория согласно `GIT_MIGRATION.md`. Это позволяет пользователю сопоставить исходный tag и полученный binary.
 
-## 9. Безопасность и приватность
+## 14. Тестовая матрица
 
-### 9.1. Угрозы и контрмеры
+### Unit
 
-| Угроза | Контрмера |
-|---|---|
-| ТСПУ блокирует домен | ✅ Прокси VLESS/Reality (трафик неотличим от HTTPS) |
-| ТСПУ блокирует IP VPS | ✅ Финский NAT-транзит (нейтральный IP) |
-| Утечка DNS-запросов | ✅ xray-core DNS routing (все DNS через прокси) |
-| Утечка WebRTC IP | ✅ WebRTC через Tauri WebView (не браузер), bypass для LiveKit IP |
-| Компрометация ключей | ✅ Ротация UUID/ключей, шифрованное хранение |
-| Анализ трафика (traffic analysis) | ✅ Reality маскирует под реальный TLS |
-| Активный зонд ТСПУ | ✅ Reality-сервер отвечает как реальный сайт |
-| Деанонимизация push-уведомлений | ✅ Push-Gateway на зарубежном VPS |
+- profile validation/signature/expiry;
+- state machine и concurrency;
+- route allowlist;
+- readiness timeout/backoff/circuit breaker;
+- redaction секретов;
+- atomic rotation и rollback.
 
-### 9.2. Приватность пользователя
+### Integration
 
-- **Нет логов на стороне клиента:** xray-core работает в memory-only режиме (loglevel: "none")
-- **Нет трекинга:** приложение не отправляет телеметрию
-- **E2E шифрование:** сообщения уже зашифрованы на уровне приложения (Web Crypto API)
-- **Физический контроль данных:** PocketBase на домашнем сервере
+- sidecar start/stop/crash/restart;
+- HTTP auth и CRUD через выбранный transport;
+- SSE subscribe/reconnect/gap recovery;
+- WebSocket, если используется;
+- streaming upload/download;
+- DNS через нужный маршрут;
+- invalid/revoked profile;
+- sleep/resume и смена сети.
 
-### 9.3. Приватность владельца
+### Platform
 
-- **Анонимный домен:** Njalla/Porkbun + крипто-оплата
-- **Разделение репозиториев:** Dev (приватный) vs Prod (анонимный, squash-коммиты)
-- **Сервер за рубежом:** VPS оплачивается криптовалютой
-- **Нет российских юр. лиц:** сервис позиционируется как международный
+- Windows 11 WebView2;
+- поддерживаемые macOS Intel/Apple Silicon;
+- выбранные Linux distributions/WebKitGTK;
+- install, upgrade, rollback и uninstall;
+- code-signing/notarization validation.
 
----
+### Network
 
-## 10. Анализ рисков
+- домашняя сеть и mobile hotspot;
+- сеть с недоступным основным доменом;
+- высокий packet loss/latency;
+- direct UDP, TCP fallback и TURN/TLS;
+- длительный soak без утечки процессов/памяти.
 
-### 10.1. Технические риски
+Ручной тест «из РФ один раз заработало» не заменяет повторяемую матрицу, но остаётся обязательным acceptance test устойчивости к текущим ограничениям.
 
-| Риск | Вероятность | Влияние | Митигация |
-|---|---|---|---|
-| xray-core падает | Средняя | Высокое | Автоматический перезапуск (watchdog) |
-| ТСПУ блокирует Reality | Низкая | Критическое | Ротация SNI, запасные протоколы |
-| Порт занят другим процессом | Низкая | Низкое | Проверка + генерация нового порта |
-| Бинарник xray не запускается на платформе | Средняя | Высокое | Тестирование на всех платформах |
-| Утечка DNS | Средняя | Высокое | DNS routing в xray (все DNS через прокси) |
-| WebRTC утечка реального IP | Средняя | Высокое | WebView настройки + bypass только для LiveKit IP |
+## 15. Риски и fallback
 
-### 10.2. Операционные риски
-
-| Риск | Вероятность | Влияние | Митигация |
-|---|---|---|---|
-| VPS заблокирован | Средняя | Высокое | Финский транзит + запасные VPS |
-| Домен заблокирован | Высокая | Среднее | DNS Only (серые тучки) + прямой IP |
-| Push-Gateway недоступен | Низкая | Среднее | Резервный push-сервер |
-| Домашний сервер offline | Средняя | Среднее | VPS продолжает работать (текст, звонки) |
-
-### 10.3. Юридические риски
-
-| Риск | Вероятность | Влияние | Митигация |
-|---|---|---|---|
-| Блокировка приложения в RuStore/App Store | Высокая | Среднее | Распространение через сайт (APK) + AltStore (iOS) |
-| Запрет VPN в РФ | Растёт | Высокое | Reality маскируется под HTTPS, не определяется как VPN |
-| Запрос данных у хостинга | Низкая | Высокое | Хостинг за рубежом, оплата криптой |
-
----
-
-## 11. Двойная стратегия: PWA + Tauri
-
-### 11.1. Логика разделения
-
-| Канал | Технология обхода | Целевая аудитория |
+| Риск | Влияние | Митигация |
 |---|---|---|
-| **PWA (браузер)** | Service Worker + WebSocket-туннель | Пользователи без установки нативного приложения |
-| **Tauri (нативное)** | xray-core sidecar + VLESS/Reality | Пользователи, установившие приложение |
-
-### 11.2. Автоопределение окружения
-
-```typescript
-// app/src/lib/env.ts
-const isTauri = '__TAURI__' in window;
-const isPWA = window.matchMedia('(display-mode: standalone)').matches;
-const isBrowser = !isTauri && !isPWA;
-
-// Логика:
-// isTauri → использовать xray-core прокси (127.0.0.1:port)
-// isPWA → использовать Service Worker туннель
-// isBrowser → прямое подключение (пользователь сам включает VPN)
-```
-
-### 11.3. PWA fallback (Service Worker туннель)
-
-Согласно разделу 5 `BYPASS_STRATEGY.md`:
-1. Service Worker перехватывает все `fetch` запросы к API PocketBase
-2. Вместо HTTP-запроса — упаковка в WebSocket-кадр
-3. WebSocket маскируется под чат-сокет (не блокируется ТСПУ)
-4. Зарубежный прокси-сервер эмулирует HTTP-запрос к PocketBase
-
-**Преимущество Tauri над PWA:** прокси работает на уровне ОС (Rust native thread), а не в песочнице браузера. Нет ограничений Service Worker, нет fingerprinting браузера, полный контроль над сетевым стеком.
-
----
-
-## 12. Выявленные проблемы PWA ↔ Tauri и варианты их решения
-
-В результате глубокого анализа всего проекта (фронтенд, бэкенд, инфраструктура, CI/CD) выявлены следующие проблемы, которые **необходимо решить** для завершённости Tauri-интеграции. Большинство из них — конфликты между PWA-архитектурой и нативной Tauri-средой.
-
----
-
-### 12.1. Проблема: Service Worker не работает в Tauri WebView
-
-**Суть проблемы:**
-`app/src/sw.ts` (307 строк) — сложный Service Worker, обрабатывающий:
-- Precaching статики (Workbox)
-- Runtime-кэширование (аватары, шрифты)
-- Push-уведомления с E2E-дешифрацией (Blind Push)
-- Background Sync (отложенная отправка сообщений из Outbox)
-- Обработку кликов по уведомлениям (навигация)
-
-В Tauri WebView Service Worker **может не работать** или работать с ограничениями:
-- WebView2 (Windows) / WKWebView (macOS) / Android WebView — разная поддержка SW
-- Background Sync API недоступно вне браузера
-- Web Push API не работает в Tauri (нет FCM/APNs интеграции на уровне WebView)
-
-**Варианты решения:**
-
-| Вариант | Описание | Плюсы | Минусы |
-|---|---|---|---|
-| **A: Условное отключение SW в Tauri** (рекомендуется) | При `isTauri` — не регистрировать SW, использовать Tauri-аналоги | ✅ Чисто, не ломает PWA | ⚠️ Нужно реализовать аналоги на Rust |
-| B: Оставить SW в Tauri | Надеяться, что WebView поддержит SW | ✅ Меньше кода | ❌ Ненадёжно, разная поддержка на платформах |
-| C: Полный отказ от SW | Убрать SW, всё перевести на Tauri | ✅ Единая архитектура | ❌ Ломает PWA-версию |
-
-**Рекомендация:** Вариант A. В `main.tsx` добавить проверку:
-```typescript
-if (!isTauri && "serviceWorker" in navigator) {
-  // Регистрация SW только в браузере/PWA
-}
-```
-В Tauri заменить:
-- Push → `tauri-plugin-notification` + push-gateway
-- Background Sync → Rust-side scheduler (cron в PocketBase уже есть)
-- Precaching → не нужно (статика в бинарнике)
-- Outbox → Rust-side очередь или оставить в Dexie.js (IndexedDB работает в WebView)
-
----
-
-### 12.2. Проблема: VitePWA плагин конфликтует с Tauri-сборкой
-
-**Суть проблемы:**
-`vite.config.ts` использует `VitePWA` плагин в режиме `injectManifest`. При `tauri build` плагин пытается инжектить Service Worker в нативную сборку, что:
-- Увеличивает размер бандла
-- Создает ненужный SW-файл в `dist/`
-- Может вызывать ошибки при загрузке в WebView
-
-**Варианты решения:**
-
-| Вариант | Описание | Плюсы | Минусы |
-|---|---|---|---|
-| **A: Условное отключение VitePWA** (рекомендуется) | Проверять `process.env.TAURI_ENV_PLATFORM` и отключать плагин | ✅ Чисто, не ломает PWA | ⚠️ Нужно тестировать |
-| B: Оставить как есть | VitePWA генерирует SW, но он не используется в Tauri | ✅ Ноль изменений | ❌ Лишний код в бандле |
-| C: Раздельные vite конфиги | `vite.config.ts` для PWA, `vite.tauri.config.ts` для Tauri | ✅ Полная изоляция | ❌ Дублирование конфига |
-
-**Рекомендация:** Вариант A. В `vite.config.ts`:
-```typescript
-const isTauri = !!process.env.TAURI_ENV_PLATFORM;
-plugins: [
-  tanstackRouter({ target: "react", autoCodeSplitting: true }),
-  react(),
-  ...(!isTauri ? [VitePWA({ ... })] : []),
-],
-```
-
----
-
-### 12.3. Проблема: Захардкоженные URL в `env.ts` и `pocketbase.ts`
-
-**Суть проблемы:**
-- `app/src/lib/env.ts` — `VITE_PB_URL` по умолчанию `https://api.whoami.ninja`
-- `app/src/lib/pocketbase.ts` — `new PocketBase(env.VITE_PB_URL)` создаёт синглтон при импорте
-
-В Tauri-сборке API должен идти через локальный прокси: `http://127.0.0.1:local_port`. Но:
-- `env.ts` не знает о Tauri
-- `pocketbase.ts` создаёт синглтон до того, как прокси запущен
-- LiveKit URL тоже захардкожен (`wss://whoami.ninja/livekit/`)
-
-**Варианты решения:**
-
-| Вариант | Описание | Плюсы | Минусы |
-|---|---|---|---|
-| **A: Ленивая инициализация PB** (рекомендуется) | Заменить синглтон на фабрику с динамическим URL | ✅ Гибкость | ⚠️ Нужно рефакторить импорты |
-| B: Tauri env переменные | Передавать URL через Tauri `beforeBuildCommand` | ✅ Просто | ❌ URL неизвестен до запуска прокси |
-| C: Runtime конфигурация | Загружать конфиг из файла при запуске | ✅ Не требует пересборки | ⚠️ Сложнее |
-
-**Рекомендация:** Вариант A. Создать `pbClient` с динамической инициализацией:
-```typescript
-// pocketbase.ts
-let pbInstance: TypedPocketBase | null = null;
-
-export async function getPbClient(): Promise<TypedPocketBase> {
-  if (pbInstance) return pbInstance;
-  
-  const url = isTauri 
-    ? `http://127.0.0.1:${await getProxyPort()}`
-    : env.VITE_PB_URL;
-    
-  pbInstance = new PocketBase(url) as TypedPocketBase;
-  return pbInstance;
-}
-```
-Для LiveKit: в Tauri — прямой WebSocket к VPS (bypass прокси), в PWA — через `wss://whoami.ninja/livekit/`.
-
----
-
-### 12.4. Проблема: Web Push API не работает в Tauri
-
-**Суть проблемы:**
-Push-уведомления в PWA используют:
-- `navigator.serviceWorker.pushManager.subscribe()` — регистрация подписки
-- Web Push API (VAPID ключи) — отправка пушей
-- Service Worker `push` event — приём и дешифрация
-
-В Tauri WebView:
-- `pushManager` недоступен или не работает
-- Нет интеграции с APNs/FCM на уровне WebView
-- Service Worker push event не срабатывает
-
-**Варианты решения:**
-
-| Вариант | Описание | Плюсы | Минусы |
-|---|---|---|---|
-| **A: `tauri-plugin-notification`** (рекомендуется) | Нативные уведомления ОС + push-gateway | ✅ Работает на всех платформах | ⚠️ Нужен свой push-gateway |
-| B: Опрос сервера (polling) | Периодически запрашивать непрочитанные | ✅ Просто | ❌ Батарея, задержки |
-| C: WebSocket long-poll | Держать постоянное WS-соединение | ✅ Real-time | ❌ Батарея, не нативные уведомления |
-
-**Рекомендация:** Вариант A. Схема:
-1. Tauri-приложение регистрируется в push-gateway (на VPS)
-2. Push-gateway отправляет пуши через APNs/FCM с зарубежного IP
-3. `tauri-plugin-notification` принимает и показывает уведомление
-4. E2E-дешифрация выполняется в Rust-слое (или в JS через `invoke`)
-
----
-
-### 12.5. Проблема: Background Sync недоступен в Tauri
-
-**Суть проблемы:**
-`sw.ts` реализует Background Sync для Outbox (отложенная отправка сообщений при восстановлении сети):
-- Регистрация `sync` event в Service Worker
-- При восстановлении сети — вычитывание очереди из Dexie.js
-- Отправка накопленных сообщений
-
-В Tauri WebView Background Sync API недоступен.
-
-**Варианты решения:**
-
-| Вариант | Описание | Плюсы | Минусы |
-|---|---|---|---|
-| **A: Rust-side scheduler** (рекомендуется) | Rust-поток мониторит сеть и вычитывает outbox | ✅ Работает даже в фоне | ⚠️ Нужен Rust-код |
-| B: JS-side polling | `useNetworkStatus` хук при `online` триггерит outbox | ✅ Просто | ❌ Только при открытом приложении |
-| C: PocketBase cron | Серверный cron проверяет неотправленные | ✅ Не зависит от клиента | ❌ Нет доступа к зашифрованным данным |
-
-**Рекомендация:** Вариант B для MVP (просто и работает), Вариант A для полной нативной поддержки. Outbox в Dexie.js (IndexedDB) **работает в Tauri WebView**, так что хранилище не нужно менять.
-
----
-
-### 12.6. Проблема: IndexedDB / Dexie.js в Tauri WebView
-
-**Суть проблемы:**
-Приложение активно использует IndexedDB через Dexie.js:
-- `media-db.ts` — хранение медиа (Dexie.js)
-- `outbox-db.ts` — очередь сообщений
-- `chat-history-db.ts` — история чатов
-
-Вопрос: работает ли IndexedDB в Tauri WebView?
-
-**Анализ:**
-- WebView2 (Windows) — ✅ поддерживает IndexedDB
-- WKWebView (macOS) — ✅ поддерживает IndexedDB
-- Android WebView — ✅ поддерживает IndexedDB
-- iOS WKWebView — ✅ поддерживает IndexedDB
-
-**Вывод:** Проблемы нет. IndexedDB работает во всех Tauri WebView. Dexie.js можно использовать без изменений.
-
----
-
-### 12.7. Проблема: Web Crypto API в Tauri WebView
-
-**Суть проблемы:**
-E2E шифрование использует Web Crypto API (`window.crypto.subtle`):
-- `encryption.ts` — AES-GCM шифрование
-- `keys.ts` — ECDH генерация ключей
-- `keystore.ts` — хранение ключей
-- `recovery.ts` — восстановление ключей
-
-Вопрос: работает ли Web Crypto API в Tauri WebView?
-
-**Анализ:**
-- Все Tauri WebView поддерживают Web Crypto API
-- `crypto.subtle` доступен во всех современных WebView
-
-**Вывод:** Проблемы нет. Web Crypto API работает. E2E шифрование не требует изменений.
-
----
-
-### 12.8. Проблема: Дубликат директории `app/app/src/features/`
-
-**Суть проблемы:**
-В проекте есть две директории features:
-- `app/src/features/` — основная (полная, актуальная)
-- `app/app/src/features/` — содержит только `chat/room/components/JoinRoomView/`
-
-Вторая директория — остаток от старой структуры проекта. Она:
-- Засоряет репозиторий
-- Может вызывать путаницу при импортах
-- Попадает в бандл при сборке
-
-**Решение:** Удалить `app/app/` полностью. Это безопасно — основной код в `app/src/`.
-
----
-
-### 12.9. Проблема: `.env.production.template` ссылается на Supabase
-
-**Суть проблемы:**
-`app/.env.production.template` содержит переменные:
-- `VITE_SUPABASE_URL=`
-- `VITE_SUPABASE_ANON_KEY=`
-- `SUPABASE_SERVICE_ROLE_KEY=`
-- `SUPABASE_CLI_PASSWORD=`
-- `SUPABASE_HOME_IP_ADDRESS=`
-
-Но проект **давно мигрировал на PocketBase** (см. ROADMAP.md). Supabase не используется.
-
-**Решение:** Обновить `.env.production.template`:
-- Убрать все Supabase переменные
-- Добавить PocketBase переменные (`VITE_PB_URL`, `VITE_LIVEKIT_URL`)
-- Добавить Tauri-специфичные переменные (`TAURI_PROXY_SERVER`, `TAURI_PROXY_UUID`, и т.д.)
-
----
-
-### 12.10. Проблема: CSP отключён в `tauri.conf.json`
-
-**Суть проблемы:**
-```json
-"security": { "csp": null }
-```
-CSP (Content Security Policy) отключён. В production-сборке это уязвимость — приложение уязвимо к XSS-атакам.
-
-**Решение:** Настроить CSP:
-```json
-"csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:* https://api.whoami.ninja wss://*.whoami.ninja; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'"
-```
-
----
-
-### 12.11. Проблема: Нет скриптов Tauri в `package.json` и `Makefile`
-
-**Суть проблемы:**
-- В `package.json` нет `tauri:dev`, `tauri:build` скриптов
-- В `Makefile` нет команд для Tauri
-- Разработчик не может запустить `npm run tauri:dev` или `make tauri-dev`
-
-**Решение:**
-В `package.json`:
-```json
-"tauri:dev": "tauri dev",
-"tauri:build": "tauri build",
-"tauri:build:debug": "tauri build --debug"
-```
-В `Makefile`:
-```makefile
-tauri-dev:
-	cd app && npm run tauri:dev
-tauri-build:
-	cd app && npm run tauri:build
-```
-
----
-
-### 12.12. Проблема: CI/CD не покрывает Android/iOS
-
-**Суть проблемы:**
-`.github/workflows/tauri-build.yml` собирает только:
-- macOS (aarch64 + x86_64)
-- Ubuntu
-- Windows
-
-Нет сборок для:
-- Android (aarch64-linux-android)
-- iOS (aarch64-apple-ios)
-
-**Решение:** Добавить matrix entries для Android/iOS:
-```yaml
-- platform: 'macos-latest'
-  args: '--target aarch64-apple-ios'
-- platform: 'ubuntu-22.04'
-  args: '--target aarch64-linux-android'
-```
-Потребуется установка Android SDK / iOS toolchain в CI.
-
----
-
-### 12.13. Проблема: Нет безопасного хранения конфигурации прокси
-
-**Суть проблемы:**
-Конфигурация VLESS/Reality (UUID, public_key, short_id, SNI) не должна:
-- Хардкодиться в бинарнике (декомпиляция)
-- Храниться в открытом виде в файле
-- Передаваться по незащищённому каналу
-
-**Варианты решения:**
-
-| Вариант | Описание | Плюсы | Минусы |
-|---|---|---|---|
-| **A: OS Keychain** (рекомендуется) | Keychain (macOS), Credential Manager (Win), Keystore (Android) | ✅ Безопасно | ⚠️ Нужен tauri-plugin-keychain или аналог |
-| B: Зашифрованный файл | Конфиг в файле, зашифрован ключом устройства | ✅ Просто | ⚠️ Ключ устройства можно извлечь |
-| C: Загрузка с сервера | При запуске — запрос конфига с сервера | ✅ Ротация ключей | ❌ Нужна сеть при запуске |
-
-**Рекомендация:** Вариант A + C. При первом запуске — загрузка с сервера (C), затем сохранение в Keychain (A). При последующих запусках — чтение из Keychain. Периодическая ротация через сервер.
-
----
-
-### 12.14. Сводная таблица проблем и решений
-
-| # | Проблема | Критичность | Решение | Сложность |
-|---|---|---|---|---|
-| 12.1 | Service Worker в Tauri | 🔴 Критичная | Условное отключение + Tauri-аналоги | Высокая |
-| 12.2 | VitePWA конфликт | 🟡 Важная | Условное отключение плагина | Низкая |
-| 12.3 | Захардкоженные URL | 🔴 Критичная | Ленивая инициализация PB | Средняя |
-| 12.4 | Web Push API | 🔴 Критичная | `tauri-plugin-notification` | Высокая |
-| 12.5 | Background Sync | 🟡 Важная | JS-side polling (MVP) / Rust scheduler | Средняя |
-| 12.6 | IndexedDB/Dexie.js | ✅ Нет проблемы | Работает без изменений | — |
-| 12.7 | Web Crypto API | ✅ Нет проблемы | Работает без изменений | — |
-| 12.8 | Дубликат `app/app/` | 🟢 Низкая | Удалить директорию | Низкая |
-| 12.9 | Устаревший `.env.template` | 🟡 Важная | Обновить переменные | Низкая |
-| 12.10 | CSP отключён | 🔴 Критичная | Настроить CSP | Низкая |
-| 12.11 | Нет скриптов Tauri | 🟡 Важная | Добавить в package.json + Makefile | Низкая |
-| 12.12 | Нет Android/iOS в CI | 🟡 Важная | Добавить matrix entries | Средняя |
-| 12.13 | Нет безопасного хранения конфига | 🔴 Критичная | OS Keychain + серверная ротация | Высокая |
-
----
-
-## 13. Контрольный список готовности
-+++++++ REPLACE</task_progress>
-
-### Этап 1: Rust-ядро
-- [ ] Добавить `tauri-plugin-shell` в `Cargo.toml`
-- [ ] Создать модуль `proxy.rs` (управление xray-core)
-- [ ] Реализовать Tauri-команды (`start_proxy`, `stop_proxy`, `get_proxy_status`, `get_proxy_port`, `restart_proxy`)
-- [ ] Настроить routing rules (bypass для LiveKit IP)
-- [ ] Скачать бинарники xray-core для всех платформ
-- [ ] Настроить `externalBin` в `tauri.conf.json`
-- [ ] Обновить `capabilities/default.json` (разрешения shell)
-- [ ] Интегрировать в `lib.rs` (invoke_handler, setup, shutdown)
-
-### Этап 2: Фронтенд
-- [ ] Создать хук `useTauri()` (определение окружения)
-- [ ] Создать `TauriProxyService` (управление через invoke)
-- [ ] Модифицировать `pocketbase.ts` (динамический API URL)
-- [ ] Создать UI-компонент статуса прокси
-- [ ] Настроить bypass для WebRTC в LiveKit конфиге
-
-### Этап 3: Сборка
-- [ ] Добавить скрипты `tauri:dev` / `tauri:build` в `package.json`
-- [ ] Настроить CSP в `tauri.conf.json`
-- [ ] Добавить команды в `Makefile`
-- [ ] Создать скрипт скачивания xray-core
-- [ ] Протестировать сборку на macOS (dev)
-- [ ] Протестировать сборку на Windows
-- [ ] Протестировать сборку на Linux
-
-### Этап 4: Безопасность
-- [ ] Реализовать безопасное хранение конфига (Keychain/Keystore)
-- [ ] Настроить ротацию UUID/ключей
-- [ ] Реализовать anti-fingerprinting (рандомизация SNI)
-- [ ] Настроить DNS routing (все DNS через прокси)
-- [ ] Отключить логирование xray (loglevel: "none")
-
-### Этап 5: Тестирование
-- [ ] Юнит-тесты Rust (генерация конфига, порт-менеджмент)
-- [ ] Интеграционные тесты (запуск xray, health check)
-- [ ] E2E тесты (подключение к PB через прокси)
-- [ ] Тест обхода ТСПУ (из РФ без VPN)
-- [ ] Тест звонков (WebRTC bypass)
-- [ ] Тест производительности (latency, throughput)
-
-### Этап 6: Мобильные платформы
-- [ ] Настроить сборку для Android (aarch64-linux-android)
-- [ ] Настроить сборку для iOS (aarch64-apple-ios)
-- [ ] Получить/создать ключи подписи (Android keystore, iOS provisioning)
-- [ ] Тест на реальных устройствах
-
----
-
-## 📎 Приложения
-
-### Ссылки на документы
-- `docs/BYPASS_STRATEGY.md` — полная стратегия обхода блокировок
-- `.agent/artifacts/INFRASTRUCTURE_V2.md` — гибридная S3 инфраструктура
-- `.agent/artifacts/GIT_MIGRATION.md` — разделение dev/prod репозиториев
-- `.agent/artifacts/.archive/vps_migration_strategy.md` — история миграции VPS
-- `.agent/artifacts/.archive/cloudflare_migration_plan.md` — проваленный план Cloudflare
-- `.agent/artifacts/.archive/pwa_offline_architecture.md` — архитектура PWA
-
-### Эталонная конфигурация
-- Текущий рабочий конфиг Hiddify/happ на домашнем сервере — **эталон** для генерации xray-конфига в Tauri
-- Параметры VLESS/Reality (UUID, public_key, short_id, SNI) — брать из рабочей конфигурации Hiddify
-
----
-
-> **Главный принцип:** Не изобретать велосипед. У вас уже есть работающее решение (VLESS/Reality через Hiddify). Нужно перенести его из системного VPN в Tauri sidecar — это даст пользователям нативное приложение со встроенным обходом блокировок, без необходимости включать системный VPN.
+| Выбранный WebView не использует SOCKS | Критическое | Gate 0 и local bridge/native adapter |
+| Bootstrap endpoint заблокирован | Критическое | signed offline/import profile и несколько discovery paths |
+| xray artifact подменён | Критическое | pinned version, checksum, provenance |
+| Sidecar остаётся после crash | Высокое | handle cleanup, startup reconciliation, OS tests |
+| Reality profile перестал работать | Высокое | signed rotation, last-known-good, external VPN fallback |
+| TURN конфликтует с Nginx:443 | Высокое | отдельный IP/L4 topology до deployment |
+| Tray listener расходует батарею/трафик | Среднее | backoff, sleep handling, opt-in autostart |
+| Linux WebKit различается по distro | Среднее | ограничить поддерживаемую матрицу |
+| Signing secrets скомпрометированы | Критическое | отдельное хранение, минимальные permissions, rotation plan |
+
+Fallback первого desktop-релиза: Tauri без встроенного xray, с явным индикатором необходимости внешнего VPN. Нельзя скрывать такой fallback за ложным статусом «обход активен».
+
+## 16. Критерии готовности desktop-релиза
+
+- [ ] Gate 0 пройден на одной платформе и ADR утверждён.
+- [ ] HTTP, realtime и media проходят через выбранный маршрут.
+- [ ] DNS и redirect behavior проверены.
+- [ ] Profile bootstrap, подпись, expiry и rotation работают.
+- [ ] Sidecar lifecycle проверен normal/crash/forced termination tests.
+- [ ] Service Worker/VitePWA отключены только в Tauri build.
+- [ ] CSP и capabilities минимизированы.
+- [ ] Notifications честно соответствуют desktop lifecycle.
+- [ ] LiveKit имеет проверенный direct/fallback/TURN маршрут без port conflict.
+- [ ] Windows/macOS/Linux builds установлены и протестированы на чистых системах.
+- [ ] Artifacts подписаны, имеют checksums/SBOM и связаны с source tag.
+- [ ] Public workflow не имеет доступа к VPS.
+- [ ] Известные ограничения опубликованы в release notes.
+
+## 17. Post-MVP: Android и iOS
+
+Для каждой мобильной платформы отдельно исследовать:
+
+- допустимый network-extension/VPN API;
+- background lifecycle;
+- APNs/FCM integration;
+- secure credential storage;
+- distribution/signing/entitlements;
+- правила магазинов и sideloading;
+- батарею и kill/restart behavior.
+
+До завершения этого исследования нельзя включать Android/iOS в общую desktop CI matrix добавлением одного target triple.
+
+## 18. Официальные технические ориентиры
+
+- Tauri external binaries: https://v2.tauri.app/develop/sidecar/
+- Tauri Stronghold: https://v2.tauri.app/plugin/stronghold/
+- Tauri notifications: https://v2.tauri.app/plugin/notification/
+- Tauri permissions: https://v2.tauri.app/security/permissions/
+- LiveKit deployment и embedded TURN: https://docs.livekit.io/transport/self-hosting/deployment/
+- LiveKit ports/firewall: https://docs.livekit.io/transport/self-hosting/ports-firewall/
+
+Версии и platform support проверяются заново непосредственно перед реализацией и релизом; документ не должен подменять актуальную upstream documentation.

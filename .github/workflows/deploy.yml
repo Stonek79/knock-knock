@@ -66,6 +66,11 @@ jobs:
         run: |
           cd ~/nemo
           git pull origin main
+
+          # Домашнее S3-хранилище. Секреты находятся только в
+          # ~/nemo/infra/home/minio/.env и не хранятся в Git.
+          docker compose -f infra/home/minio/docker-compose.yml pull
+          docker compose -f infra/home/minio/docker-compose.yml up -d
           
           # Останавливаем только старый одиночный веб-контейнер (туннель whoami-frpc НЕ затрагивается!)
           docker rm -f whoami-web || true

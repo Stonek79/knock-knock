@@ -16,6 +16,47 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - frps
+      - pocketbase
+      - web
+
+  web:
+    image: ghcr.io/nemolabs/nemo-app:latest
+    container_name: whoami-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - whoami-net
+
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    pull_policy: if_not_present
+    container_name: whoami-pb
+    restart: unless-stopped
+    command: 
+      - serve 
+      - --http=0.0.0.0:8090 
+      - --dir=/pb/pb_data 
+      - --hooksDir=/pb/pb_hooks
+    ports:
+      - "8090:8090"
+    volumes:
+      - /opt/nemo/pb_data:/pb/pb_data
+      - ./pb_hooks:/pb/pb_hooks
+      - ./pb_schema.json:/pb/pb_schema.json
+    env_file:
+      - .env
+    environment:
+      - PB_ENCRYPTION_KEY=${PB_ENCRYPTION_KEY:-}
+      - PB_PUSH_GATEWAY_URL=http://whoami-push:4000/
+      # В Prod-режиме письмо отправляется через реальный SMTP (Mailgun/Resend)
+      - PB_SMTP_HOST=${PB_SMTP_HOST:-}
+      - PB_SMTP_PORT=${PB_SMTP_PORT:-}
+      - PB_SMTP_USER=${PB_SMTP_USER:-}
+      - PB_SMTP_PASS=${PB_SMTP_PASS:-}
+      - PB_SMTP_TLS=${PB_SMTP_TLS:-true}
+    networks:
+      - whoami-net
 
   frps:
     image: fatedier/frps:v0.58.1
@@ -24,12 +65,10 @@ services:
     command: ["-c", "/etc/frp/frps.toml"]
     ports:
       - "7443:7443" # Внешний порт для FRP туннеля
-      - "3000:3000" # Веб-интерфейс React App
-      - "8090:8090" # PocketBase Prod API
-      - "9090:9090" # PocketBase Dev API
+      - "9090:9090" # PocketBase Dev API (проброс из дома)
       - "6000:6000" # Безопасный SSH доступ к домашнему серверу
     volumes:
-      - ./frp/frps.toml:/etc/frp/frps.toml
+      - ./frps.toml:/etc/frp/frps.toml
     env_file:
       - .env
     networks:
@@ -39,7 +78,6 @@ services:
     build: ./push-gateway
     container_name: whoami-push
     restart: unless-stopped
-    # Порты наружу не пробрасываем, Cloudflare Tunnel будет проксировать трафик внутрь
     environment:
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
