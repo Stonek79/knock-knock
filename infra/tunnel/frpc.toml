@@ -58,7 +58,16 @@ localIP = "127.0.0.1"
 localPort = 9090
 remotePort = 9090
 
-# 4. Безопасный SSH-доступ к домашнему серверу из любой точки мира
+# 4. MinIO S3 API для Prod PocketBase на VPS.
+# Доступ к этому порту на VPS оставляем только локальным контейнерам.
+[[proxies]]
+name = "nemo_minio_s3"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 9000
+remotePort = 19000
+
+# 5. Безопасный SSH-доступ к домашнему серверу из любой точки мира
 [[proxies]]
 name = "ssh_home"
 type = "tcp"
