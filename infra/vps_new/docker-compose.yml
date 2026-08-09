@@ -23,8 +23,6 @@ services:
     image: ghcr.io/nemolabs/nemo-app:latest
     container_name: whoami-web
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     networks:
       - whoami-net
 
@@ -38,8 +36,6 @@ services:
       - --http=0.0.0.0:8090 
       - --dir=/pb/pb_data 
       - --hooksDir=/pb/pb_hooks
-    ports:
-      - "8090:8090"
     volumes:
       - /opt/nemo/pb_data:/pb/pb_data
       - ./pb_hooks:/pb/pb_hooks
@@ -67,7 +63,6 @@ services:
     command: ["-c", "/etc/frp/frps.toml"]
     ports:
       - "7443:7443" # Внешний порт для FRP туннеля
-      - "9090:9090" # PocketBase Dev API (проброс из дома)
       - "6000:6000" # Безопасный SSH доступ к домашнему серверу
       - "127.0.0.1:19000:19000" # MinIO S3 через FRP, только локально на VPS
     volumes:

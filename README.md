@@ -1,85 +1,48 @@
-# Nemo (PrivMessenger)
+# Nemo Messenger
 
-PWA мессенджер с фокусом на безопасность, Ghost Mode и WebRTC звонки.
+Nemo is a self-hosted messaging application with an installable web client,
+PocketBase backend, realtime updates, and encrypted media handling.
 
-## Архитектура
-Проект построен по схеме **Self-Hosted Hybrid**:
-- **Frontend**: Vite + React 19 + TanStack (Router, Query, Form, Virtual).
-- **Backend**: PocketBase (Auth, SQLite, Realtime, JS Hooks) на домашнем сервере.
-- **Infrastructure**: VPS (Nginx + Coturn) <--> WireGuard <--> Home Server.
+## What is included
 
-## Стек технологий
-- **Язык**: TypeScript
-- **UI**: Radix UI + CSS Modules
-- **State**: Zustand
-- **Crypto**: Web Crypto API + IndexedDB (Client-side E2E encryption)
-- **Calls**: WebRTC (P2P + TURN on VPS)
+- React + TypeScript web client in `app/`;
+- PocketBase schema and hooks in `infra/prod/`;
+- VPS deployment templates in `infra/prod/`;
+- Docker-based build files.
 
-## Структура проекта
-```
-/infra        # Конфигурационные файлы для деплоя
-  /vps        # Конфиги для публичного сервера (Nginx, WireGuard, Coturn)
-  /home       # Конфиги для домашнего сервера (PocketBase, Hooks, Schema)
-/app          # Исходный код Frontend приложения (Vite)
-/docs         # Документация проекта
-/scripts      # Скрипты автоматизации и сидирования (seed.js)
-```
+The public repository contains only the files required to build and run a
+release. Secrets, databases, media, local indexes, and development machine
+configuration are intentionally excluded.
 
-## Установка и запуск (Разработка)
+## Storage model
 
-1. **Предварительная настройка**:
-   Убедитесь, что инфраструктура развернута (см. [DEPLOYMENT.md](./DEPLOYMENT.md)).
+PocketBase stores application data. Media files are stored in an S3-compatible
+MinIO bucket. Dev and Prod use separate buckets and separate access keys.
+The reference deployment keeps MinIO on a private home server and reaches it
+from the VPS through an authenticated FRP tunnel. If the home server is down,
+media operations may be temporarily unavailable.
 
-2. **Запуск фронтенда**:
-   ```bash
-   cd app
-   npm install
-   npm run dev
-   ```
+## Local development
 
-3. **Переменные окружения**:
-   Скопируйте шаблон и заполните значениями:
-   ```bash
-   cd app
-   cp .env.example .env.local
-   # Отредактируйте .env.local
-   ```
-
-## Тестирование
-
-### Unit-тесты (Mock)
 ```bash
 cd app
-npm run test
-```
-
-### E2E тесты (Staging)
-```bash
-# 1. Настройте тестовое окружение
-./scripts/use-env.sh staging
-
-# 2. Запустите приложение
+cp .env.example .env.local
+npm ci
 npm run dev
-
-# 3. Запустите тесты в другом терминале
-npx playwright test
 ```
 
-📖 **Подробная документация:**
-- [TESTING.md](./docs/TESTING.md) — Полное руководство по тестированию
-- [TEST_ENV_SETUP.md](./docs/TEST_ENV_SETUP.md) — Настройка тестового окружения
-- [SECURITY_CONFIG.md](./docs/SECURITY_CONFIG.md) — Безопасность конфигурации
+Set `VITE_PB_URL` in `.env.local` to a PocketBase instance you control. Do not
+commit `.env` files or credentials.
 
-## Документация
+## Deployment
 
-- [ARCHITECTURE.md](./docs/ARCHITECTURE.md) — Архитектура проекта
-- [DEPLOYMENT.md](./DEPLOYMENT.md) — Руководство по развертыванию
-- [DESIGN.md](./docs/DESIGN.md) — Дизайн-система
-- [ROADMAP.md](./docs/ROADMAP.md) — План развития
-- [RULES.md](./docs/RULES.md) — Правила разработки
+The public repository does not contain production secrets and does not deploy
+to a server automatically. Prepare the environment files on the target
+machine, review the Compose and Nginx configuration, and deploy manually over
+SSH. Keep the exact image digest and configuration used for each release.
 
-## Безопасность
+## Security notes
 
-⚠️ **Важно:** Никогда не коммитьте `.env` файлы в git! Все секреты хранятся локально.
-
-📖 См. [SECURITY_CONFIG.md](./docs/SECURITY_CONFIG.md) для подробностей.
+This project is provided for review and self-hosting. Review the code and
+configuration for your environment, keep PocketBase and MinIO administration
+interfaces private, restrict firewall ports, and maintain tested backups.

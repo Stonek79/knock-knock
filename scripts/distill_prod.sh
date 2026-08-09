@@ -17,9 +17,19 @@ if [ -d "$DEST_DIR" ]; then
 fi
 mkdir -p "$DEST_DIR"
 
-echo "📂 Копируем исходные файлы..."
-# 2. Копируем только разрешенные папки и файлы
-cp -R app "$DEST_DIR/"
+echo "📂 Копируем только файлы, необходимые для запуска..."
+# 2. Явный allowlist вместо копирования всей рабочей папки app.
+mkdir -p "$DEST_DIR/app"
+cp app/package.json app/package-lock.json app/index.html \
+   app/Dockerfile app/nginx.conf app/vite.config.ts \
+   app/tsconfig*.json "$DEST_DIR/app/"
+cp -R app/src "$DEST_DIR/app/"
+if [ -d app/public ]; then
+  cp -R app/public "$DEST_DIR/app/"
+fi
+if [ -d app/src-tauri ]; then
+  cp -R app/src-tauri "$DEST_DIR/app/"
+fi
 mkdir -p "$DEST_DIR/infra"
 cp -R infra/vps_new "$DEST_DIR/infra/prod"
 cp -R infra/home/pb_hooks "$DEST_DIR/infra/prod/"
@@ -28,13 +38,22 @@ cp Dockerfile.app "$DEST_DIR/"
 cp README.md "$DEST_DIR/"
 cp .gitignore "$DEST_DIR/"
 
-echo "🧹 Очищаем мусор и dev-файлы..."
+echo "🧹 Очищаем тесты и локальные файлы..."
 # 3. Удаляем мусорные папки внутри скопированного
 find "$DEST_DIR" -name "node_modules" -type d -prune -exec rm -rf '{}' +
 find "$DEST_DIR" -name "dist" -type d -prune -exec rm -rf '{}' +
-find "$DEST_DIR" -name ".env" -type f -delete
-find "$DEST_DIR" -name ".env.local" -type f -delete
-find "$DEST_DIR" -name ".DS_Store" -type f -delete
+# Keep only the explicitly generated .env.example files.
+find "$DEST_DIR" -type f -name ".env*" ! -name ".env.example" -delete
+find "$DEST_DIR" -type f -name ".DS_Store" -delete
+# Local MCP configuration is machine-specific and must not enter the release.
+find "$DEST_DIR" -type f -name ".mcp.json" -delete
+rm -rf "$DEST_DIR/app/src/test" \
+       "$DEST_DIR/app/e2e" \
+       "$DEST_DIR/app/.storybook" \
+       "$DEST_DIR/app/coverage" \
+       "$DEST_DIR/app/e2e-report" \
+       "$DEST_DIR/app/dev-dist" \
+       "$DEST_DIR/app/scripts"
 rm -rf "$DEST_DIR/app/src-tauri/target"
 
 echo "🛡 Создаем чистый .env.example..."
@@ -50,6 +69,14 @@ VAPID_PRIVATE_KEY=
 LIVEKIT_API_KEY=
 LIVEKIT_API_SECRET=
 EOF
+
+echo "🕵️ Заменяем локальные имена и адреса на безопасные placeholders..."
+# The private checkout contains the real deployment domain and VPS address.
+# The public release must remain runnable as a template without disclosing them.
+find "$DEST_DIR" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' \
+  -o -name '*.json' -o -name '*.yml' -o -name '*.yaml' -o -name '*.conf' \
+  -o -name '*.sh' -o -name '*.md' -o -name '*.html' \) -print0 |
+  xargs -0 perl -pi -e 's/whoami\.ninja/example.invalid/g; s/2\.26\.9\.246/203.0.113.10/g; s/whoami/nemo/g'
 
 echo "✨ Дистилляция завершена!"
 echo "➡️  Чистый проект находится в папке: $DEST_DIR"

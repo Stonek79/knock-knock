@@ -205,3 +205,7 @@ app/src/
   // ✅ React 19
   const Input = ({ ref, ...props }: Props & { ref?: React.Ref<HTMLInputElement> }) => ...;
   ```
+# Статус документа
+
+> Общие правила разработки. Сетевая топология и размещение сервисов описаны в
+> [CURRENT_STATE.md](./CURRENT_STATE.md), а не в старых примерах ниже.

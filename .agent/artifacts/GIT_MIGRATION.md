@@ -19,25 +19,36 @@ Nemo разрабатывается в приватном dev-репозитор
 
 Отдельный аккаунт и очищенная история повышают псевдонимность, но не гарантируют анонимность. Код, ранее публичная история, домен, IP, время публикаций и инфраструктурные признаки могут использоваться для корреляции.
 
-### Целевая runtime-инфраструктура для первого пилота
+### Runtime-инфраструктура: текущее состояние и цель
 
 Стоимость VPS является ограничением первого этапа, поэтому production media storage остаётся на домашнем сервере. Это осознанный trade-off, а не требование полной отказоустойчивости.
 
-```text
-Домашний сервер:
-  Dev PocketBase + Dev Mailpit
-  Production MinIO для изображений и видео
-  FRP client с исходящим защищённым соединением
+**Сейчас deployed:** Dev и Prod PocketBase работают дома; MinIO также работает
+дома; VPS предоставляет Nginx, FRP server, LiveKit и push-gateway.
 
-VPS:
-  Production PocketBase
+**Цель первого пилота:** перенести Prod PocketBase на VPS, сохранив MinIO дома.
+До отдельного ручного переноса нельзя описывать VPS Prod PocketBase как уже
+работающий сервис.
+
+```text
+Домашний сервер сейчас:
+  Dev PocketBase + Prod PocketBase + Dev Mailpit
+  MinIO для постоянных Dev/Prod медиа
+  FRP client с исходящим соединением
+
+VPS сейчас:
   Frontend + Nginx
   LiveKit
   Push-gateway
   FRP server
+
+Целевой VPS:
+  Production PocketBase
 ```
 
-Production PocketBase не зависит от домашнего PocketBase. Через FRP VPS получает только ограниченный доступ к production bucket в MinIO.
+После переноса Production PocketBase не должен зависеть от домашнего
+PocketBase. Через FRP VPS будет получать только ограниченный доступ к
+production bucket в MinIO.
 
 При недоступности дома API, авторизация и текстовые данные на VPS должны продолжать работать. Медиа могут временно быть недоступны; клиент обязан показывать понятное состояние и повторять upload/download, а не терять операцию.
 

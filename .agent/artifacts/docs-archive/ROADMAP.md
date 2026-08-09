@@ -58,7 +58,7 @@
 - [x] **Type Safety**: Полная типизация воркера и хуков без использования `any`.
 - [x] **Clean Code**: 100% покрытие константами, отсутствие магических строк.
 
-### 9. Современная медиа-система (v3) — 📋 `plans/media_system_v3.md`
+### 9. Современная медиа-система (v3) — 📋 исторический план в `.agent/artifacts/docs-archive/`
 - [x] **3.1** Переход на **Dexie.js** для Offline-хранилища (IndexedDB).
 - [x] **3.2** Реализация **Web Workers** для сжатия (WebCodecs) и шифрования медиа.
 - [x] **3.3** "Умная" очистка кэша (TTL + Favorites retention).
@@ -81,7 +81,7 @@
 ### 0. Превью ссылок (OpenGraph Link Previews)
 - [ ] Разработка системы генерации красивых карточек предпросмотра для ссылок, отправленных в чате. Отложено для более поздних этапов после PWA и WebRTC.
 
-### 1. Звонки (WebRTC) — 📋 `WEBRTC_CALLS_IMPLEMENTATION.md` + `IMPLEMENTATION_PLAN_v2.md → Этап 4`
+### 1. Звонки (WebRTC) — 📋 исторические документы перемещены в `.agent/artifacts/docs-archive/`
 
 **✅ Принятые решения (PocketBase Era):**
 - **WebRTC решение:** LiveKit Server (Self-Hosted на домашнем сервере)
@@ -122,6 +122,7 @@
 2. Auth (регистрация с display_name, persistent session, email верификация)
 3. SMTP (Brevo), Push-уведомления, LiveKit Calls
 
-Подробный план реализации: `docs/IMPLEMENTATION_PLAN_v2.md`
+Актуальные критерии готовности: `.agent/artifacts/prod_readiness_plan.md` и
+`.agent/artifacts/TAURY_PLAN.md`.
 Дизайн-система: `docs/DESIGN_SYSTEM_PLAN.md`
 Стратегия авторизации: `docs/AUTH_STRATEGY.md`

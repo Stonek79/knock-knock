@@ -1,7 +1,7 @@
 # План подготовки Nemo к пробному Production-релизу
 
 > **Статус:** рабочий план; галочка означает подтверждённый результат, а не наличие файла или workflow
-> **Связанные документы:** `GIT_MIGRATION.md`, `TAURY_PLAN.md`, `docs/DEPLOYMENT.md`
+> **Связанные документы:** `GIT_MIGRATION.md`, `TAURY_PLAN.md`, `docs/CURRENT_STATE.md`
 
 ## 1. Цель пробного релиза
 
@@ -25,9 +25,10 @@
 
 ## 3. Зафиксировать production-архитектуру
 
-- [x] Принято решение для первого пилота: Dev PocketBase остаётся дома; Prod PocketBase работает на VPS; production MinIO для изображений и видео остаётся дома из-за стоимости VPS.
+- [x] Принято целевое решение для первого пилота: Dev PocketBase остаётся дома; Prod PocketBase будет перенесён на VPS; production MinIO остаётся дома из-за стоимости VPS.
+- [x] Зафиксировано фактическое состояние текущего deployed окружения: Dev и Prod PocketBase пока работают дома; на VPS работают Nginx, FRP server, LiveKit и push-gateway.
 - [ ] Утвердить единственную актуальную схему размещения PocketBase Prod, MinIO, LiveKit, push-gateway, Nginx и FRP в deployed compose.
-- [ ] Привести `docs/DEPLOYMENT.md`, compose-файлы и `GIT_MIGRATION.md` к одной схеме.
+- [x] Привести `docs/CURRENT_STATE.md`, compose-файлы и `GIT_MIGRATION.md` к одной схеме.
 - [ ] Отделить публичные self-hosting templates от реальных operational-конфигов.
 - [ ] Удалить из публичных templates реальные IP, пути, домены администратора и credentials.
 - [ ] Составить data-flow diagram: текст, realtime, media, calls, push и administrative traffic.
