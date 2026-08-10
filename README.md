@@ -3,6 +3,11 @@
 Nemo is a self-hosted messaging application with an installable web client,
 PocketBase backend, realtime updates, and encrypted media handling.
 
+The project is under active development and is not currently approved for a
+public production release. The cryptographic lifecycle and server-side access
+rules are being reviewed; see `docs/ARCHITECTURE_AUDIT.md` before making E2EE or
+zero-knowledge claims.
+
 ## What is included
 
 - React + TypeScript web client in `app/`;

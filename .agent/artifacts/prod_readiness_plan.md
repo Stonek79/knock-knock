@@ -1,7 +1,9 @@
 # План подготовки Nemo к пробному Production-релизу
 
 > **Статус:** рабочий план; галочка означает подтверждённый результат, а не наличие файла или workflow
-> **Связанные документы:** `GIT_MIGRATION.md`, `TAURY_PLAN.md`, `docs/CURRENT_STATE.md`
+> **Связанные документы:** `GIT_MIGRATION.md`, `TAURY_PLAN.md`,
+> `docs/CURRENT_STATE.md`, `docs/ARCHITECTURE_AUDIT.md`,
+> `docs/TESTING_PLAN.md`
 
 ## 1. Цель пробного релиза
 
@@ -23,6 +25,22 @@
 - Наличие кода, workflow или ранее установленной галочки не заменяет повторяемую проверку.
 - Любой release-blocker возвращает итоговый статус в `NO-GO`.
 
+### Снимок аудита от 9 августа 2026 года
+
+Текущий статус — `NO-GO`, что ожидаемо для активной разработки. Главные P0:
+
+- несовместимый crypto lifecycle и общий keystore для аккаунтов устройства;
+- публичные Push/LiveKit gateway endpoints;
+- слишком широкие PocketBase rules для invites/users/media/presence;
+- fail-open проверка invite при регистрации;
+- отсутствие управляемых PocketBase migrations/schema drift gate;
+- небезопасный и невоспроизводимый prototype release-export.
+
+Существующие unit tests частично устарели: lint и build проходят, но suite имеет
+13 failed, 50 passed, 2 skipped и 5 unhandled realtime errors. Восстановление
+ведётся отдельными этапами из `docs/TESTING_PLAN.md`; простое удаление падающих
+тестов не считается исправлением.
+
 ## 3. Зафиксировать production-архитектуру
 
 - [x] Принято целевое решение для первого пилота: Dev PocketBase остаётся дома; Prod PocketBase будет перенесён на VPS; production MinIO остаётся дома из-за стоимости VPS.
@@ -34,8 +52,8 @@
 - [ ] Составить data-flow diagram: текст, realtime, media, calls, push и administrative traffic.
 - [ ] Зафиксировать trust boundaries и доступные извне порты.
 - [ ] Зафиксировать degraded mode: при отключении дома API/auth/text продолжают работать, media операции переходят в retry.
-- [ ] Настроить VPS → home MinIO только через исходящий FRP client, TLS и отдельный bucket service account.
-- [ ] Не публиковать MinIO port и не давать PocketBase доступ к чужим bucket или admin API.
+- [x] Настроен VPS → home MinIO через исходящий FRP client; health endpoint на VPS `127.0.0.1:19000` проверен. Защита транспорта зависит от внешнего Reality/SOCKS-контура и должна быть формально описана перед релизом.
+- [x] MinIO API и console на домашнем сервере привязаны к loopback; Dev/Prod используют отдельные bucket и service account. Ограничение политик проверено вручную.
 
 **Gate:** новый оператор может по документации однозначно объяснить, где находятся данные и какой сервис имеет к ним доступ; документы не противоречат deployed compose.
 
@@ -109,8 +127,10 @@
 
 ### 7.2. Данные
 
-- [ ] Настроить регулярный backup PocketBase и media metadata.
-- [ ] Настроить отдельный backup MinIO objects.
+- [x] Создан и проверен ручной локальный backup текущего Prod PocketBase.
+- [x] Создан и проверен ручной локальный backup MinIO objects.
+- [ ] Автоматизировать расписание Prod backups после утверждения retention; Dev backup не требуется.
+- [ ] Добавить вторую физическую копию: backup на том же домашнем диске не защищает от отказа диска.
 - [ ] Проверить восстановление media object и соответствующей PocketBase metadata record совместно.
 - [ ] Зашифровать backups и отделить их credentials от production.
 - [ ] Выполнить реальное восстановление в изолированном окружении.
@@ -162,6 +182,9 @@ Android/iOS вынесены в отдельный post-pilot этап: desktop 
 **Gate:** публичный tag можно собрать независимо, checksums совпадают, а VPS обновляется и откатывается без `git pull`, build и автоматического deploy.
 
 ## 10. Финальный QA
+
+Подробная программа восстановления и расширения тестов находится в
+`docs/TESTING_PLAN.md`.
 
 - [ ] Unit, integration и E2E suites проходят из чистого checkout.
 - [ ] Проверены auth, registration, recovery, contacts, rooms, messages, replies и moderation.

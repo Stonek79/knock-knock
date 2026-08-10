@@ -1,61 +1,69 @@
-# Техническая спецификация: Task Runner (Система фонового выполнения задач) v1.1
+# Task Runner PocketBase
 
-## 1. Обзор
-Task Runner — это внутренняя система очередей на базе PocketBase JS Hooks, предназначенная для асинхронного выполнения задач. Она обеспечивает надежность (через повторы) и производительность (через асинхронность).
+> **Статус:** описание текущего механизма и обязательной переработки. Очередь не
+> используется одноразовыми комнатами.
 
-## 2. Модель данных (Collection: `task_queue`)
+## Текущее устройство
 
-### Поля
-- **id**: `TEXT` (автогенерация)
-- **task_key**: `TEXT` (**Уникальный индекс**, ключ идемпотентности, напр. `push:msg_123`)
-- **type**: `SELECT` (допустимые значения: `push`, `email`, `media_cleanup`, `cleanup`, `test`)
-- **payload**: `JSON` (содержит аргументы задачи. **Важно**: передавать только ID, а не чувствительные данные)
-- **status**: `SELECT` (`pending`, `processing`, `completed`, `failed`; по умолчанию: `pending`)
-- **attempts**: `NUMBER` (по умолчанию: 0)
-- **last_error**: `TEXT` (текст ошибки для диагностики в админ-панели)
-- **run_at**: `DATETIME` (время ближайшего запуска; по умолчанию: текущее время)
+`task_queue` хранит `task_key`, `type`, `payload`, `status`, `attempts`,
+`last_error` и `run_at`. Cron выбирает pending/failed записи, выполняет handler и
+помечает результат.
 
-### Индексы
-1. **Для воркера**: `idx_task_queue_status_run_at`: по полям `status` и `run_at`. (Упрощенный вариант без WHERE из-за ограничений импорта JSON).
-2. **Для защиты от дублей**: `idx_task_queue_key`: по полю `task_key` (**Unique**, фильтр `WHERE "task_key" != ''`).
+Фактически существуют два пути обработки:
 
-## 3. Воркер и Планировщик (`pb_hooks/tasks.pb.js`)
+- общий runner в `tasks.pb.js`/`task_helpers.js`;
+- отдельный broadcast cron в `main.pb.js`.
 
-### Крон (Cron)
-Запускается каждую минуту:
-```javascript
-cronAdd("task_runner", "* * * * *", () => {
-    // Выборка до 20 задач (batch processing)
-});
-```
+Обычный push task сейчас может содержать subscription endpoint/keys и
+зашифрованный content/IV. Поэтому старое утверждение «payload содержит только
+ID» реализации не соответствует.
 
-### Алгоритм обработки
-1. **Выборка**: `pending` или `failed` задачи, где `run_at` <= сейчас.
-2. **Retry (Экспоненциальный бэкофф)**:
-   - 1-я ошибка: +1 мин
-   - 2-я ошибка: +5 мин
-   - 3-я ошибка: +15 мин
-   - 4-я ошибка: +60 мин
-   - 5-я ошибка: статус `failed`, прекращение попыток.
+## Известные проблемы
 
-## 4. Логирование и Мониторинг
+- generic dispatcher знает не все schema types и может завершить неизвестную
+  задачу как `completed`;
+- generic runner и broadcast cron могут конкурировать за pending broadcast;
+- pending selection должен явно учитывать `run_at <= now`;
+- call push создаёт запись без обязательного `type`;
+- формат call subscription не совпадает с gateway;
+- claims/locking требуют проверки при параллельном запуске;
+- payload содержит больше чувствительных данных, чем необходимо;
+- logs и `last_error` требуют redaction/retention.
 
-### Куда смотреть админу?
-- **Таблица `task_queue`**: Поле `last_error` покажет причину сбоя конкретной задачи.
-- **Раздел Logs в PocketBase**: Использование `$app.logger().info/error` для отслеживания работы самого ранера.
+## Целевая модель
 
-### Уровни логов
-- `INFO`: Начало/конец цикла воркера, успешное выполнение тяжелых задач.
-- `ERROR`: Фатальные ошибки (проблемы с БД, 5 неудачных попыток).
+1. Один dispatcher и исчерпывающий enum handler-типов.
+2. Unknown type переводится в `failed` и создаёт diagnostic, но не считается
+   выполненным.
+3. Выборка только `run_at <= now`.
+4. Атомарный claim `pending/failed → processing` с lease/owner.
+5. Idempotency через уникальный `task_key` и идемпотентный downstream handler.
+6. Retry только для временных ошибок с ограниченным exponential backoff.
+7. Permanent error сразу завершает задачу как failed/dead-letter.
+8. Payload содержит минимальные references; push credentials читаются из
+   закрытой subscription collection непосредственно перед отправкой.
+9. Expired subscription удаляется безопасным server handler.
+10. Cleanup удаляет старые completed/failed записи по утверждённому retention.
 
-## 5. Очистка и Менеджмент памяти (Retention)
+Broadcast может остаться отдельным процессором только при отдельном status/type
+namespace, который общий runner никогда не выбирает.
 
-Чтобы избежать разрастания базы данных и утечек памяти:
-- **Авто-очистка**: Специальная задача `queue_cleanup`, которая:
-  - Удаляет `completed` задачи старше 24 часов.
-  - Удаляет `failed` задачи старше 7 дней.
-- **Изоляция**: Каждый цикл воркера работает в локальной области видимости хука, что предотвращает накопление мусора в памяти VM.
+## Безопасность
 
-## 6. Безопасность
-- **Payload**: В очереди хранятся только ссылки на данные (`ID`), а не само содержимое (текст сообщений и т.д.).
-- **Доступ**: Обычные пользователи не имеют доступа к коллекции `task_queue` (правила API: `listRule: null`).
+- коллекция недоступна клиенту;
+- gateway принимает только запрос с server-to-server secret;
+- plaintext message и auth token в payload запрещены;
+- endpoint/keys не логируются;
+- одноразовые push не создают durable task: volatile runtime отправляет только
+  нейтральный wake-up signal с непрозрачным короткоживущим handle.
+
+## Acceptance tests
+
+- scheduled pending не выполняется раньше `run_at`;
+- параллельные workers выполняют задачу ровно один раз;
+- temporary failure повторяется по backoff;
+- permanent/unknown failure не становится completed;
+- broadcast не перехватывается generic runner;
+- expired endpoint очищается;
+- logs/payload не содержат запрещённых данных;
+- restart восстанавливает постоянные задачи, но не ephemeral state.

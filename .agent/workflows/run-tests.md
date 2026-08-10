@@ -1,24 +1,32 @@
 ---
-description: Как запускать тесты в проекте
+description: Как запускать проверки Nemo
 ---
 
-# Запуск тестов
+# Проверки frontend
 
-// turbo-all
+Команды выполняются из директории `app`.
 
-1. Запустить все тесты:
 ```bash
-TMPDIR=$PWD/.vitest-tmp npm run test
+npm run lint
+npm run build
+npm test -- --run
 ```
 
-2. Запустить конкретный файл:
+Один test file:
+
 ```bash
-TMPDIR=$PWD/.vitest-tmp npm run test -- --run src/path/to/test.ts
+npm test -- --run src/path/to/file.test.ts
 ```
 
-3. Запустить с watch-режимом:
+Watch mode:
+
 ```bash
-TMPDIR=$PWD/.vitest-tmp npm run test
+npm run test:watch
 ```
 
-**ВАЖНО**: Переменная `TMPDIR=$PWD/.vitest-tmp` обязательна для избежания EPERM ошибок в песочнице.
+`TMPDIR` не требуется по умолчанию. Задавай отдельную временную директорию
+только если текущая sandbox действительно возвращает ошибку доступа.
+
+Текущая suite частично устарела. Следуй `docs/TESTING_PLAN.md`: сначала отличи
+сломанный mock от реального дефекта, не удаляй test только ради зелёного вывода.
+Unit tests не должны обращаться к Dev или Prod API.

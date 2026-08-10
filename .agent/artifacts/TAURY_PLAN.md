@@ -4,6 +4,8 @@
 > **Первый scope:** Windows, macOS и Linux
 > **Отдельный post-MVP scope:** Android и iOS
 > **Критерии:** работоспособность, проверяемая безопасность и воспроизводимый публичный релиз
+> **Связанные gates:** `docs/ARCHITECTURE_AUDIT.md`, `docs/TESTING_PLAN.md`,
+> `.agent/artifacts/prod_readiness_plan.md`
 
 ## 1. Цель
 

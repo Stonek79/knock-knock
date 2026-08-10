@@ -1,299 +1,148 @@
-# Архитектура проекта Nemo
+# Архитектура Nemo
 
-> Актуальная схема размещения и правила одноразовых комнат находятся в
-> [CURRENT_STATE.md](./CURRENT_STATE.md). Этот документ описывает общие
-> инженерные принципы и структуру кода.
+> **Статус:** описание подтверждённой реализации и утверждённых границ.
+> Размещение сервисов: [CURRENT_STATE.md](./CURRENT_STATE.md).
+> Открытые риски: [ARCHITECTURE_AUDIT.md](./ARCHITECTURE_AUDIT.md).
 
-Этот документ описывает архитектурные стандарты, структуру проекта и правила, обязательные для соблюдения всеми разработчиками.
+## 1. Назначение системы
 
----
+Nemo — приватный мессенджер в активной разработке. Постоянные чаты используют
+PocketBase для данных/realtime, MinIO для media, Web Push для нейтральных
+уведомлений и LiveKit SFU для звонков.
 
-## 🏗 Общие принципы
+E2EE и минимизация серверных данных являются обязательными требованиями, но
+текущий crypto lifecycle ещё не прошёл interoperability-аудит. Термины
+«проверенное E2EE» и «абсолютный Zero Knowledge» пока не применяются.
 
-1.  **Mobile First**: Весь интерфейс проектируется и верстается в первую очередь под мобильные устройства. Desktop — это расширение (адаптивная версия).
-2.  **Offline First**: Приложение должно сохранять работоспособность без интернета. Кеширование данных (TanStack Query) и оптимистичные обновления обязательны.
-3.  **Secure by Design**: E2E шифрование не опция, а база. Приватные ключи пользователя никогда не покидают устройство.
-4.  **Zero Knowledge**: Сервер (PocketBase) хранит только зашифрованные блобы и метаданные. Никаких открытых сообщений в БД.
-5.  **Backend-Driven Entities**: Критически важные системные сущности (например, комната "Избранное") создаются на стороне сервера через хуки, гарантируя целостность данных.
-6.  **Isolated Handlers Pattern**: Использование двойного импорта (`require`) для обеспечения стабильности JavaScript хуков в изолированных контекстах PocketBase v0.23+.
-7.  **Web Core as Source of Truth**: Основная разработка ведется как Web/PWA. Нативные приложения (Android/Desktop) являются обертками (Wrappers) над веб-ядром.
+## 2. Текущее размещение
 
----
+```text
+Клиент PWA
+   │ HTTPS / SSE / WebSocket
+   ▼
+VPS: Nginx
+   ├── FRP ──► дом: Dev/Prod PocketBase
+   ├── LiveKit SFU
+   └── Push/LiveKit gateway
 
-## 🛠 Технологический стек
-
-| Слой | Технологии |
-|------|------------|
-| **Frontend** | React 19, TypeScript, Vite |
-| **Routing** | TanStack Router (File-based routing) |
-| **Storage (Offline)** | **Dexie.js** (IndexedDB) — для кэширования медиа и оффлайн-режима |
-| **Media Processing** | **WebCodecs API**, **mp4-muxer**, **OffscreenCanvas** (в Web Workers) |
-| **State (Server)** | TanStack Query (v5) |
-| **State (Global)** | Zustand |
-| **UI Kit** | Radix UI Primitives (Headless) + наши обёртки |
-| **Styling** | CSS Modules + Vanilla CSS (Variables) |
-| **Backend** | PocketBase v0.23+ (Auth, SQLite, Realtime SSE, JS Hooks) |
-| **Background Tasks** | **Task Runner** (SQLite-based queue + Cron Hooks) |
-| **Crypto** | Web Crypto API (SubtleCrypto: ECDH-ES, AES-GCM) |
-| **Линтинг** | Biome (lint + format) |
-
----
-
-## 📂 Структура проекта (Feature-Driven Architecture)
-
-...
-
-## 🔄 Фоновые задачи (Task Runner)
-
-Для выполнения тяжелых или отложенных операций (Push-уведомления, очистка старых файлов, агрегация данных) используется кастомный Task Runner на стороне PocketBase:
-1.  **Очередь задач**: Коллекция `task_queue` хранит тип задачи, полезную нагрузку (payload) и статус.
-2.  **Cron Hooks**: JS-хук в `pb_hooks` просыпается по расписанию, выбирает новые задачи и выполняет их порциями.
-3.  **Retry Logic**: Механизм повторов при сбоях (экспоненциальная задержка).
-
-## 🌍 Offline First и Кэширование
-
-Приложение должно сохранять работоспособность без интернета:
-1.  **Сообщения**: TanStack Query кеширует данные в памяти.
-2.  **Медиа**: Все зашифрованные файлы сохраняются в **Dexie.js** (IndexedDB). При повторном просмотре файлы берутся из локальной БД, а не скачиваются заново.
-3.  **Оптимистичные обновления**: UI меняется мгновенно, данные синхронизируются в фоне.
-
-Проект организован по функциональным доменам (Features), а не по типу файлов. Мы используем прагматичный подход (Feature-Driven Architecture), а не строгий FSD, чтобы избежать излишней фрагментации.
-
-```
-app/src/
-├── features/           # 🟢 БИЗНЕС-ЛОГИКА (Домены)
-│   ├── admin/          # Панель администратора
-│   ├── auth/           # Формы входа, регистрации
-│   ├── calls/          # Звонки (UI и логика WebRTC)
-│   ├── chat/           # Чаты. Внутри разбиты на домены
-│   ├── contacts/       # Управление контактами
-│   ├── favorites/      # Избранное (сохраненные сообщения)
-│   ├── navigation/     # Глобальная навигация
-│   ├── presence/       # Статус пользователей (в сети)
-│   ├── profile/        # Управление профилем
-│   └── settings/       # Настройки приложения
-│
-├── layouts/            # 🟡 СТРУКТУРА СТРАНИЦ
-│   ├── AppLayout/      # Основной UI (сайдбар + контент)
-│   ├── AuthLayout/     # Лейаут авторизации
-│   ├── RootLayout/     # Глобальный провайдер
-│   └── SettingsRouteLayout/ # Лейаут настроек
-│
-├── pages/              # 🔴 ТОЧКИ ВХОДА (Маршруты)
-│   ├── LandingPage/    # Главная публичная
-│   ├── LoginPage/      # Страница входа
-│   └── ...             # Страницы собирают features и layouts
-│
-├── components/         # ⚪️ UI KIT (Глупые компоненты)
-│   ├── ui/             # Атомы: Button, AppLogo, Alert
-│   └── ...
-│
-├── lib/                # ⚫️ ЯДРО (Core)
-│   ├── constants/      # Константы (Runtime: темы, роли, MIME-типы)
-│   ├── types/          # Типы (Compile-time)
-│   ├── crypto/         # Криптография (Web Crypto API)
-│   ├── schemas/        # Zod-схемы валидации
-│   └── repositories/   # Слой доступа к PocketBase API
-│
-├── hooks/              # Глобальные хуки (useMediaQuery, useTheme)
-├── stores/             # Глобальные Zustand сторы (auth, theme)
-└── locales/            # i18n JSON файлы (RU/EN)
+Дом:
+   ├── Dev PocketBase + отдельный pb_data
+   ├── Prod PocketBase + отдельный pb_data
+   └── MinIO: отдельные Dev/Prod buckets и service accounts
 ```
 
-## Доменная модель чатов
+Цель пилота — вручную перенести Prod PocketBase на VPS, оставив MinIO дома из-за
+стоимости хранения. До этого переноса deployed-состоянием остаётся схема выше.
 
-| Тип | URL | Описание |
-|-----|-----|----------|
-| **Публичный DM** | `/chat/:roomId` | 1-на-1 чат, история сохраняется в БД |
-| **Приватный чат** | `/private/:roomId` | 1-на-1 эфемерный чат, история удаляется при закрытии |
-| **Группа** | `/chat/:roomId` | Групповой чат, множество участников |
-| **Избранное** | `/favorites/:roomId` | Сохраненные сообщения (Self-chat) |
-| **DM-инициализатор** | `/dm/:userId` и `/_auth/dm/:userId` | Redirect-роут: находит/создаёт комнату и редиректит |
+## 3. Frontend
 
----
+Основное направление зависимостей:
 
-## Целевая структура
-
-```
-routes/
-├── __root.tsx                    # RootLayout (минимальный: init, ghost, dev banner)
-├── index.tsx                     # / — IndexPage (landing или redirect)
-├── login.tsx                     # /login — LoginPage
-│
-├── _auth.tsx                     # AuthLayout — проверка авторизации
-├── _auth/
-│   ├── chat.tsx                  # ChatLayout — Outlet + sidebar context
-│   ├── chat/
-│   │   ├── index.tsx             # /chat — ChatIndexPage
-│   │   └── $roomId.tsx           # /chat/:roomId — ChatRoomPage
-│   │
-│   ├── private.tsx               # PrivateLayout — Outlet + sidebar context
-│   ├── private/
-│   │   ├── index.tsx             # /private — PrivateChatPage
-│   │   └── $roomId.tsx           # /private/:roomId — PrivateRoomPage
-│   │
-│   ├── dm.$userId.tsx            # /dm/:userId — DMInitializer
-│   ├── contacts.tsx              # /contacts — ContactsPage
-│   ├── calls.tsx                 # /calls — CallsPage
-│   ├── favorites.tsx             # /favorites — FavoritesPage
-│   ├── profile.tsx               # /profile — ProfilePage
-│   │
-│   ├── settings.tsx              # SettingsLayout
-│   ├── settings/
-│   │   ├── index.tsx             # /settings — SettingsIndexPage
-│   │   ├── account.tsx
-│   │   ├── appearance.tsx
-│   │   ├── privacy.tsx
-│   │   ├── notifications.tsx
-│   │   └── security.tsx
-│   │
-│   ├── admin.tsx                 # AdminLayout
-│   └── admin/
-│       ├── index.tsx             # /admin — AdminDashboard
-│       └── users.tsx             # /admin/users — UserList
+```text
+pages/features/components
+          ↓
+      hooks/services
+          ↓
+      repositories
+          ↓
+PocketBase, IndexedDB, browser/native adapters
 ```
 
+Правила:
 
-### Правила слоев (Feature-Driven Architecture):
-1.  **Pages** могут импортировать **Features**, **Layouts** и **Components**.
-2.  **Features** инкапсулируют внутри себя всё необходимое (хуки, компоненты под-домена). Для сложных фичей (как `chat`) применяется внутреннее разбиение на модули (`modules/Message`, `modules/ChatRoom`), где каждый модуль хранит свои хуки и UI рядом.
-3.  **Features** могут импортировать **Components** и глобальные **Hooks**. Фичи не должны зависеть друг от друга (Sibling Imports запрещены).
-4.  **Layouts** управляют расположением **Features** на странице.
-5.  **Lib** — это ядро, без зависимостей от React (по возможности).
+- UI не выполняет прямые запросы к PocketBase;
+- repositories не импортируют feature/UI-код;
+- network connection не создаётся как side effect импорта;
+- server state хранится через TanStack Query, локальный UI state — локально или
+  в небольших Zustand stores;
+- browser-specific APIs скрываются за adapters, чтобы PWA tests и Tauri build
+  могли использовать другие реализации.
 
----
+Сейчас `RealtimeGateway` нарушает часть этих правил и требует рефакторинга.
 
-## 🧠 Управление состоянием
+## 4. Постоянные данные
 
-### 1. Server State (TanStack Query) — *Предпочтительно*
-Всё, что приходит из БД (чаты, сообщения, профиль), должно управляться через TanStack Query.
-- **Кеширование**: Используй ключи `['rooms', userId]`.
-- **Инвалидация**: После мутаций (sendMessage) инвалидируй связанные квери.
+### Сообщения
 
-### 2. Global Client State (Zustand)
-Только для данных, которые нужны всему приложению и не хранятся в БД:
-- `useAuthStore` (текущий юзер, сессия).
-- `useThemeStore` (тема оформления).
-- `useCallStore` (состояние активного звонка).
+Комнаты, участники и сообщения сохраняются в PocketBase и распространяются
+через Realtime SSE. Серверные hooks выполняют системные операции, push queue и
+часть проверок целостности.
 
-### 3. Local State (useState)
-Для UI-состояний компонента (открыт модалка, значение инпута, hover).
-Не выноси это в global store!
+Серверная авторизация обязана проверять membership/ownership. Клиентские
+фильтры и скрытие UI не считаются защитой.
 
----
+### Media
 
-## 📐 Типы и Константы
+Для постоянных чатов клиент шифрует media до upload. PocketBase создаёт запись,
+а file storage направляется в MinIO через S3-compatible API. Room relation,
+membership rules, server size/MIME limits и cleanup должны обеспечиваться на
+сервере; текущая schema требует исправления по аудиту.
 
-Чёткое разделение между Runtime значениями и Compile-time типами.
+Локальные IndexedDB caches являются частью threat model. Сейчас некоторые
+media/Outbox данные сохраняются открыто и не полностью очищаются при logout.
 
-### 1. Константы (`lib/constants/`)
-Только объекты `as const`. Файлы должны быть "лёгкими". **Избегайте "магических строк" (magic strings) и чисел напрямую в коде.** Обязательно выносите любые хардкод значения (имена бакетов, типы MIME, роли пользователей и т.д.) в константы.
+### Звонки и push
 
-#### Пример константы темы (`lib/constants/theme.ts`)
+LiveKit передаёт аудио/видео через SFU. Это не чистая P2P-топология. PocketBase
+должен проверять membership до выдачи LiveKit token. Gateway является
+внутренним сервисом и не должен доверять запросу браузера.
 
-```typescript
-// Утверждённые темы проекта
-export const DESIGN_THEME = {
-    DEFAULT:  'default',   // WA-inspired, по умолчанию
-    NEON:     'neon',      // Cyberpunk/Glassmorphism
-    EMERALD:  'emerald',   // VIP/Gold
-} as const;
+Push для постоянного чата должен быть минимальным и не содержать plaintext
+сообщения, имя комнаты или состав участников. Credentials подписки не должны
+логироваться.
 
-export type DesignTheme = typeof DESIGN_THEME[keyof typeof DESIGN_THEME];
-```
+## 5. Профили
 
-### 2. Типы (`lib/types/`)
-Интерфейсы, алиасы и типы, выведенные из Zod-схем или констант.
+- **Открытый:** доступен через безопасный search DTO; общается с открытым
+  уровнем.
+- **Закрытый:** не перечисляется глобально; использует внутренний
+  регистрационный ID/псевдоним; общается с закрытым уровнем.
+- **Одноразовый:** существует только внутри персонально приглашённой временной
+  сессии.
 
-**Важно:** Типы для сущностей БД выводятся из **Zod-схем** (`z.infer<typeof schema>`), расположенных в `src/lib/schemas/`. *Запрещено* ручное приведение типов (`as unknown as Role`). Вместо этого — Type Guards или `satisfies`.
+Schema сейчас реализует только часть `public/private`, а сервер не обеспечивает
+все межуровневые ограничения. Одноразовый режим не реализован.
 
-```typescript
-// lib/schemas/auth.ts
-import { z } from 'zod';
+## 6. Одноразовый runtime
 
-export const loginSchema = z.object({
-    email:    z.string().email(),
-    password: z.string().min(8),
-});
+Одноразовые комнаты нельзя строить поверх обычных rooms/messages/media и
+task_queue. Требуется отдельный volatile service:
 
-export type LoginPayload = z.infer<typeof loginSchema>;
-```
+- состояние только в RAM;
+- персональный one-use invite;
+- reconnect lease 2 минуты;
+- уничтожение комнаты создателем и персональный выход участника;
+- no multi-device;
+- media только в памяти устройств;
+- нейтральный push с непрозрачным wake-up handle;
+- клиентский deadline/epoch для очистки после долгого offline;
+- отсутствие durable logs, PocketBase, MinIO и backups.
 
-### 3. Barrel Exports
-Каждая папка в `lib/types` и `lib/constants` должна иметь `index.ts` для удобного импорта:
-```typescript
-import { CHAT_TYPE } from '@/lib/constants';
-import type { ChatType } from '@/lib/types';
-```
+Техническое ограничение: большие media без временного relay передаются только
+когда необходимые устройства онлайн.
 
----
+## 7. Schema и migrations
 
-## 🎨 UI/UX Стандарты
+`pb_schema.json` пока является snapshot, а не надёжным механизмом deployment.
+Целевая модель:
 
-1. **Radix Headless**: Используй наши компоненты-обёртки из `@/components/ui` (`<Button>`, `<Avatar>`, `<Dialog>`). Прямой импорт Radix-примитивов в `features/` и `pages/` запрещён.
-2. **CSS Modules**: Кастомизация только через `Component.module.css`.
-3. **Inline Styles ЗАПРЕЩЕНЫ**: `style={{ margin: 10 }}` — под запретом. Только `className`.
-4. **Иконки**: Только `lucide-react`.
-5. **Темы**: `default` (WA-inspired, по умолчанию) / `neon` / `emerald`. Подробнее: `docs/DESIGN.md` и `docs/DESIGN_SYSTEM_PLAN.md`.
+1. все изменения оформляются versioned `pb_migrations`;
+2. PocketBase image закреплён по версии/digest;
+3. staging поднимается с нуля из migrations;
+4. CI сравнивает ожидаемую и фактическую schema;
+5. перед production migration создаётся проверенный restore point.
 
----
+## 8. Operational boundaries
 
-## 🔐 Безопасность и защита от угроз API (Security Guidelines)
+- VPS deployment только вручную по SSH и точному image digest;
+- GitHub Actions не имеет ключей или маршрута к VPS;
+- секреты хранятся в отдельных `.env` сервисов вне Git;
+- публичные self-hosting templates не содержат реальную topology;
+- logs редактируются и имеют ограниченный retention;
+- backup на том же домашнем диске не считается защитой от отказа диска.
 
-Архитектура безопасности базируется на выявлении и предотвращении общих уязвимостей (OWASP API Security Top 10):
+## 9. Проверки
 
-1. **Broken Object Level Authorization (BOLA) & Access Control**: 
-   - Всегда проверяйте права доступа на уровне БД. В PocketBase для этого используются **API Rules** (фильтры).
-   - Пользователь имеет право на чтение/запись только тех строк, где его `id` или `user_id` соответствует правилам коллекции.
-2. **Rate Limiting (Защита от DDoS и Brute-Force)**:
-   - Блокировка частых действий на сервере. В PocketBase настроено ограничение частоты запросов.
-3. **Input Validation & Injection Prevention**: 
-   - Любые данные от пользователя считаются потенциально опасными. Избегайте `dangerouslySetInnerHTML`. 
-   - Используйте типизацию (TypeScript) для валидации всех входных параметров. 
-   - PocketBase автоматически защищает от SQL-инъекций через использование подготовленных выражений в драйвере SQLite.
-4. **Data Exposure (Избыточное раскрытие данных)**: 
-   - В запросах API всегда выключайте публичный доступ к чувствительным полям. Никакие секретные данные (хеши, ключи) не должны "утекать" на клиент.
-5. **Server-Side Hooks (Atomic Operations)**:
-   - Использование **JS VM Hooks** для атомарных операций: создание системных комнат при регистрации и полная очистка данных (Cascade Delete) при удалении пользователя.
-6. **Security Headers & Транспорт**: 
-   - **HTTPS Everywhere**: Доступ к приложению и API исключительно по TLS.
-   - Обязательно настраиваются заголовки `Content-Security-Policy (CSP)`, `X-Content-Type-Options`, `X-Frame-Options` для защиты от XSS и Clickjacking.
-6. **E2E Криптография (Основа приватности)**: 
-   - Secret Keys: Приватный ключ (`cryptoKey`) **никогда** не должен покидать клиент (браузер). 
-   - Storage: Ключи хранятся в `IndexedDB` (не LocalStorage) с параметром `non-extractable`.
-
----
-
-## 🛡 Security Testing
-Регулярно (перед крупными релизами) проводить проверку на:
-- **XSS & Validation**: Попытка инъекции скриптов, XSS payload-текстов в сообщения и формы профиля.
-- **BOLA Bypass**: Попытка прочитать/изменить или удалить чужие сообщения посредством прямой подмены `message_id` или `room_id` в запросах к PocketBase.
-- **Brute-Force**: Проверка блокировки после N попыток входа.
-- **Dependency Audit**: `npm audit` на известные уязвимости (CVE).
-
----
-
-## 🔄 Правила разработки (Workflow)
-
-1.  **Линтинг**: `npm run lint` и `npx tsc --noEmit` должны проходить перед каждым коммитом.
-2.  **Импорты**: Используй алиас `@/` (напр. `@/features/chat`). Относительные пути (`../../`) допустимы только внутри одной фичи.
-3.  **Язык**: Код, комментарии и коммиты — на **русском** или **английском** (но консистентно). Текущий стандарт — комментарии RU.
-
----
-
-## 🛠 Стандарты PocketBase Hooks (v0.23+)
-
-Из-за специфики среды выполнения PocketBase (изоляция обработчиков), необходимо соблюдать паттерн **"Double Require"**:
-
-1.  **Top-level Require**: Импорт `db.js` в начале файла необходим, если константы используются в параметрах регистрации (например, в `cronAdd` или `onRecord...`).
-2.  **Internal Require**: Каждая функция-обработчик или колбэк ДОЛЖНЫ содержать свой `require(`${__hooks}/db.js`)`, так как внешние переменные из глобальной области видимости затираются или становятся недоступны при вызове обработчика.
-
-```javascript
-// ✅ Правильно:
-const DB_TOP = require(`${__hooks}/db.js`);
-
-cronAdd("task", DB_TOP.CONFIG.CRON, () => {
-    const DB = require(`${__hooks}/db.js`); // Внутренний импорт
-    // ... логика
-});
-```
+Архитектурное изменение считается завершённым, когда согласованы code,
+PocketBase migrations, TypeScript contracts, tests и документы. Программа
+восстановления test suite находится в [TESTING_PLAN.md](./TESTING_PLAN.md).

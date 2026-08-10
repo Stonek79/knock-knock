@@ -2,9 +2,12 @@
 
 **Usage**: Token-optimized CLI proxy for shell commands.
 
-## Rule
+## Optional usage
 
-Always prefix shell commands with `rtk` to minimize token consumption.
+Используйте `rtk`, если он установлен и сокращённый вывод не скрывает diagnostic,
+необходимый для текущей задачи. Это оптимизация, а не обязательное правило.
+При ошибке, несовместимости или необходимости полного вывода запускайте исходную
+команду напрямую.
 
 Examples:
 
@@ -29,4 +32,4 @@ rtk proxy <cmd>       # Run raw (no filtering, for debugging)
 
 ## Why
 
-RTK filters and compresses command output before it reaches the LLM context, saving 60-90% tokens on common operations. Always use `rtk <cmd>` instead of raw commands.
+RTK filters and compresses command output before it reaches the LLM context.
