@@ -20,7 +20,7 @@ token = "{{ .Envs.FRP_TOKEN }}"
 # Настройки шифрования, TLS-соединения и поддержания пульса (Heartbeat)
 [transport]
 tcpMux = true
-tls.enable = false
+tls.enable = true
 proxyURL = "socks5://127.0.0.1:10808"
 dialServerTimeout = 30
 dialServerKeepAlive = 30
