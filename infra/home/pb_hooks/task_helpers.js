@@ -12,63 +12,99 @@ function handlePushTask(payload) {
 	const DB = require(`${__hooks}/db.js`);
 	const pushGatewayUrl =
 		$os.getenv("PB_PUSH_GATEWAY_URL") || DB.CONFIG.PUSH_GATEWAY_DEFAULT_URL;
+	const gatewaySecret = $os.getenv("PUSH_GATEWAY_SECRET") || "";
+
+	if (!gatewaySecret) {
+		throw new Error("PUSH_GATEWAY_SECRET is not configured");
+	}
 
 	if (!payload.subscriptions || payload.subscriptions.length === 0) {
-		console.log("📡 [PUSH_DEBUG] Нет активных подписок для отправки push-уведомлений. Пропускаем.");
+		console.log(
+			"📡 [PUSH_DEBUG] Нет активных подписок для отправки push-уведомлений. Пропускаем.",
+		);
 		return;
 	}
 
-	console.log(`📡 [PUSH_DEBUG] Отправка push-уведомления на шлюз: ${pushGatewayUrl}${DB.CONFIG.PUSH_GATEWAY_ENDPOINT} для ${payload.subscriptions.length} подписок...`);
+	console.log(
+		`📡 [PUSH_DEBUG] Отправка push-уведомлений для ${payload.subscriptions.length} подписок...`,
+	);
 
+	let res;
 	try {
-		const res = $http.send({
+		res = $http.send({
 			url: `${pushGatewayUrl}${DB.CONFIG.PUSH_GATEWAY_ENDPOINT}`,
 			method: DB.VALUES.METHOD_POST,
-			headers: { "Content-Type": DB.VALUES.CONTENT_TYPE_JSON },
+			headers: {
+				"Content-Type": DB.VALUES.CONTENT_TYPE_JSON,
+				Authorization: `Bearer ${gatewaySecret}`,
+			},
 			body: JSON.stringify({
 				subscriptions: payload.subscriptions,
 				payload: payload.data,
 			}),
 			timeout: 10,
 		});
+	} catch (_httpErr) {
+		console.error("❌ [PUSH_DEBUG_ERROR] Сбой сети при отправке push-запроса");
+		throw new Error("Push gateway network error");
+	}
 
-		console.log(`📡 [PUSH_DEBUG] Ответ push-шлюза: статус ${res.statusCode}`);
+	console.log(`📡 [PUSH_DEBUG] Ответ push-шлюза: статус ${res.statusCode}`);
 
-		if (res.statusCode < 200 || res.statusCode >= 300) {
-			throw new Error(
-				`Push Gateway error (Status: ${res.statusCode}): ${res.raw}`,
+	if (res.statusCode < 200 || res.statusCode >= 300) {
+		throw new Error(`Push Gateway error (Status: ${res.statusCode})`);
+	}
+
+	try {
+		const data = res.json();
+		if (data?.expired_ids && data?.expired_ids?.length > 0) {
+			console.log(
+				`📡 [PUSH_DEBUG] Найдено ${data.expired_ids.length} просроченных подписок (по id). Выполняю очистку...`,
 			);
-		}
-
-		try {
-			const data = res.json();
-			if (data && data.expired_endpoints && data.expired_endpoints.length > 0) {
-				console.log(`📡 [PUSH_DEBUG] Найдено ${data.expired_endpoints.length} просроченных подписок. Начинаю очистку...`);
-				
-				for (const endpoint of data.expired_endpoints) {
-					try {
-						const expiredRecs = $app.findRecordsByFilter(
-							DB.TABLES.PUSH_SUBS,
-							`${DB.FIELDS.ENDPOINT} = {:endpoint}`,
-							"",
-							10,
-							0,
-							{ endpoint: endpoint }
-						);
-						for (const rec of expiredRecs) {
-							$app.delete(rec);
-						}
-					} catch (e) {
-						console.error(`❌ [PUSH_DEBUG_ERROR] Ошибка удаления подписки ${endpoint}:`, e);
+			for (const recId of data.expired_ids) {
+				try {
+					const rec = $app.findRecordById(DB.TABLES.PUSH_SUBS, recId);
+					if (rec) {
+						$app.delete(rec);
 					}
+				} catch (e) {
+					console.error(
+						`❌ [PUSH_DEBUG_ERROR] Ошибка удаления подписки по id:`,
+						e.message || e,
+					);
 				}
 			}
-		} catch (parseErr) {
-			console.error(`❌ [PUSH_DEBUG_ERROR] Не удалось распарсить JSON ответ от шлюза:`, parseErr);
 		}
-	} catch (httpErr) {
-		console.error(`❌ [PUSH_DEBUG_ERROR] Сбой сети при отправке push-запроса: ${httpErr.message || httpErr}`);
-		throw httpErr;
+		// Обратная совместимость: старый gateway возвращает expired_endpoints
+		if (data?.expired_endpoints && data?.expired_endpoints?.length > 0) {
+			console.log(
+				`📡 [PUSH_DEBUG] Найдено ${data.expired_endpoints.length} просроченных подписок (по endpoint, legacy). Выполняю очистку...`,
+			);
+			for (const endpoint of data.expired_endpoints) {
+				try {
+					const expiredRecs = $app.findRecordsByFilter(
+						DB.TABLES.PUSH_SUBS,
+						`${DB.FIELDS.ENDPOINT} = {:endpoint}`,
+						"",
+						10,
+						0,
+						{ endpoint: endpoint },
+					);
+					for (const rec of expiredRecs) {
+						$app.delete(rec);
+					}
+				} catch (e) {
+					console.error(
+						`❌ [PUSH_DEBUG_ERROR] Ошибка удаления подписки:`,
+						e.message || e,
+					);
+				}
+			}
+		}
+	} catch (_parseErr) {
+		console.error(
+			"❌ [PUSH_DEBUG_ERROR] Не удалось распарсить JSON ответ от шлюза",
+		);
 	}
 }
 
@@ -80,7 +116,9 @@ function handleTaskError(task, err) {
 	const attempts = task.getInt(DB.FIELDS.ATTEMPTS) + 1;
 	const maxAttempts = 5;
 
-	console.error(`❌ [TASK_ERROR] Задача ID: ${task.id} завершилась с ошибкой: ${err.message || String(err)} (Попытка: ${attempts}/${maxAttempts})`);
+	console.error(
+		`❌ [TASK_ERROR] Задача ID: ${task.id} завершилась с ошибкой: ${err.message || String(err)} (Попытка: ${attempts}/${maxAttempts})`,
+	);
 
 	task.set(DB.FIELDS.ATTEMPTS, attempts);
 	task.set(DB.FIELDS.LAST_ERROR, err.message || String(err));
@@ -100,9 +138,13 @@ function handleTaskError(task, err) {
 
 	try {
 		$app.save(task);
-		console.log(`💾 [TASK_DEBUG] Состояние задачи ${task.id} обновлено после ошибки.`);
+		console.log(
+			`💾 [TASK_DEBUG] Состояние задачи ${task.id} обновлено после ошибки.`,
+		);
 	} catch (saveErr) {
-		console.error(`❌ [TASK_DEBUG_ERROR] Не удалось сохранить состояние ошибки для задачи ${task.id}: ${saveErr.message || saveErr}`);
+		console.error(
+			`❌ [TASK_DEBUG_ERROR] Не удалось сохранить состояние ошибки для задачи ${task.id}: ${saveErr.message || saveErr}`,
+		);
 	}
 }
 
@@ -175,8 +217,9 @@ function processTask(task) {
 	}
 }
 
-// Экспортируем функции для использования внутри cron-обработчиков
+// Экспортируем функции для использования внутри cron-обработчиков и тестов
 module.exports = {
 	processTask,
+	handlePushTask,
 	handleCleanupTask,
 };

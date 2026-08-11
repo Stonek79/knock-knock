@@ -30,7 +30,9 @@
 Текущий статус — `NO-GO`, что ожидаемо для активной разработки. Главные P0:
 
 - несовместимый crypto lifecycle и общий keystore для аккаунтов устройства;
-- публичные Push/LiveKit gateway endpoints;
+- публичные Push/LiveKit gateway endpoints (код и локальные gateway/hooks tests
+  проверены 10.08.2026; Dev и Nginx-проверка ожидаются; см.
+  ARCHITECTURE_AUDIT.md §2);
 - слишком широкие PocketBase rules для invites/users/media/presence;
 - fail-open проверка invite при регистрации;
 - отсутствие управляемых PocketBase migrations/schema drift gate;

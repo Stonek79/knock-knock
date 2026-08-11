@@ -34,13 +34,19 @@ frontend bundle. Обнаруженный рабочий secret ротирует
 PocketBase Admin UI, MinIO API/console, FRP dashboard и домашний SSH закрываются
 firewall/allowlist или приватным административным каналом.
 
-Push/LiveKit gateway является внутренним:
+Push/LiveKit gateway является внутренним (реализация ожидает исправлений и проверки):
 
-- вызов PocketBase → gateway подписывается отдельным secret;
-- LiveKit token требует auth, membership и разрешённую identity;
-- CORS имеет точный allowlist;
-- действуют body limits и rate limits;
-- полные push endpoints не попадают в logs.
+- вызов PocketBase → gateway подписывается отдельным secret `PUSH_GATEWAY_SECRET`
+  (заголовок `Authorization: Bearer`, постоянновременное сравнение, fail-closed);
+- LiveKit token требует auth и membership (проверяется в хуке PocketBase
+  `/api/calls/token`, gateway принимает запрос только от PocketBase);
+- CORS полностью удалён — браузерные запросы недопустимы;
+- действуют body limits (`100 KB`), rate limits (120 push/min, 60 token/min)
+  и ограничения nginx (`limit_req`, `client_max_body_size 64k`);
+- полные push endpoints не попадают в логи и ответы gateway (возвращаются
+  `expired_ids` записей PocketBase);
+- Nginx-маршрут `/push/` защищён и будет удалён после переноса Prod PocketBase
+  на VPS.
 
 FRP `tls.disable` допустим только при документированном и проверенном внешнем
 защищённом транспорте. Наличие SOCKS/Reality в соседнем конфиге само по себе не

@@ -91,9 +91,12 @@ bucket или общий service account.
 [`ARCHITECTURE_AUDIT.md`](./ARCHITECTURE_AUDIT.md), а восстановление тестов — в
 [`TESTING_PLAN.md`](./TESTING_PLAN.md).
 
-- авторизация LiveKit token endpoint по PocketBase-сессии;
-- внутренний секрет для server-to-server push endpoint;
-- CORS allowlist вместо `*`;
+- авторизация LiveKit token endpoint по PocketBase-сессии (код и локальные
+  hooks/gateway tests проверены 10.08.2026; Dev-проверка ожидается);
+- внутренний секрет для server-to-server push endpoint (Compose/env-путь и
+  локальные tests проверены 10.08.2026; Dev-проверка ожидается);
+- CORS allowlist вместо `*` → CORS удалён (локально проверено; Nginx и Dev
+  deployment ожидают проверки);
 - очистка временных ключей, кэшей и приглашений по TTL;
 - тест закрытия комнаты, reconnect и очистки офлайн-клиента;
 - проверка, что одноразовые данные не попадают в PocketBase и резервные копии.

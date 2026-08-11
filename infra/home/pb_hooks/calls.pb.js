@@ -42,13 +42,11 @@ routerAdd("POST", "/api/calls/token", (e) => {
 		if (members.length > 0) {
 			isMember = true;
 		}
-	} catch (err) {
-		console.error(
-			`❌ [CALLS_ERROR] Ошибка проверки участника: ${err.message || err}`,
-		);
+	} catch (_err) {
+		console.error("❌ [CALLS_ERROR] Ошибка проверки участника");
 		return e.json(500, {
 			code: "INTERNAL_ERROR",
-			error: `Внутренняя ошибка сервера: ${err.message || err}`,
+			error: "Внутренняя ошибка сервера",
 		});
 	}
 
@@ -62,20 +60,31 @@ routerAdd("POST", "/api/calls/token", (e) => {
 	// 2. Анонимизированный идентификатор участника (Zero-Knowledge)
 	const anonIdentity = `anon_${$security.md5(`${userId}_${room_id}`)}`;
 
-	// 3. Запрашиваем токен у push-шлюза
+	// 3. Запрашиваем токен у push-шлюза (server-to-server)
 	let token = "";
 	try {
+		const gatewaySecret = $os.getenv("PUSH_GATEWAY_SECRET") || "";
+		if (!gatewaySecret) {
+			console.error("PUSH_GATEWAY_SECRET is not configured");
+			return e.json(500, {
+				code: "CALL_SERVICE_DOWN",
+				error: "Push gateway secret is not configured",
+			});
+		}
+
 		const envGateway = $os.getenv("PB_PUSH_GATEWAY_URL");
 		const baseUrl = envGateway
 			? envGateway.replace(/\/+$/, "")
 			: "http://whoami-push:4000";
 		const tokenUrl = `${baseUrl}/api/livekit-token`;
-		console.error(`[CALLS_DEBUG] Sending token request to: ${tokenUrl}`);
 
 		const res = $http.send({
 			url: tokenUrl,
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${gatewaySecret}`,
+			},
 			body: JSON.stringify({
 				roomName: room_id,
 				participantIdentity: anonIdentity,
@@ -88,20 +97,18 @@ routerAdd("POST", "/api/calls/token", (e) => {
 			token = data.token;
 		} else {
 			console.error(
-				`❌ [CALLS_ERROR] Push-шлюз вернул ошибку: ${res.statusCode} ${res.raw}`,
+				`❌ [CALLS_ERROR] Push-шлюз вернул ошибку: статус ${res.statusCode}`,
 			);
 			return e.json(500, {
 				code: "CALL_SERVICE_DOWN",
-				error: `Не удалось получить токен от ${tokenUrl}: ${res.statusCode} ${res.raw}`,
+				error: "Не удалось получить токен звонка",
 			});
 		}
-	} catch (err) {
-		console.error(
-			`❌ [CALLS_ERROR] Ошибка запроса токена: ${err.message || err}`,
-		);
+	} catch (_err) {
+		console.error("❌ [CALLS_ERROR] Ошибка запроса токена");
 		return e.json(500, {
 			code: "CALL_SERVICE_DOWN",
-			error: `Не удалось получить токен (Сетевая ошибка): ${err.message || err}`,
+			error: "Не удалось получить токен звонка",
 		});
 	}
 
@@ -120,9 +127,9 @@ routerAdd("POST", "/api/calls/token", (e) => {
 						`📞 [CALLS_DEBUG] Звонок ${existing_call_log_id} переведен в статус ongoing`,
 					);
 				}
-			} catch (err) {
+			} catch (_err) {
 				console.error(
-					`❌ [CALLS_ERROR] Ошибка обновления статуса лога ${existing_call_log_id}: ${err.message || err}`,
+					"❌ [CALLS_ERROR] Ошибка обновления статуса лога звонка",
 				);
 			}
 		}
@@ -146,10 +153,8 @@ routerAdd("POST", "/api/calls/token", (e) => {
 		$app.save(callRecord);
 		callLogId = callRecord.id;
 		console.log(`📞 [CALLS_DEBUG] Создан новый лог звонка: ${callLogId}`);
-	} catch (err) {
-		console.error(
-			`❌ [CALLS_ERROR] Не удалось создать запись call_logs: ${err.message || err}`,
-		);
+	} catch (_err) {
+		console.error("❌ [CALLS_ERROR] Не удалось создать запись call_logs");
 	}
 
 	// 5. Отправка Push-уведомлений о звонке через очередь задач (Blind Push)
@@ -180,6 +185,7 @@ routerAdd("POST", "/api/calls/token", (e) => {
 			if (subscriptions.length > 0) {
 				const subsData = subscriptions.map((sub) => {
 					return {
+						id: sub.id,
 						endpoint: sub.get("endpoint"),
 						keys: {
 							p256dh: sub.get("p256dh"),
@@ -214,9 +220,9 @@ routerAdd("POST", "/api/calls/token", (e) => {
 				);
 			}
 		}
-	} catch (err) {
+	} catch (_err) {
 		console.error(
-			`❌ [CALLS_ERROR] Ошибка планирования Push-уведомлений о звонке: ${err.message || err}`,
+			"❌ [CALLS_ERROR] Ошибка планирования Push-уведомлений о звонке",
 		);
 	}
 
@@ -258,13 +264,11 @@ routerAdd("POST", "/api/calls/status", (e) => {
 		);
 
 		return e.json(200, { success: true, id: call_log_id, status: status });
-	} catch (err) {
-		console.error(
-			`❌ [CALLS_ERROR] Ошибка обновления статуса звонка: ${err.message || err}`,
-		);
+	} catch (_err) {
+		console.error("❌ [CALLS_ERROR] Ошибка обновления статуса звонка");
 		return e.json(500, {
 			code: "INTERNAL_ERROR",
-			error: `Не удалось обновить статус: ${err.message || err}`,
+			error: "Не удалось обновить статус звонка",
 		});
 	}
 });

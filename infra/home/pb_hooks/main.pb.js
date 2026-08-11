@@ -352,9 +352,12 @@ onRecordAfterCreateSuccess((e) => {
 		}
 
 		const pushSubs = subscriptions.map((sub) => ({
+			id: sub.id,
 			endpoint: sub.get(DB.FIELDS.ENDPOINT),
-			p256dh: sub.get(DB.FIELDS.P256DH),
-			auth: sub.get(DB.FIELDS.AUTH),
+			keys: {
+				p256dh: sub.get(DB.FIELDS.P256DH),
+				auth: sub.get(DB.FIELDS.AUTH),
+			},
 		}));
 
 		const payload = {

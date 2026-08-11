@@ -25,6 +25,22 @@
 - Перед изменением понять вызывающий и вызываемый код, schema и связанные
   security rules.
 
+### Инструменты разработки
+
+- Для структуры кода сначала использовать `codebase-memory-mcp`; корневой
+  Nemo и вложенный `app` считаются отдельными индексируемыми проектами.
+- Для строк, конфигураций и Markdown использовать `rg`; для структурного
+  поиска и рефакторинга JavaScript/TypeScript — `ast-grep` с предварительной
+  проверкой совпадений.
+- `gitleaks` запускать только как read-only redacted scan. Не выводить и не
+  сохранять значения секретов, не создавать allowlist без отдельного решения.
+- `semgrep` использовать для read-only security/correctness scan с явным
+  ruleset; исключать `node_modules`, `dist`, `coverage`, кэши и `.env`.
+  Автоматическое исправление или подавление findings не выполнять без review.
+- Compound Engineering использовать выборочно для планирования и review:
+  `$ce-brainstorm`, `$ce-plan`, `$ce-code-review`, `$ce-doc-review`,
+  `$ce-compound`. Автономные commit/push/PR workflow требуют явного запроса.
+
 ## Границы архитектуры
 
 - Основное направление frontend-зависимостей: `UI/hooks → services →

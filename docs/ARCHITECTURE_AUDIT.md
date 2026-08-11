@@ -40,19 +40,47 @@ room key и recovery используют разные алгоритмы или
 
 До прохождения этих проверок Nemo нельзя описывать как проверенный E2EE-клиент.
 
-### 2. Закрыть внутренний Push/LiveKit gateway
+### 2. Закрыть внутренний Push/LiveKit gateway — код и локальные тесты готовы
 
-Gateway сейчас опубликован через Nginx и не проверяет вызывающую сторону.
+Статус: код исправлен по итогам ревью, локальные тесты проходят. P0 ещё не
+закрывается полностью до ручной проверки на Dev-контуре и проверки Nginx в
+реальном контейнере.
 
-Нужно:
+Внесено в код (не проверено на Dev):
 
-- добавить отдельный server-to-server secret PocketBase → gateway;
-- не принимать от браузера произвольные push subscriptions;
-- выдавать LiveKit token только после проверки PocketBase-сессии, членства в
-  комнате и разрешённой identity;
-- заменить глобальный CORS на точный allowlist;
-- не писать полные push endpoint и внутренние ошибки в logs;
-- добавить rate limits и ограничения размера тела запроса.
+- server-to-server secret `PUSH_GATEWAY_SECRET` (заголовок
+  `Authorization: Bearer`, постоянновременное сравнение `timingSafeEqual`,
+  fail-closed: при отсутствии секрета gateway отвечает 503);
+- браузерные запросы недопустимы: CORS удалён, Nginx отклоняет запросы без
+  `Authorization` (403), gateway проверяет секрет (401/503);
+- LiveKit token требует membership на стороне PocketBase:
+  браузер → `/api/calls/token` (PB hook: auth + membership check) →
+  `/api/livekit-token` (gateway, только s2s);
+- порядок middleware: авторизация → rate limiter → handler (неавторизованные
+  запросы не расходуют лимит PocketBase); лимиты env парсятся безопасно
+  (NaN/0/отрицательные → default);
+- формат подписок нормализован: gateway принимает и вложенный `keys.{p256dh,auth}`,
+  и старый плоский формат (задачи, уже лежащие в task_queue); новые задачи
+  создаются во вложенном формате;
+- логи и ответы gateway и хуков не содержат полных push endpoints, `res.raw`,
+  внутренних URL и деталей ошибок (только статус-код и обобщённые сообщения);
+- body limit (`100 KB`), rate limits (120 push/min, 60 token/min по умолчанию);
+- Nginx: `limit_req` (зона `push_gateway`, 240r/m, burst 30),
+  `client_max_body_size 64k`; блокировка `/push/` без `Authorization`;
+- `PUSH_GATEWAY_SECRET` в Compose не переопределяется пустой строкой: домашний
+  PocketBase читает секрет из `app/.env` (`env_file`), VPS gateway — из
+  `infra/vps_new/.env` (то же значение).
+
+Открыто:
+
+- [x] локальные unit/integration тесты gateway и хуков: gateway 19/19,
+  PocketBase hooks 10/10;
+- [ ] проверка Nginx `nginx -t` и Docker build в окружении с работающим Docker;
+- [ ] ручная проверка на Dev-контуре: секрет в `app/.env` и `infra/vps_new/.env`,
+  звонок LiveKit и отправка push без утечек в логах;
+- [ ] удаление маршрута `/push/` из Nginx после переноса Prod PocketBase на VPS
+  (vps_new compose уже использует внутренний `http://whoami-push:4000/`);
+- [ ] повторный формальный security review.
 
 ### 3. Исправить PocketBase authorization
 
