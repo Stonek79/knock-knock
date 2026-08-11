@@ -30,9 +30,10 @@
 Текущий статус — `NO-GO`, что ожидаемо для активной разработки. Главные P0:
 
 - несовместимый crypto lifecycle и общий keystore для аккаунтов устройства;
-- публичные Push/LiveKit gateway endpoints (код и локальные gateway/hooks tests
-  проверены 10.08.2026; Dev и Nginx-проверка ожидаются; см.
-  ARCHITECTURE_AUDIT.md §2);
+- Push/LiveKit gateway развернут и защищён S2S secret; локальные tests, VPS
+  build, healthcheck, Nginx syntax, реальная доставка push и выдача LiveKit
+  token проверены, но полный звонок между двумя клиентами и повторный security
+  review ещё открыты (см. ARCHITECTURE_AUDIT.md §2);
 - слишком широкие PocketBase rules для invites/users/media/presence;
 - fail-open проверка invite при регистрации;
 - отсутствие управляемых PocketBase migrations/schema drift gate;
@@ -54,7 +55,7 @@
 - [ ] Составить data-flow diagram: текст, realtime, media, calls, push и administrative traffic.
 - [ ] Зафиксировать trust boundaries и доступные извне порты.
 - [ ] Зафиксировать degraded mode: при отключении дома API/auth/text продолжают работать, media операции переходят в retry.
-- [x] Настроен VPS → home MinIO через исходящий FRP client; health endpoint на VPS `127.0.0.1:19000` проверен. Защита транспорта зависит от внешнего Reality/SOCKS-контура и должна быть формально описана перед релизом.
+- [x] Настроен VPS → home MinIO через исходящий FRP client; health endpoint на VPS `127.0.0.1:19000` проверен. FRPC идёт через Happ/Xray SOCKS с дополнительно включённым FRP TLS.
 - [x] MinIO API и console на домашнем сервере привязаны к loopback; Dev/Prod используют отдельные bucket и service account. Ограничение политик проверено вручную.
 
 **Gate:** новый оператор может по документации однозначно объяснить, где находятся данные и какой сервис имеет к ним доступ; документы не противоречат deployed compose.
@@ -111,6 +112,9 @@
 - [ ] Выполнить dependency audit для npm, Cargo и container images.
 - [ ] Подготовить `SECURITY.md`, vulnerability contact и supported versions.
 - [ ] Проверить privacy-sensitive telemetry: по умолчанию она отсутствует либо явно opt-in.
+- [x] Исправить и покрыть локальными тестами базовое privacy-safe отображение
+  профилей в звонках/шапке комнаты, исходящий экран звонка и доступность
+  завершения звонка; полный двухклиентский E2E остаётся открытым.
 
 **Gate:** все Critical/High findings исправлены или формально приняты с ограничением пилота и сроком устранения.
 
@@ -126,6 +130,10 @@
 - [ ] Убедиться, что Nginx и TURN/TLS не конкурируют за один `IP:443`.
 - [ ] Проверить degraded mode при недоступности домашнего MinIO/FRP.
 - [ ] Проверить, что frontend не теряет media upload/download при временном отказе MinIO и показывает retry-state.
+- [ ] Провести FRP soak-test: REST и realtime без `heartbeat timeout` не менее
+  30 минут, затем повторить после restart Happ/Xray и FRPC.
+- [ ] Убедиться, что после restart FRPC на FRPS не остаются конфликтующие
+  регистрации `proxy already exists`.
 
 ### 7.2. Данные
 

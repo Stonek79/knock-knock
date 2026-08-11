@@ -23,6 +23,8 @@ export interface SessionSlice {
         serverUrl?: string,
         callLogId?: string,
         isInitiator?: boolean,
+        displayName?: string,
+        avatarUrl?: string | null,
     ) => void;
     setActiveCallStatus: (status: ActiveCallStatus) => void;
     toggleMute: () => void;
@@ -43,6 +45,8 @@ export interface SessionSlice {
     initiateCall: (
         roomId: string,
         callType: CallLogsTypeOptions,
+        displayName?: string,
+        avatarUrl?: string | null,
     ) => Promise<void>;
 }
 

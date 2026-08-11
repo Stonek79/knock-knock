@@ -14,6 +14,7 @@ export const calls = {
     mute: "Без звука",
     unmute: "Включить звук",
     privateRoom: "Приватная комната",
+    privateParticipant: "Анонимный собеседник",
     video: "Видео",
     audio: "Аудио",
     status_missed: "Пропущенный",

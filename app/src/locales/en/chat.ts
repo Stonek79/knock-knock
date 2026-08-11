@@ -37,6 +37,7 @@ export const chat = {
     privacyWarning:
         "This is a private chat. Messages will be deleted when both participants leave.",
     defaultUserName: "User",
+    privateUserName: "Anonymous",
     defaultUserNickname: "user",
     errors: {
         accessDenied: "Access denied or room not found",

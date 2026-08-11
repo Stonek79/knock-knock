@@ -23,6 +23,8 @@ export const createSessionSlice: CallStateCreator<SessionSlice> = (
         serverUrl = env.VITE_LIVEKIT_URL,
         callLogId,
         isInitiator = false,
+        displayName = "",
+        avatarUrl = null,
     ) => {
         set({
             activeSession: {
@@ -30,6 +32,8 @@ export const createSessionSlice: CallStateCreator<SessionSlice> = (
                 type: callType,
                 isInitiator,
                 roomName,
+                displayName,
+                avatarUrl,
                 token,
                 serverUrl,
                 callLogId: callLogId ?? null,
@@ -216,6 +220,8 @@ export const createSessionSlice: CallStateCreator<SessionSlice> = (
                         type,
                         isInitiator: false,
                         roomName: roomId,
+                        displayName: "",
+                        avatarUrl: null,
                         token: res.token,
                         serverUrl: env.VITE_LIVEKIT_URL,
                         callLogId: res.callLogId || callLogId,
@@ -238,13 +244,20 @@ export const createSessionSlice: CallStateCreator<SessionSlice> = (
         await get().acceptCall();
     },
 
-    initiateCall: async (roomId, callType) => {
+    initiateCall: async (
+        roomId,
+        callType,
+        displayName = "",
+        avatarUrl = null,
+    ) => {
         set({
             activeSession: {
                 status: ACTIVE_CALL_STATUS.INITIATING,
                 type: callType,
                 isInitiator: true,
                 roomName: roomId,
+                displayName,
+                avatarUrl,
                 token: null,
                 serverUrl: env.VITE_LIVEKIT_URL,
                 callLogId: null,
@@ -264,6 +277,8 @@ export const createSessionSlice: CallStateCreator<SessionSlice> = (
                         type: callType,
                         isInitiator: true,
                         roomName: roomId,
+                        displayName,
+                        avatarUrl,
                         token: res.token,
                         serverUrl: env.VITE_LIVEKIT_URL,
                         callLogId: res.callLogId || null,

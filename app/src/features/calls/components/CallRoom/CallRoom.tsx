@@ -83,13 +83,16 @@ export function CallRoom() {
     const {
         status,
         type,
-        roomName,
+        displayName,
+        avatarUrl,
         token,
         serverUrl,
         isMuted,
         isVideoMuted,
         isScreenSharing,
     } = activeSession;
+    const participantName =
+        displayName || t("calls.privateParticipant", "Анонимный собеседник");
 
     // Определяем текст статуса для пользователя через i18n ключи
     let statusText = t("calls.statusConnecting", "Соединение...");
@@ -121,7 +124,8 @@ export function CallRoom() {
     if (isMinimized) {
         return (
             <CallPiP
-                displayName={roomName}
+                displayName={participantName}
+                avatarUrl={avatarUrl}
                 statusText={statusText}
                 isMuted={isMuted}
                 onExpand={() => {
@@ -136,7 +140,8 @@ export function CallRoom() {
     // Для любых звонков в активном статусе рендерим LiveKitRoom для аудио/видео
     const isWebRTCActive =
         (status === ACTIVE_CALL_STATUS.ACTIVE ||
-            status === ACTIVE_CALL_STATUS.CONNECTING) &&
+            status === ACTIVE_CALL_STATUS.CONNECTING ||
+            status === ACTIVE_CALL_STATUS.CALLING) &&
         typeof token === "string" &&
         typeof serverUrl === "string";
 
@@ -206,7 +211,8 @@ export function CallRoom() {
                     >
                         <LiveKitSync />
                         <CallVideoView
-                            displayName={roomName}
+                            displayName={participantName}
+                            avatarUrl={avatarUrl}
                             statusText={statusText}
                             isConnecting={isConnecting}
                         />
@@ -214,7 +220,8 @@ export function CallRoom() {
                     </LiveKitRoom>
                 ) : (
                     <CallAvatarView
-                        displayName={roomName}
+                        displayName={participantName}
+                        avatarUrl={avatarUrl}
                         statusText={statusText}
                         isConnecting={isConnecting}
                     />

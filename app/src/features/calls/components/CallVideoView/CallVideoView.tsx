@@ -10,6 +10,7 @@ import styles from "./CallVideoView.module.css";
 
 interface CallVideoViewProps {
     displayName: string;
+    avatarUrl?: string | null;
     statusText: string;
     isConnecting?: boolean;
 }
@@ -22,6 +23,7 @@ interface CallVideoViewProps {
  */
 export function CallVideoView({
     displayName,
+    avatarUrl,
     statusText,
     isConnecting = false,
 }: CallVideoViewProps) {
@@ -49,6 +51,7 @@ export function CallVideoView({
                     <Box className={styles.avatarGlassLayer}>
                         <CallAvatarView
                             displayName={displayName}
+                            avatarUrl={avatarUrl}
                             statusText={statusText}
                             isConnecting={isConnecting}
                         />

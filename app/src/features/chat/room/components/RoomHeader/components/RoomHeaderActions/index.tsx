@@ -37,26 +37,30 @@ export function RoomHeaderActions({
 
     return (
         <Flex align="center" gap="1">
-            <IconButton
-                variant="ghost"
-                size="md"
-                shape="round"
-                className={styles.actionButton}
-                aria-label={t("chat.call", "Позвонить")}
-                onClick={onAudioCallClick}
-            >
-                <Phone size={ICON_SIZE.sm} />
-            </IconButton>
-            <IconButton
-                variant="ghost"
-                size="md"
-                shape="round"
-                className={styles.actionButton}
-                aria-label={t("chat.videoCall", "Видеозвонок")}
-                onClick={onVideoCallClick}
-            >
-                <Video size={ICON_SIZE.sm} />
-            </IconButton>
+            {!isEphemeral && (
+                <>
+                    <IconButton
+                        variant="ghost"
+                        size="md"
+                        shape="round"
+                        className={styles.actionButton}
+                        aria-label={t("chat.call", "Позвонить")}
+                        onClick={onAudioCallClick}
+                    >
+                        <Phone size={ICON_SIZE.sm} />
+                    </IconButton>
+                    <IconButton
+                        variant="ghost"
+                        size="md"
+                        shape="round"
+                        className={styles.actionButton}
+                        aria-label={t("chat.videoCall", "Видеозвонок")}
+                        onClick={onVideoCallClick}
+                    >
+                        <Video size={ICON_SIZE.sm} />
+                    </IconButton>
+                </>
+            )}
 
             {isEphemeral && onEndSession && (
                 <Button

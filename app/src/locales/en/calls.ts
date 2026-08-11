@@ -13,6 +13,7 @@ export const calls = {
     mute: "Mute",
     unmute: "Unmute",
     privateRoom: "Private Room",
+    privateParticipant: "Anonymous participant",
     video: "Video",
     audio: "Audio",
     status_missed: "Missed",

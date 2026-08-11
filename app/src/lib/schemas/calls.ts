@@ -26,6 +26,8 @@ export const activeCallSessionSchema = z.object({
     type: callTypeSchema,
     isInitiator: z.boolean(),
     roomName: z.string(),
+    displayName: z.string(),
+    avatarUrl: z.string().nullable(),
     token: z.string().nullable(),
     serverUrl: z.string().nullable(),
     callLogId: z.string().nullable(),

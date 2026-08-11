@@ -34,7 +34,9 @@ frontend bundle. Обнаруженный рабочий secret ротирует
 PocketBase Admin UI, MinIO API/console, FRP dashboard и домашний SSH закрываются
 firewall/allowlist или приватным административным каналом.
 
-Push/LiveKit gateway является внутренним (реализация ожидает исправлений и проверки):
+Push/LiveKit gateway является внутренним. S2S-защита развернута; реальная
+доставка push и выдача LiveKit-токена подтверждены, полный звонок между двумя
+клиентами и повторный security review ещё открыты:
 
 - вызов PocketBase → gateway подписывается отдельным secret `PUSH_GATEWAY_SECRET`
   (заголовок `Authorization: Bearer`, постоянновременное сравнение, fail-closed);
@@ -48,9 +50,9 @@ Push/LiveKit gateway является внутренним (реализация
 - Nginx-маршрут `/push/` защищён и будет удалён после переноса Prod PocketBase
   на VPS.
 
-FRP `tls.disable` допустим только при документированном и проверенном внешнем
-защищённом транспорте. Наличие SOCKS/Reality в соседнем конфиге само по себе не
-доказывает защиту каждого deployment.
+FRP TLS остаётся включённым даже при подключении через Happ/Xray SOCKS. Внешний
+VPN-транспорт не заменяет защиту FRP-соединения и не является основанием для
+`tls.enable = false`.
 
 ## 3. PocketBase authorization
 

@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { MEMBER_ROLE, ROOM_TYPE, ROOM_VISIBILITY } from "../constants";
+import {
+    MEMBER_ROLE,
+    PROFILE_TYPE,
+    ROOM_TYPE,
+    ROOM_VISIBILITY,
+} from "../constants";
 
 /**
  * Схемы перечислений (используются в UI и для валидации параметров API)
@@ -27,6 +32,9 @@ export const memberProfileSchema = z.object({
     display_name: z.string(),
     username: z.string().optional(),
     avatar_url: z.string().nullable().optional(),
+    profile_type: z
+        .enum([PROFILE_TYPE.PUBLIC, PROFILE_TYPE.PRIVATE])
+        .optional(),
 });
 
 /** Схема расширенного участника (ExpandedRoomMember) */
@@ -86,4 +94,7 @@ export const peerUserSchema = z.object({
     display_name: z.string(),
     username: z.string().optional(),
     avatar_url: z.string().nullable().optional(),
+    profile_type: z
+        .enum([PROFILE_TYPE.PUBLIC, PROFILE_TYPE.PRIVATE])
+        .optional(),
 });

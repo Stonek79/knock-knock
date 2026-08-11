@@ -82,7 +82,7 @@ export function DefaultHeader({ roomId }: DefaultHeaderProps) {
 
     const handleAudioCall = async () => {
         try {
-            await initiateCall(roomId, CALL_TYPE.AUDIO);
+            await initiateCall(roomId, CALL_TYPE.AUDIO, displayName, avatarUrl);
         } catch (e: unknown) {
             const message = parseCallError(e, t);
             toast({
@@ -95,7 +95,7 @@ export function DefaultHeader({ roomId }: DefaultHeaderProps) {
 
     const handleVideoCall = async () => {
         try {
-            await initiateCall(roomId, CALL_TYPE.VIDEO);
+            await initiateCall(roomId, CALL_TYPE.VIDEO, displayName, avatarUrl);
         } catch (e: unknown) {
             const message = parseCallError(e, t);
             toast({

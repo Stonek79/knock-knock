@@ -40,6 +40,7 @@ export const chat = {
     privacyWarning:
         "Это приватный чат. Сообщения будут удалены при выходе обоих участников.",
     defaultUserName: "Пользователь",
+    privateUserName: "Аноним",
     defaultUserNickname: "user",
     errors: {
         accessDenied: "Доступ запрещен или комната не найдена",

@@ -33,6 +33,10 @@ export function IncomingCallAlert() {
     const isIncoming = incomingSession !== null;
     const isActive = activeSession !== null;
     const callType = incomingSession?.type ?? CALL_TYPE.VIDEO;
+    const participantName = t(
+        "calls.privateParticipant",
+        "Анонимный собеседник",
+    );
 
     // Запуск/остановка рингтона и 45-секундный таймаут автоотклонения с отметкой MISSED
     useEffect(() => {
@@ -94,7 +98,7 @@ export function IncomingCallAlert() {
             <Box className={styles.ambientSpot2} />
 
             <Box className={styles.alertCard}>
-                <IncomingCallAvatar displayName={incomingSession.roomId} />
+                <IncomingCallAvatar displayName={participantName} />
 
                 {/* Е2ЕЕ Шифрование / Бейдж Второй линии */}
                 <IncomingCallBadges isActive={isActive} />

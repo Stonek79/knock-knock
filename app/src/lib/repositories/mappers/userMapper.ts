@@ -56,6 +56,7 @@ export const UserMapper = {
             username: user.username || "",
             display_name: displayName,
             avatar_url: avatarUrl,
+            profile_type: user.profile_type,
             status: extractString(user.status, USER_WEB_STATUS.OFFLINE),
             last_seen:
                 user.last_seen || user.updated || new Date().toISOString(),

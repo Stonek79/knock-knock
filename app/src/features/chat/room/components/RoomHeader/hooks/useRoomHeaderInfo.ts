@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ROOM_TYPE } from "@/lib/constants";
+import { PROFILE_TYPE, ROOM_TYPE } from "@/lib/constants";
 import type { PeerUser, RoomWithMembers } from "@/lib/types/room";
 import { useAuthStore } from "@/stores/auth";
 
@@ -33,6 +33,7 @@ export function useRoomHeaderInfo({ room, peerUser }: UseRoomHeaderInfoProps) {
                     t("chat.defaultUserName", "Пользователь"),
                 username: otherMember.profiles.username ?? undefined,
                 avatar_url: otherMember.profiles.avatar_url ?? undefined,
+                profile_type: otherMember.profiles.profile_type,
             };
         }
     }
@@ -43,25 +44,52 @@ export function useRoomHeaderInfo({ room, peerUser }: UseRoomHeaderInfoProps) {
         room?.room_members?.length === 1 &&
         room.room_members[0].user_id === user?.id;
 
+    // Неизвестный тип считаем закрытым: это предотвращает показ реального
+    // имени и аватара при неполном expand или старом ответе API.
+    const isPrivatePeer =
+        isDM &&
+        !isSelfChat &&
+        resolvedPeer?.profile_type !== PROFILE_TYPE.PUBLIC;
+    const privateUserName = t("chat.privateUserName", "Аноним");
+    const visiblePeer =
+        isPrivatePeer && resolvedPeer
+            ? {
+                  ...resolvedPeer,
+                  display_name: privateUserName,
+                  username: undefined,
+                  avatar_url: undefined,
+              }
+            : resolvedPeer;
+
     // Вычисление отображаемого имени
     const displayName = isSelfChat
         ? t("chat.favorites", "Избранное")
-        : isDM && resolvedPeer
-          ? resolvedPeer.display_name
-          : room?.name || t("chat.unknownRoom", "Чат");
+        : isPrivatePeer
+          ? privateUserName
+          : isDM && visiblePeer
+            ? visiblePeer.display_name
+            : room?.name || t("chat.unknownRoom", "Чат");
 
     // Вычисление аватара
     const avatarFallback = isSelfChat
         ? "⭐"
         : displayName?.[0]?.toUpperCase() || "?";
-    const avatarUrl =
-        (isDM ? resolvedPeer?.avatar_url : room?.avatar_url) ?? undefined;
+    const avatarUrl = isPrivatePeer
+        ? undefined
+        : ((isDM ? visiblePeer?.avatar_url : room?.avatar_url) ?? undefined);
 
     // Список имен участников для групп
     const memberNames =
         isGroup && room?.room_members
             ? room.room_members
-                  .map((m) => m.profiles?.display_name)
+                  .map((m) => {
+                      if (!m.profiles) {
+                          return null;
+                      }
+                      return m.profiles.profile_type === PROFILE_TYPE.PUBLIC
+                          ? m.profiles.display_name
+                          : privateUserName;
+                  })
                   .filter(Boolean)
                   .join(", ")
             : "";
@@ -70,7 +98,7 @@ export function useRoomHeaderInfo({ room, peerUser }: UseRoomHeaderInfoProps) {
         isDM,
         isGroup,
         isSelfChat,
-        resolvedPeer,
+        resolvedPeer: visiblePeer,
         displayName,
         avatarUrl,
         avatarFallback,

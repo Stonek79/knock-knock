@@ -195,12 +195,6 @@ async function handleMessageEvent({
         );
     }
 
-    if (event.action === REALTIME_ACTIONS.CREATE) {
-        if (record.sender !== userId) {
-            incrementUnreadCount({ roomId: record.room });
-        }
-    }
-
     // 3. Обновляем окно самого чата, если оно сейчас открыто
     if (_activeRoomId && record.room === _activeRoomId) {
         if (event.action === REALTIME_ACTIONS.DELETE) {
