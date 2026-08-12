@@ -15,7 +15,7 @@ routerAdd(
 		}
 
 		const user = e.auth;
-		if (!user) {
+		if (!user || user.collection().name !== "users") {
 			throw new UnauthorizedError("Authentication required");
 		}
 
@@ -106,5 +106,7 @@ routerAdd(
 
 		return e.json(200, { success: true, room: roomId });
 	},
-	$apis.requireRecordAuth("users"),
+	// PocketBase image currently deployed by Nemo does not expose
+	// requireRecordAuth(); the handler still validates e.auth above.
+	$apis.requireAuth(),
 );
