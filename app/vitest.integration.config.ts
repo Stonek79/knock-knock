@@ -24,6 +24,10 @@ export default mergeConfig(
 
             // Используем node окружение для прямого взаимодействия с SDK
             environment: "node",
+
+            // Основной setup настраивает browser-only globals (window),
+            // которые недоступны в node-интеграционном контуре.
+            setupFiles: [],
         },
     }),
 );

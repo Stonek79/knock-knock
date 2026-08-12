@@ -251,7 +251,14 @@ staging с явным `VITE_ALLOW_DB_CLEANUP=true` тесты по-прежне�
 Server-side hook в `infra/home/pb_hooks/security.pb.js` теперь запрещает
 обычному пользователю выставлять, снимать или менять `is_test` во всех
 коллекциях, где поле присутствует; superuser seed-контур сохранён. Runtime
-негативный тест этого правила на staging остаётся частью Stage 3.
+Негативный runtime-тест добавлен в
+`src/test/is-test-policy.integration.test.ts`, но запуск 12 августа 2026 года
+заблокирован недоступностью DNS `dev-api.whoami.ninja` (`ENOTFOUND`). Поэтому
+его результат остаётся `NO-GO` до запуска из сети с доступом к staging.
+
+Полный локальный suite после добавления guarded integration-файла:
+`26 passed | 3 skipped` test files, `114 passed | 4 skipped` tests. Browser-only
+test setup теперь безопасно загружается и в Node integration-конфиге.
 
 **Срез 6a (Outbox persistence contract).** Добавлены unit-тесты публичного
 `outboxDb` без подключения к PocketBase или реальной IndexedDB:
