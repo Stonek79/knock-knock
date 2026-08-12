@@ -4,6 +4,56 @@
  * которые невозможно декларативно описать в JSON-схеме PocketBase.
  */
 
+// `is_test` — операционный маркер disposable-данных, а не пользовательское
+// поле. Seed запускается с superuser-auth; обычный клиент не может выставить
+// маркер при создании или изменить его позже.
+const TEST_MARKED_COLLECTIONS = [
+	"rooms",
+	"room_members",
+	"messages",
+	"room_keys",
+	"presence_status",
+	"message_reactions",
+	"user_folders",
+	"message_reports",
+	"media",
+	"call_logs",
+];
+
+function isSuperuserRequest(e) {
+	const authRecord = e.requestInfo().authRecord;
+	return authRecord?.collection().name === "_superusers";
+}
+
+for (const collectionName of TEST_MARKED_COLLECTIONS) {
+	onRecordCreateRequest((e) => {
+		if (isSuperuserRequest(e)) {
+			return e.next();
+		}
+
+		if (e.record.getBool("is_test")) {
+			throw new BadRequestError(
+				"Security Policy: only the test administration context may create is_test records.",
+			);
+		}
+		e.next();
+	}, collectionName);
+
+	onRecordUpdateRequest((e) => {
+		if (isSuperuserRequest(e)) {
+			return e.next();
+		}
+
+		const oldRecord = e.app.findRecordById(collectionName, e.record.id);
+		if (oldRecord.getBool("is_test") !== e.record.getBool("is_test")) {
+			throw new BadRequestError(
+				"Security Policy: users cannot create, promote, or demote is_test records.",
+			);
+		}
+		e.next();
+	}, collectionName);
+}
+
 // 1. ЗАЩИТА ОТ ЭСКАЛАЦИИ ПРИВИЛЕГИЙ ПРИ СОЗДАНИИ (Создание админов и владельцев)
 onRecordCreateRequest((e) => {
 	const authRecord = e.requestInfo().authRecord;

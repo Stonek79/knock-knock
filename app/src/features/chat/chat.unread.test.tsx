@@ -22,10 +22,19 @@ const createWrapper = () => {
     );
 };
 
-// Мокаем сервис вместо прямого pb.collection
-vi.mock("@/lib/services/room/queries", () => ({
-    getRoomUnreadCounts: vi.fn(),
-}));
+// Мокаем сервис вместо прямого pb.collection.
+// Используем partial mock через importOriginal: `queries` пере-экспортируется через
+// `room/index.ts` (findOrCreateDM, getChatRoomData, ...), поэтому замена модуля
+// заглушке без них ломала загрузку `useCreateDM`. Сохраняем все реальные экспорты и
+// переопределяем только тот seam, который тест управляет: getRoomUnreadCounts.
+vi.mock("@/lib/services/room/queries", async (importOriginal) => {
+    const actual =
+        await importOriginal<typeof import("@/lib/services/room/queries")>();
+    return {
+        ...actual,
+        getRoomUnreadCounts: vi.fn(),
+    };
+});
 
 vi.mock("@/stores/auth", () => ({
     useAuthStore: () => ({

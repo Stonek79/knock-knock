@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { cleanupDatabase } from "@/test/helpers/db-cleanup";
+import {
+    cleanupDatabase,
+    isDatabaseCleanupAllowed,
+} from "@/test/helpers/db-cleanup";
 import { DB_FIELDS } from "../constants/db";
 import { pb } from "../pocketbase";
 import { mediaRepository } from "./media.repository";
@@ -8,7 +11,9 @@ import { mediaRepository } from "./media.repository";
  * Интеграционный тест MediaRepository.
  * Проверяет реальное взаимодействие с PocketBase.
  */
-describe("MediaRepository: Integration", () => {
+const describeIntegration = describe.skipIf(!isDatabaseCleanupAllowed());
+
+describeIntegration("MediaRepository: Integration", () => {
     // Перед тестами чистим старые тестовые данные
     beforeAll(async () => {
         await cleanupDatabase();

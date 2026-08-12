@@ -1,3 +1,4 @@
+import { registerSW } from "virtual:pwa-register";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode, useEffect } from "react";
@@ -93,6 +94,9 @@ function Root() {
  * Инициализация React-приложения.
  */
 const rootElement = document.getElementById(DOM_ROOT_ID);
+
+// Регистрация PWA worker нужна для Background Sync и offline-кэша.
+registerSW({ immediate: true });
 
 if (rootElement && !rootElement.innerHTML) {
     const root = createRoot(rootElement);

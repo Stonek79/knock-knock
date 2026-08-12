@@ -130,5 +130,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         AuthService.logout();
         set({ pbUser: null, profile: null });
         ChatRealtimeService.destroy();
+        // Следующий пользователь должен немедленно пройти refreshSession.
+        // Throttle относится к текущей сессии и не должен переноситься через logout.
+        lastFetchAttempt = 0;
     },
 }));

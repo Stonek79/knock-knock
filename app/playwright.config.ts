@@ -44,8 +44,8 @@ export default defineConfig({
     // Репортеры
     reporter: [
         ["list"],
-        ["html", { outputFolder: "e2e-report", open: "never" }],
-        ["json", { outputFile: "e2e-results.json" }],
+        ["html", { outputFolder: "playwright-report", open: "never" }],
+        ["json", { outputFile: "test-results/e2e-results.json" }],
     ],
 
     // Общие настройки для всех тестов

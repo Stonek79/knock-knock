@@ -18,6 +18,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ChatRoom } from "@/features/chat/room";
 import { ClipboardService } from "@/lib/services/clipboard";
+import { getChatRoomData } from "@/lib/services/room";
+import type { RoomWithMembers } from "@/lib/types";
 import { ok } from "@/lib/utils/result";
 
 // --- Стабильные константы и моки ---
@@ -27,13 +29,13 @@ const MOCK_MESSAGES = [
     {
         id: "msg-1",
         content: "My Message",
-        sender_id: "user-1",
+        sender: "user-1",
         created_at: "2023-01-01",
     },
     {
         id: "msg-2",
         content: "Other Message",
-        sender_id: "user-2",
+        sender: "user-2",
         created_at: "2023-01-01",
     },
 ];
@@ -45,19 +47,20 @@ const MOCK_MARK_AS_READ = vi.fn();
 const MOCK_T = (_: string, defaultValue: string) => defaultValue;
 
 // --- Мокирование зависимостей (Должно быть в начале файла) ---
-
-vi.mock("@/lib/services/message", () => ({
-    MessageService: {
-        sendMessage: vi.fn(),
-        deleteMessage: vi.fn(),
-        updateMessage: vi.fn(),
-    },
-}));
-
+//
+// ВНИМАНИЕ: `vi.mock` хилится (hoist) над `import`, а фабрика вызывается во время
+// импорта зависимостей — до инициализации констант тела файла (TDZ). Поэтому:
+// - в фабриках нельзя ссылаться на константы тела файла;
+// - getChatRoomData возвращает корректный Result прямо в фабрике с помощью
+//   импортированного `ok` (import-binding инициализируется до импорта room).
 vi.mock("@/lib/services/room", () => ({
     RoomService: {
         findOrCreateDM: vi.fn(),
     },
+    // useChatRoomData импортирует getChatRoomData именно как named export.
+    // Тело фабрики не поражено TDZ: реальное resolved-value задаётся в
+    // `beforeEach` через `vi.mocked(...)` (import-bindings инициализированы там).
+    getChatRoomData: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -73,8 +76,18 @@ vi.mock("react-i18next", () => ({
     }),
 }));
 
+// useAuthStore — zustand hook с selector-семантикой: `useAuthStore(s => s.profile)`
+// должен вернуть profile, а не весь state. Простой `() => ({...})` возвращал бы
+// объект целиком, из-за чего `user?.id` становился бы undefined, нарушая контракты
+// ownership (isOwnMessage / canEditSelected). MOCK_USER уже инициализирован к моменту
+// вызова фабрики (как и в исходном моке), поэтому ссылка на него безопасна.
 vi.mock("@/stores/auth", () => ({
-    useAuthStore: () => ({ pbUser: MOCK_USER, profile: MOCK_USER }),
+    useAuthStore: (
+        selector: (state: {
+            pbUser: typeof MOCK_USER;
+            profile: typeof MOCK_USER;
+        }) => unknown,
+    ) => selector({ pbUser: MOCK_USER, profile: MOCK_USER }),
 }));
 
 vi.mock("@/features/chat/message", async (importOriginal) => {
@@ -116,6 +129,28 @@ describe("Действия с сообщениями в чате", () => {
         MOCK_DELETE_MESSAGE.mockClear();
         MOCK_UPDATE_MESSAGE.mockClear();
         MOCK_MARK_AS_READ.mockClear();
+
+        // getChatRoomData должен вернуть корректный Result с roomKey, иначе
+        // ChatRoomMessages/ChatRoomInputArea считают чат неинициализированным.
+        vi.mocked(getChatRoomData).mockResolvedValue(
+            ok({
+                room: {
+                    id: "room-1",
+                    name: "Test Room",
+                    type: "direct",
+                    visibility: "private",
+                    avatar_url: null,
+                    created_by: "user-1",
+                    created_at: "2023-01-01",
+                    room_members: [],
+                    metadata: {},
+                    permissions: {},
+                    last_message: null,
+                } satisfies RoomWithMembers,
+                roomKey: {} as CryptoKey,
+                otherUserId: "user-2",
+            }),
+        );
 
         queryClient = new QueryClient({
             defaultOptions: {
@@ -190,7 +225,10 @@ describe("Действия с сообщениями в чате", () => {
         });
 
         await waitFor(() => {
-            expect(MOCK_DELETE_MESSAGE).toHaveBeenCalledWith("msg-1", true);
+            expect(MOCK_DELETE_MESSAGE).toHaveBeenCalledWith({
+                messageId: "msg-1",
+                isOwnMessage: true,
+            });
         });
     });
 
@@ -224,10 +262,10 @@ describe("Действия с сообщениями в чате", () => {
         });
 
         await waitFor(() => {
-            expect(MOCK_UPDATE_MESSAGE).toHaveBeenCalledWith(
-                "msg-1",
-                "Updated Content",
-            );
+            expect(MOCK_UPDATE_MESSAGE).toHaveBeenCalledWith({
+                messageId: "msg-1",
+                newContent: "Updated Content",
+            });
         });
     });
 

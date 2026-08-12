@@ -18,6 +18,7 @@ import { pb } from "@/lib/pocketbase";
 import { setupRuntimeCaching } from "@/lib/pwa/runtime-caching";
 import { SealedSenderUtil } from "@/lib/services/chat-crypto";
 import { MessageService } from "@/lib/services/message";
+import { getOutboxFailureUpdate } from "@/lib/services/outbox-retry";
 
 declare const self: ServiceWorkerGlobalScope & {
     __WB_MANIFEST: Array<{ url: string; revision: string | null }>;
@@ -293,15 +294,12 @@ async function processOutboxMessage(userId: string, msg: OutboxMessage) {
             `[SW] Ошибка отправки отложенного сообщения ${msg.id}`,
             e,
         );
-        if (msg.retryCount >= 5) {
-            await outboxDb.updateStatus(userId, msg.id, "failed");
-        } else {
-            await outboxDb.updateStatus(
-                userId,
-                msg.id,
-                "pending",
-                msg.retryCount + 1,
-            );
-        }
+        const update = getOutboxFailureUpdate(msg.retryCount);
+        await outboxDb.updateStatus(
+            userId,
+            msg.id,
+            update.status,
+            update.retryCount,
+        );
     }
 }

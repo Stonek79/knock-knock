@@ -1,8 +1,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { cleanupDatabase } from "@/test/helpers/db-cleanup";
+import {
+    cleanupDatabase,
+    isDatabaseCleanupAllowed,
+} from "@/test/helpers/db-cleanup";
 import { MessageService } from "./message";
 
-describe("MessageService: Интеграционные тесты (Staging)", () => {
+const describeIntegration = describe.skipIf(!isDatabaseCleanupAllowed());
+
+describeIntegration("MessageService: Интеграционные тесты (Staging)", () => {
     // Перед всеми тестами очищаем базу
     beforeAll(async () => {
         await cleanupDatabase();

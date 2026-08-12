@@ -8,16 +8,45 @@ import { pb } from "@/lib/pocketbase";
  *
  * ВАЖНО: Требует наличия поля `is_test` (тип bool) в схемах коллекций.
  */
+export interface DatabaseCleanupPolicyInput {
+    pbUrl?: string;
+    allowCleanup?: string;
+}
+
+/**
+ * Разрешена ли очистка данных интеграционного контура.
+ *
+ * Нужны оба независимых условия: явный флаг и известный test/staging endpoint.
+ * Поэтому одна ошибочная переменная окружения не может включить cleanup на
+ * production или на неизвестном URL.
+ */
+export function isDatabaseCleanupAllowed({
+    pbUrl = import.meta.env.VITE_PB_URL,
+    allowCleanup = import.meta.env.VITE_ALLOW_DB_CLEANUP,
+}: DatabaseCleanupPolicyInput = {}): boolean {
+    if (allowCleanup !== "true" || !pbUrl) {
+        return false;
+    }
+
+    try {
+        const hostname = new URL(pbUrl).hostname.toLowerCase();
+        const isLocalTest = ["localhost", "127.0.0.1", "::1"].includes(
+            hostname,
+        );
+        const isKnownRemoteTest = [
+            "dev-api.whoami.ninja",
+            "staging-api.whoami.ninja",
+            "test-api.whoami.ninja",
+        ].includes(hostname);
+
+        return isLocalTest || isKnownRemoteTest;
+    } catch {
+        return false;
+    }
+}
+
 export async function cleanupDatabase() {
-    const pbUrl = import.meta.env.VITE_PB_URL;
-
-    // 🛡 ЗАЩИТА 1: Не позволяем чистить базу, если URL похож на продуктовый
-    // Но разрешаем, если есть явный флаг VITE_ALLOW_DB_CLEANUP=true
-    const isProdUrl =
-        pbUrl?.includes("api.whoami.ninja") && !pbUrl?.includes("staging");
-    const isCleanupAllowed = import.meta.env.VITE_ALLOW_DB_CLEANUP === "true";
-
-    if (isProdUrl && !isCleanupAllowed) {
+    if (!isDatabaseCleanupAllowed()) {
         throw new Error(
             "⛔ КРИТИЧЕСКАЯ ОШИБКА БЕЗОПАСНОСТИ: Попытка очистки ПРОДУКТОВОЙ базы данных остановлена!",
         );

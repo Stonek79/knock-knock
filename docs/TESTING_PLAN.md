@@ -9,8 +9,9 @@
 
 - `npm run lint` — успешно;
 - `npm run build` — успешно;
-- frontend suite: 7 failed, 87 passed, 2 skipped (после среза Stage 2.3;
-  room/repository/message-deletion slices зелёные);
+- frontend suite после срезов 2.4–2.6 и hardening cleanup: 114 passed, 2 skipped;
+  unit-сценарии зелёные, integration setup на production-like URL безопасно
+  пропускается;
 - после отложенной инициализации `RealtimeGateway` необработанных ошибок нет;
 - PocketBase integration tests пропущены.
 
@@ -61,8 +62,8 @@ Dev/Prod. Отладочные логи помечаются уникальны�
 1. [x] crypto backup/recovery;
 2. [x] room creation и key distribution;
 3. [x] message deletion и local-delete metadata;
-4. auth store и logout cleanup;
-5. chat actions/UI;
+4. [x] auth store и logout cleanup;
+5. [x] chat actions/UI;
 6. Outbox и Service Worker.
 
 Для каждого изменённого теста проверяется, что он утверждает продуктовый
@@ -155,23 +156,154 @@ narrowing через `unknown`: только объект с числовым `s
 `room.test.ts`, `RealtimeGateway.test.ts`, `useKeysBackup.test.ts` зелёные;
 `npm run lint` и `npm run build` без ошибок.
 
-**Полный snapshot suite (после среза 2.3):** 7 failed, 87 passed, 2 skipped
-(96). Целевые срезы 2.1–2.3 зелёные. Остаточные падения относятся к этапам
-2.4–2.5:
+**Срез 4 (auth store и logout cleanup).** `auth.test.ts` содержал stale
+expectation и не покрывал перенос refresh-throttle между аккаунтами:
 
-- `src/stores/auth/auth.test.ts` — 2 теста (auth store и logout cleanup);
-- `src/features/chat/chat.actions.test.tsx` — 5 тестов (chat actions/UI).
+- тест «валидная инициализация» вызывал `expect(UserMapper.toDomain)
+  .toHaveBeenCalledWith(...)`, хотя `UserMapper` не мокался (мокался только
+  `AuthService`). Убрано; тест теперь проверяет наблюдаемое состояние
+  (`pbUser`, `profile.id`/`profile.username`, `loading`), а не внутренний вызов
+  mapper;
+- тест «ошибка инициализации» мокал `NETWORK_ERROR` и ждал полной очистки
+  `pbUser`/`profile`. Это противоречит фактическому контракту `fetchProfile`:
+  сетевая ошибка не разлогинивает («сетевая ошибка — сохраняем сессию»), а
+  очистка происходит только при `UNAUTHORIZED_ERROR` (401). Сценарий разбит на
+  два: 401 → полная очистка + `AuthService.logout`; сетевая ошибка → локальная
+  сессия сохраняется, `loading` завершается, logout не вызывается;
+- падение `loading === true` было вызвано модульным throttle refresh (10s),
+  который живёт вне zustand-состояния и не сбрасывается `setState`. Тест смены
+  аккаунта сначала воспроизвёл, что второй `refreshSession` не вызывается при
+  быстром logout/login; `signOut` теперь сбрасывает throttle текущей сессии,
+  после чего сценарий проходит без искусственного ожидания 11 секунд. Для
+  изоляции остальных тестов используется monotonic fake `Date` в `beforeEach`.
 
-Отдельно suite сообщает об одном падении при загрузке
-`src/features/chat/chat.unread.test.tsx`: его `vi.mock` для
-`@/lib/services/room/queries` не содержит `findOrCreateDM`. Два integration
-теста (`media.repository.integration.test.ts` и `message.integration.test.ts`)
-не дают эксплуатационного evidence: `cleanupDatabase` безопасно блокирует
-очистку при текущем production PB URL, поэтому их setup завершается отказом и
-сценарии остаются пропущенными до запуска на изолированном staging.
+Подтверждённый store-level auth/logout контракт (тестами, 5/5):
 
-**Gate:** все актуальные unit tests зелёные; устаревшие сценарии либо переписаны,
-либо удалены с объяснением в commit.
+- `initialize` валидным пользователем → `pbUser` = актуальный record,
+  `profile` = доменный профиль текущего пользователя, `loading` = false;
+- ошибка 401 → `signOut` (очистка `pbUser`/`profile` + `AuthService.logout`),
+  `loading` = false, ложный success исключён;
+- сетевая ошибка → `loading` = false, локальная сессия сохраняется;
+- `signOut` вызывает `AuthService.logout()` и
+  `ChatRealtimeService.destroy()`, сбрасывает `pbUser`/`profile` и throttle
+  refresh текущей сессии. Внутренние эффекты этих сервисов (`pb.authStore.clear`,
+  `chatCryptoService.clearCache`, unsubscribes и `clearInterval`) этим тестом не
+  проверяются.
+- смена аккаунта: после `signOut` состояния предыдущего пользователя нет,
+  повторная инициализация другого пользователя не сохраняет `id` предыдущего.
+
+Реально проверено на уровне store: вызовы cleanup seams для auth state и
+realtime. Внутренняя очистка PocketBase auth session и realtime требует
+отдельных service-level тестов. Keystore (room keys), media/history cache, Outbox и CacheStorage при
+logout НЕ очищаются — это открытые пункты P1 в `ARCHITECTURE_AUDIT.md`
+(«очищать CacheStorage и IndexedDB при logout»), а не текущий контракт
+`signOut`. По правилу «не расширять cleanup до новых хранилищ без evidence»
+добавлять их в этот срез не стали. Криптопротокол и authorization rules не
+менялись; ADR не требуется. Изменены `app/src/stores/auth/auth.test.ts`,
+`app/src/stores/auth/index.ts` и этот план.
+
+**Срез 5 (chat actions/UI и chat.unread).** Исправлены stale test doubles и
+fixtures, без изменений production-кода:
+
+- `chat.actions.test.tsx`: fixture использует доменное поле `sender`, а не
+  устаревшее `sender_id`; проверки удаления и редактирования используют
+  фактические объектные контракты `{ messageId, isOwnMessage }` и
+  `{ messageId, newContent }`;
+- mock `@/lib/services/room` возвращает `getChatRoomData` с минимальным
+  корректным `Result`, необходимым для рендера `ChatRoom`, и сохраняет
+  `RoomService.findOrCreateDM`;
+- mock `@/lib/services/room/queries` стал partial mock через `importOriginal`:
+  переопределяется только `getRoomUnreadCounts`, остальные exports, включая
+  `findOrCreateDM`, сохраняются;
+- targeted acceptance: `chat.actions.test.tsx` 5/5 и
+  `chat.unread.test.tsx` 2/2.
+
+**Полный snapshot suite (после среза 2.5):** 98 passed, 2 skipped; 2 test files
+failed (100 тестов всего). Оставшиеся два failure — guarded integration setup:
+`media.repository.integration.test.ts` и `message.integration.test.ts` блокируют
+очистку при текущем production-like PB URL. Они не являются unit-регрессиями и
+должны запускаться только на изолированном staging.
+
+**Gate Stage 2.5:** targeted chat actions/unread, lint и build зелёные. Unit
+gate закрыт; integration/release evidence на изолированном staging ещё не
+получен. Commit пока не выполнялся.
+
+**Дополнение после среза 2.5 (безопасный integration setup).** Два
+интеграционных файла больше не падают в `beforeAll` на production-like PB URL:
+`isDatabaseCleanupAllowed()` используется как условие `describe.skipIf`. При
+обычном unit-запуске небезопасный контур получает `skipped`, а на изолированном
+staging с явным `VITE_ALLOW_DB_CLEANUP=true` тесты по-прежнему выполняются.
+Защитный throw в `cleanupDatabase` сохранён. Cleanup требует одновременно
+этот флаг и URL из allowlist локальных test/staging-контуров; production и
+неизвестные URL запрещены даже при флаге. Проверено: полный suite —
+`22 passed | 2 skipped` test files, `98 passed | 2 skipped` tests; lint, build и
+`git diff --check` зелёные. Это не является эксплуатационным evidence staging.
+
+**Hardening integration cleanup policy.** `isDatabaseCleanupAllowed()` теперь
+требует одновременно `VITE_ALLOW_DB_CLEANUP=true` и URL из явного allowlist
+локальных/test/staging-контуров (`localhost`, `127.0.0.1`, `dev-api`,
+`staging-api`, `test-api`). Production и неизвестные URL запрещены даже при
+флаге. Добавлены 11 unit-проверок policy; полный suite после изменения —
+`26 passed | 2 skipped` test files, `114 passed | 2 skipped` tests. Это не
+заменяет server-side запрет записи `is_test` пользователем и не является
+эксплуатационным staging evidence.
+
+Server-side hook в `infra/home/pb_hooks/security.pb.js` теперь запрещает
+обычному пользователю выставлять, снимать или менять `is_test` во всех
+коллекциях, где поле присутствует; superuser seed-контур сохранён. Runtime
+негативный тест этого правила на staging остаётся частью Stage 3.
+
+**Срез 6a (Outbox persistence contract).** Добавлены unit-тесты публичного
+`outboxDb` без подключения к PocketBase или реальной IndexedDB:
+
+- `add`/`getPending` возвращают только сообщения со статусом `pending` и не
+  смешивают пользовательские базы;
+- `updateStatus` изменяет статус и `retryCount`, `remove` удаляет запись;
+- targeted acceptance: `media-db.outbox.test.ts` 2/2.
+
+Это только persistence-wrapper evidence. Background Sync в `sw.ts`, повторная
+отправка, восстановление room key, retry после сети и logout-очистка Outbox ещё
+не подтверждены и не позволяют отметить пункт 6 как завершённый.
+
+**Полный snapshot suite (после среза 6a):** 100 passed, 2 skipped; 23 test
+files passed, 2 skipped. Lint, build и `git diff --check` зелёные.
+
+**Срез 6b (Background Sync retry policy).** Retry-решение вынесено в чистый
+`getOutboxFailureUpdate` и подключено в `sw.ts`:
+
+- при `retryCount < 5` сообщение остаётся `pending`, счётчик увеличивается на 1;
+- при `retryCount >= 5` сообщение получает статус `failed`, повторный retry не
+  планируется;
+- targeted acceptance: `outbox-retry.test.ts` 2/2.
+
+Это проверяет только детерминированную policy-функцию. Реальный Service Worker
+цикл (`sync` event, перечисление IndexedDB, room-key recovery, upload и
+доставка) ещё не запускался в браузере и не считается подтверждённым.
+
+**Полный snapshot suite (после среза 6b):** 102 passed, 2 skipped; 24 test
+files passed, 2 skipped. Lint, build и `git diff --check` зелёные.
+
+**Срез 6c (регистрация Service Worker).** Добавлена явная регистрация PWA
+worker через `virtual:pwa-register` в `main.tsx`; до этого `sw.ts` собирался,
+но браузерный worker не регистрировался. Добавлен Playwright smoke-тест
+`e2e/service-worker.spec.ts`, проверяющий `navigator.serviceWorker.ready`,
+scope и активный `sw.js`.
+
+Проверено в локальном Chromium mock-проекте: smoke 1/1. Это подтверждает
+регистрацию worker, но не полный Background Sync с реальным Outbox,
+IndexedDB, room-key recovery и доставкой сообщения.
+
+Повторная проверка Background Sync API показала: локальный Chromium видит
+`registration.sync`, но отклоняет `sync.register("sync-outbox")` с
+`UnknownError: Background Sync is disabled`; тест фиксирует это как `skipped`,
+а не как зелёное runtime-доказательство. В staging/браузере с включённым
+Background Sync этот тест должен быть выполнен отдельно.
+
+Генерируемые Playwright-файлы теперь направляются в игнорируемые
+`playwright-report/` и `test-results/`; соответствующие пути зафиксированы в
+`app/playwright.config.ts` и `app/.gitignore`. Исторический tracked
+`app/e2e-report` оставлен без изменений, чтобы не создавать удаления в
+текущем рабочем коммите.
 
 ## Этап 3. Security integration tests
 
