@@ -102,7 +102,20 @@ export function useKeysBackup() {
             try {
                 const text = evt.target?.result as string;
                 const backupData = JSON.parse(text) as KeyBackup;
-                await restoreKeys(backupData, backupPassword);
+                // restoreKeys возвращает Result<void, AppError>: при err ключи
+                // не восстановлены, поэтому показываем ошибку, а не success.
+                const result = await restoreKeys(backupData, backupPassword);
+                if (result.isErr()) {
+                    logger.error(
+                        "Ошибка при восстановлении ключей из бэкапа:",
+                        result.error,
+                    );
+                    setStatusMessage({
+                        type: COMPONENT_INTENT.DANGER,
+                        text: t("profile.restoreError"),
+                    });
+                    return;
+                }
                 setStatusMessage({
                     type: COMPONENT_INTENT.SUCCESS,
                     text: t("profile.keysRestored"),

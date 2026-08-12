@@ -5,20 +5,45 @@
 
 ## Текущая база
 
-На снимке от 9 августа 2026 года:
+На снимке от 12 августа 2026 года:
 
 - `npm run lint` — успешно;
 - `npm run build` — успешно;
-- unit suite: 13 failed, 50 passed, 2 skipped;
-- Vitest сообщил о 5 необработанных ошибках `EventSource is not defined`;
+- frontend suite: 9 failed, 77 passed, 2 skipped (после срезов Stage 2.1 и
+  2.2; room/repository slices зелёные);
+- после отложенной инициализации `RealtimeGateway` необработанных ошибок нет;
 - PocketBase integration tests пропущены.
 
 Падающие тесты нельзя просто удалить. Сначала для каждого теста определяется,
 устарел ли только mock/ожидание или тест обнаруживает реальный дефект.
 
+## Рабочий цикл обратной связи
+
+Для новой наблюдаемой возможности или исправления используется один узкий
+вертикальный срез: согласованная публичная test seam, один падающий тест,
+минимальная реализация до зелёного результата. Нельзя сначала написать набор
+тестов для предполагаемой архитектуры, а затем массово реализовывать их;
+следующий срез выбирается только после результата предыдущего.
+
+Граница теста должна быть зафиксирована в task/specification или отдельно
+согласована с владельцем. Тест проверяет продуктовый контракт, а не внутренние
+коллаборации, приватные методы или форму mock.
+
+Для bug или регрессии до выдвижения гипотез требуется запустить feedback loop,
+который воспроизводит точный симптом. Он должен быть agent-runnable,
+детерминированным и достаточно быстрым для повторного запуска. Если такой
+сигнал построить нельзя, нужно сообщить, что уже проверено, и запросить
+безопасный redacted артефакт, доступ к воспроизводящему окружению либо
+разрешение на временную диагностическую инструментализацию.
+
+Ни fixture, ни вывод этого цикла не могут содержать секреты, plaintext,
+полные endpoints, auth tokens, идентификаторы пользователей/комнат или данные
+Dev/Prod. Отладочные логи помечаются уникальным префиксом и удаляются до
+завершения задачи.
+
 ## Этап 1. Восстановить тестовый фундамент
 
-- убрать соединение `RealtimeGateway` как side effect импорта;
+- [x] убрать соединение `RealtimeGateway` как side effect импорта;
 - добавить управляемый mock EventSource/realtime transport;
 - создать единый PocketBase test adapter с актуальными `getOne`, `filter`,
   realtime и auth APIs;
@@ -26,15 +51,15 @@
 - запретить случайное обращение unit tests к Dev/Prod API;
 - добиться завершения Vitest без unhandled errors.
 
-**Gate:** suite завершается детерминированно, даже если отдельные assertions ещё
-падают.
+**Gate:** [x] suite завершается детерминированно, даже если отдельные assertions
+ещё падают. Оставшиеся падения ведутся отдельными вертикальными срезами этапа 2.
 
 ## Этап 2. Обновить существующие unit tests
 
 Очередность:
 
-1. crypto backup/recovery;
-2. room creation и key distribution;
+1. [x] crypto backup/recovery;
+2. [x] room creation и key distribution;
 3. message deletion и local-delete metadata;
 4. auth store и logout cleanup;
 5. chat actions/UI;
@@ -42,6 +67,50 @@
 
 Для каждого изменённого теста проверяется, что он утверждает продуктовый
 контракт, а не внутреннюю форму устаревшего mock.
+
+**Срез 1 (crypto backup/recovery).** `useKeysBackup.test.ts` утверждал
+устаревший контракт: моки `exportKeys`/`restoreKeys` возвращали raw-значение,
+`null` и бросали исключение. Актуальный контракт `useKeystore` —
+`Promise<Result<KeyBackup, AppError>>` / `Promise<Result<void, AppError>>`.
+Тесты переписаны под Result-контракт (`ok`/`err`+`appError`), fixture бэкапа
+содержит плейсхолдеры base64, а не реальные ключи. Заодно исправлен дефект
+реализации `handleRestoreBackup`: `err` от `restoreKeys` теперь показывает
+ошибку, а не success. Криптопротокол (`recovery.ts`) не менялся — ADR не
+требуется. Проверено: 8/8 тестов зелёные, lint и build проходят.
+
+**Срез 2 (room creation и key distribution).** `room.test.ts` утверждал
+устаревшие моки PocketBase: `getFullList` вместо актуального `getOne` для
+профилей, прямой `collection().create` вместо `pb.createBatch()`+
+`batch.send()`, отсутствие `pb.filter()`. Моки переписаны под реальные API
+через локальный тестовый адаптер (в рамках test scope, production PocketBase
+API не менялся). Тесты утверждают продуктовый контракт
+`createRoom -> Result<{ roomId, roomKey }, RoomError>`: нет участников или
+отсутствует профиль/ключ участника -> `MISSING_KEYS_ERROR` со списком
+отсутствующих ID; сетевая ошибка получения профиля (не 404) -> `DB_ERROR`;
+успех -> room key генерируется и шифруется отдельно на каждого участника,
+`createRoomWithMembersAndKeys` получает корректные room/members/keys,
+возвращаются `roomId` и `roomKey`; ошибка `encryptRoomKeysForMembers` не
+создаёт комнату (`CRYPTO_ERROR`); ошибка `batch.send` -> `DB_ERROR`;
+дублирующиеся user IDs не дублируют участников; в payload создания нет
+сырых ключей или plaintext. Заодно исправлен доказанный production-дефект в
+`userRepository.getProfilesByIds`: `Promise.all`+`getOne` отвергал весь
+батч при одном 404, делая недостижимым код `MISSING_KEYS_ERROR` со списком
+отсутствующих ID в `createRoom` и `addMembersToGroup`. Заменено на
+`Promise.allSettled`: 404 пропускается (вызывающий код вычисляет
+отсутствующих), прочие ошибки распространяются как `NETWORK_ERROR`.
+Криптопротокол не менялся — ADR не требуется. Проверено: 11/11 тестов
+зелёные, lint и build проходят, full suite без unhandled errors. Остаточные
+падения (9) относятся к этапам 2.3–2.5 (message deletion, auth store, chat
+actions/UI) и не затрагивают room creation.
+
+**Дополнение к срезу 2 (типобезопасная обработка ошибок repository).** В
+`userRepository.getProfilesByIds` сохранён стандартный discriminant
+`PromiseSettledResult.status === "fulfilled"`; самодельная константа не нужна.
+Для `PromiseRejectedResult.reason` используется `unknown` и явный type guard:
+только объект с числовым `status === 404` считается отсутствующим профилем;
+malformed-значения и остальные статусы возвращаются как `NETWORK_ERROR`.
+Добавлены 7 repository-level тестов с реальным `ClientResponseError`,
+структурным 404 и malformed rejection. Проверено: 7/7 тестов зелёные.
 
 **Gate:** все актуальные unit tests зелёные; устаревшие сценарии либо переписаны,
 либо удалены с объяснением в commit.

@@ -1,6 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import type { ChangeEvent } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ERROR_CODES } from "@/lib/constants";
+import type { KeyBackup } from "@/lib/crypto/recovery";
+import { appError, err, ok } from "@/lib/utils/result";
 import { useKeysBackup } from "./useKeysBackup";
 
 // Моки для хуков
@@ -27,7 +30,20 @@ vi.mock("@/hooks/useKeystore", () => ({
     }),
 }));
 
+// Fixture имеет структуру KeyBackup, но содержит плейсхолдеры base64,
+// а не настоящие криптографические материалы: UI-тест проверяет контракт
+// экспорта/восстановления, а не сам crypto. Реальные ключи в fixtures запрещены.
+const mockBackupData: KeyBackup = {
+    version: 1,
+    salt: "c2FsdC1wbGFjZWhvbGRlcg==", // base64("salt-placeholder") — не секрет
+    iv: "aXYtcGxhY2Vob2xkZXI=", // base64("iv-placeholder")
+    data: "ZGF0YS1wbGFjZWhvbGRlcg==", // base64("data-placeholder")
+};
+
 describe("useKeysBackup", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
     it("должен инициализироваться с дефолтными значениями", () => {
         const { result } = renderHook(() => useKeysBackup());
 
@@ -53,8 +69,8 @@ describe("useKeysBackup", () => {
 
         it("должен вызвать скачивание и сбросить пароль при успехе", async () => {
             const { result } = renderHook(() => useKeysBackup());
-            const mockBackupData = { keys: "blob" };
-            mockExportKeys.mockResolvedValueOnce(mockBackupData);
+            // exportKeys возвращает Result<KeyBackup, AppError> — успех это ok(backup)
+            mockExportKeys.mockResolvedValueOnce(ok(mockBackupData));
 
             await act(async () => {
                 result.current.setBackupPassword("secure-pass");
@@ -75,7 +91,15 @@ describe("useKeysBackup", () => {
 
         it("должен вывести ошибку, если экспорт ключей не удался", async () => {
             const { result } = renderHook(() => useKeysBackup());
-            mockExportKeys.mockResolvedValueOnce(null);
+            // Контракт: неудача — это err(AppError), а не null/throw
+            mockExportKeys.mockResolvedValueOnce(
+                err(
+                    appError(
+                        ERROR_CODES.CRYPTO_ERROR,
+                        "Не удалось создать бэкап",
+                    ),
+                ),
+            );
 
             await act(async () => {
                 result.current.setBackupPassword("secure-pass");
@@ -85,6 +109,7 @@ describe("useKeysBackup", () => {
                 await result.current.handleDownloadBackup();
             });
 
+            expect(mockDownloadJson).not.toHaveBeenCalled();
             expect(result.current.statusMessage).toEqual({
                 type: "danger",
                 text: "profile.backupError",
@@ -118,8 +143,9 @@ describe("useKeysBackup", () => {
 
         it("должен восстановить ключи при корректном файле и пароле", async () => {
             const { result } = renderHook(() => useKeysBackup());
-            const backupContent = { version: 1, encrypted: "data" };
-            const mockEvent = createMockFile(JSON.stringify(backupContent));
+            // restoreKeys возвращает Result<void, AppError> — успех это ok(undefined)
+            mockRestoreKeys.mockResolvedValueOnce(ok(undefined));
+            const mockEvent = createMockFile(JSON.stringify(mockBackupData));
 
             await act(async () => {
                 result.current.setBackupPassword("valid-pass");
@@ -133,7 +159,7 @@ describe("useKeysBackup", () => {
             });
 
             expect(mockRestoreKeys).toHaveBeenCalledWith(
-                backupContent,
+                mockBackupData,
                 "valid-pass",
             );
             expect(result.current.statusMessage?.type).toBe("success");
@@ -163,10 +189,18 @@ describe("useKeysBackup", () => {
             });
         });
 
-        it("должен вывести ошибку, если restoreKeys бросил исключение", async () => {
+        it("должен вывести ошибку, если restoreKeys вернул ошибку", async () => {
             const { result } = renderHook(() => useKeysBackup());
-            const mockEvent = createMockFile(JSON.stringify({ data: "ok" }));
-            mockRestoreKeys.mockRejectedValueOnce(new Error("fail"));
+            const mockEvent = createMockFile(JSON.stringify(mockBackupData));
+            // Контракт: restoreKeys не бросает, а возвращает err(AppError)
+            mockRestoreKeys.mockResolvedValueOnce(
+                err(
+                    appError(
+                        ERROR_CODES.DECRYPT_FAILED_ERROR,
+                        "Не удалось расшифровать бэкап",
+                    ),
+                ),
+            );
 
             await act(async () => {
                 result.current.setBackupPassword("valid-pass");

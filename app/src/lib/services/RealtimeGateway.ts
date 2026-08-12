@@ -28,10 +28,7 @@ class RealtimeGateway {
     private maxBackoffDelay = 30000;
     private isReconnecting = false;
     private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    private constructor() {
-        this.initConnectionListeners();
-    }
+    private connectionListenersInitialized = false;
 
     /**
      * Возвращает единственный инстанс RealtimeGateway.
@@ -44,6 +41,11 @@ class RealtimeGateway {
     }
 
     private initConnectionListeners(): void {
+        if (this.connectionListenersInitialized) {
+            return;
+        }
+        this.connectionListenersInitialized = true;
+
         if (pb.realtime) {
             pb.realtime.onDisconnect = (activeSubscriptions: Array<string>) => {
                 if (activeSubscriptions.length > 0) {
@@ -123,6 +125,8 @@ class RealtimeGateway {
         collection: string,
         callback: RealtimeCallback<T>,
     ): Promise<() => void> {
+        this.initConnectionListeners();
+
         if (!this.listeners.has(collection)) {
             this.listeners.set(collection, new Set());
         }

@@ -161,8 +161,10 @@ Hook регистрации использует отсутствующие в s
 - закрепить версии PocketBase, LiveKit, frontend image и остальных контейнеров;
 - исправить task queue: типы задач, планирование, ownership и минимизацию
   payload;
-- исправить формат call push subscription;
-- убрать side effect подключения `RealtimeGateway` при импорте;
+- [x] исправить формат call push subscription: новые задачи используют вложенный
+  `keys`, gateway сохраняет совместимость со старым плоским форматом;
+- [x] убрать side effect подключения `RealtimeGateway` при импорте; проверено
+  отдельным Vitest seam-тестом и полным suite без unhandled `EventSource` errors;
 - исправить lifecycle silent refresh;
 - зашифровать либо исключить чувствительные данные Outbox;
 - очищать CacheStorage и IndexedDB при logout;

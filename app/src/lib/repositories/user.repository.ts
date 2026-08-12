@@ -16,6 +16,32 @@ import type {
 import { appError, err, fromPromise, ok } from "../utils/result";
 import { UserMapper } from "./mappers/userMapper";
 
+/**
+ * Проверяет, что неизвестная ошибка является 404 от PocketBase.
+ *
+ * Настоящий PocketBase бросает `ClientResponseError`, у которого `status` —
+ * число (`new ClientResponseError({ status, ... })`). Тестовые адаптеры и
+ * server-side hooks могут бросать структурно эквивалентный объект вида
+ * `{ status: 404 }`. Любое другое значение (null, строка, пустой/искажённый
+ * объект, обычный `Error`, `{ status: "404" }` со строкой) НЕ считается 404,
+ * чтобы не маскировать настоящую ошибку и дать вызывающему коду вернуть
+ * `NETWORK_ERROR`.
+ */
+function hasStatusProperty(value: object): value is { status: unknown } {
+    return "status" in value;
+}
+
+function isNotFoundError(reason: unknown): boolean {
+    if (
+        typeof reason !== "object" ||
+        reason === null ||
+        !hasStatusProperty(reason)
+    ) {
+        return false;
+    }
+    return typeof reason.status === "number" && reason.status === 404;
+}
+
 export const userRepository = {
     /**
      * Получить всех пользователей системы
@@ -107,7 +133,12 @@ export const userRepository = {
     },
 
     /**
-     * Получить профили пользователей по списку ID
+     * Получить профили пользователей по списку ID.
+     *
+     * Возвращает только найденные профили. Запись, отсутствующая в БД (404),
+     * пропускается, чтобы вызывающий код мог определить отсутствующих
+     * участников и вернуть безопасный MISSING_KEYS_ERROR со списком ID.
+     * Сетевые и прочие ошибки (не 404) распространяются как NETWORK_ERROR.
      */
     getProfilesByIds: async (
         userIds: string[],
@@ -118,25 +149,36 @@ export const userRepository = {
             return ok([]);
         }
 
-        return fromPromise(
-            Promise.all(
-                userIds.map((id) =>
-                    pb.collection(DB_TABLES.USERS).getOne<{
-                        id: string;
-                        public_key_x25519: string;
-                    }>(id, {
-                        fields: `${USER_FIELDS.ID},${USER_FIELDS.PUBLIC_KEY_X25519}`,
-                    }),
-                ),
+        const results = await Promise.allSettled(
+            userIds.map((id) =>
+                pb.collection(DB_TABLES.USERS).getOne<{
+                    id: string;
+                    public_key_x25519: string;
+                }>(id, {
+                    fields: `${USER_FIELDS.ID},${USER_FIELDS.PUBLIC_KEY_X25519}`,
+                }),
             ),
-            (e: unknown) => {
-                return appError(
-                    ERROR_CODES.NETWORK_ERROR,
-                    "Ошибка получения профилей",
-                    e,
-                );
-            },
         );
+
+        const profiles: { id: string; public_key_x25519: string }[] = [];
+        for (const r of results) {
+            if (r.status === "fulfilled") {
+                profiles.push(r.value);
+                continue;
+            }
+            // 404 = запись не найдена — пропускаем; вызывающий код вычислит
+            // отсутствующих по расхождению длин и вернёт MISSING_KEYS_ERROR.
+            if (!isNotFoundError(r.reason)) {
+                return err(
+                    appError(
+                        ERROR_CODES.NETWORK_ERROR,
+                        "Ошибка получения профилей",
+                        r.reason,
+                    ),
+                );
+            }
+        }
+        return ok(profiles);
     },
 
     /**
