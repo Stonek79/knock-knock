@@ -13,34 +13,9 @@ import type {
     UserSecurityKeys,
     UserSort,
 } from "../types";
+import { isNotFoundError } from "../utils/errors";
 import { appError, err, fromPromise, ok } from "../utils/result";
 import { UserMapper } from "./mappers/userMapper";
-
-/**
- * Проверяет, что неизвестная ошибка является 404 от PocketBase.
- *
- * Настоящий PocketBase бросает `ClientResponseError`, у которого `status` —
- * число (`new ClientResponseError({ status, ... })`). Тестовые адаптеры и
- * server-side hooks могут бросать структурно эквивалентный объект вида
- * `{ status: 404 }`. Любое другое значение (null, строка, пустой/искажённый
- * объект, обычный `Error`, `{ status: "404" }` со строкой) НЕ считается 404,
- * чтобы не маскировать настоящую ошибку и дать вызывающему коду вернуть
- * `NETWORK_ERROR`.
- */
-function hasStatusProperty(value: object): value is { status: unknown } {
-    return "status" in value;
-}
-
-function isNotFoundError(reason: unknown): boolean {
-    if (
-        typeof reason !== "object" ||
-        reason === null ||
-        !hasStatusProperty(reason)
-    ) {
-        return false;
-    }
-    return typeof reason.status === "number" && reason.status === 404;
-}
 
 export const userRepository = {
     /**
@@ -104,8 +79,7 @@ export const userRepository = {
             pb.collection(DB_TABLES.USERS).getFirstListItem<UserRecord>(filter),
             (e: unknown): null | UserRepoError => {
                 // PocketBase бросает 404 если ничего не найдено
-                const error = e as { status?: number };
-                if (error?.status === 404) {
+                if (isNotFoundError(e)) {
                     return null;
                 }
                 return appError(

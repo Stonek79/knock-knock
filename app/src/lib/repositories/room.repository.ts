@@ -21,6 +21,7 @@ import type {
     RoomsResponse,
     RoomWithMembers,
 } from "../types";
+import { isNotFoundError } from "../utils/errors";
 import { appError, err, fromPromise, ok } from "../utils/result";
 import { type PBRoomExpanded, RoomMapper } from "./mappers/roomMapper";
 import { messageRepository } from "./message.repository";
@@ -265,8 +266,7 @@ export const roomRepository = {
                     { $autoCancel: false },
                 ),
             (e: unknown): RoomMemberRecord | null | RoomRepoError => {
-                const error = e as { status?: number };
-                if (error?.status === 404) {
+                if (isNotFoundError(e)) {
                     return null;
                 }
                 return appError(
@@ -322,8 +322,7 @@ export const roomRepository = {
                     },
                 ),
             (e: unknown): RoomRepoError => {
-                const error = e as { status?: number };
-                if (error?.status === 404) {
+                if (isNotFoundError(e)) {
                     // Возвращаем специальную ошибку или null через Result позже
                     return appError(
                         ERROR_CODES.NOT_FOUND_ERROR,
@@ -484,8 +483,7 @@ export const roomRepository = {
                     { $autoCancel: false },
                 ),
             (e: unknown) => {
-                const error = e as { status?: number };
-                if (error?.status !== 404) {
+                if (!isNotFoundError(e)) {
                     return appError(
                         ERROR_CODES.NETWORK_ERROR,
                         "Ошибка при поиске участника",

@@ -21,6 +21,24 @@ export function isNetworkError(error: unknown): boolean {
 }
 
 /**
+ * Проверяет, является ли значение ошибкой PocketBase «запись не найдена».
+ * Только объект с числовым `status === 404` считается 404. Любое другое
+ * значение (null, строка, пустой/искажённый объект, обычный Error,
+ * `{ status: "404" }` со строкой) НЕ считается 404, чтобы не маскировать
+ * настоящую ошибку и дать вызывающему коду вернуть NETWORK_ERROR.
+ */
+export function isNotFoundError(reason: unknown): boolean {
+    if (typeof reason !== "object" || reason === null) {
+        return false;
+    }
+    return (
+        "status" in reason &&
+        typeof reason.status === "number" &&
+        reason.status === 404
+    );
+}
+
+/**
  * Маппит ошибку PocketBase в внутренний код ошибки (ErrorCode)
  */
 export function mapPbErrorCode(error: unknown): ErrorCode {

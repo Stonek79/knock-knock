@@ -9,8 +9,8 @@
 
 - `npm run lint` — успешно;
 - `npm run build` — успешно;
-- frontend suite: 9 failed, 77 passed, 2 skipped (после срезов Stage 2.1 и
-  2.2; room/repository slices зелёные);
+- frontend suite: 7 failed, 87 passed, 2 skipped (после среза Stage 2.3;
+  room/repository/message-deletion slices зелёные);
 - после отложенной инициализации `RealtimeGateway` необработанных ошибок нет;
 - PocketBase integration tests пропущены.
 
@@ -60,7 +60,7 @@ Dev/Prod. Отладочные логи помечаются уникальны�
 
 1. [x] crypto backup/recovery;
 2. [x] room creation и key distribution;
-3. message deletion и local-delete metadata;
+3. [x] message deletion и local-delete metadata;
 4. auth store и logout cleanup;
 5. chat actions/UI;
 6. Outbox и Service Worker.
@@ -111,6 +111,64 @@ actions/UI) и не затрагивают room creation.
 malformed-значения и остальные статусы возвращаются как `NETWORK_ERROR`.
 Добавлены 7 repository-level тестов с реальным `ClientResponseError`,
 структурным 404 и malformed rejection. Проверено: 7/7 тестов зелёные.
+
+**Срез 3 (message deletion и local-delete metadata).** `message.test.ts`
+утверждал устаревшие моки и ожидания. Падения были stale mocks/expectations, а
+не дефектами удаления:
+
+- тест «своё сообщение» мокал только `update` и ожидал soft-delete, тогда как
+  фактический контракт: сервис сначала вызывает `getMessageById` (`getOne`),
+  затем для своего/admin сообщения вызывает `hardDeleteMessage` (`pb delete`);
+- тест «чужое сообщение» ожидал оператор `{"deleted_by+": "my-id"}`, тогда как
+  фактический контракт пишет `metadata.deleted_by` как массив внутри поля
+  `metadata` через `updateMessage`, сохраняя остальные metadata.
+
+Тесты переписаны под фактический PocketBase-контракт с локальным тестовым
+адаптером (`getOne/update/delete`, мок `mediaService`/`mediaDb` — без
+IndexedDB/облака). Покрыто 12 сценариев: своё (hard delete) и его идемпотентность,
+чужое (добавление `currentUserId` в `metadata.deleted_by` с сохранением остальных
+metadata) и его идемпотентность, NOT_FOUND (очистка локальных media + success,
+без лишнего update/delete), ошибки repository update/delete → `DB_ERROR` без
+ложного success, media cleanup (в т.ч. не-фатальный сбой облачной очистки).
+
+Заодно исправлен доказанный производственный дефект в
+`messageRepository.getMessageById`: он маппил ЛЮБУЮ ошибку `getOne` в
+`NOT_FOUND_ERROR`, из-за чего сетевой сбой при загрузке сообщения попадал в ветку
+«не найдено → успех» и `deleteMessage` возвращал ложный success. Теперь только
+настоящий `status === 404` маппится в `NOT_FOUND_ERROR`, прочие ошибки —
+в `NETWORK_ERROR`, поэтому `deleteMessage` возвращает `DB_ERROR` при сетевом
+сбое (по шаблону `userRepository.getProfilesByIds`). Криптопротокол и
+authorization rules не менялись; клиентский `isOwnMessage`/`isAdmin` не является
+server-side авторизацией и unit-тестами не подтверждается. Путь удаления
+(messages/room_members) на сервере не менялся, ADR не требуется.
+
+**Вынос общего type-guard'а.** Проверка «error это 404» вынесена в общий
+`isNotFoundError(reason: unknown)` в `@/lib/utils/errors.ts` (cast-free
+narrowing через `unknown`: только объект с числовым `status === 404`). Guard
+используется во всех call-site'ах, убрав дублирование и касты
+`as { status?: number }`: `messageRepository.getMessageById`,
+`userRepository.getByUsername`/`getProfilesByIds`,
+`roomRepository` (3 места) и `pushRepository.findByEndpoint`. Семантика guard
+для 404/network совпадает с прежней, поэтому поведение и тесты не изменились.
+
+Проверено targeted: `message.test.ts` 12/12, `user.repository.test.ts`,
+`room.test.ts`, `RealtimeGateway.test.ts`, `useKeysBackup.test.ts` зелёные;
+`npm run lint` и `npm run build` без ошибок.
+
+**Полный snapshot suite (после среза 2.3):** 7 failed, 87 passed, 2 skipped
+(96). Целевые срезы 2.1–2.3 зелёные. Остаточные падения относятся к этапам
+2.4–2.5:
+
+- `src/stores/auth/auth.test.ts` — 2 теста (auth store и logout cleanup);
+- `src/features/chat/chat.actions.test.tsx` — 5 тестов (chat actions/UI).
+
+Отдельно suite сообщает об одном падении при загрузке
+`src/features/chat/chat.unread.test.tsx`: его `vi.mock` для
+`@/lib/services/room/queries` не содержит `findOrCreateDM`. Два integration
+теста (`media.repository.integration.test.ts` и `message.integration.test.ts`)
+не дают эксплуатационного evidence: `cleanupDatabase` безопасно блокирует
+очистку при текущем production PB URL, поэтому их setup завершается отказом и
+сценарии остаются пропущенными до запуска на изолированном staging.
 
 **Gate:** все актуальные unit tests зелёные; устаревшие сценарии либо переписаны,
 либо удалены с объяснением в commit.

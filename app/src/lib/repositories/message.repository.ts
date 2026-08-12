@@ -16,6 +16,7 @@ import type {
     Result,
     UnreadCount,
 } from "../types";
+import { isNotFoundError } from "../utils/errors";
 import { appError, err, fromPromise, ok } from "../utils/result";
 import { MessageMapper } from "./mappers/messageMapper";
 
@@ -35,9 +36,20 @@ export const messageRepository = {
         return fromPromise(
             pb.collection(DB_TABLES.MESSAGES).getOne<PBMessage>(messageId),
             (e: unknown) => {
+                // Только настоящий 404 означает «сообщение не найдено». Сетевые
+                // и прочие ошибки не должны маскироваться под NOT_FOUND: иначе
+                // deleteMessage посчитал бы сбой получения сообщения успешным
+                // удалением и вернул ложный success.
+                if (isNotFoundError(e)) {
+                    return appError(
+                        ERROR_CODES.NOT_FOUND_ERROR,
+                        `Сообщение с ID ${messageId} не найдено`,
+                        e,
+                    );
+                }
                 return appError(
-                    ERROR_CODES.NOT_FOUND_ERROR,
-                    `Сообщение с ID ${messageId} не найдено`,
+                    ERROR_CODES.NETWORK_ERROR,
+                    `Ошибка получения сообщения ${messageId}`,
                     e,
                 );
             },

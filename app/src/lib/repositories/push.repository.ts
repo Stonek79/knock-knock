@@ -6,7 +6,7 @@ import type {
     PushSubscriptionsResponse,
     Result,
 } from "../types";
-import { mapPbErrorCode } from "../utils/errors";
+import { isNotFoundError, mapPbErrorCode } from "../utils/errors";
 import { appError, fromPromise } from "../utils/result";
 
 type PushRepoError = AppError<string>;
@@ -26,7 +26,7 @@ export const pushRepository = {
                 )
                 .catch((e) => {
                     // Если ошибка 404 (сообщения нет) - возвращаем null
-                    if (e.status === 404) {
+                    if (isNotFoundError(e)) {
                         return null;
                     }
 
