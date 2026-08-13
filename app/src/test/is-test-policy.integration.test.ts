@@ -8,7 +8,7 @@ import {
 const describeIntegration = describe.skipIf(!isDatabaseCleanupAllowed());
 
 describeIntegration("PocketBase is_test policy", () => {
-    let folderId: string | undefined;
+    const createdIds: { room?: string; member?: string } = {};
 
     beforeAll(async () => {
         await cleanupDatabase();
@@ -18,16 +18,21 @@ describeIntegration("PocketBase is_test policy", () => {
     });
 
     afterAll(async () => {
-        if (folderId) {
-            await pb.collection("user_folders").delete(folderId);
+        if (createdIds.member) {
+            await pb.collection("room_members").delete(createdIds.member);
+        }
+        if (createdIds.room) {
+            await pb.collection("rooms").delete(createdIds.room);
         }
         pb.authStore.clear();
     });
 
     it("не позволяет обычному пользователю создать is_test=true", async () => {
         await expect(
-            pb.collection("user_folders").create({
-                user: pb.authStore.model?.id,
+            pb.collection("rooms").create({
+                created_by: pb.authStore.model?.id,
+                type: "group",
+                visibility: "private",
                 name: "runtime-policy-check-create",
                 is_test: true,
             }),
@@ -35,20 +40,31 @@ describeIntegration("PocketBase is_test policy", () => {
     });
 
     it("не позволяет обычному пользователю изменить is_test", async () => {
-        const folder = await pb.collection("user_folders").create({
-            user: pb.authStore.model?.id,
+        const userId = pb.authStore.model?.id;
+        const room = await pb.collection("rooms").create({
+            created_by: userId,
+            type: "group",
+            visibility: "private",
             name: "runtime-policy-check-update",
             is_test: false,
         });
-        folderId = folder.id;
+        createdIds.room = room.id;
+
+        const member = await pb.collection("room_members").create({
+            room: room.id,
+            user: userId,
+            role: "owner",
+            unread_count: 0,
+        });
+        createdIds.member = member.id;
 
         await expect(
-            pb.collection("user_folders").update(folder.id, {
+            pb.collection("rooms").update(room.id, {
                 is_test: true,
             }),
         ).rejects.toThrow();
 
-        const persisted = await pb.collection("user_folders").getOne(folder.id);
+        const persisted = await pb.collection("rooms").getOne(room.id);
         expect(persisted.is_test).not.toBe(true);
     });
 });

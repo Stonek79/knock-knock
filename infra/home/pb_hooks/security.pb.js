@@ -22,7 +22,7 @@ const TEST_MARKED_COLLECTIONS = [
 
 for (const collectionName of TEST_MARKED_COLLECTIONS) {
 	onRecordCreateRequest((e) => {
-		const authRecord = e.requestInfo().authRecord;
+		const authRecord = e.auth;
 		if (authRecord?.collection().name === "_superusers") {
 			return e.next();
 		}
@@ -36,7 +36,7 @@ for (const collectionName of TEST_MARKED_COLLECTIONS) {
 	}, collectionName);
 
 	onRecordUpdateRequest((e) => {
-		const authRecord = e.requestInfo().authRecord;
+		const authRecord = e.auth;
 		if (authRecord?.collection().name === "_superusers") {
 			return e.next();
 		}
@@ -53,7 +53,7 @@ for (const collectionName of TEST_MARKED_COLLECTIONS) {
 
 // 1. ЗАЩИТА ОТ ЭСКАЛАЦИИ ПРИВИЛЕГИЙ ПРИ СОЗДАНИИ (Создание админов и владельцев)
 onRecordCreateRequest((e) => {
-	const authRecord = e.requestInfo().authRecord;
+	const authRecord = e.auth;
 	if (!authRecord || authRecord.collection().name !== "users") {
 		return e.next();
 	}
@@ -99,7 +99,7 @@ onRecordCreateRequest((e) => {
 
 // 2. ЗАЩИТА ОТ ЭСКАЛАЦИИ ПРИВИЛЕГИЙ ПРИ ОБНОВЛЕНИИ (Смена ролей)
 onRecordUpdateRequest((e) => {
-	const authRecord = e.requestInfo().authRecord;
+	const authRecord = e.auth;
 	if (!authRecord || authRecord.collection().name !== "users") {
 		return e.next();
 	}
@@ -149,7 +149,7 @@ onRecordDeleteRequest((e) => {
 
 // 4. ЗАЩИТА ОТ ИЗМЕНЕНИЯ ЧУЖИХ СООБЩЕНИЙ
 onRecordUpdateRequest((e) => {
-	const authRecord = e.requestInfo().authRecord;
+	const authRecord = e.auth;
 	if (!authRecord || authRecord.collection().name !== "users") {
 		return e.next();
 	}

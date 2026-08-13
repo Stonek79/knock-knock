@@ -226,10 +226,11 @@ onRecordCreateRequest((e) => {
 		}
 		const invites = e.app.findRecordsByFilter(
 			"invites",
-			`code = '${inviteCodeRaw}' && status = 'active'`,
+			"code = {:inviteCode} && status = 'active'",
 			"",
 			1,
 			0,
+			{ inviteCode: inviteCodeRaw },
 		);
 		if (invites.length === 0) {
 			throw $errors.badRequest("Invalid or inactive invite code");
@@ -998,8 +999,14 @@ routerAdd("GET", "/api/custom/users/search", (e) => {
 	}
 
 	try {
-		const filter = `profile_type = 'public' && (username ~ '${q}' || display_name ~ '${q}')`;
-		const users = $app.findRecordsByFilter("users", filter, "-created", 50, 0);
+		const users = $app.findRecordsByFilter(
+			"users",
+			"profile_type = 'public' && (username ~ {:query} || display_name ~ {:query})",
+			"-created",
+			50,
+			0,
+			{ query: q },
+		);
 
 		return e.json(
 			200,

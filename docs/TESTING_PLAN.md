@@ -260,6 +260,11 @@ Server-side hook в `infra/home/pb_hooks/security.pb.js` теперь запре
 `26 passed | 3 skipped` test files, `114 passed | 4 skipped` tests. Browser-only
 test setup теперь безопасно загружается и в Node integration-конфиге.
 
+В `infra/home/pb_hooks/main.pb.js` фильтры проверки `invite_code` и поиска
+пользователей по `q` переведены на PocketBase parameter binding. Эти значения
+больше не конкатенируются в filter expression; runtime-проверка endpoint’ов
+остаётся частью следующего security integration среза.
+
 **Срез 6a (Outbox persistence contract).** Добавлены unit-тесты публичного
 `outboxDb` без подключения к PocketBase или реальной IndexedDB:
 
