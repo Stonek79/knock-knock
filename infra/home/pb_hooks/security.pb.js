@@ -41,7 +41,12 @@ for (const collectionName of TEST_MARKED_COLLECTIONS) {
 			return e.next();
 		}
 
-		const oldRecord = e.app.findRecordById(collectionName, e.record.id);
+		// PocketBase executes registered callbacks in an isolated JSVM context:
+		// do not rely on the loop variable captured during hook registration.
+		const oldRecord = e.app.findRecordById(
+			e.record.collection().name,
+			e.record.id,
+		);
 		if (oldRecord.getBool("is_test") !== e.record.getBool("is_test")) {
 			throw new BadRequestError(
 				"Security Policy: users cannot create, promote, or demote is_test records.",

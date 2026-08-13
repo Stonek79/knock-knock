@@ -252,9 +252,13 @@ Server-side hook в `infra/home/pb_hooks/security.pb.js` теперь запре
 обычному пользователю выставлять, снимать или менять `is_test` во всех
 коллекциях, где поле присутствует; superuser seed-контур сохранён. Runtime
 Негативный runtime-тест добавлен в
-`src/test/is-test-policy.integration.test.ts`, но запуск 12 августа 2026 года
-заблокирован недоступностью DNS `dev-api.whoami.ninja` (`ENOTFOUND`). Поэтому
-его результат остаётся `NO-GO` до запуска из сети с доступом к staging.
+`src/test/is-test-policy.integration.test.ts`. Запуск на Dev уже достиг двух
+негативных assertions, но завершился ошибкой cleanup: тест пытался удалить
+owner-запись `room_members`, что сервер намеренно запрещает. Одновременно
+runtime-логи выявили `ReferenceError` из-за захвата `collectionName` в
+изолированном JSVM callback. Cleanup переведён на поддерживаемое удаление
+комнаты, hook получает имя коллекции из самого record. Результат остаётся
+`NO-GO` до повторного запуска после deploy этих правок.
 
 Полный локальный suite после добавления guarded integration-файла:
 `26 passed | 3 skipped` test files, `114 passed | 4 skipped` tests. Browser-only

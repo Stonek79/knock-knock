@@ -8,7 +8,7 @@ import {
 const describeIntegration = describe.skipIf(!isDatabaseCleanupAllowed());
 
 describeIntegration("PocketBase is_test policy", () => {
-    const createdIds: { room?: string; member?: string } = {};
+    const createdIds: { room?: string } = {};
 
     beforeAll(async () => {
         await cleanupDatabase();
@@ -18,10 +18,9 @@ describeIntegration("PocketBase is_test policy", () => {
     });
 
     afterAll(async () => {
-        if (createdIds.member) {
-            await pb.collection("room_members").delete(createdIds.member);
-        }
         if (createdIds.room) {
+            // Security hook deliberately forbids deleting the owner membership.
+            // Deleting its room is the supported cleanup path.
             await pb.collection("rooms").delete(createdIds.room);
         }
         pb.authStore.clear();
@@ -56,7 +55,7 @@ describeIntegration("PocketBase is_test policy", () => {
             role: "owner",
             unread_count: 0,
         });
-        createdIds.member = member.id;
+        expect(member.id).toBeTruthy();
 
         await expect(
             pb.collection("rooms").update(room.id, {
