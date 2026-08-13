@@ -4,6 +4,9 @@
 		"name": "users",
 		"type": "auth",
 		"system": false,
+		"authAlert": {
+			"enabled": false
+		},
 		"fields": [
 			{
 				"id": "text3208210256",

@@ -252,13 +252,21 @@ Server-side hook в `infra/home/pb_hooks/security.pb.js` теперь запре
 обычному пользователю выставлять, снимать или менять `is_test` во всех
 коллекциях, где поле присутствует; superuser seed-контур сохранён. Runtime
 Негативный runtime-тест добавлен в
-`src/test/is-test-policy.integration.test.ts`. Запуск на Dev уже достиг двух
-негативных assertions, но завершился ошибкой cleanup: тест пытался удалить
-owner-запись `room_members`, что сервер намеренно запрещает. Одновременно
-runtime-логи выявили `ReferenceError` из-за захвата `collectionName` в
-изолированном JSVM callback. Cleanup переведён на поддерживаемое удаление
-комнаты, hook получает имя коллекции из самого record. Результат остаётся
-`NO-GO` до повторного запуска после deploy этих правок.
+`src/test/is-test-policy.integration.test.ts`. Повторный запуск на Dev после
+deploy правок прошёл: `2 passed`. Он подтвердил, что обычный пользователь не
+может создать запись с `is_test=true` и не может изменить маркер у уже
+созданной записи; cleanup корректно удаляет комнату, каскадно удаляя owner
+membership. Ошибка JSVM-захвата `collectionName` устранена. Этот конкретный
+runtime-срез закрыт; общий release `NO-GO` остаётся из-за независимых P0/P1
+пунктов `ARCHITECTURE_AUDIT.md`.
+
+**Отключение устаревшего login alert.** Nemo не использует email-уведомления о
+входе с нового устройства. В `pb_schema.json` для auth-коллекции `users`
+зафиксировано `authAlert.enabled: false`; отдельный node:test не допускает
+случайно вернуть этот флаг при изменении schema. Для уже развёрнутых Dev/Prod
+значение нужно один раз применить к collection `users` через PocketBase Admin
+UI. Полный import schema ради одного флага не выполнять: restart контейнера
+сам настройки коллекции не изменяет.
 
 Полный локальный suite после добавления guarded integration-файла:
 `26 passed | 3 skipped` test files, `114 passed | 4 skipped` tests. Browser-only
