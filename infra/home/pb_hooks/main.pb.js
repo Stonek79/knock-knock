@@ -240,10 +240,10 @@ onRecordCreateRequest((e) => {
 		// Подменяем код на id инвайта для связи
 		e.record.set("invite_code", invite.id);
 	} catch (err) {
-		if (err.message?.includes("Bot detected")) {
-			throw err;
-		}
-		console.error("❌ [HOOK_CRASH]:", err.message || err);
+		console.error("❌ [REGISTRATION_BLOCKED]:", err.message || err);
+		// Invite validation is a security boundary. Never continue registration
+		// after a failed lookup or malformed invite payload.
+		throw err;
 	}
 
 	return e.next();

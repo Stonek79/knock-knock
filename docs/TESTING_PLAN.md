@@ -274,8 +274,11 @@ test setup теперь безопасно загружается и в Node int
 
 В `infra/home/pb_hooks/main.pb.js` фильтры проверки `invite_code` и поиска
 пользователей по `q` переведены на PocketBase parameter binding. Эти значения
-больше не конкатенируются в filter expression; runtime-проверка endpoint’ов
-остаётся частью следующего security integration среза.
+больше не конкатенируются в filter expression. В том же срезе зафиксирован
+fail-closed registration: ошибка проверки invite больше не проглатывается и не
+может продолжить создание пользователя. Runtime-проверка endpoint’ов добавлена
+в `src/test/security-parameter-binding.integration.test.ts`; её staging/Dev
+результат нужно подтвердить после deploy.
 
 **Срез 6a (Outbox persistence contract).** Добавлены unit-тесты публичного
 `outboxDb` без подключения к PocketBase или реальной IndexedDB:
