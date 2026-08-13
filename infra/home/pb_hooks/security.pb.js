@@ -20,14 +20,10 @@ const TEST_MARKED_COLLECTIONS = [
 	"call_logs",
 ];
 
-function isSuperuserRequest(e) {
-	const authRecord = e.requestInfo().authRecord;
-	return authRecord?.collection().name === "_superusers";
-}
-
 for (const collectionName of TEST_MARKED_COLLECTIONS) {
 	onRecordCreateRequest((e) => {
-		if (isSuperuserRequest(e)) {
+		const authRecord = e.requestInfo().authRecord;
+		if (authRecord?.collection().name === "_superusers") {
 			return e.next();
 		}
 
@@ -40,7 +36,8 @@ for (const collectionName of TEST_MARKED_COLLECTIONS) {
 	}, collectionName);
 
 	onRecordUpdateRequest((e) => {
-		if (isSuperuserRequest(e)) {
+		const authRecord = e.requestInfo().authRecord;
+		if (authRecord?.collection().name === "_superusers") {
 			return e.next();
 		}
 
