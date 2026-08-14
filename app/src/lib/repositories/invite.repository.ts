@@ -69,9 +69,10 @@ export const inviteRepository = {
         return fromPromise(
             pb
                 .collection(DB_TABLES.INVITES)
-                .getFirstListItem<InvitesResponse<T>>(`token="${token}"`, {
-                    expand: "room,created_by",
-                }),
+                .getFirstListItem<InvitesResponse<T>>(
+                    pb.filter("token = {:token}", { token }),
+                    { expand: "room,created_by" },
+                ),
             (e: unknown) =>
                 appError(
                     ERROR_CODES.NOT_FOUND_ERROR,
@@ -119,7 +120,7 @@ export const inviteRepository = {
         roomKeyEncrypted: string,
     ): Promise<Result<boolean, InviteRepoError>> => {
         return fromPromise(
-            pb.send("/api/invites/join", {
+            pb.send(API_ROUTES.INVITES_JOIN, {
                 method: "POST",
                 body: {
                     token,

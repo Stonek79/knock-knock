@@ -1,205 +1,185 @@
-import { ClientResponseError } from "pocketbase";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
-import { DB_TABLES, ERROR_CODES, USER_FIELDS } from "@/lib/constants";
+import { API_ROUTES, ERROR_CODES, USER_FIELDS } from "@/lib/constants";
 import { pb } from "@/lib/pocketbase";
 import { userRepository } from "./user.repository";
 
 vi.mock("@/lib/pocketbase", () => ({
     pb: {
+        send: vi.fn(),
         collection: vi.fn(),
         files: { getURL: vi.fn() },
+        authStore: { record: null },
     },
 }));
 
-/**
- * Узкий repository-level тест для getProfilesByIds.
- *
- * Отражает реальный runtime/API-контракт PocketBase: ошибка HTTP >= 400
- * бросается как ClientResponseError (числовой `status`), а 404 означает
- * «запись не найдена». Тестовые адаптеры (и server-side hooks) могут бросать
- * структурно эквивалентный объект `{ status: 404 }` — оба варианта должны
- * обрабатываться одинаково. Malformed-значения (null, строка, {} или Error)
- * НЕ являются 404 и не должны маскироваться.
- *
- * Здесь только плейсхолдеры base64 и статичные id — без секретов/plaintext.
- */
+const KEY_1 = {
+    id: "user-1",
+    public_key_x25519: "x25519-user-1",
+    public_key_signing: "signing-user-1",
+};
 
-type MockUser = { id: string; public_key_x25519: string };
-type GetOneCase =
-    | { kind: "ok"; user: MockUser }
-    | { kind: "throw"; error: unknown };
+const KEY_2 = {
+    id: "user-2",
+    public_key_x25519: "x25519-user-2",
+    public_key_signing: "signing-user-2",
+};
 
-const getOneCalls: Array<{ id: string; fields?: unknown }> = [];
-
-function setupMockPb(cases: Record<string, GetOneCase>): void {
-    getOneCalls.length = 0;
-
-    (pb.collection as Mock).mockImplementation(() => ({
-        getOne: vi.fn(async (id: string, options?: { fields?: string }) => {
-            getOneCalls.push({ id, fields: options?.fields });
-            const entry = cases[id];
-            if (!entry) {
-                // По умолчанию — faithful 404 от PocketBase (ClientResponseError).
-                throw new ClientResponseError({
-                    status: 404,
-                    url: "http://mock/users",
-                    data: {},
-                });
-            }
-            if (entry.kind === "throw") {
-                throw entry.error;
-            }
-            return entry.user;
-        }),
-    }));
-
-    (pb.files.getURL as Mock).mockImplementation(
-        (rec: { id: string }, file: string) => `http://mock/${rec.id}/${file}`,
-    );
+function setupSend(response: unknown): void {
+    (pb.send as Mock).mockResolvedValue(response);
 }
 
-// base64-плейсхолдеры 32 байт — не секреты, не реальные ключи.
-const USER_1: MockUser = {
-    id: "user-1",
-    public_key_x25519: btoa("mock1111mock1111mock1111mock1111"),
-};
-const USER_2: MockUser = {
-    id: "user-2",
-    public_key_x25519: btoa("mock2222mock2222mock2222mock2222"),
-};
-
-describe("userRepository.getProfilesByIds", () => {
+describe("userRepository capability key reads", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("возвращает Ok со всеми найденными профилями", async () => {
-        setupMockPb({
-            [USER_1.id]: { kind: "ok", user: USER_1 },
-            [USER_2.id]: { kind: "ok", user: USER_2 },
+    it("uses the capability endpoint, deduplicates ids, and returns the exact DTO", async () => {
+        setupSend([KEY_1, KEY_2]);
+
+        const result = await userRepository.fetchSecurityKeys([
+            KEY_1.id,
+            KEY_1.id,
+            KEY_2.id,
+        ]);
+
+        expect(result.isOk()).toBe(true);
+        expect(pb.send).toHaveBeenCalledWith(API_ROUTES.USERS_KEYS, {
+            method: "POST",
+            body: { userIds: [KEY_1.id, KEY_2.id] },
         });
+        expect(pb.collection).not.toHaveBeenCalled();
+        if (result.isOk()) {
+            expect(result.value).toEqual([KEY_1, KEY_2]);
+        }
+    });
+
+    it("keeps room compatibility without reading users directly", async () => {
+        setupSend([KEY_1]);
 
         const result = await userRepository.getProfilesByIds([
-            USER_1.id,
-            USER_2.id,
+            KEY_1.id,
+            KEY_2.id,
         ]);
 
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-            expect(result.value).toEqual([USER_1, USER_2]);
+            expect(result.value).toEqual([
+                { id: KEY_1.id, public_key_x25519: KEY_1.public_key_x25519 },
+            ]);
         }
-        expect(pb.collection).toHaveBeenCalledWith(DB_TABLES.USERS);
-        expect(getOneCalls[0].fields).toContain(USER_FIELDS.ID);
-        expect(getOneCalls[0].fields).toContain(USER_FIELDS.PUBLIC_KEY_X25519);
+        expect(pb.collection).not.toHaveBeenCalled();
     });
 
-    it("faithful PocketBase 404 (ClientResponseError) пропускается", async () => {
-        setupMockPb({
-            [USER_1.id]: { kind: "ok", user: USER_1 },
-            [USER_2.id]: {
-                kind: "throw",
-                error: new ClientResponseError({
-                    status: 404,
-                    url: "http://mock/users",
-                    data: {},
-                }),
-            },
-        });
+    it("maps the own-user key contract for existing callers", async () => {
+        setupSend([KEY_1]);
 
-        const result = await userRepository.getProfilesByIds([
-            USER_1.id,
-            USER_2.id,
-        ]);
+        const result = await userRepository.getSecurityKeys(KEY_1.id);
 
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-            expect(result.value).toEqual([USER_1]);
-        }
-    });
-
-    it("структурный { status: 404 } (как в test-адаптерах) тоже пропускается", async () => {
-        setupMockPb({
-            [USER_1.id]: { kind: "ok", user: USER_1 },
-            [USER_2.id]: { kind: "throw", error: { status: 404 } },
-        });
-
-        const result = await userRepository.getProfilesByIds([
-            USER_1.id,
-            USER_2.id,
-        ]);
-
-        expect(result.isOk()).toBe(true);
-        if (result.isOk()) {
-            expect(result.value).toEqual([USER_1]);
-        }
-    });
-
-    it("ошибки 401/403/500 возвращает как NETWORK_ERROR", async () => {
-        for (const status of [401, 403, 500]) {
-            setupMockPb({
-                [USER_1.id]: {
-                    kind: "throw",
-                    error: new ClientResponseError({
-                        status,
-                        url: "http://mock/users",
-                        data: {},
-                    }),
-                },
+            expect(result.value).toEqual({
+                [USER_FIELDS.PUBLIC_KEY_X25519]: KEY_1.public_key_x25519,
+                [USER_FIELDS.PUBLIC_KEY_SIGNING]: KEY_1.public_key_signing,
             });
-
-            const result = await userRepository.getProfilesByIds([USER_1.id]);
-
-            expect(result.isErr()).toBe(true);
-            if (result.isErr()) {
-                expect(result.error.kind).toBe(ERROR_CODES.NETWORK_ERROR);
-            }
         }
     });
 
-    it("структурная { status: 500 } возвращается как NETWORK_ERROR", async () => {
-        setupMockPb({
-            [USER_1.id]: { kind: "throw", error: { status: 500 } },
-        });
+    it("fails closed for malformed key DTO responses", async () => {
+        setupSend([
+            {
+                id: KEY_1.id,
+                public_key_x25519: KEY_1.public_key_x25519,
+                public_key_signing: "",
+            },
+        ]);
 
-        const result = await userRepository.getProfilesByIds([USER_1.id]);
+        const result = await userRepository.fetchSecurityKeys([KEY_1.id]);
 
         expect(result.isErr()).toBe(true);
         if (result.isErr()) {
-            expect(result.error.kind).toBe(ERROR_CODES.NETWORK_ERROR);
+            expect(result.error.kind).toBe(ERROR_CODES.VALIDATION_ERROR);
         }
     });
 
-    it("malformed rejection (null, строка, {}, Error, статус-строка) не считается 404", async () => {
-        const malformed: unknown[] = [
-            null,
-            "boom",
-            {},
-            new Error("boom"),
-            { status: "404" },
-        ];
+    it("trims key DTO values and rejects whitespace-only keys", async () => {
+        setupSend([
+            {
+                ...KEY_1,
+                public_key_x25519: `  ${KEY_1.public_key_x25519} `,
+            },
+        ]);
 
-        for (const error of malformed) {
-            setupMockPb({
-                [USER_1.id]: { kind: "throw", error },
-            });
-
-            const result = await userRepository.getProfilesByIds([USER_1.id]);
-
-            expect(result.isErr()).toBe(true);
-            if (result.isErr()) {
-                expect(result.error.kind).toBe(ERROR_CODES.NETWORK_ERROR);
-            }
-        }
-    });
-
-    it("пустой список id возвращает Ok([])", async () => {
-        setupMockPb({});
-
-        const result = await userRepository.getProfilesByIds([]);
+        const result = await userRepository.fetchSecurityKeys([KEY_1.id]);
 
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
-            expect(result.value).toEqual([]);
+            expect(result.value[0]).toEqual(KEY_1);
+        }
+
+        setupSend([
+            {
+                ...KEY_1,
+                public_key_x25519: "   ",
+            },
+        ]);
+        const invalidResult = await userRepository.fetchSecurityKeys([
+            KEY_1.id,
+        ]);
+
+        expect(invalidResult.isErr()).toBe(true);
+        if (invalidResult.isErr()) {
+            expect(invalidResult.error.kind).toBe(ERROR_CODES.VALIDATION_ERROR);
+        }
+    });
+
+    it("returns an empty result without making a request for empty ids", async () => {
+        const result = await userRepository.fetchSecurityKeys([]);
+
+        expect(result.isOk()).toBe(true);
+        expect(pb.send).not.toHaveBeenCalled();
+    });
+
+    it("rejects oversized key requests instead of silently dropping members", async () => {
+        const result = await userRepository.fetchSecurityKeys(
+            Array.from({ length: 51 }, (_, index) => `user-${index}`),
+        );
+
+        expect(result.isErr()).toBe(true);
+        expect(pb.send).not.toHaveBeenCalled();
+    });
+
+    it("preserves allowlisted private identity in the admin DTO", async () => {
+        setupSend([
+            {
+                id: "private-user-id",
+                profile_type: "private",
+                username: "moderation-name",
+                display_name: "Moderation Name",
+                created: "2026-08-14 12:00:00",
+                banned_until: null,
+            },
+        ]);
+
+        const result = await userRepository.getAdminUsers("");
+
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+            expect(result.value[0]).toMatchObject({
+                username: "moderation-name",
+                display_name: "Moderation Name",
+                profile_type: "private",
+            });
+        }
+    });
+
+    it("rejects incomplete public contact DTOs", async () => {
+        setupSend([{ id: "public-user-id", profile_type: "public" }]);
+
+        const result = await userRepository.getContacts();
+
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+            expect(result.error.kind).toBe(ERROR_CODES.VALIDATION_ERROR);
         }
     });
 });

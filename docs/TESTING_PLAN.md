@@ -393,3 +393,20 @@ PocketBase collections:
 - flaky test не перезапускается молча: сначала сохраняются причина и diagnostic;
 - release gate требует lint, typecheck/build, unit, security integration и smoke;
 - количество skipped tests публикуется и не может незаметно увеличиваться.
+
+## Срез 7 (защита чтения профилей, локальная часть)
+
+Прямое чтение `users` переведено на owner-only snapshot и capability DTO для
+search/contacts/keys. Проверены локально:
+
+- hook/schema DTO и auth-rule tests: `10/10`;
+- repository, room и peer capability tests: `9/9`, `11/11` и `2/2`;
+- полный frontend unit suite без подключения к PocketBase: `27` test files,
+  `118 passed`, `6 skipped`;
+- `npm run lint`, `npm run build` и `git diff --check` — зелёные.
+
+Двухпользовательская Dev authorization matrix (list/get чужого users, private
+profile, shared-room keys, anonymous/foreign room) не запускалась агентом и
+остаётся ручной приёмкой владельца. До этой проверки срез не помечается как
+полностью закрытая; runtime-интеграционные тесты, crypto interoperability и
+release `NO-GO` остаются открытыми.

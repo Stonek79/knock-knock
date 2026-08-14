@@ -6,7 +6,44 @@
  * и интеграции с асинхронным Task Runner для уведомлений.
  */
 
-// require(`${__hooks}/calls.pb.js`);
+// Pure allowlist DTO mapper'ы для custom user-routes: явные
+// серверные DTO вместо publicExport() для search/contacts/keys.
+const UsersDto = require(`${__hooks}/users_dto.js`);
+const USERS_API_ROUTES = {
+	CONTACTS: "/api/custom/users/contacts",
+	SEARCH: "/api/custom/users/search",
+	KEYS: "/api/custom/users/keys",
+};
+const SUPERUSERS_COLLECTION_NAME = "_superusers";
+const USERS_ROUTE_LIMITS = {
+	MAX_CONTACTS: 500,
+	DEFAULT_SEARCH_PAGE_SIZE: 50,
+	MAX_SEARCH_PAGE_SIZE: 50,
+	MAX_SEARCH_PAGE: 100,
+	MAX_SEARCH_QUERY_LENGTH: 100,
+};
+
+/**
+ * Разбирает JSON-тело POST-запроса. В PocketBase v0.25+ тело иногда не
+ * попадает в requestInfo().body автоматически, поэтому есть raw fallback.
+ */
+function parseJsonBody(e) {
+	const info = e.requestInfo();
+	const body = info?.body;
+	if (body && typeof body === "object" && !Array.isArray(body)) {
+		return body;
+	}
+	const raw = e?.request.body ? toString(e.request.body) : "";
+	if (raw) {
+		try {
+			return JSON.parse(raw);
+		} catch (err) {
+			console.error(`❌ [HOOK_ERROR] JSON parse error: ${err.message || err}`);
+			return {};
+		}
+	}
+	return {};
+}
 
 /**
  * 1. ИНИЦИАЛИЗАЦИЯ ИЗБРАННОГО
@@ -33,10 +70,11 @@ onRecordAfterCreateSuccess((e) => {
 	try {
 		rooms = e.app.findRecordsByFilter(
 			DB.TABLES.ROOMS,
-			`id = '${deterministicId}'`,
+			"id = {:roomId}",
 			"",
 			1,
 			0,
+			{ roomId: deterministicId },
 		);
 	} catch (filterErr) {
 		console.error(
@@ -99,7 +137,9 @@ onRecordAfterCreateSuccess((e) => {
 		}
 
 		// Создание системной комнаты (Nemo)
-		const sysDeterministicId = $security.md5(`${user.id}system`).substring(0, 15);
+		const sysDeterministicId = $security
+			.md5(`${user.id}system`)
+			.substring(0, 15);
 		const sysRoom = new Record(roomCollection, {
 			[DB.FIELDS.ID]: sysDeterministicId,
 			[DB.FIELDS.TYPE]: "system",
@@ -334,8 +374,11 @@ onRecordAfterCreateSuccess((e) => {
 		}
 
 		// Сбор активных подписок только для offline-пользователей
+		const subscriptionParams = Object.fromEntries(
+			offlineUserIds.map((id, index) => [`offlineUser${index}`, id]),
+		);
 		const filterQuery = offlineUserIds
-			.map((id) => `${DB.FIELDS.USER_ID} = '${id}'`)
+			.map((_, index) => `${DB.FIELDS.USER_ID} = {:offlineUser${index}}`)
 			.join(" || ");
 
 		const subscriptions = e.app.findRecordsByFilter(
@@ -344,7 +387,7 @@ onRecordAfterCreateSuccess((e) => {
 			"",
 			500,
 			0,
-			{},
+			subscriptionParams,
 		);
 
 		if (subscriptions.length === 0) {
@@ -479,8 +522,12 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 
 				// Получаем коллекции
 				const roomCollection = $app.findCollectionByNameOrId(DB.TABLES.ROOMS);
-				const memberCollection = $app.findCollectionByNameOrId(DB.TABLES.MEMBERS);
-				const messageCollection = $app.findCollectionByNameOrId(DB.TABLES.MESSAGES);
+				const memberCollection = $app.findCollectionByNameOrId(
+					DB.TABLES.MEMBERS,
+				);
+				const messageCollection = $app.findCollectionByNameOrId(
+					DB.TABLES.MESSAGES,
+				);
 
 				// 1. Находим все существующие системные комнаты
 				const existingSysRooms = $app.findRecordsByFilter(
@@ -512,7 +559,9 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 				let autoCreatedCount = 0;
 
 				for (const u of allUsers) {
-					const deterministicId = $security.md5(`${u.id}system`).substring(0, 15);
+					const deterministicId = $security
+						.md5(`${u.id}system`)
+						.substring(0, 15);
 					if (existingRoomIds[deterministicId]) {
 						continue;
 					}
@@ -594,7 +643,7 @@ cronAdd("process_broadcasts", "* * * * *", () => {
 });
 
 /**
- * 7. КАСТОМНЫЕ ЭНДПОИНТЫ ДЛЯ ПОИСКА КОНТАКТОВ (АНАЛОГ TELEGRAM)
+ * 7. КАСТОМНЫЕ ЭНДПОИНТЫ ДЛЯ ПОИСКА КОНТАКТОВ
  * Позволяет получать список контактов и искать пользователей по username,
  * не открывая глобальный listRule для всех.
  *
@@ -643,7 +692,9 @@ routerAdd(
 		}
 
 		const text = typeof bodyData.text === "string" ? bodyData.text : "";
-		const attachments = Array.isArray(bodyData.attachments) ? bodyData.attachments : [];
+		const attachments = Array.isArray(bodyData.attachments)
+			? bodyData.attachments
+			: [];
 
 		if (!text || typeof text !== "string" || text.trim() === "") {
 			if (attachments.length === 0) {
@@ -657,7 +708,11 @@ routerAdd(
 		const broadcastId = `broadcast_${Date.now()}`;
 		task.set(DB.FIELDS.TASK_KEY, broadcastId);
 		task.set(DB.FIELDS.TYPE, DB.VALUES.TASK_TYPE_BROADCAST);
-		task.set(DB.FIELDS.PAYLOAD, { text: text, attachments: attachments, adminId: user.id });
+		task.set(DB.FIELDS.PAYLOAD, {
+			text: text,
+			attachments: attachments,
+			adminId: user.id,
+		});
 		task.set(DB.FIELDS.STATUS, DB.VALUES.STATUS_PENDING);
 		task.set(
 			DB.FIELDS.RUN_AT,
@@ -715,7 +770,10 @@ routerAdd(
 							});
 						}
 					} catch (mediaErr) {
-						console.error("Failed to load media info for broadcast history:", mediaErr);
+						console.error(
+							"Failed to load media info for broadcast history:",
+							mediaErr,
+						);
 					}
 				}
 
@@ -774,10 +832,11 @@ routerAdd(
 			// В PocketBase v0.23 фильтрация по JSON-полям делается через Like оператор или json_extract
 			const messages = $app.findRecordsByFilter(
 				DB.TABLES.MESSAGES,
-				`metadata~'"broadcast_id":"${broadcastId}"'`,
+				"metadata~{:broadcastMetadata}",
 				"",
 				100000,
 				0,
+				{ broadcastMetadata: `'"broadcast_id":"${broadcastId}"'` },
 			);
 
 			for (const msg of messages) {
@@ -787,12 +846,13 @@ routerAdd(
 			// Находим саму задачу
 			const tasks = $app.findRecordsByFilter(
 				DB.TABLES.TASK_QUEUE,
-				`task_key = '${broadcastId}'`,
+				"task_key = {:taskKey}",
 				"",
 				1,
 				0,
+				{ taskKey: broadcastId },
 			);
-			
+
 			if (tasks.length > 0) {
 				const task = tasks[0];
 				const payload = task.get(DB.FIELDS.PAYLOAD) || {};
@@ -893,7 +953,9 @@ routerAdd(
 					$app.saveNoValidate(sysMember);
 
 					createdCount++;
-					console.log(`✅ [MIGRATE_ROOMS] Создана системная комната для пользователя ${u.id}`);
+					console.log(
+						`✅ [MIGRATE_ROOMS] Создана системная комната для пользователя ${u.id}`,
+					);
 				} catch (createErr) {
 					console.error(
 						`❌ [MIGRATE_ROOMS] Ошибка создания для ${u.id}: ${createErr.message || createErr}`,
@@ -920,145 +982,370 @@ routerAdd(
 
 /**
  * GET /api/custom/users/contacts
- * Возвращает список пользователей, с которыми текущий юзер имеет общие комнаты.
+ * Возвращает список пользователей, с которыми текущий юзер имеет общие комнаты,
+ * через отдельный membership-scoped DTO (UsersDto.toContactProfileDto).
+ * Для private/unknown профиля DTO fail-closed: только { id, profile_type } —
+ * без name/username/avatar/status/last_seen и без технического id fallback.
+ * Все динамические фильтры строятся через parameter binding.
  */
-routerAdd("GET", "/api/custom/users/contacts", (e) => {
-	const userId = e.auth.id;
+routerAdd(
+	"GET",
+	USERS_API_ROUTES.CONTACTS,
+	(e) => {
+		const DB = require(`${__hooks}/db.js`);
+		const userId = e.auth.id;
 
-	try {
-		const myMembers = $app.findRecordsByFilter(
-			"room_members",
-			`user = '${userId}'`,
-			"",
-			500,
-			0,
-		);
-		if (myMembers.length === 0) {
-			return e.json(200, []);
-		}
-		const roomIds = myMembers.map((m) => m.get("room"));
-
-		const filter = roomIds.map((id) => `room = '${id}'`).join(" || ");
-		const otherMembers = $app.findRecordsByFilter(
-			"room_members",
-			`user != '${userId}' && (${filter})`,
-			"",
-			500,
-			0,
-		);
-		const otherUserIds = [...new Set(otherMembers.map((m) => m.get("user")))];
-
-		if (otherUserIds.length === 0) {
-			return e.json(200, []);
-		}
-
-		const usersFilter = otherUserIds.map((id) => `id = '${id}'`).join(" || ");
-		const users = $app.findRecordsByFilter("users", usersFilter, "", 500, 0);
-
-		const result = users.map((u) => {
-			const isPublic = u.getString("profile_type") === "public";
-			return {
-				id: u.id,
-				username: isPublic ? u.getString("username") : undefined,
-				display_name: isPublic ? u.getString("display_name") : undefined,
-				avatar: isPublic ? u.getString("avatar") : undefined,
-				status: u.getString("status"),
-				last_seen: u.getString("last_seen"),
-			};
-		});
-
-		return e.json(200, result);
-	} catch (err) {
-		console.error("❌ [CONTACTS] Ошибка:", err);
-		return e.json(200, []);
-	}
-}, $apis.requireAuth());
-
-/**
- * GET /api/custom/users/search?q=...
- * Поиск пользователей по username или display_name.
- */
-routerAdd("GET", "/api/custom/users/search", (e) => {
-	const user = e.auth;
-	const q = e.request.url.query().get("q") || "";
-
-	if (!q) {
-		if (!user || user.collection().name !== "_superusers") {
-			return e.json(200, []);
-		}
 		try {
-			const users = $app.findRecordsByFilter("users", "", "-created", 50, 0);
-			return e.json(
-				200,
-				users.map((u) => u.publicExport()),
+			const myMembers = $app.findRecordsByFilter(
+				DB.TABLES.MEMBERS,
+				`user = {:userId}`,
+				"",
+				USERS_ROUTE_LIMITS.MAX_CONTACTS,
+				0,
+				{ userId: userId },
 			);
+			if (myMembers.length === 0) {
+				return e.json(200, []);
+			}
+
+			const roomIds = [
+				...new Set(myMembers.map((m) => m.get(DB.FIELDS.ROOM))),
+			];
+			if (roomIds.length === 0) {
+				return e.json(200, []);
+			}
+
+			// Parameter-bound OR-фильтр по комнатам (без интерполяции ввода).
+			const roomOr = UsersDto.buildOrBoundFilter(
+				DB.FIELDS.ROOM,
+				roomIds,
+				"room",
+			);
+			const otherMembers = $app.findRecordsByFilter(
+				DB.TABLES.MEMBERS,
+				`user != {:userId} && (${roomOr.filter})`,
+				"",
+				USERS_ROUTE_LIMITS.MAX_CONTACTS,
+				0,
+				Object.assign({ userId: userId }, roomOr.params),
+			);
+			const otherUserIds = [
+				...new Set(otherMembers.map((m) => m.get(DB.FIELDS.USER))),
+			];
+			if (otherUserIds.length === 0) {
+				return e.json(200, []);
+			}
+
+			const userOr = UsersDto.buildOrBoundFilter(
+				DB.FIELDS.ID,
+				otherUserIds.slice(0, USERS_ROUTE_LIMITS.MAX_CONTACTS),
+				"uid",
+			);
+			const users = $app.findRecordsByFilter(
+				DB.TABLES.USERS,
+				userOr.filter,
+				"",
+				USERS_ROUTE_LIMITS.MAX_CONTACTS,
+				0,
+				userOr.params,
+			);
+
+			const result = users.map(UsersDto.toContactProfileDto);
+
+			return e.json(200, result);
 		} catch (err) {
-			console.error("❌ [ADMIN_USERS] Ошибка:", err);
+			console.error("❌ [CONTACTS] Ошибка:", err);
 			return e.json(500, { message: "Internal Server Error" });
 		}
-	}
+	},
+	$apis.requireAuth(),
+);
 
-	try {
-		const users = $app.findRecordsByFilter(
-			"users",
-			"profile_type = 'public' && (username ~ {:query} || display_name ~ {:query})",
-			"-created",
-			50,
-			0,
-			{ query: q },
-		);
+/**
+ * GET /api/custom/users/search?q=...&page=...&perPage=...
+ * Поиск публичных профилей через явный allowlist DTO
+ * (UsersDto.toPublicProfileSearchDto). Для обычного пользователя пустой запрос
+ * не превращается в выдачу всех записей. Суперпользователь при пустом q
+ * получает отдельный минимальный административный DTO (не publicExport()).
+ * Параметры q/page/perPage валидируются и ограничиваются; фильтры — через
+ * parameter binding.
+ */
+routerAdd(
+	"GET",
+	USERS_API_ROUTES.SEARCH,
+	(e) => {
+		const DB = require(`${__hooks}/db.js`);
+		const user = e.auth;
+		const q = (e.request.url.query().get("q") || "").trim();
+		if (q.length > USERS_ROUTE_LIMITS.MAX_SEARCH_QUERY_LENGTH) {
+			return e.json(400, { message: "Search query is too long" });
+		}
+		const isSuperuser =
+			user?.collection() && user.collection().name === SUPERUSERS_COLLECTION_NAME;
 
-		return e.json(
-			200,
-			users.map((u) => u.publicExport()),
+		// Валидация и clamp пагинации.
+		let page = parseInt(e.request.url.query().get("page") || "1", 10);
+		let perPage = parseInt(
+			e.request.url.query().get("perPage") ||
+				String(USERS_ROUTE_LIMITS.DEFAULT_SEARCH_PAGE_SIZE),
+			10,
 		);
-	} catch (err) {
-		console.error("❌ [SEARCH] Ошибка:", err);
-		return e.json(500, { message: "Internal Server Error" });
-	}
-}, $apis.requireAuth());
+		if (!Number.isFinite(page) || page < 1) {
+			page = 1;
+		}
+		if (!Number.isFinite(perPage) || perPage < 1) {
+			perPage = USERS_ROUTE_LIMITS.DEFAULT_SEARCH_PAGE_SIZE;
+		}
+		if (perPage > USERS_ROUTE_LIMITS.MAX_SEARCH_PAGE_SIZE) {
+			perPage = USERS_ROUTE_LIMITS.MAX_SEARCH_PAGE_SIZE;
+		}
+		if (page > USERS_ROUTE_LIMITS.MAX_SEARCH_PAGE) {
+			page = USERS_ROUTE_LIMITS.MAX_SEARCH_PAGE;
+		}
+		const offset = (page - 1) * perPage;
+
+		if (isSuperuser) {
+			try {
+				const filter = q
+					? "(username ~ {:query} || display_name ~ {:query})"
+					: "";
+				const users = $app.findRecordsByFilter(
+					DB.TABLES.USERS,
+					filter,
+					"-created",
+					perPage,
+					offset,
+					q ? { query: q } : {},
+				);
+				return e.json(200, users.map(UsersDto.toAdminUserDto));
+			} catch (err) {
+				console.error("❌ [ADMIN_USERS] Ошибка:", err);
+				return e.json(500, { message: "Internal Server Error" });
+			}
+		}
+
+		if (!q) {
+			// Пустой поиск обычного пользователя не раскрывает всех users.
+			return e.json(200, []);
+		}
+
+		try {
+			const users = $app.findRecordsByFilter(
+				DB.TABLES.USERS,
+				`${UsersDto.USER_FIELDS.PROFILE_TYPE} = {:publicType} && (${UsersDto.USER_FIELDS.USERNAME} ~ {:query} || ${UsersDto.USER_FIELDS.DISPLAY_NAME} ~ {:query})`,
+				"-created",
+				perPage,
+				offset,
+				{ publicType: UsersDto.USER_PROFILE_TYPE_PUBLIC, query: q },
+			);
+
+			return e.json(200, users.map(UsersDto.toPublicProfileSearchDto));
+		} catch (err) {
+			console.error("❌ [SEARCH] Ошибка:", err);
+			return e.json(500, { message: "Internal Server Error" });
+		}
+	},
+	$apis.requireAuth(),
+);
+
+/**
+ * POST /api/custom/users/keys
+ * Возвращает публичные E2EE-ключи только для identity, для которых у
+ * запрашивающего есть серверная capability: сам пользователь, public
+ * профиль либо подтверждённая общая существующая комната. Тело:
+ * { userIds: string[], roomId?: string }.
+ *
+ * userIds дедуплицируются, валидируются и ограничиваются ДО проверок.
+ * Ответ — только { id, public_key_x25519, public_key_signing }; пустой или
+ * отсутствующий обязательный ключ даёт детерминированный отказ (пропуск),
+ * fallback на прямое чтение users запрещён. Клиентское заявление о membership
+ * не принимается: сервер сам проверяет self/public/shared-room.
+ */
+routerAdd(
+	"POST",
+	USERS_API_ROUTES.KEYS,
+	(e) => {
+		const DB = require(`${__hooks}/db.js`);
+		const requesterId = e.auth.id;
+
+		const body = parseJsonBody(e);
+		if (UsersDto.hasTooManyUserIds(body?.userIds)) {
+			return e.json(400, { message: "Too many user IDs" });
+		}
+		const userIds = UsersDto.sanitizeAndCapUserIds(body?.userIds);
+		if (userIds.length === 0) {
+			return e.json(200, []);
+		}
+		const roomId =
+			body && typeof body.roomId === "string" && body.roomId.trim() !== ""
+				? body.roomId
+				: null;
+
+		// Если указан roomId, запрашивающий обязан быть участником этой комнаты.
+		if (roomId) {
+			try {
+				const requesterMembers = $app.findRecordsByFilter(
+					DB.TABLES.MEMBERS,
+					`room = {:roomId} && user = {:userId}`,
+					"",
+					1,
+					0,
+					{ roomId: roomId, userId: requesterId },
+				);
+				if (requesterMembers.length === 0) {
+					return e.json(403, {
+						message: "Access denied. You are not a member of this room.",
+					});
+				}
+			} catch (err) {
+				console.error("❌ [USERS_KEYS] Ошибка проверки комнаты:", err);
+				return e.json(500, { message: "Internal Server Error" });
+			}
+		}
+
+		// Комнаты запрашивающего для проверки "общая существующая комната".
+		let requesterRoomIds = [];
+		try {
+			const myMembers = $app.findRecordsByFilter(
+				DB.TABLES.MEMBERS,
+				`user = {:userId}`,
+				"",
+				USERS_ROUTE_LIMITS.MAX_CONTACTS,
+				0,
+				{ userId: requesterId },
+			);
+			requesterRoomIds = [
+				...new Set(myMembers.map((m) => m.get(DB.FIELDS.ROOM))),
+			];
+		} catch (err) {
+			console.error("❌ [USERS_KEYS] Ошибка загрузки комнат:", err);
+			return e.json(500, { message: "Internal Server Error" });
+		}
+
+		const targetOr = UsersDto.buildOrBoundFilter(
+			DB.FIELDS.ID,
+			userIds,
+			"target",
+		);
+		let targets;
+		try {
+			targets = $app.findRecordsByFilter(
+				DB.TABLES.USERS,
+				targetOr.filter,
+				"",
+				UsersDto.MAX_USERS_PER_KEYS_REQUEST,
+				0,
+				targetOr.params,
+			);
+		} catch (err) {
+			console.error("❌ [USERS_KEYS] Ошибка загрузки пользователей:", err);
+			return e.json(500, { message: "Internal Server Error" });
+		}
+
+		const sharedUserIds = new Set();
+		if (requesterRoomIds.length > 0) {
+			try {
+				const roomOr = UsersDto.buildOrBoundFilter(
+					DB.FIELDS.ROOM,
+					requesterRoomIds,
+					"room",
+				);
+				const memberOr = UsersDto.buildOrBoundFilter(
+					DB.FIELDS.USER,
+					userIds,
+					"member",
+				);
+				const sharedMembers = $app.findRecordsByFilter(
+					DB.TABLES.MEMBERS,
+					`(${roomOr.filter}) && (${memberOr.filter})`,
+					"",
+					USERS_ROUTE_LIMITS.MAX_CONTACTS,
+					0,
+					Object.assign({}, roomOr.params, memberOr.params),
+				);
+				for (const member of sharedMembers) {
+					sharedUserIds.add(member.get(DB.FIELDS.USER));
+				}
+			} catch (err) {
+				console.error("❌ [USERS_KEYS] Ошибка проверки общих комнат:", err);
+				return e.json(500, { message: "Internal Server Error" });
+			}
+		}
+
+		const result = [];
+		for (const target of targets) {
+			const targetId = target.id;
+			const isSelf = targetId === requesterId;
+			const isTargetPublic =
+				target.getString(UsersDto.USER_FIELDS.PROFILE_TYPE) ===
+				UsersDto.USER_PROFILE_TYPE_PUBLIC;
+
+			if (!isSelf && !isTargetPublic && !sharedUserIds.has(targetId)) {
+				continue;
+			}
+
+			const dto = UsersDto.toPublicKeyDto(target);
+			if (dto) {
+				result.push(dto);
+			}
+		}
+
+		return e.json(200, result);
+	},
+	$apis.requireAuth(),
+);
 
 /**
  * POST /api/custom/invites/generate
  * Генерация инвайт-кода с rate limiting (админы без ограничений).
  */
-routerAdd("POST", "/api/custom/invites/generate", (e) => {
-	const DB = require(`${__hooks}/db.js`);
-	const user = e.auth;
+routerAdd(
+	"POST",
+	"/api/custom/invites/generate",
+	(e) => {
+		const DB = require(`${__hooks}/db.js`);
+		const user = e.auth;
 
-	// Проверка лимитов (Rate Limiting) — админы без ограничений
-	const isAdmin = user.collection().name === "_superusers";
+		// Проверка лимитов (Rate Limiting) — админы без ограничений
+		const isAdmin = user.collection().name === "_superusers";
 
-	if (!isAdmin) {
-		const pastTime = new Date(Date.now() - DB.CONFIG.INVITE_RATE_LIMIT_MINUTES * 60000)
-			.toISOString()
-			.replace("T", " ");
+		if (!isAdmin) {
+			const pastTime = new Date(
+				Date.now() - DB.CONFIG.INVITE_RATE_LIMIT_MINUTES * 60000,
+			)
+				.toISOString()
+				.replace("T", " ");
 
-		const recentInvites = $app.findRecordsByFilter(
-			"invites",
-			`created_by = '${user.id}' && created >= '${pastTime}'`,
-			"",
-			1,
-			0,
-		);
+			const recentInvites = $app.findRecordsByFilter(
+				"invites",
+				"created_by = {:createdBy} && created >= {:createdAfter}",
+				"",
+				1,
+				0,
+				{ createdBy: user.id, createdAfter: pastTime },
+			);
 
-		if (recentInvites.length > 0) {
-			return e.json(429, { message: `Rate limit: Only 1 invite allowed per ${DB.CONFIG.INVITE_RATE_LIMIT_MINUTES} minute(s)` });
+			if (recentInvites.length > 0) {
+				return e.json(429, {
+					message: `Rate limit: Only 1 invite allowed per ${DB.CONFIG.INVITE_RATE_LIMIT_MINUTES} minute(s)`,
+				});
+			}
 		}
-	}
 
-	// Генерация инвайт-кода
-	const inviteCollection = $app.findCollectionByNameOrId("invites");
-	const record = new Record(inviteCollection);
-	const code = `kk-${$security.randomString(8)}`;
-	record.set("code", code);
-	record.set("created_by", user.id);
-	record.set("status", "active");
+		// Генерация инвайт-кода
+		const inviteCollection = $app.findCollectionByNameOrId("invites");
+		const record = new Record(inviteCollection);
+		const code = `kk-${$security.randomString(8)}`;
+		record.set("code", code);
+		record.set("created_by", user.id);
+		record.set("status", "active");
 
-	$app.save(record);
+		$app.save(record);
 
-	return e.json(200, { code: code });
-}, $apis.requireAuth());
+		return e.json(200, { code: code });
+	},
+	$apis.requireAuth(),
+);
 
 /**
  * POST /api/custom/rooms/:roomId/read
@@ -1085,20 +1372,26 @@ routerAdd(
 				memberRecord = $app.findFirstRecordByFilter(
 					DB.TABLES.MEMBERS,
 					`${DB.FIELDS.ROOM} = {:roomId} && ${DB.FIELDS.USER} = {:userId}`,
-					{ roomId: roomId, userId: user.id }
+					{ roomId: roomId, userId: user.id },
 				);
 			} catch (e) {
-				return e.json(403, { message: "Access denied. You are not a member of this room." });
+				return e.json(403, {
+					message: "Access denied. You are not a member of this room.",
+				});
 			}
 
 			const lastReadAt = memberRecord.getString(DB.FIELDS.LAST_READ_AT);
 			if (!lastReadAt) {
-				return e.json(200, { success: true, updated: 0, message: "No last_read_at set" });
+				return e.json(200, {
+					success: true,
+					updated: 0,
+					message: "No last_read_at set",
+				});
 			}
 
-			// 2. ИЩЕМ СООБЩЕНИЯ: 
+			// 2. ИЩЕМ СООБЩЕНИЯ:
 			// Используем ORM для сохранения Realtime событий для других участников чата.
-			// ВАЖНО (ТГ-подход): Помечаем прочитанными только те сообщения, которые созданы <= last_read_at.
+			// ВАЖНО: Помечаем прочитанными только те сообщения, которые созданы <= last_read_at.
 			// Это гарантирует, что новые сообщения, находящиеся ниже видимой зоны, не будут прочитаны досрочно.
 			const records = $app.findRecordsByFilter(
 				DB.TABLES.MESSAGES,
@@ -1106,7 +1399,7 @@ routerAdd(
 				"",
 				1000,
 				0,
-				{ roomId: roomId, userId: user.id, lastReadAt: lastReadAt }
+				{ roomId: roomId, userId: user.id, lastReadAt: lastReadAt },
 			);
 
 			let affected = 0;
@@ -1118,15 +1411,15 @@ routerAdd(
 				affected++;
 			}
 
-			return e.json(200, { 
-				success: true, 
+			return e.json(200, {
+				success: true,
 				updated: affected,
-				message: `Успешно отмечено как прочитанное: ${affected}` 
+				message: `Успешно отмечено как прочитанное: ${affected}`,
 			});
 		} catch (err) {
 			console.error(`❌ [READ_MESSAGES_ERROR]: ${err.message || err}`);
 			return e.json(500, { message: "Internal server error" });
 		}
 	},
-	$apis.requireAuth()
+	$apis.requireAuth(),
 );

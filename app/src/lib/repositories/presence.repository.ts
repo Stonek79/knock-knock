@@ -24,7 +24,12 @@ export const presenceRepository = {
             pb
                 .collection(DB_TABLES.PRESENCE_STATUS)
                 .getFirstListItem<PBPresenceStatus>(
-                    `${PRESENCE_FIELDS.ENCRYPTED_USER_ID} = "${userId}"`,
+                    pb.filter(
+                        `${PRESENCE_FIELDS.ENCRYPTED_USER_ID} = {:userId}`,
+                        {
+                            userId,
+                        },
+                    ),
                 ),
             (e) => {
                 return appError(
@@ -143,7 +148,10 @@ export const presenceRepository = {
             pb
                 .collection(DB_TABLES.PRESENCE_STATUS)
                 .getFullList<PBPresenceStatus>({
-                    filter: `${PRESENCE_FIELDS.IS_TYPING} = true && ${PRESENCE_FIELDS.ROOM_ID} = "${roomId}" && ${PRESENCE_FIELDS.ENCRYPTED_USER_ID} != "${excludeUserId}"`,
+                    filter: pb.filter(
+                        `${PRESENCE_FIELDS.IS_TYPING} = true && ${PRESENCE_FIELDS.ROOM_ID} = {:roomId} && ${PRESENCE_FIELDS.ENCRYPTED_USER_ID} != {:excludeUserId}`,
+                        { roomId, excludeUserId },
+                    ),
                     expand: PRESENCE_FIELDS.ENCRYPTED_USER_ID,
                 }),
             (e) => {

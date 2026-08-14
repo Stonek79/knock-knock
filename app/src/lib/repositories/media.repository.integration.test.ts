@@ -40,7 +40,7 @@ describeIntegration("MediaRepository: Integration", () => {
         const formData = new FormData();
         formData.append("file", blob, "test-file.txt");
         formData.append(DB_FIELDS.IS_TEST, "true"); // Помечаем как тест для очистки
-        formData.append("owner", pb.authStore.model?.id || "");
+        formData.append("owner", pb.authStore.record?.id || "");
 
         const result = await mediaRepository.uploadMedia(formData);
 

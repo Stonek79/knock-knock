@@ -230,8 +230,16 @@ export async function addMembersToGroup({
             return ok(undefined);
         }
 
-        const profilesResult =
-            await userRepository.getProfilesByIds(newMemberIds);
+        const keyResult = await userRepository.fetchSecurityKeys(
+            newMemberIds,
+            roomId,
+        );
+        const profilesResult = keyResult.map((keys) =>
+            keys.map(({ id, public_key_x25519 }) => ({
+                id,
+                public_key_x25519,
+            })),
+        );
 
         if (profilesResult.isErr()) {
             return err(

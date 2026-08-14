@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import {
+    API_ROUTES,
     DB_TABLES,
     ERROR_CODES,
     MEMBER_ROLE,
@@ -52,6 +53,7 @@ const cryptoMocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/pocketbase", () => ({
     pb: {
+        send: vi.fn(),
         collection: vi.fn(),
         filter: vi.fn(),
         createBatch: vi.fn(),
@@ -121,6 +123,43 @@ function setupMockPb(config: MockPbConfig) {
             id: (d as { id?: string })?.id ?? "gen-id",
         })),
     }));
+
+    (pb.send as Mock).mockImplementation(
+        async (path: string, options?: { body?: { userIds?: unknown } }) => {
+            if (path !== API_ROUTES.USERS_KEYS) {
+                return [];
+            }
+            const ids = Array.isArray(options?.body?.userIds)
+                ? options.body.userIds.filter(
+                      (id): id is string => typeof id === "string",
+                  )
+                : [];
+            const failure = ids.find(
+                (id) =>
+                    config.getOneThrow?.collection === DB_TABLES.USERS &&
+                    config.getOneThrow?.id === id,
+            );
+            if (failure) {
+                throw config.getOneThrow?.error;
+            }
+            return ids.flatMap((id) => {
+                const record = data[DB_TABLES.USERS].find(
+                    (item) => item.id === id,
+                );
+                const x25519 = record?.public_key_x25519;
+                if (typeof x25519 !== "string" || x25519 === "") {
+                    return [];
+                }
+                return [
+                    {
+                        id,
+                        public_key_x25519: x25519,
+                        public_key_signing: "mock-signing-key",
+                    },
+                ];
+            });
+        },
+    );
 
     (pb.filter as Mock).mockImplementation((tpl: string) => tpl);
 

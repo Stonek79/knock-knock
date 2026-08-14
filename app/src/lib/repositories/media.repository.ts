@@ -72,7 +72,7 @@ export const mediaRepository = {
      * Получение публичного URL системного файла (когда нет полного record)
      */
     getSystemFileUrl: (id: string, filename: string): string => {
-        return pb.buildUrl(
+        return pb.buildURL(
             `/api/files/${STORAGE_CONFIG.MEDIA_COLLECTION}/${id}/${filename}`,
         );
     },

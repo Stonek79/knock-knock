@@ -29,7 +29,7 @@ describeIntegration("PocketBase is_test policy", () => {
     it("не позволяет обычному пользователю создать is_test=true", async () => {
         await expect(
             pb.collection("rooms").create({
-                created_by: pb.authStore.model?.id,
+                created_by: pb.authStore.record?.id,
                 type: "group",
                 visibility: "private",
                 name: "runtime-policy-check-create",
@@ -39,7 +39,7 @@ describeIntegration("PocketBase is_test policy", () => {
     });
 
     it("не позволяет обычному пользователю изменить is_test", async () => {
-        const userId = pb.authStore.model?.id;
+        const userId = pb.authStore.record?.id;
         const room = await pb.collection("rooms").create({
             created_by: userId,
             type: "group",

@@ -142,6 +142,13 @@ exists`; приложение в тот же момент восстановил
 общих контактов нужны отдельные серверные DTO endpoints с минимальным набором
 разрешённых полей.
 
+Локальная часть защиты чтения профилей теперь реализована: snapshot содержит owner-only
+`listRule`/`viewRule`, а search/contacts/keys используют отдельные allowlist DTO
+и parameter binding. Прямое чтение чужих `users` из frontend consumer-путей
+убрано. Это ещё не закрывает security gate: фактическое правило в Dev и
+двухпользовательскую authorization matrix владелец проверяет отдельно; crypto
+interoperability и release `NO-GO` остаются открытыми.
+
 ### 4. Исправить приглашения и регистрацию
 
 Hook регистрации использует отсутствующие в schema поля `code/status` и

@@ -13,6 +13,11 @@ export const profileSchema = z.object({
     display_name: z.string().optional(),
 });
 
+export const profileTypeSchema = z.enum([
+    PROFILE_TYPE.PUBLIC,
+    PROFILE_TYPE.PRIVATE,
+]);
+
 // Полная схема модели профиля (из БД)
 export const profileModelSchema = z.object({
     id: z.string(),
@@ -21,9 +26,7 @@ export const profileModelSchema = z.object({
     display_name: z.string().default(""),
     avatar_url: z.string().nullable().optional(),
     status: z.string().optional(),
-    profile_type: z
-        .enum([PROFILE_TYPE.PUBLIC, PROFILE_TYPE.PRIVATE])
-        .optional(),
+    profile_type: profileTypeSchema.optional(),
     last_seen: z.string().optional(),
     banned_until: z.string().nullable().optional(),
     is_agreed_to_rules: z.boolean().optional(),

@@ -32,7 +32,9 @@ export const ROUTES = {
 export const API_ROUTES = {
     USERS_SEARCH: "/api/custom/users/search",
     USERS_CONTACTS: "/api/custom/users/contacts",
+    USERS_KEYS: "/api/custom/users/keys",
     INVITES_GENERATE: "/api/custom/invites/generate",
+    INVITES_JOIN: "/api/invites/join",
     BROADCAST_SEND: "/api/custom/broadcast",
     BROADCAST_HISTORY: "/api/custom/broadcast/history",
     BROADCAST_DELETE: (id: string) => `/api/custom/broadcast/${id}`,

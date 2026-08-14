@@ -17,10 +17,10 @@ export function useChatPeer(
                 return null;
             }
 
-            const result = await userService.getUserProfile(otherUserId);
+            const result = await userService.getPeerProfile(otherUserId);
 
             if (result.isErr()) {
-                return null;
+                throw result.error;
             }
 
             return result.value;

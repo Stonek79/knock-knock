@@ -22,7 +22,12 @@ export const pushRepository = {
             pb
                 .collection(DB_TABLES.PUSH_SUBSCRIPTIONS)
                 .getFirstListItem<PushSubscriptionsResponse>(
-                    `${PUSH_SUBSCRIPTIONS_FIELDS.ENDPOINT}="${endpoint}"`,
+                    pb.filter(
+                        `${PUSH_SUBSCRIPTIONS_FIELDS.ENDPOINT} = {:endpoint}`,
+                        {
+                            endpoint,
+                        },
+                    ),
                 )
                 .catch((e) => {
                     // Если ошибка 404 (сообщения нет) - возвращаем null

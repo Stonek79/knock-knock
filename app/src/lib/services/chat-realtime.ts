@@ -333,7 +333,7 @@ async function syncPublicKeys({ userId }: { userId: string }) {
             await exportPublicKey(identity.publicKey),
         );
 
-        const keysRes = await userRepository.getSecurityKeys(userId);
+        const keysRes = await userRepository.getOwnSecurityKeyState(userId);
         if (keysRes.isOk()) {
             const keys = keysRes.value;
             if (!keys[USER_FIELDS.PUBLIC_KEY_X25519]) {

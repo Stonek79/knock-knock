@@ -252,17 +252,21 @@ export const roomRepository = {
             return ok(null);
         }
 
-        const filterIds = roomIds
-            .map((id: string) =>
-                pb.filter(`${ROOM_MEMBER_FIELDS.ROOM} = {:id}`, { id }),
-            )
+        const roomParams = Object.fromEntries(
+            roomIds.map((id: string, index: number) => [`roomId${index}`, id]),
+        );
+        const roomFilter = roomIds
+            .map((_, index) => `${ROOM_MEMBER_FIELDS.ROOM} = {:roomId${index}}`)
             .join(" || ");
 
         const targetMemberResult = await fromPromise(
             pb
                 .collection(DB_TABLES.ROOM_MEMBERS)
                 .getFirstListItem<RoomMemberRecord>(
-                    `${ROOM_MEMBER_FIELDS.USER} = "${targetUserId}" && (${filterIds})`,
+                    pb.filter(
+                        `${ROOM_MEMBER_FIELDS.USER} = {:targetUserId} && (${roomFilter})`,
+                        { targetUserId, ...roomParams },
+                    ),
                     { $autoCancel: false },
                 ),
             (e: unknown): RoomMemberRecord | null | RoomRepoError => {
