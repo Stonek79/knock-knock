@@ -272,13 +272,30 @@ UI. Полный import schema ради одного флага не выпол�
 `26 passed | 3 skipped` test files, `114 passed | 4 skipped` tests. Browser-only
 test setup теперь безопасно загружается и в Node integration-конфиге.
 
-В `infra/home/pb_hooks/main.pb.js` фильтры проверки `invite_code` и поиска
-пользователей по `q` переведены на PocketBase parameter binding. Эти значения
-больше не конкатенируются в filter expression. В том же срезе зафиксирован
-fail-closed registration: ошибка проверки invite больше не проглатывается и не
-может продолжить создание пользователя. Runtime-проверка endpoint’ов добавлена
-в `src/test/security-parameter-binding.integration.test.ts`; её staging/Dev
+В hook-модулях `infra/home/pb_hooks/` (проверка `invite_code` в
+`main.02-registration.pb.js`, поиск по `q` в `main.06-user-capabilities.pb.js`)
+фильтры переведены на PocketBase parameter binding. Эти значения больше не
+конкатенируются в filter expression. В том же срезе зафиксирован fail-closed
+registration: ошибка проверки invite больше не проглатывается и не может
+продолжить создание пользователя. Runtime-проверка endpoint’ов добавлена в
+`src/test/security-parameter-binding.integration.test.ts`; её staging/Dev
 результат нужно подтвердить после deploy.
+
+**Разбивка PocketBase hooks (монолит удалён).** Единый
+`infra/home/pb_hooks/main.pb.js` разделён на модули `main.01`–`main.08`
+(жизненный цикл пользователя, регистрация, доставка сообщений, scheduled tasks,
+admin broadcast, user capabilities, invites, room-read) и чистые helper-модули
+(`db.js`, `users_dto.js`, `task_helpers.js`, `hook_constants.js`,
+`request_utils.js`). Единый файл удалён. Hook static/contract тесты
+(`calls.pb`, `main.users.dto`, `task_helpers`, `pb_schema_auth_options`,
+`request_utils`, `main.hooks.registration`, `main.routes.contract`) — итого
+`42` теста, все зелёные. В route contract также проверяются отсутствие
+логирования тела broadcast-запроса и отсутствие затенения route event в
+room-read, а также различение отсутствующего membership и ошибки БД. Тесты
+проверяют единственность регистрации,
+отсутствие дубликатов роутов, отсутствие `publicExport()` на user routes,
+наличие локальных dependency `require` и удаление `main.pb.js`. Dev runtime
+smoke-test двух принципалов остаётся ручной приёмкой владельца.
 
 **Срез 6a (Outbox persistence contract).** Добавлены unit-тесты публичного
 `outboxDb` без подключения к PocketBase или реальной IndexedDB:

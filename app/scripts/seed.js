@@ -18,7 +18,7 @@ import "dotenv/config";
 const POCKETBASE_URL = process.env.VITE_PB_URL || "http://127.0.0.1:8090";
 const pb = new PocketBase(POCKETBASE_URL);
 
-// Константы структуры БД (СИНХРОНИЗИРОВАНО С pb_hooks/main.pb.js)
+// Константы структуры БД (согласованы со snapshot infra/home/pb_schema.json)
 const DB = {
     TABLES: {
         USERS: "users",

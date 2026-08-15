@@ -105,13 +105,16 @@ ADR и честное обновление состояния.
 E1. `infra/home/pb_schema.json` сейчас задаёт для `users` auth-wide list/view
 rules, хотя auth-record содержит profile, key и account-related fields.
 
-E2. `app/src/lib/repositories/user.repository.ts` всё ещё имеет прямые чужие
-reads (`getAllUsers`, `getUserById`, `getByUsername`, `getProfilesByIds`,
-`getSecurityKeys`). `getProfilesByIds` используется room mutations, а
-`getSecurityKeys` — realtime key resolution.
+E2. На исходном срезе `app/src/lib/repositories/user.repository.ts` имел
+прямые чужие reads (`getAllUsers`, `getUserById`, `getByUsername`,
+`getProfilesByIds`, `getSecurityKeys`). Сейчас административный список, поиск и
+ключи переведены на узкие endpoints; прямой `users` read оставлен только для
+собственного профиля.
 
-E3. `infra/home/pb_hooks/main.pb.js` parameter-binds search, но отдаёт
-`publicExport()` и contacts возвращает private `status`/`last_seen`.
+E3. На исходном срезе `infra/home/pb_hooks/main.06-user-capabilities.pb.js`
+parameter-binds search, но отдавал `publicExport()`, а contacts возвращал
+private `status`/`last_seen`. Сейчас маршруты используют явные DTO и
+parameter-bound filters; Dev runtime smoke-test остаётся ручной проверкой.
 
 E4. `app/vitest.integration.config.ts` уже подключает реальный Dev/Staging
 контур, а `isDatabaseCleanupAllowed()` разрешает cleanup только для явного
@@ -152,11 +155,11 @@ UI, экспортирует актуальный `pb_schema.json` и выпол
 
 ### U2. Replace broad profile exports with explicit server capabilities
 
-**Files:** `infra/home/pb_hooks/main.pb.js`, `app/src/lib/constants/routes.ts`,
+**Files:** `infra/home/pb_hooks/main.06-user-capabilities.pb.js`, `app/src/lib/constants/routes.ts`,
 `app/src/lib/types/user.ts`, `app/src/lib/types/index.ts`,
 `infra/home/pb_hooks/__tests__/main.users.dto.test.cjs` (new).
 
-1. Define server-owned DTO mappers in `main.pb.js`: `toPublicProfileSearchDto`,
+1. Define server-owned DTO mappers in `main.06-user-capabilities.pb.js`: `toPublicProfileSearchDto`,
 `toContactProfileDto`, and `toPublicKeyDto`. Each mapper has an allowlist and
 does not call `publicExport()`.
 2. Keep `GET /api/custom/users/search`, but require auth, reject/normalise

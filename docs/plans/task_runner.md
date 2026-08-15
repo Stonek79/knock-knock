@@ -12,7 +12,7 @@
 Фактически существуют два пути обработки:
 
 - общий runner в `tasks.pb.js`/`task_helpers.js`;
-- отдельный broadcast cron в `main.pb.js`.
+- отдельный broadcast cron в `main.04-scheduled-tasks.pb.js`.
 
 Обычный push task сейчас может содержать subscription endpoint/keys и
 зашифрованный content/IV. Поэтому старое утверждение «payload содержит только

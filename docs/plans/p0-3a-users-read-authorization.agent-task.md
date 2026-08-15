@@ -80,7 +80,7 @@ Runtime-доступ в рамках работы агента всегда сч
 - room creation/add-member в `app/src/lib/services/room/mutations.ts`;
 - realtime key resolution в `app/src/lib/services/chat-realtime.ts`;
 - `/api/custom/users/search` и `/api/custom/users/contacts` в
-  `infra/home/pb_hooks/main.pb.js`.
+  `infra/home/pb_hooks/main.06-user-capabilities.pb.js`.
 
 До удаления методов запиши, какие callers будут переведены на новый endpoint.
 Не удаляй метод только потому, что он выглядит устаревшим: сначала докажи
@@ -88,7 +88,7 @@ Runtime-доступ в рамках работы агента всегда сч
 
 ### 2. Server DTO и capability endpoints
 
-В `infra/home/pb_hooks/main.pb.js`:
+В `infra/home/pb_hooks/main.06-user-capabilities.pb.js`:
 
 - добавь явные allowlist-мапперы `toPublicProfileSearchDto`,
   `toContactProfileDto`, `toPublicKeyDto`;

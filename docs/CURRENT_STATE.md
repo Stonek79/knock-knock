@@ -73,6 +73,18 @@ parameter binding.
 отдельно. Агент к Dev/Prod API или базе не подключался. Release `NO-GO` и
 остальные P0/P1 остаются открытыми.
 
+### Разбивка PocketBase hooks (локальная проверка)
+
+Монолит `infra/home/pb_hooks/main.pb.js` разделён на модули `main.01`–`main.08`
+(lifecycle, registration, message delivery, scheduled tasks, admin broadcast,
+user capabilities, invites, room-read) и чистые helper-модули (`db.js`,
+`users_dto.js`, `task_helpers.js`, `hook_constants.js`, `request_utils.js`).
+Единый файл удалён. Порядок загрузки задаётся именами файлов, каждый callback
+подключает зависимости локальным `require`, ни один `*.pb.js` не импортирует
+другой. Это проверено локально (`node --check`, hook static/contract tests,
+`npm run build`, `npm run lint`, frontend suite, `git diff --check`), но Dev
+runtime smoke-test двух принципалов выполняется владельцем отдельно.
+
 ### Одноразовый профиль и секретная комната
 
 Одноразовый профиль создаётся только для персонального приглашения в секретную
