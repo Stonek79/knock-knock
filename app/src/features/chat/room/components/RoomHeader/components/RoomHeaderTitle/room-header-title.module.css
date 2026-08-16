@@ -12,6 +12,10 @@
     letter-spacing: 0.5px;
     margin: 0;
     padding: var(--space-1) 0;
+    max-width: var(--max-width-title);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .onlineDot {

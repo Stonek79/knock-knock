@@ -4,6 +4,9 @@
 
 /* Global Reset & Body */
 html {
+    /* Safari may inflate text independently of the declared root size. */
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
     font-size: calc(16px * var(--scale-factor, 1));
 }
 
