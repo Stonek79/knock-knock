@@ -1,8 +1,10 @@
+import { QueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ERROR_CODES } from "@/lib/constants";
+import { ERROR_CODES, QUERY_KEYS } from "@/lib/constants";
 import { AuthService } from "@/lib/services/auth";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
-import type { UserRecord as AuthUser } from "@/lib/types";
+import { sessionCleanup, sessionGuard } from "@/lib/services/session-cleanup";
+import type { UserRecord as AuthUser, RoomWithMembers } from "@/lib/types";
 import type { Profile } from "@/lib/types/profile";
 import { appError, err, ok } from "@/lib/utils/result";
 import { useAuthStore } from ".";
@@ -26,6 +28,15 @@ vi.mock("@/lib/services/chat-realtime", () => ({
     },
 }));
 
+// Mock room-list-db: signOut обязан очищать постоянный кеш комнат, чтобы данные
+// предыдущего аккаунта не оставались доступны следующему.
+const roomListMocks = vi.hoisted(() => ({
+    clear: vi.fn(),
+}));
+vi.mock("@/lib/services/room-list-db", () => ({
+    roomListDb: { clear: roomListMocks.clear },
+}));
+
 /** Полный валидный record PocketBase-пользователя. */
 function makeUser(id: string, username: string): AuthUser {
     return {
@@ -39,6 +50,17 @@ function makeUser(id: string, username: string): AuthUser {
         collectionId: "users",
         collectionName: "users",
     } as unknown as AuthUser;
+}
+
+/** Отложенный promise: результат завершается вручную после signOut. */
+function deferredResult<T>() {
+    let resolve!: (v: T) => void;
+    let reject!: (e: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+        resolve = res;
+        reject = rej;
+    });
+    return { promise, resolve, reject };
 }
 
 describe("useAuthStore", () => {
@@ -58,6 +80,8 @@ describe("useAuthStore", () => {
             loading: true,
             isAdmin: false,
         });
+        // Изолируем seam очистки QueryClient между тестами.
+        sessionCleanup.registerQueryClient(null);
     });
 
     afterEach(() => {
@@ -120,7 +144,7 @@ describe("useAuthStore", () => {
         expect(AuthService.logout).toHaveBeenCalled();
     });
 
-    it("должен очищать состояние и realtime при выходе (signOut)", async () => {
+    it("должен очищать состояние, realtime и room-list кеш при выходе (signOut)", async () => {
         useAuthStore.setState({
             pbUser: makeUser("user-1", "test"),
             profile: { id: "user-1" } as unknown as Profile,
@@ -130,8 +154,105 @@ describe("useAuthStore", () => {
 
         expect(AuthService.logout).toHaveBeenCalled();
         expect(ChatRealtimeService.destroy).toHaveBeenCalled();
+        expect(roomListMocks.clear).toHaveBeenCalledWith("user-1");
         expect(useAuthStore.getState().pbUser).toBeNull();
         expect(useAuthStore.getState().profile).toBeNull();
+    });
+
+    it("при недоступности IndexedDB очистка кеша не ломает выход (best-effort)", async () => {
+        useAuthStore.setState({
+            pbUser: makeUser("user-1", "test"),
+            profile: { id: "user-1" } as unknown as Profile,
+        });
+        roomListMocks.clear.mockRejectedValueOnce(
+            new Error("IndexedDB unavailable"),
+        );
+
+        await useAuthStore.getState().signOut();
+
+        expect(useAuthStore.getState().pbUser).toBeNull();
+        expect(ChatRealtimeService.destroy).toHaveBeenCalled();
+    });
+
+    it("signOut инвалидирует session guard и удаляет чувствительные query-данные", async () => {
+        const qc = new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+        });
+        sessionCleanup.registerQueryClient(qc);
+
+        // Заполняем «общий» клиент чувствительными данными текущей сессии,
+        // включая отдельные top-level ключи (favorites-room, admin, broadcast).
+        qc.setQueryData(QUERY_KEYS.rooms("user-1"), [{ id: "room-a" }]);
+        qc.setQueryData(QUERY_KEYS.messages("room-a"), [{ id: "msg-1" }]);
+        qc.setQueryData(QUERY_KEYS.favoritesRoom("user-1"), ["favorites-1"]);
+        qc.setQueryData(QUERY_KEYS.adminUsers(), [{ id: "admin-1" }]);
+        qc.setQueryData(QUERY_KEYS.broadcastHistory(), [{ id: "bcast-1" }]);
+        qc.setQueryData(QUERY_KEYS.media("media-1", "user-1"), [{ id: "m-1" }]);
+
+        const generationBefore = sessionGuard.current();
+
+        useAuthStore.setState({
+            pbUser: makeUser("user-1", "test"),
+            profile: { id: "user-1" } as unknown as Profile,
+        });
+
+        await useAuthStore.getState().signOut();
+
+        // Session guard инвалидирован: номер сессии строго вырос, поэтому
+        // async-ответы предыдущей сессии не запишут данные/кеш.
+        expect(sessionGuard.current()).toBeGreaterThan(generationBefore);
+
+        // Контракт: после logout старые query-данные недоступны следующему
+        // пользователю (и не «всплывают» позже).
+        expect(qc.getQueryData(QUERY_KEYS.rooms("user-1"))).toBeUndefined();
+        expect(qc.getQueryData(QUERY_KEYS.messages("room-a"))).toBeUndefined();
+        expect(
+            qc.getQueryData(QUERY_KEYS.favoritesRoom("user-1")),
+        ).toBeUndefined();
+        expect(qc.getQueryData(QUERY_KEYS.adminUsers())).toBeUndefined();
+        expect(qc.getQueryData(QUERY_KEYS.broadcastHistory())).toBeUndefined();
+        expect(
+            qc.getQueryData(QUERY_KEYS.media("media-1", "user-1")),
+        ).toBeUndefined();
+
+        // Постоянный кеш предыдущего пользователя очищен.
+        expect(roomListMocks.clear).toHaveBeenCalledWith("user-1");
+    });
+
+    it("in-flight запрос, завершившийся после signOut, не возвращает данные в QueryClient", async () => {
+        const qc = new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+        });
+        sessionCleanup.registerQueryClient(qc);
+
+        // In-flight чувствительный запрос (rooms): серверный ответ ещё не пришёл.
+        const deferred = deferredResult<RoomWithMembers[]>();
+        const inflight = qc.fetchQuery({
+            queryKey: QUERY_KEYS.rooms("user-1"),
+            queryFn: () => deferred.promise,
+        });
+        // Убеждаемся, что запрос реально выполняется до logout.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(qc.getQueryState(QUERY_KEYS.rooms("user-1"))?.fetchStatus).toBe(
+            "fetching",
+        );
+
+        useAuthStore.setState({
+            pbUser: makeUser("user-1", "test"),
+            profile: { id: "user-1" } as unknown as Profile,
+        });
+
+        await useAuthStore.getState().signOut();
+
+        // signOut отменил in-flight запрос (cancelQueries) до removeQueries.
+        expect(qc.getQueryData(QUERY_KEYS.rooms("user-1"))).toBeUndefined();
+
+        // «Старый» ответ приходит ПОСЛЕ logout: запрос отменён, данные в
+        // QueryClient не возвращаются.
+        deferred.resolve([{ id: "STALE_AFTER_LOGOUT" } as RoomWithMembers]);
+        await expect(inflight).rejects.toBeDefined();
+
+        expect(qc.getQueryData(QUERY_KEYS.rooms("user-1"))).toBeUndefined();
     });
 
     it("при смене аккаунта не оставляет данные предыдущего пользователя", async () => {
@@ -147,6 +268,8 @@ describe("useAuthStore", () => {
         await useAuthStore.getState().signOut();
         expect(useAuthStore.getState().pbUser).toBeNull();
         expect(useAuthStore.getState().profile).toBeNull();
+        // Постоянный кеш предыдущего пользователя очищен.
+        expect(roomListMocks.clear).toHaveBeenCalledWith("user-a");
 
         const userB = makeUser("user-b", "bob");
         vi.mocked(AuthService.getLocalRecord).mockReturnValue(userB);

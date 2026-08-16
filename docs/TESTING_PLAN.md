@@ -427,3 +427,60 @@ profile, shared-room keys, anonymous/foreign room) не запускалась �
 остаётся ручной приёмкой владельца. До этой проверки срез не помечается как
 полностью закрытая; runtime-интеграционные тесты, crypto interoperability и
 release `NO-GO` остаются открытыми.
+
+## Срез 8 (cache-first список чатов + очистка при logout, локальная часть)
+
+Реализация изменена по результатам код-ревью cache-first изменения: список
+чатов после reload должен читаться из постоянного IndexedDB-кеша мгновенно, а
+серверная синхронизация (включая N+1 last-messages) выполняться в фоне.
+
+Что покрыто unit-тестами (замоканы PocketBase/IndexedDB и другие seam'ы, без
+Dev/Prod API и без реальной IndexedDB):
+
+- cache-first список чатов (`useChatList.test.tsx`):
+  - cache hit: список показывается из кеша ДО завершения фоновой синхронизации,
+    N+1-запросы последних сообщений вне критического пути;
+  - последовательность и расшарка кеша по `userId`+PB origin (`room-list-db`),
+    изоляция между пользователями;
+  - кеш пополняется только raw-данными (ciphertext), без расшифрованного
+    plaintext в IndexedDB;
+  - malformed кеш (`room-list-db`) валидируется `roomWithMembersSchema` и
+    обрабатывается как cache miss — повреждённые данные не попадают в
+    decrypt/UI;
+  - устаревший серверный ответ (stale realtime race) не перезаписывает ни UI,
+    ни persistent cache (`room-list-db.save` не вызывается);
+  - `isDecrypted: false` / ошибка расшифровки заменяют content пустой строкой,
+    ciphertext в UI не показывается (`decryptPreviews.test.ts`);
+  - logout race: deferred-ответ, завершившийся после logout, не пишет ни в
+    QueryClient, ни в IndexedDB-кеш;
+  - фолбэк на сервер при cache miss / ошибке batch-загрузки без затирания уже
+    показанных данных.
+- session generation guard и очистка данных при logout (`session-cleanup.ts`,
+  `auth.test.ts`, `useChatList.test.tsx`):
+  - `sessionGuard` — монотонный generation guard: инвалидируется при signOut,
+    async-ответы предыдущей сессии не записывают данные/кеш;
+  - `clearSensitiveQueryData` сначала `cancelQueries`, затем `removeQueries` для
+    чувствительных префиксов (rooms, messages, favorites-room, broadcast-history,
+    admin/users и остальные реально используемые user-scoped ключи);
+  - настоящий `useAuthStore.signOut` инвалидирует guard, отменяет in-flight
+    запрос (завершившийся после signOut ответ не возвращает данные в
+    QueryClient), удаляет чувствительные query-данные и очищает постоянный
+    room-list кеш (`roomListDb.clear`);
+  - legacy host-based IndexedDB-базы удаляются best-effort через
+    `purgeLegacyRoomListCaches` без потери актуальных origin-баз.
+
+Что требует browser/runtime E2E и пока НЕ подтверждено:
+
+- реальное поведение IndexedDB и Dexie (персистентность, очистка, удаление
+  legacy-баз) в настоящем браузере;
+- реальная расшифровка превью (crypto interoperability) и отсутствие ciphertext
+  в UI на реальных ключах;
+- поведение `cancelQueries` для реальных сетевых fetch'ов RealtimeGateway при
+  logout;
+- полный цикл cache-first при реальной network latency, лимитах квоты IndexedDB
+  и повторных вкладках.
+
+Локальные проверки среза: `npm run lint`, `npm run build`, `git diff --check` и
+frontend unit suite зелёные; количество unit-тестов выросло (добавлены guard и
+in-flight logout-сценарии). Покрытие браузером и Dev/Prod-контуром не проверялось
+и не является release readiness.

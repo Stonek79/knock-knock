@@ -8,7 +8,6 @@ import {
 } from "../constants";
 import { pb } from "../pocketbase";
 import { realtimeGateway } from "../services/RealtimeGateway";
-import { roomListDb } from "../services/room-list-db";
 import type {
     PBRealtimeAction,
     PBRealtimeEvent,
@@ -75,12 +74,11 @@ export const roomRepository = {
     },
 
     /**
-     * Получение списка комнат пользователя (быстрый критический путь).
+     * Получение списка комнат пользователя (серверные данные, без кеша).
      *
-     * Комнаты и участники грузятся с сервера, а last_message подтягивается из
-     * постоянного кеша (raw ciphertext). Ожидание N+1-запросов последних сообщений
-     * вынесено из критического пути: полная серверная загрузка с last-msgs живёт в
-     * `getUserRoomsWithLastMessages` и выполняется в фоне.
+     * Комнаты и участники грузятся с сервера. Cache-first orchestration
+     * (заполнение last_message из постоянного кеша, N+1-устранение) живёт в
+     * сервисном/прикладном слое, а не в repository.
      */
     getUserRooms: async (
         userId: string,
@@ -107,24 +105,9 @@ export const roomRepository = {
             return err(roomsResult.error);
         }
 
-        // 3. Мержим last_message из локального кеша (быстро, без N+1 к серверу).
-        //    Повреждённый/недоступный кеш не должен валить критический путь.
-        let cachedRooms: RoomWithMembers[] = [];
-        try {
-            cachedRooms = (await roomListDb.load(userId)) ?? [];
-        } catch {
-            cachedRooms = [];
-        }
-        const lastByRoom = new Map(
-            cachedRooms.map((r) => [r.id, r.last_message ?? null] as const),
-        );
-
-        return ok(
-            roomsResult.value.map((room) => ({
-                ...room,
-                last_message: lastByRoom.get(room.id) ?? null,
-            })),
-        );
+        // Repository отвечает только за серверные данные. last_message (и любые
+        // cache-first решения) заполняются в сервисном/прикладном слое.
+        return roomsResult;
     },
 
     /**
@@ -161,9 +144,13 @@ export const roomRepository = {
         // 3. Батч последних видимых сообщений (пакетный контракт last-messages)
         const lastMsgsResult =
             await messageRepository.getLastVisibleMessageBatch(roomIds, userId);
-        const lastMsgs = lastMsgsResult.isOk()
-            ? lastMsgsResult.value
-            : new Map();
+        if (lastMsgsResult.isErr()) {
+            // Не превращаем сбой загрузки последних сообщений в пустые превью:
+            // возвращаем ошибку, чтобы прикладной слой не перезаписывал уже
+            // показанные данные и не писал новый (неполный) снимок в кеш.
+            return err(lastMsgsResult.error);
+        }
+        const lastMsgs = lastMsgsResult.value;
 
         return ok(
             roomsResult.value.map((room) => ({

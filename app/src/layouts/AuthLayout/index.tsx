@@ -4,7 +4,10 @@ import { useEffect } from "react";
 import { MainLayoutSkeleton } from "@/components/ui/Skeleton";
 import { AppLayout } from "@/layouts/AppLayout";
 import { ROUTES } from "@/lib/constants";
+import { env } from "@/lib/env";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
+import { purgeLegacyRoomListCaches } from "@/lib/services/room-list-db";
+import { sessionCleanup } from "@/lib/services/session-cleanup";
 import { useAuthStore } from "@/stores/auth";
 
 /**
@@ -19,6 +22,12 @@ export function AuthLayout() {
     useEffect(() => {
         if (pbUser) {
             ChatRealtimeService.init({ qc: queryClient, user: pbUser });
+            // Регистрируем клиент в узком seam для очистки при logout (без
+            // импорта main.tsx и без циклической зависимости).
+            sessionCleanup.registerQueryClient(queryClient);
+            // После перехода имени IndexedDB-кеша с host на origin удаляем
+            // legacy host-based базы, чтобы не оставались в браузере.
+            void purgeLegacyRoomListCaches(env.VITE_PB_URL);
         }
     }, [pbUser, queryClient]);
 

@@ -129,6 +129,32 @@ bucket или общий service account.
 Одноразовые медиа идут по отдельному runtime-пути и не должны вызываться через
 обычную коллекцию `media` или попадать в MinIO.
 
+## Кэширование списка чатов (cache-first) и очистка при logout
+
+Локальная реализация frontend, без утверждений о browser/runtime-поверке:
+
+- список чатов после reload читается из постоянного IndexedDB-кеша мгновенно
+  (cache-first), а серверная синхронизация, включая N+1-запросы последних
+  сообщений, выполняется в фоне; кеш хранит только raw-данные (ciphertext
+  `last_message`), расшифрованный plaintext в IndexedDB не сохраняется;
+- имя IndexedDB-базы детерминированно выводится из `userId` и полного origin
+  PocketBase URL, поэтому dev/prod, http/https и разные порты не разделяют кеш;
+  legacy host-based базы (созданные до перехода на origin) чистятся best-effort;
+- malformed кеш валидируется `roomWithMembersSchema` и обрабатывается как cache
+  miss — повреждённые данные не попадают в decrypt/UI; при `isDecrypted:false`
+  или ошибке расшифровки ciphertext не показывается (подменяется пустой строкой);
+- session generation guard (`sessionGuard`) защищает от записи устаревших
+  async-ответов в QueryClient/IndexedDB после logout; при logout
+  `sessionCleanup` отменяет (`cancelQueries`) и удаляет (`removeQueries`)
+  чувствительные query-ключи, а `roomListDb.clear` очищает постоянный кеш.
+
+Проверено unit-тестами (замоканы PocketBase/IndexedDB и seam'ы, без Dev/Prod API
+и без реальной IndexedDB): см. `TESTING_PLAN.md`, «Срез 8». Реальное поведение
+IndexedDB/Dexie, расшифровка на реальных ключах, cancel сетевых fetch'ов
+RealtimeGateway при logout и полный цикл cache-first при сетевых задержках
+требуют browser/runtime E2E и НЕ проверялись. Это не является заявлением о
+release readiness или проверенном Dev/Prod-контуре.
+
 ## Что является обязательным перед релизом
 
 Полный перечень обнаруженных блокеров ведётся в

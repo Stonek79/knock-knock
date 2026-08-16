@@ -13,7 +13,7 @@ export async function decryptRoomPreviews(
                 return room;
             }
             try {
-                const { content } = await chatCryptoService.decryptPreview({
+                const result = await chatCryptoService.decryptPreview({
                     message: {
                         room: room.id,
                         content: last.content,
@@ -23,11 +23,27 @@ export async function decryptRoomPreviews(
                     },
                     userId,
                 });
+                // Контракт сервиса возвращает { isDecrypted }. При любой неудаче
+                // (reject ИЛИ isDecrypted: false) НЕ выводим ciphertext: заменяем
+                // content безопасным пустым значением.
+                if (!result.isDecrypted) {
+                    return {
+                        ...room,
+                        last_message: { ...last, content: "" },
+                    };
+                }
                 // Не мутируем вход: возвращаем копию с расшифрованным content.
-                return { ...room, last_message: { ...last, content } };
+                return {
+                    ...room,
+                    last_message: { ...last, content: result.content },
+                };
             } catch {
-                // Один сбойный кеш не должен валить весь список.
-                return room;
+                // Один сбойный кеш не должен валить весь список. Вместо
+                // ciphertext показываем безопасный пустой превью.
+                return {
+                    ...room,
+                    last_message: { ...last, content: "" },
+                };
             }
         }),
     );

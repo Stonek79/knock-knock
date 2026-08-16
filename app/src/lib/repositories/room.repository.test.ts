@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { DB_TABLES } from "../constants";
 import { pb } from "../pocketbase";
-import type { RoomWithMembers } from "../types";
 import { appError, err, ok } from "../utils/result";
 import { messageRepository } from "./message.repository";
 
@@ -48,13 +47,6 @@ vi.mock("./message.repository", () => ({
     },
 }));
 
-const dbMocks = vi.hoisted(() => ({
-    load: vi.fn(),
-}));
-vi.mock("../services/room-list-db", () => ({
-    roomListDb: { load: dbMocks.load },
-}));
-
 // Импорт поверх моков (динамически, чтобы factory отработали после hoisting)
 const { roomRepository } = await import("./room.repository");
 
@@ -99,34 +91,26 @@ beforeEach(() => {
     }));
 });
 
-describe("roomRepository.getUserRooms (критический путь)", () => {
-    it("НЕ вызывает N+1-запрос последних сообщений (getLastVisibleMessageBatch)", async () => {
-        dbMocks.load.mockResolvedValue([
-            {
-                ...roomRecord("r1"),
-                last_message: lastMsg("cached-lm"),
-            } as RoomWithMembers,
-        ]);
-
+describe("roomRepository.getUserRooms (серверные данные, без кеша)", () => {
+    it("возвращает комнаты пользователя с сервера без N+1-запроса last-msgs", async () => {
         const result = await roomRepository.getUserRooms("u1");
 
         if (result.isErr()) {
             throw result.error;
         }
 
+        // Repository не отвечает за cache-first: N+1-запрос последних сообщений
+        // здесь не выполняется, last_message остаётся серверным.
         expect(
             messageRepository.getLastVisibleMessageBatch,
         ).not.toHaveBeenCalled();
 
         const rooms = result.value;
-        // last_message берётся из локального кеша, а не N+1 к серверу
-        const r1 = rooms.find((r) => r.id === "r1");
-        expect(r1?.last_message?.id).toBe("cached-lm");
+        expect(rooms.map((r) => r.id)).toEqual(["r1", "r2"]);
+        expect(rooms.every((r) => r.last_message === null)).toBe(true);
     });
 
-    it("при повреждённом кеше продолжает работу без N+1-запроса", async () => {
-        dbMocks.load.mockRejectedValue(new Error("IndexedDB broken"));
-
+    it("не обращается к IndexedDB-кешу (cache orchestration вне repository)", async () => {
         const result = await roomRepository.getUserRooms("u1");
 
         expect(result.isOk()).toBe(true);
@@ -160,17 +144,16 @@ describe("roomRepository.getUserRoomsWithLastMessages (фоновая синхр
         expect(r2?.last_message).toBeNull();
     });
 
-    it("сбой пакетного запроса не роняет список комнат (last_message = null)", async () => {
+    it("сбой пакетного запроса не превращается в пустые превью (возвращает ошибку)", async () => {
         messageMocks.getLastVisibleMessageBatch.mockResolvedValue(
             err(appError("network-error", "batch failed")),
         );
 
         const result = await roomRepository.getUserRoomsWithLastMessages("u1");
 
-        if (result.isErr()) {
-            throw result.error;
-        }
-        const rooms = result.value;
-        expect(rooms.every((r) => r.last_message === null)).toBe(true);
+        // Контракт: при сбое batch-загрузки не отдаём комнаты с пустым
+        // last_message и не позволяем прикладному слою перезаписать показанные
+        // данные или сохранить неполный снимок в кеш.
+        expect(result.isErr()).toBe(true);
     });
 });

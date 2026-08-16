@@ -4,6 +4,7 @@ import { QUERY_KEYS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import { getUserRoomsWithLastMessages } from "@/lib/services/room";
 import { roomListDb } from "@/lib/services/room-list-db";
+import { sessionGuard } from "@/lib/services/session-cleanup";
 import type { ExtendedChatItem, RoomWithMembers } from "@/lib/types";
 import { useAuthStore } from "@/stores/auth";
 import { decryptRoomPreviews } from "../utils/decryptPreviews";
@@ -36,61 +37,105 @@ export function useChatList() {
                 return [];
             }
 
-            // Полная серверная загрузка + запись raw-кеша + расшифровка превью.
-            const fetchAndApply = async (): Promise<RoomWithMembers[]> => {
-                const result = await getUserRoomsWithLastMessages(pbUser.id);
+            const userId = pbUser.id;
+            // Session guard: ответ, завершившийся после logout/смены пользователя,
+            // не должен писать в IndexedDB или QueryClient.
+            const sessionAtStart = sessionGuard.current();
+            const isCurrentSession = (): boolean =>
+                sessionGuard.current() === sessionAtStart;
+
+            // Серверная загрузка (N+1-запрос last-msgs вне критического пути).
+            const loadFresh = async (): Promise<RoomWithMembers[]> => {
+                const result = await getUserRoomsWithLastMessages(userId);
                 if (result.isErr()) {
                     throw result.error;
                 }
-                const rawRooms = result.value;
-                // Кеш хранит ТОЛЬКО raw-данные (ciphertext); расшифровка ниже,
-                // чтобы не сохранять plaintext сообщений в IndexedDB.
-                try {
-                    await roomListDb.save(pbUser.id, rawRooms);
-                } catch (e) {
-                    logger.warn(
-                        "useChatList: не удалось обновить кеш комнат",
-                        e,
-                    );
+                return result.value;
+            };
+
+            // Сохраняем raw-кеш (только ciphertext) fire-and-forget: НЕ блокирует
+            // показ свежих данных и выполняется только если сессия актуальна.
+            const saveRawCache = (rawRooms: RoomWithMembers[]): void => {
+                if (!isCurrentSession()) {
+                    return;
                 }
-                return decryptRoomPreviews(rawRooms, pbUser.id);
+                void roomListDb.save(userId, rawRooms).catch(() => {
+                    logger.warn("useChatList: не удалось обновить кеш комнат");
+                });
             };
 
             // Если в React Query уже есть данные (инвалидация, refetch, realtime),
             // не «откатываем» список к кешу — грузим с сервера.
             const existing = queryClient.getQueryData<RoomWithMembers[]>(
-                QUERY_KEYS.rooms(pbUser.id),
+                QUERY_KEYS.rooms(userId),
             );
 
             if (!existing) {
-                // cache-first из локального кеша (изоляция по userId/PB URL)
-                const cached = await roomListDb
-                    .load(pbUser.id)
-                    .catch(() => null);
+                // cache-first из локального кеша (изоляция по userId/PB URL).
+                // `[]` — корректный cache hit; null/повреждённый кеш — cache miss.
+                const cached = await roomListDb.load(userId).catch(() => null);
 
-                if (cached) {
-                    // Показываем из кеша мгновенно, сервер синхронизируем в фоне
+                if (isCurrentSession() && cached) {
+                    const cachedPreview = await decryptRoomPreviews(
+                        cached,
+                        userId,
+                    );
+
+                    // Показываем из кеша мгновенно, сервер синхронизируем в фоне.
                     void (async () => {
                         try {
-                            const fresh = await fetchAndApply();
+                            const raw = await loadFresh();
+                            if (!isCurrentSession()) {
+                                return;
+                            }
+                            // Защита от устаревшего ответа: если за время фоновой
+                            // синхронизации realtime/optimistic код заменил наш
+                            // кеш-снимок свежими данными — не перезаписываем их и
+                            // НЕ пишем устаревший снимок в IndexedDB.
+                            const current = queryClient.getQueryData<
+                                RoomWithMembers[]
+                            >(QUERY_KEYS.rooms(userId));
+                            if (current !== cachedPreview) {
+                                return;
+                            }
+                            saveRawCache(raw);
+                            const fresh = await decryptRoomPreviews(
+                                raw,
+                                userId,
+                            );
                             queryClient.setQueryData(
-                                QUERY_KEYS.rooms(pbUser.id),
+                                QUERY_KEYS.rooms(userId),
                                 fresh,
                             );
-                        } catch (e) {
+                        } catch {
                             logger.error(
                                 "useChatList: фоновая синхронизация не удалась",
-                                e,
                             );
                         }
                     })();
-                    return decryptRoomPreviews(cached, pbUser.id);
+                    return cachedPreview;
                 }
             }
 
             // Cache miss / недоступный кеш — грузим с сервера (fallback)
-            return fetchAndApply();
+            const raw = await loadFresh();
+            if (!isCurrentSession()) {
+                // Сессия завершилась: не пишем старые данные в IndexedDB/QueryClient.
+                return [];
+            }
+            // Не затираем более свежие realtime/optimistic данные, заменившие
+            // текущий снимок, пока выполнялся серверный запрос.
+            const current = queryClient.getQueryData<RoomWithMembers[]>(
+                QUERY_KEYS.rooms(userId),
+            );
+            const shouldApply = current === existing;
+            if (shouldApply) {
+                saveRawCache(raw);
+            }
+            const fresh = await decryptRoomPreviews(raw, userId);
+            return shouldApply ? fresh : (current ?? fresh);
         },
+
         select: (data: RoomWithMembers[]): ExtendedChatItem[] => {
             if (!data || !pbUser) {
                 return [];

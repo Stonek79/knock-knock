@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { QUERY_KEYS } from "@/lib/constants";
+import { sessionCleanup } from "@/lib/services/session-cleanup";
 import { useChatList } from "./useChatList";
 
 /**
@@ -59,18 +61,17 @@ vi.mock("@/lib/services/room/queries", async (importOriginal) => {
 });
 
 import type { RoomRepoError, RoomWithMembers } from "@/lib/types";
-import { ok, type Result } from "@/lib/utils/result";
+import { appError, err, ok, type Result } from "@/lib/utils/result";
 
-const createWrapper = () => {
-    const queryClient = new QueryClient({
+const createWrapper = (
+    qc: QueryClient = new QueryClient({
         defaultOptions: {
             queries: { retry: false },
         },
-    });
+    }),
+) => {
     return ({ children }: { children: ReactNode }) => (
-        <QueryClientProvider client={queryClient}>
-            {children}
-        </QueryClientProvider>
+        <QueryClientProvider client={qc}>{children}</QueryClientProvider>
     );
 };
 
@@ -120,6 +121,9 @@ beforeEach(() => {
     vi.clearAllMocks();
     mocks.auth.pbUser = { id: "user-a" };
     mocks.decryptPreview.mockImplementation(decrypt);
+    // Сейв выполняется fire-and-forget: mock должен возвращать thenable, чтобы
+    // `saveRawCache` корректно обрабатывал `save().catch(...)`.
+    mocks.save.mockResolvedValue(undefined);
 });
 
 describe("useChatList — cache-first загрузка", () => {
@@ -148,6 +152,28 @@ describe("useChatList — cache-first загрузка", () => {
         await waitFor(() => {
             expect(result.current.data?.[0]?.lastMessage).toBe("SERVER_CT_DEC");
         });
+    });
+
+    it("save (fire-and-forget) не блокирует первый показ свежих данных с сервера", async () => {
+        // Cache miss: свежие данные приходят с сервера; save «застрял» (pending).
+        // Отображение НЕ должно ожидать завершения записи в IndexedDB.
+        mocks.load.mockResolvedValue(null);
+        mocks.getUserRoomsWithLastMessages.mockResolvedValue(
+            ok([makeRoom("r1", "SERVER_CT")]),
+        );
+        const slowSave = deferred<void>();
+        mocks.save.mockReturnValue(slowSave.promise);
+
+        const { result } = renderHook(() => useChatList(), {
+            wrapper: createWrapper(),
+        });
+
+        await waitFor(() => {
+            expect(result.current.data?.[0]?.lastMessage).toBe("SERVER_CT_DEC");
+        });
+        // save начат, но ещё не завершён — показ от него не завис.
+        expect(mocks.save).toHaveBeenCalled();
+        expect(result.current.data?.[0]?.lastMessage).toBe("SERVER_CT_DEC");
     });
 
     it("кеш пополняется только raw (ciphertext) данными, без plaintext", async () => {
@@ -205,7 +231,9 @@ describe("useChatList — cache-first загрузка", () => {
         mocks.load.mockImplementation(async (userId: string) =>
             userId === "user-b" ? userBCache : null,
         );
-        mocks.getUserRoomsWithLastMessages.mockResolvedValue(ok([]));
+        mocks.getUserRoomsWithLastMessages.mockImplementation(
+            async (userId: string) => ok(userId === "user-b" ? userBCache : []),
+        );
 
         const { result, rerender } = renderHook(() => useChatList(), {
             wrapper: createWrapper(),
@@ -220,5 +248,128 @@ describe("useChatList — cache-first загрузка", () => {
             expect(result.current.data?.[0]?.lastMessage).toBe("USER_B_CT_DEC");
         });
         expect(mocks.load).toHaveBeenCalledWith("user-b");
+    });
+
+    it("фоновая синхронизация не перезаписывает более свежие realtime-данные", async () => {
+        mocks.load.mockResolvedValue([makeRoom("r1", "CACHED_CT")]);
+        const bg = deferred<Result<RoomWithMembers[], RoomRepoError>>();
+        mocks.getUserRoomsWithLastMessages.mockReturnValue(bg.promise);
+
+        const qc = new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+        });
+        const { result } = renderHook(() => useChatList(), {
+            wrapper: createWrapper(qc),
+        });
+
+        // Первый показ из кеша
+        await waitFor(() => {
+            expect(result.current.data?.[0]?.lastMessage).toBe("CACHED_CT_DEC");
+        });
+
+        // Realtime заменил кеш-снимок (уже расшифрованный превью), пока
+        // фоновая синхронизация в полёте
+        qc.setQueryData<RoomWithMembers[]>(
+            QUERY_KEYS.rooms("user-a"),
+            (old = []) =>
+                old.map((room) =>
+                    room.id === "r1" && room.last_message
+                        ? {
+                              ...room,
+                              last_message: {
+                                  ...room.last_message,
+                                  content: "REALTIME_CT_DEC",
+                              },
+                          }
+                        : room,
+                ),
+        );
+        await waitFor(() => {
+            expect(result.current.data?.[0]?.lastMessage).toBe(
+                "REALTIME_CT_DEC",
+            );
+        });
+
+        // Фоновая синхронизация завершается более старым серверным снимком
+        bg.resolve(ok([makeRoom("r1", "STALE_SERVER_CT")]));
+
+        // Более свежие realtime-данные не затёрты устаревшим ответом
+        await waitFor(() => {
+            expect(result.current.data?.[0]?.lastMessage).toBe(
+                "REALTIME_CT_DEC",
+            );
+        });
+        expect(result.current.data?.[0]?.lastMessage).not.toBe(
+            "STALE_SERVER_CT_DEC",
+        );
+        // Устаревший серверный ответ НЕ перезаписывает IndexedDB-кеш.
+        expect(mocks.save).not.toHaveBeenCalled();
+    });
+
+    it("deferred-ответ после logout не пишет данные в кеш/QueryClient", async () => {
+        mocks.load.mockResolvedValue([makeRoom("r1", "CACHED_CT")]);
+        const bg = deferred<Result<RoomWithMembers[], RoomRepoError>>();
+        mocks.getUserRoomsWithLastMessages.mockReturnValue(bg.promise);
+
+        const qc = new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+        });
+        const { result, rerender } = renderHook(() => useChatList(), {
+            wrapper: createWrapper(qc),
+        });
+
+        // Первый показ из кеша (фоновая синхронизация в полёте)
+        await waitFor(() => {
+            expect(result.current.data?.[0]?.lastMessage).toBe("CACHED_CT_DEC");
+        });
+
+        // Logout через тот же seam, что вызывает useAuthStore.signOut: session
+        // guard инвалидируется и чувствительные query-данные удаляются из
+        // QueryClient. Полный signOut (AuthService.logout, destroy realtime,
+        // roomListDb.clear) покрыт в auth.test.ts; здесь store замокан целиком
+        // (тесты управляют pbUser через mocks.auth), поэтому сетевых вызовов не
+        // происходит.
+        sessionCleanup.registerQueryClient(qc);
+        mocks.auth.pbUser = null;
+        await sessionCleanup.clearSensitiveQueryData();
+        rerender();
+
+        // Старый серверный ответ завершается уже ПОСЛЕ logout.
+        bg.resolve(ok([makeRoom("r1", "STALE_AFTER_LOGOUT")]));
+        // Даём отложенным микротаскам отработать.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // Не пишем в IndexedDB-кеш и не затираем query-данные старым снимком:
+        // чувствительные rooms-данные вовсе удалены из QueryClient (более строгий
+        // контракт, чем «не содержит устаревший контент»).
+        expect(mocks.save).not.toHaveBeenCalled();
+
+        const queryData = qc.getQueryData<RoomWithMembers[]>(
+            QUERY_KEYS.rooms("user-a"),
+        );
+        expect(queryData).toBeUndefined();
+    });
+
+    it("ошибка batch-загрузки не затирает показанные данные и не пишет снимок в кеш", async () => {
+        mocks.load.mockResolvedValue([makeRoom("r1", "CACHED_CT")]);
+        mocks.getUserRoomsWithLastMessages.mockResolvedValue(
+            err(appError("network-error", "batch failed")),
+        );
+
+        const { result } = renderHook(() => useChatList(), {
+            wrapper: createWrapper(),
+        });
+
+        // Показанные из кеша данные остаются
+        await waitFor(() => {
+            expect(result.current.data?.[0]?.lastMessage).toBe("CACHED_CT_DEC");
+        });
+
+        // Фоновая синхронизация завершилась ошибкой: показанные данные не
+        // затёрты, ошибка не «выпадает» пользователю и неполный снимок не
+        // записан в IndexedDB.
+        expect(result.current.error).toBeNull();
+        expect(result.current.data?.[0]?.lastMessage).toBe("CACHED_CT_DEC");
+        expect(mocks.save).not.toHaveBeenCalled();
     });
 });

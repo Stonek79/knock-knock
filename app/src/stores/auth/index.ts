@@ -5,6 +5,8 @@ import { authRepository } from "@/lib/repositories/auth.repository";
 import { UserMapper } from "@/lib/repositories/mappers/userMapper";
 import { AuthService } from "@/lib/services/auth";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
+import { roomListDb } from "@/lib/services/room-list-db";
+import { sessionCleanup } from "@/lib/services/session-cleanup";
 import type { UserRecord as AuthUser } from "@/lib/types";
 import type { Profile } from "@/lib/types/profile";
 
@@ -127,11 +129,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     signOut: async () => {
+        const userId = get().pbUser?.id;
         AuthService.logout();
         set({ pbUser: null, profile: null });
         ChatRealtimeService.destroy();
+        // Инвалидируем session guard, отменяем in-flight запросы и удаляем
+        // чувствительные данные (rooms, messages и др.) из общего TanStack
+        // QueryClient. Вынесено в отдельный узкий seam (session-cleanup),
+        // чтобы не создавать циклический импорт через main.tsx.
+        await sessionCleanup.clearSensitiveQueryData();
         // Следующий пользователь должен немедленно пройти refreshSession.
         // Throttle относится к текущей сессии и не должен переноситься через logout.
         lastFetchAttempt = 0;
+
+        // Очищаем room-list кеш завершающего пользователя, чтобы данные одного
+        // аккаунта не были доступны следующему. Best-effort: сбой IndexedDB не
+        // должен блокировать выход. Сырой IndexedDB/DOMException не передаём в
+        // logger (может содержать userId/имя базы).
+        if (userId) {
+            try {
+                await roomListDb.clear(userId);
+            } catch {
+                logger.warn("AuthStore: не удалось очистить room-list кеш");
+            }
+        }
     },
 }));
