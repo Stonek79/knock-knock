@@ -1,30 +1,33 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { QUERY_KEYS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
-import { chatCryptoService } from "@/lib/services/chat-crypto";
-import { getUserRooms } from "@/lib/services/room";
+import { getUserRoomsWithLastMessages } from "@/lib/services/room";
+import { roomListDb } from "@/lib/services/room-list-db";
 import type { ExtendedChatItem, RoomWithMembers } from "@/lib/types";
 import { useAuthStore } from "@/stores/auth";
+import { decryptRoomPreviews } from "../utils/decryptPreviews";
 import { mapRoomToChatItem } from "../utils/roomUiMapper";
 
 /**
  * Хук для получения и обработки списка чатов текущего пользователя.
  *
- * Выполняет следующие задачи:
- * 1. Получает сырые данные комнат из PocketBase.
- * 2. Маппит их в формат ChatItem для UI.
- * 3. Локализует названия и системные сообщения.
- * 4. Сортирует список согласно правилам:
- *    - "Избранное" (Saved Messages) всегда на первом месте.
- *    - Закрепленные чаты следуют далее, сортируясь по времени закрепления (pinPosition).
- *    - Все остальные чаты сортируются по дате последнего обновления/сообщения.
+ * Использует cache-first стратегию:
+ * 1. При отсутствии данных в React Query читает список комнат из постоянного
+ *    IndexedDB-кеша (разделяется по userId и PB environment). Список
+ *    отображается сразу, без ожидания сервера.
+ * 2. Серверное обновление (включая последние сообщения) выполняется в фоне и
+ *    обновляет кеш и query после завершения.
+ * 3. Постоянный кеш убирает ожидание N+1-запросов последних сообщений из
+ *    критического пути отрисовки после reload.
+ * 4. Маппит данные в формат ChatItem, локализует названия и сортирует список.
  *
  * @returns {UseQueryResult<ChatItem[]>} Объект с данными чатов, статусом загрузки и ошибками.
  */
 export function useChatList() {
     const { t } = useTranslation();
     const pbUser = useAuthStore((state) => state.pbUser);
+    const queryClient = useQueryClient();
 
     return useQuery({
         queryKey: QUERY_KEYS.rooms(pbUser?.id),
@@ -33,40 +36,60 @@ export function useChatList() {
                 return [];
             }
 
-            const result = await getUserRooms(pbUser.id);
+            // Полная серверная загрузка + запись raw-кеша + расшифровка превью.
+            const fetchAndApply = async (): Promise<RoomWithMembers[]> => {
+                const result = await getUserRoomsWithLastMessages(pbUser.id);
+                if (result.isErr()) {
+                    throw result.error;
+                }
+                const rawRooms = result.value;
+                // Кеш хранит ТОЛЬКО raw-данные (ciphertext); расшифровка ниже,
+                // чтобы не сохранять plaintext сообщений в IndexedDB.
+                try {
+                    await roomListDb.save(pbUser.id, rawRooms);
+                } catch (e) {
+                    logger.warn(
+                        "useChatList: не удалось обновить кеш комнат",
+                        e,
+                    );
+                }
+                return decryptRoomPreviews(rawRooms, pbUser.id);
+            };
 
-            if (result.isErr()) {
-                logger.error("Failed to fetch rooms", result.error);
-                throw result.error;
-            }
-
-            const rooms = result.value;
-
-            // Параллельно расшифровываем контент последних сообщений для превью
-            await Promise.all(
-                rooms.map(async (room) => {
-                    if (
-                        room.last_message &&
-                        !room.last_message.is_deleted &&
-                        room.last_message.content
-                    ) {
-                        const { content } =
-                            await chatCryptoService.decryptPreview({
-                                message: {
-                                    ...room.last_message,
-                                    room: room.id,
-                                    content: room.last_message.content || "",
-                                    iv: room.last_message.iv || "",
-                                    is_deleted: !!room.last_message.is_deleted,
-                                },
-                                userId: pbUser.id,
-                            });
-                        room.last_message.content = content;
-                    }
-                }),
+            // Если в React Query уже есть данные (инвалидация, refetch, realtime),
+            // не «откатываем» список к кешу — грузим с сервера.
+            const existing = queryClient.getQueryData<RoomWithMembers[]>(
+                QUERY_KEYS.rooms(pbUser.id),
             );
 
-            return rooms;
+            if (!existing) {
+                // cache-first из локального кеша (изоляция по userId/PB URL)
+                const cached = await roomListDb
+                    .load(pbUser.id)
+                    .catch(() => null);
+
+                if (cached) {
+                    // Показываем из кеша мгновенно, сервер синхронизируем в фоне
+                    void (async () => {
+                        try {
+                            const fresh = await fetchAndApply();
+                            queryClient.setQueryData(
+                                QUERY_KEYS.rooms(pbUser.id),
+                                fresh,
+                            );
+                        } catch (e) {
+                            logger.error(
+                                "useChatList: фоновая синхронизация не удалась",
+                                e,
+                            );
+                        }
+                    })();
+                    return decryptRoomPreviews(cached, pbUser.id);
+                }
+            }
+
+            // Cache miss / недоступный кеш — грузим с сервера (fallback)
+            return fetchAndApply();
         },
         select: (data: RoomWithMembers[]): ExtendedChatItem[] => {
             if (!data || !pbUser) {

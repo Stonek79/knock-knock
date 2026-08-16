@@ -8,6 +8,7 @@ import {
 } from "../constants";
 import { pb } from "../pocketbase";
 import { realtimeGateway } from "../services/RealtimeGateway";
+import { roomListDb } from "../services/room-list-db";
 import type {
     PBRealtimeAction,
     PBRealtimeEvent,
@@ -74,7 +75,12 @@ export const roomRepository = {
     },
 
     /**
-     * Получение списка комнат пользователя
+     * Получение списка комнат пользователя (быстрый критический путь).
+     *
+     * Комнаты и участники грузятся с сервера, а last_message подтягивается из
+     * постоянного кеша (raw ciphertext). Ожидание N+1-запросов последних сообщений
+     * вынесено из критического пути: полная серверная загрузка с last-msgs живёт в
+     * `getUserRoomsWithLastMessages` и выполняется в фоне.
      */
     getUserRooms: async (
         userId: string,
@@ -93,18 +99,72 @@ export const roomRepository = {
         if (roomIds.length === 0) {
             return ok([]);
         }
-        // 2. Вызываем наш метод, чтобы получить комнаты с участниками по этим ID
+
+        // 2. Комнаты с участниками по этим ID
         const roomsResult =
             await roomRepository.getRoomsWithMembersByIds(roomIds);
         if (roomsResult.isErr()) {
             return err(roomsResult.error);
         }
 
+        // 3. Мержим last_message из локального кеша (быстро, без N+1 к серверу).
+        //    Повреждённый/недоступный кеш не должен валить критический путь.
+        let cachedRooms: RoomWithMembers[] = [];
+        try {
+            cachedRooms = (await roomListDb.load(userId)) ?? [];
+        } catch {
+            cachedRooms = [];
+        }
+        const lastByRoom = new Map(
+            cachedRooms.map((r) => [r.id, r.last_message ?? null] as const),
+        );
+
+        return ok(
+            roomsResult.value.map((room) => ({
+                ...room,
+                last_message: lastByRoom.get(room.id) ?? null,
+            })),
+        );
+    },
+
+    /**
+     * Полная серверная загрузка комнат пользователя вместе с последними
+     * видимыми сообщениями. Используется для фоновой синхронизации после того,
+     * как список уже показан из кеша. Содержит ожидание N+1-запроса last-msgs,
+     * поэтому не входит в критический путь отрисовки.
+     */
+    getUserRoomsWithLastMessages: async (
+        userId: string,
+    ): Promise<Result<RoomWithMembers[], RoomRepoError>> => {
+        // 1. Получаем ID всех комнат, в которых состоит пользователь
+        const membersResult =
+            await roomRepository.getRoomMembersByUserId(userId);
+
+        if (membersResult.isErr()) {
+            return err(membersResult.error);
+        }
+
+        const roomIds = membersResult.value.map(
+            (m) => m[ROOM_MEMBER_FIELDS.ROOM] as string,
+        );
+        if (roomIds.length === 0) {
+            return ok([]);
+        }
+
+        // 2. Комнаты с участниками по этим ID
+        const roomsResult =
+            await roomRepository.getRoomsWithMembersByIds(roomIds);
+        if (roomsResult.isErr()) {
+            return err(roomsResult.error);
+        }
+
+        // 3. Батч последних видимых сообщений (пакетный контракт last-messages)
         const lastMsgsResult =
             await messageRepository.getLastVisibleMessageBatch(roomIds, userId);
         const lastMsgs = lastMsgsResult.isOk()
             ? lastMsgsResult.value
             : new Map();
+
         return ok(
             roomsResult.value.map((room) => ({
                 ...room,

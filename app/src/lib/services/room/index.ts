@@ -13,6 +13,7 @@ import {
     getFavoriteRooms,
     getRoomUnreadCounts,
     getUserRooms,
+    getUserRoomsWithLastMessages,
 } from "./queries";
 
 /**
@@ -24,6 +25,7 @@ export const RoomService = {
     getChatRoomData,
     getFavoriteRooms,
     getUserRooms,
+    getUserRoomsWithLastMessages,
     getRoomUnreadCounts,
 
     // Mutations (изменение данных)
@@ -52,4 +54,5 @@ export {
     getFavoriteRooms,
     getRoomUnreadCounts,
     getUserRooms,
+    getUserRoomsWithLastMessages,
 };

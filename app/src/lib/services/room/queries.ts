@@ -398,6 +398,16 @@ export async function getUserRooms(
 }
 
 /**
+ * Полная серверная загрузка комнат пользователя вместе с последними сообщениями.
+ * Используется для фоновой синхронизации списка комнат.
+ */
+export async function getUserRoomsWithLastMessages(
+    userId: string,
+): Promise<Result<RoomWithMembers[], RoomRepoError>> {
+    return roomRepository.getUserRoomsWithLastMessages(userId);
+}
+
+/**
  * Получает счетчики непрочитанных сообщений для всех комнат пользователя.
  */
 export async function getRoomUnreadCounts(
