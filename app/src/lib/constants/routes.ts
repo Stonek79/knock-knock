@@ -34,6 +34,7 @@ export const API_ROUTES = {
     USERS_CONTACTS: "/api/custom/users/contacts",
     USERS_KEYS: "/api/custom/users/keys",
     INVITES_GENERATE: "/api/custom/invites/generate",
+    INVITES_VALIDATE: "/api/custom/invites/validate",
     INVITES_JOIN: "/api/invites/join",
     BROADCAST_SEND: "/api/custom/broadcast",
     BROADCAST_HISTORY: "/api/custom/broadcast/history",

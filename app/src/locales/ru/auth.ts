@@ -38,6 +38,14 @@ export const auth = {
         loginAfterRegisterFailed:
             "Не удалось войти после регистрации. Попробуйте войти вручную.",
         registerFailed: "Ошибка регистрации. Попробуйте позже.",
+        inviteRequired: "Введите код приглашения.",
+        invalidInvite: "Код приглашения недействителен.",
+        inviteExpired: "Срок действия кода приглашения истёк.",
+        inviteUsed: "Код приглашения уже использован.",
+        inviteUnavailable:
+            "Код приглашения временно недоступен. Попробуйте позже.",
+        registrationInviteRequired:
+            "Для регистрации нужен код приглашения, а не приглашение в комнату.",
     },
     emailInvalid: "Неверный формат email",
     passwordTooShort: "Минимум 8 символов",

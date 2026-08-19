@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AuthService } from "@/lib/services/auth";
 import { ChatRealtimeService } from "@/lib/services/chat-realtime";
+import { getAuthErrorKey } from "@/lib/utils/auth-error-mapping";
 
 /**
  * Хук для управления формами входа и регистрации.
@@ -40,9 +41,7 @@ export function useAuthForms() {
             if (result.isOk()) {
                 return true;
             } else {
-                setSubmitError(
-                    t(result.error.message || "auth.errors.invalidCredentials"),
-                );
+                setSubmitError(t(getAuthErrorKey(result.error, "login")));
                 return false;
             }
         },
@@ -92,9 +91,7 @@ export function useAuthForms() {
                     setSubmitError(t("auth.errors.loginAfterRegisterFailed"));
                 }
             } else {
-                setSubmitError(
-                    t(regResult.error.message || "auth.errors.registerFailed"),
-                );
+                setSubmitError(t(getAuthErrorKey(regResult.error, "register")));
             }
         },
     });

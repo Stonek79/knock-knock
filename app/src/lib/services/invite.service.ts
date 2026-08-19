@@ -5,7 +5,7 @@
 
 import { ERROR_CODES } from "../constants";
 import { inviteRepository } from "../repositories/invite.repository";
-import type { InviteRepoError, Result } from "../types";
+import type { InviteRepoError, Result, RoomInvitePreviewDto } from "../types";
 import type { InvitesRecord, InvitesResponse } from "../types/pocketbase-types";
 import { appError, err, ok } from "../utils/result";
 
@@ -50,12 +50,15 @@ export const inviteService = {
     },
 
     /**
-     * Получить инвайт и проверить его валидность (срок и лимиты).
+     * Получить и проверить room invite по его токену.
+     * Эндпоинт /api/custom/invites/validate уже отклоняет истёкшие и
+     * исчерпанные invite fail-closed и возвращает узкий DTO. Ниже — только
+     * защитная клиентская проверка, не ожидающая полную запись Invites.
      */
-    validateInvite: async <T = unknown>(
+    validateInvite: async (
         token: string,
-    ): Promise<Result<InvitesResponse<T>, InviteRepoError>> => {
-        const res = await inviteRepository.getInviteByToken<T>(token);
+    ): Promise<Result<RoomInvitePreviewDto, InviteRepoError>> => {
+        const res = await inviteRepository.getInviteByToken(token);
 
         if (res.isErr()) {
             return err(res.error);
@@ -65,7 +68,6 @@ export const inviteService = {
 
         // Проверка лимита использований
         if (
-            invite.max_uses &&
             invite.max_uses > 0 &&
             (invite.uses_count ?? 0) >= invite.max_uses
         ) {
@@ -80,7 +82,7 @@ export const inviteService = {
         // Проверка срока жизни
         if (invite.expires_at) {
             const expireDate = new Date(invite.expires_at);
-            if (expireDate < new Date()) {
+            if (Number.isNaN(expireDate.getTime()) || expireDate < new Date()) {
                 return err(
                     appError(
                         ERROR_CODES.FORBIDDEN_ERROR,
@@ -94,10 +96,11 @@ export const inviteService = {
     },
 
     /**
-     * Вступление по инвайту (Подготовка к Этапу 5).
-     * Сейчас возвращает заглушку, так как для безопасного вступления
-     * понадобится кастомный серверный эндпоинт (RPC),
-     * который атомарно увеличит uses_count и добавит в room_members.
+     * Вступление по инвайту через серверный endpoint.
+     * Endpoint повторно проверяет токен, увеличивает uses_count, добавляет
+     * room_members и персональный зашифрованный ключ. Примечание: расходование
+     * через серверный endpoint пока не является runtime-подтверждённо атомарным
+     * (см. BLOCKER по конкурентному использованию в TESTING_PLAN/CURRENT_STATE).
      */
     joinRoomByToken: async (
         token: string,

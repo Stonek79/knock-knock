@@ -5,8 +5,9 @@
 
 import { API_ROUTES, DB_TABLES, ERROR_CODES } from "../constants";
 import { pb } from "../pocketbase";
-import type { InviteRepoError, Result } from "../types";
+import type { InviteRepoError, Result, RoomInvitePreviewDto } from "../types";
 import type { InvitesRecord, InvitesResponse } from "../types/pocketbase-types";
+import { mapPbErrorCode } from "../utils/errors";
 import { appError, err, fromPromise, ok } from "../utils/result";
 
 export const inviteRepository = {
@@ -22,11 +23,7 @@ export const inviteRepository = {
                 method: "POST",
             }),
             (e: unknown) =>
-                appError(
-                    ERROR_CODES.NETWORK_ERROR,
-                    "Ошибка при генерации инвайта",
-                    e,
-                ),
+                appError(mapPbErrorCode(e), "Ошибка при генерации инвайта", e),
         ).then((res) => {
             if (res.isErr()) {
                 return err(res.error);
@@ -45,11 +42,7 @@ export const inviteRepository = {
         return fromPromise(
             pb.collection(DB_TABLES.INVITES).create<InvitesResponse>(data),
             (e: unknown) =>
-                appError(
-                    ERROR_CODES.NETWORK_ERROR,
-                    "Ошибка при создании инвайта",
-                    e,
-                ),
+                appError(mapPbErrorCode(e), "Ошибка при создании инвайта", e),
         ).then((res) => {
             if (res.isErr()) {
                 return err(res.error);
@@ -59,26 +52,29 @@ export const inviteRepository = {
     },
 
     /**
-     * Получить информацию об инвайте по его токену.
+     * Получить информацию об invite по его токену через узкий DTO endpoint.
      * (Используется на странице /join/:token)
+     * Endpoint возвращает только allowlist DTO — не полную запись Invites.
      * @param token Уникальный токен
      */
-    getInviteByToken: async <T = unknown>(
+    getInviteByToken: async (
         token: string,
-    ): Promise<Result<InvitesResponse<T>, InviteRepoError>> => {
+    ): Promise<Result<RoomInvitePreviewDto, InviteRepoError>> => {
         return fromPromise(
-            pb
-                .collection(DB_TABLES.INVITES)
-                .getFirstListItem<InvitesResponse<T>>(
-                    pb.filter("token = {:token}", { token }),
-                    { expand: "room,created_by" },
-                ),
-            (e: unknown) =>
-                appError(
-                    ERROR_CODES.NOT_FOUND_ERROR,
-                    "Инвайт не найден или недействителен",
+            pb.send<RoomInvitePreviewDto>(API_ROUTES.INVITES_VALIDATE, {
+                method: "POST",
+                body: { token },
+            }),
+            (e: unknown) => {
+                const kind = mapPbErrorCode(e);
+                return appError(
+                    kind,
+                    kind === ERROR_CODES.NETWORK_ERROR
+                        ? "Сервер недоступен"
+                        : "Инвайт не найден или недействителен",
                     e,
-                ),
+                );
+            },
         ).then((res) => {
             if (res.isErr()) {
                 return err(res.error);
@@ -97,11 +93,7 @@ export const inviteRepository = {
         return fromPromise(
             pb.collection(DB_TABLES.INVITES).delete(id),
             (e: unknown) =>
-                appError(
-                    ERROR_CODES.NETWORK_ERROR,
-                    "Ошибка при удалении инвайта",
-                    e,
-                ),
+                appError(mapPbErrorCode(e), "Ошибка при удалении инвайта", e),
         ).then((res) => {
             if (res.isErr()) {
                 return err(res.error);
@@ -129,7 +121,7 @@ export const inviteRepository = {
             }),
             (e: unknown) =>
                 appError(
-                    ERROR_CODES.NETWORK_ERROR,
+                    mapPbErrorCode(e),
                     "Ошибка при вступлении в комнату. Возможно, ссылка недействительна.",
                     e,
                 ),

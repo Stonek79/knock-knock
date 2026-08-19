@@ -37,20 +37,20 @@
 - слишком широкие PocketBase rules для invites/media/presence/reactions и
   call-history операций;
 - owner-only users локально реализованы, но Dev authorization matrix ещё не
-  выполнена; invite registration остаётся незавершённой, потому что hook всё
-  ещё не согласован со schema `invites` (`code/status` против
-  `token/expires_at/max_uses/uses_count`);
+  выполнена; invite registration локально согласована вокруг `invites.token`
+  и закрытого list/view, но Dev runtime matrix и конкурентное расходование ещё
+  не проверены;
 - отсутствие управляемых PocketBase migrations/schema drift gate;
 - небезопасный и невоспроизводимый prototype release-export.
 
-Локальный frontend suite после последних срезов: 35 test files passed, 4
-skipped; 186 tests passed, 6 skipped. `npm run lint`, `npm run build` и
+Локальный frontend suite после последних срезов: 37 test files passed, 4
+skipped; 196 tests passed, 6 skipped. `npm run lint`, `npm run build` и
 `git diff --check` проходят. Пропуски — integration/browser-контуры без
 разрешённого изолированного окружения; это не evidence Dev/Prod и не release
 readiness.
 
-Последнее локальное evidence привязано к commit `ac968f0` (19 августа 2026):
-команды выполнялись из `app`, без подключения к Dev/Prod API. Runtime claims
+Последнее локальное evidence относится к текущему рабочему срезу (19 августа
+2026); команды выполнялись из `app`, без подключения к Dev/Prod API. Runtime claims
 ниже считаются подтверждёнными только там, где отдельно указаны VPS/Dev
 проверки владельца; локальный suite не заменяет их.
 
@@ -140,9 +140,13 @@ readiness.
   parameter binding и миграция frontend consumers; Dev authorization matrix
   владельца остаётся открытой.
 - [x] Локально подтверждены fail-closed обработка ошибки invite и parameter
-  binding; это не подтверждает успешный valid invite.
-- [ ] Согласовать hook/schema модель `invites` и пройти runtime-сценарии
-  valid/expired/used/foreign invite после deploy.
+  binding; valid/expired/exhausted/foreign contract tests и условный атомарный
+  `UPDATE` с проверкой `rowsAffected()` покрывают локальный concurrent-use
+  контракт, но не подтверждают Dev runtime.
+- [x] Согласовать hook/schema модель `invites`; локально покрыть
+  valid/expired/exhausted/foreign/malformed и прямой list/view denial.
+- [ ] Пройти Dev runtime-сценарии valid/expired/used/foreign invite после
+  deploy и проверить конкурентное расходование.
 - [x] В schema snapshot отключены новые-device login alerts; применение в
   работающем Dev выполняется владельцем через Admin UI.
 

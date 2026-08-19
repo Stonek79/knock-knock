@@ -1469,7 +1469,7 @@
 				"name": "room",
 				"type": "relation",
 				"system": false,
-				"required": true,
+				"required": false,
 				"collectionId": "pbc_rooms_id",
 				"maxSelect": 1,
 				"cascadeDelete": true
@@ -1537,8 +1537,8 @@
 		"indexes": [
 			"CREATE UNIQUE INDEX `idx_invite_token` ON `invites` (`token`)"
 		],
-		"listRule": "",
-		"viewRule": "",
+		"listRule": null,
+		"viewRule": null,
 		"createRule": "@request.auth.id != '' && (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role ?= 'owner' || room.room_members_via_room.role ?= 'admin'))",
 		"updateRule": "@request.auth.id != '' && (created_by = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role ?= 'owner' || room.room_members_via_room.role ?= 'admin')))",
 		"deleteRule": "@request.auth.id != '' && (created_by = @request.auth.id || (room.room_members_via_room.user ?= @request.auth.id && (room.room_members_via_room.role ?= 'owner' || room.room_members_via_room.role ?= 'admin')))"

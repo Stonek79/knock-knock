@@ -419,7 +419,7 @@ export type CallLogsResponse<Texpand = unknown> = Required<CallLogsRecord> &
 // ---------------------------------------------------------------------------
 
 export type InvitesRecord = {
-    room: RecordIdString;
+    room?: RecordIdString;
     token: string;
     expires_at?: IsoDateString;
     created_by: RecordIdString;
@@ -427,7 +427,11 @@ export type InvitesRecord = {
     uses_count?: number;
 };
 
-export type InvitesResponse<Texpand = unknown> = Required<InvitesRecord> &
+export type InvitesResponse<Texpand = unknown> = Omit<
+    Required<InvitesRecord>,
+    "room"
+> &
+    Pick<InvitesRecord, "room"> &
     BaseSystemFields<Texpand>;
 
 export type CollectionRecords = {

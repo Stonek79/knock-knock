@@ -76,7 +76,10 @@ describe("route decomposition contract", () => {
 		const got = loadRoutes("main.07-invites.pb.js");
 		assert.deepEqual(
 			got.map((r) => [r.method, r.route]),
-			[["POST", "/api/custom/invites/generate"]],
+			[
+				["POST", "/api/custom/invites/generate"],
+				["POST", "/api/custom/invites/validate"],
+			],
 		);
 		assert.ok(got.every((r) => r.requireAuth));
 	});
@@ -90,15 +93,15 @@ describe("route decomposition contract", () => {
 		assert.ok(got.every((r) => r.requireAuth));
 	});
 
-	it("все 9 routes зарегистрированы ровно один раз, без дубликатов и с requireAuth", () => {
+	it("все invite/capability routes зарегистрированы ровно один раз, без дубликатов и с requireAuth", () => {
 		const allRoutes = [
 			...loadRoutes("main.05-admin-broadcast.pb.js"),
 			...loadRoutes("main.06-user-capabilities.pb.js"),
 			...loadRoutes("main.07-invites.pb.js"),
 			...loadRoutes("main.08-room-read.pb.js"),
 		];
-		assert.equal(allRoutes.length, 9);
-		assert.equal(new Set(allRoutes.map((r) => r.route)).size, 9);
+		assert.equal(allRoutes.length, 10);
+		assert.equal(new Set(allRoutes.map((r) => r.route)).size, 10);
 		assert.ok(allRoutes.every((r) => r.requireAuth));
 	});
 
@@ -143,6 +146,17 @@ describe("route decomposition contract", () => {
 		);
 		assert.doesNotMatch(src, /JSON\.stringify\(info\?\.body\)/);
 		assert.doesNotMatch(src, /console\.log\([^\n]*(rawBody|bodyData)/);
+	});
+
+	it("invite routes use token only and do not reference legacy fields", () => {
+		const src = fs.readFileSync(
+			path.join(HOOKS_DIR, "main.07-invites.pb.js"),
+			"utf8",
+		);
+		assert.match(src, /token = \{:\s*inviteToken\}/);
+		assert.doesNotMatch(src, /set\("code"/);
+		assert.doesNotMatch(src, /set\("status"/);
+		assert.doesNotMatch(src, /code\s*=/);
 	});
 
 	it("room-read не затеняет route event в проверке membership", () => {

@@ -14,6 +14,19 @@ const OUTPUT_PATH = path.resolve(
 );
 const PROJECT_ROOT = path.resolve(process.cwd(), "..");
 
+const SYSTEM_FIELD_NAMES = new Set([
+    "id",
+    "created",
+    "updated",
+    "collectionId",
+    "collectionName",
+    "emailVisibility",
+    "verified",
+    "tokenKey",
+    "lastResetSentAt",
+    "lastVerificationSentAt",
+]);
+
 // 1. СТРОГИЙ МАППИНГ ТИПОВ (Strict Mapping)
 function mapFieldType(field, typeName) {
     switch (field.type) {
@@ -175,19 +188,7 @@ export type AuthSystemFields<T = never> = {
             } else {
                 code += `export type ${typeName}Record = {\n`;
                 for (const field of coll.fields) {
-                    const systemFieldsToSkip = [
-                        "id",
-                        "created",
-                        "updated",
-                        "collectionId",
-                        "collectionName",
-                        "emailVisibility",
-                        "verified",
-                        "tokenKey",
-                        "lastResetSentAt",
-                        "lastVerificationSentAt",
-                    ];
-                    if (systemFieldsToSkip.includes(field.name)) {
+                    if (SYSTEM_FIELD_NAMES.has(field.name)) {
                         continue;
                     }
 
@@ -201,7 +202,28 @@ export type AuthSystemFields<T = never> = {
             const systemFields = isAuth
                 ? "AuthSystemFields"
                 : "BaseSystemFields";
-            code += `export type ${typeName}Response<Texpand = unknown> = Required<${typeName}Record> & ${systemFields}<Texpand>;\n\n`;
+            // PocketBase responses historically expose optional fields as
+            // required in this project. Preserve that contract everywhere,
+            // except for `invites.room`, which is intentionally optional for
+            // registration invites and must stay aligned with the schema.
+            const optionalFields =
+                coll.name === "invites" &&
+                coll.fields.some(
+                    (field) => field.name === "room" && !field.required,
+                )
+                    ? ["room"]
+                    : [];
+            const responseRecordType =
+                optionalFields.length > 0
+                    ? `Omit<Required<${typeName}Record>, ${optionalFields
+                          .map((field) => `"${field}"`)
+                          .join(
+                              " | ",
+                          )}> & Pick<${typeName}Record, ${optionalFields
+                          .map((field) => `"${field}"`)
+                          .join(" | ")}>`
+                    : `Required<${typeName}Record>`;
+            code += `export type ${typeName}Response<Texpand = unknown> = ${responseRecordType} & ${systemFields}<Texpand>;\n\n`;
         }
 
         // Маппинги коллекций
@@ -257,41 +279,27 @@ export type AuthSystemFields<T = never> = {
 }
 
 function setupGitHooks() {
-    const huskyDir = path.join(PROJECT_ROOT, ".husky");
+    // Husky is owned by app/package.json and lives in app/.husky. Type generation
+    // must not mutate package.json or try to install hooks from the repository
+    // root: that made the command emit a misleading npm set-script failure.
+    const huskyDir = path.join(PROJECT_ROOT, "app", ".husky");
     const preCommitPath = path.join(huskyDir, "pre-commit");
 
     if (!fs.existsSync(huskyDir)) {
-        console.log(`🔧 Инициализация Husky для синхронизации состояния...`);
-        try {
-            execSync(`npm set-script prepare "husky install"`, {
-                cwd: PROJECT_ROOT,
-                stdio: "inherit",
-            });
-            execSync(`npx husky install`, {
-                cwd: PROJECT_ROOT,
-                stdio: "inherit",
-            });
-        } catch (e) {
-            console.log(
-                `⚠️ Не удалось инициализировать Husky. Убедитесь, что находитесь в git-репозитории.`,
-                e,
-            );
-        }
+        console.log(
+            `ℹ️ Каталог app/.husky не найден; установка Git hooks пропущена.`,
+        );
+        return;
     }
 
     if (fs.existsSync(huskyDir) && !fs.existsSync(preCommitPath)) {
-        const preCommitScript = `#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-echo "🔄 Запуск генерации типов перед коммитом..."
-cd app && npm run typegen:pb
-git add src/lib/types/pocketbase-types.ts
-`;
-        fs.writeFileSync(preCommitPath, preCommitScript, { mode: 0o755 });
         console.log(
-            `✅ Git Hook 'pre-commit' успешно установлен. Типы будут автоматически генерироваться перед каждым коммитом.`,
+            `ℹ️ app/.husky/pre-commit не найден; typegen не создаёт hooks автоматически.`,
         );
+        return;
     }
+
+    console.log(`✅ Husky найден: app/.husky/pre-commit`);
 }
 
 function formatTypeName(name) {

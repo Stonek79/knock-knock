@@ -1,4 +1,5 @@
 export * from "./auth";
+export * from "./auth-errors";
 export * from "./cache";
 export * from "./calls";
 export * from "./chat";

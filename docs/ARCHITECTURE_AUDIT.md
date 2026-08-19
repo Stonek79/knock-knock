@@ -103,7 +103,7 @@ P0 ещё не закрывается до полного звонка межд�
 Открыто:
 
 - [x] локальные unit/contract тесты gateway и хуков: gateway 19/19,
-  PocketBase hooks 42/42 (локальный срез 19.08.2026);
+  PocketBase hooks 71/71 (локальный срез 19.08.2026);
 - [x] Nginx `nginx -t`, Docker build и gateway healthcheck проверены на VPS
   (11.08.2026);
 - [x] env/Compose-путь секрета для домашнего PocketBase проверен локально
@@ -173,13 +173,28 @@ allowlist DTO и parameter binding. Эти consumer-пути больше не �
 
 ### 4. Исправить приглашения и регистрацию
 
-Локально исправлена только часть границы: ошибки проверки теперь fail-closed и
-фильтр использует parameter binding. Но hook всё ещё ищет поля `code/status`,
-которых нет в текущем schema snapshot (`token`, `expires_at`, `max_uses`,
-`uses_count`), поэтому корректный valid invite не доказан и может быть отвергнут.
-Нужно согласовать одну модель `invites`, исправить hook/schema contract и
-подтвердить runtime-сценарии valid/expired/used/foreign invite. До этого P0 не
-закрывается.
+Локальный hook/schema contract согласован вокруг единого секрета
+`invites.token`: клиентское поле `invite_code` сохранено только как имя входа,
+а в users записывается внутренний id invite. Регистрационные invites могут не
+иметь `room`; комнатные invites используют тот же token и обязательную room-
+ветку. Проверяются TTL, max uses, exhausted/foreign room invite, а ошибки
+обработки fail-closed; регистрационный invite расходуется до сохранения user и
+ошибка его записи отклоняет регистрацию. Прямая list/view выдача invites закрыта (`null` rules),
+проверка комнатного invite вынесена в авторизованный POST DTO endpoint; token не
+передаётся в URL.
+
+Конкурентное расходование больше не использует `get -> check -> save`: оба
+расходующих пути вызывают общий условный SQL `UPDATE` и проверяют
+`rowsAffected()`, поэтому один SQLite writer не может выдать один и тот же
+usage slot двум конкурентным запросам. Остаётся runtime-gate: текущий образ
+PocketBase не закреплён, поэтому Dev concurrent matrix и проверка фактического
+snapshot ещё обязательны.
+
+Локальное evidence: hook/schema contract tests и route tests проходят; токены не
+попадают в логи. P0.4 всё ещё не закрывается полностью: владелец должен
+применить snapshot в Dev и выполнить runtime valid/expired/used/foreign matrix,
+проверить конкурентное повторное использование и подтвердить, что фактические
+rules совпадают со snapshot. Prod не изменяется.
 
 ### 5. Ротировать секреты
 

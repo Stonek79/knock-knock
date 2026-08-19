@@ -3,11 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Box } from "@/components/layout/Box";
 import { Flex } from "@/components/layout/Flex";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { getAuthErrorMessage } from "@/features/auth/utils/auth-error-mapping";
 import { FavoritesChatList } from "@/features/chat/list";
 import { ChatRoom } from "@/features/chat/room";
 import { useFavoritesRoom } from "@/features/favorites/hooks/useFavoritesRoom";
 import { BREAKPOINTS, useMediaQuery } from "@/hooks/useMediaQuery";
+import { AUTH_ERROR_KEYS, ERROR_CODES } from "@/lib/constants";
+import { isAppError } from "@/lib/utils/result";
 import styles from "./favoritespage.module.css";
 
 /**
@@ -62,7 +63,12 @@ export function FavoritesPage() {
                 >
                     <span className={styles.errorText}>
                         {t("common.error", "Ошибка")}:{" "}
-                        {t(getAuthErrorMessage(error))}
+                        {t(
+                            isAppError(error) &&
+                                error.kind === ERROR_CODES.UNAUTHORIZED_ERROR
+                                ? AUTH_ERROR_KEYS.unauthorized
+                                : "common.unknownError",
+                        )}
                     </span>
                 </Flex>
             ) : roomId ? (

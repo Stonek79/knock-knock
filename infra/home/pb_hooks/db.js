@@ -10,6 +10,7 @@ const DB = {
 	/** @type {Object} Имена коллекций PocketBase */
 	TABLES: {
 		USERS: "users",
+		INVITES: "invites",
 		ROOMS: "rooms",
 		MEMBERS: "room_members",
 		MEDIA: "media",
@@ -117,6 +118,7 @@ const DB = {
 
 		// Настройки инвайтов
 		INVITE_RATE_LIMIT_MINUTES: 3, // Лимит на генерацию инвайтов (в минутах)
+		INVITE_DEFAULT_TTL_MINUTES: 24 * 60,
 	},
 };
 

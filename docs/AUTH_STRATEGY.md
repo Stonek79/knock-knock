@@ -1,8 +1,9 @@
 # Аутентификация, регистрация и уровни профиля
 
-> **Статус:** рабочая целевая спецификация. Локальный registration hook стал
-> fail-closed, но hook/schema contract всё ещё содержит release-blocking дефект
-> и описан в
+> **Статус:** локальный hook/schema contract согласован вокруг `invites.token` и
+> проверяется fail-closed; расходование использует условный атомарный `UPDATE`.
+> Dev runtime matrix и проверка конкурентного расходования ещё не выполнены;
+> release остаётся заблокированным. См.
 > [ARCHITECTURE_AUDIT.md](./ARCHITECTURE_AUDIT.md).
 
 ## 1. Разделение понятий
@@ -18,17 +19,32 @@
 Frontend использует username/password и invitation input. PocketBase выдаёт
 обычную auth-сессию. В schema есть `profile_type = public|private`.
 
-Текущую регистрацию нельзя считать рабочей invite-only:
+Локальная модель использует `token`, `room`, `expires_at`, `max_uses` и
+`uses_count`. Регистрационный invite имеет пустую `room`, комнатный invite —
+непустую. Входное поле клиента по обратной совместимости называется
+`invite_code`, но hook ищет только `token` и сохраняет в user только id записи.
+Прямое чтение `invites` закрыто; room-проверка идёт через авторизованный DTO
+endpoint, возвращающий узкий allowlist `RoomInvitePreviewDto` без `token` и
+`created_by` (тип используется в repository/service/`useJoinRoom`). Локальные
+valid/expired/exhausted/foreign/malformed tests и contract-тесты validate
+endpoint проходят, но Dev runtime и конкурентная атомарность расходования ещё
+не подтверждены в развернутом runtime: локальный consume использует общий
+условный атомарный `UPDATE` с проверкой `rowsAffected()`, поэтому конкурентное
+использование одного invite не должно превышать `max_uses`. Образ PocketBase
+не закреплён, а Dev concurrent matrix ещё не выполнена владельцем.
 
-- hook ищет поля `code/status`, отсутствующие в текущем snapshot коллекции
-  `invites`;
-- schema использует `token`, `room`, `expires_at`, `max_uses`, `uses_count`;
-- обработчик теперь не проглатывает ошибку и работает fail-closed, но успешный
-  valid invite ещё не подтверждён и может быть отвергнут из-за несовпадения
-  модели.
-
-До согласования модели `invites` и runtime-проверки регистрация не готова для
+До применения snapshot в Dev и runtime-проверки регистрация не готова для
 публичного доступа.
+
+Ошибки регистрации не показывают пользователю сырой ответ PocketBase. Известные
+состояния invite (`required`, `invalid`, `expired`, `used`, `unavailable`) имеют
+отдельные локализованные сообщения; неизвестная ошибка получает нейтральный
+fallback. Backend-совместимость, типы контекста и UI-ключи разделены в
+`app/src/lib/constants`, `app/src/lib/types` и `app/src/lib/utils`; мэппер всегда
+возвращает только типизированный ключ локализации. Для сетевого сбоя показывается
+отдельное сообщение о недоступности сервера. На странице вступления сетевой сбой
+также отделён от недействительной или истёкшей ссылки, без раскрытия
+существования invite.
 
 ## 3. Целевая регистрация постоянного аккаунта
 

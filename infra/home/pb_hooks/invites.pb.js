@@ -4,13 +4,18 @@ routerAdd(
 	"POST",
 	"/api/invites/join",
 	(e) => {
+		const { consumeInviteAtomically } = require(`${__hooks}/invite_consumption.js`);
 		const info = e.requestInfo();
 		const body = info?.body || {};
 
-		const token = body.token;
+		const token = typeof body.token === "string" ? body.token.trim() : "";
 		const roomKeyEncrypted = body.roomKeyEncrypted;
 
-		if (!token || !roomKeyEncrypted) {
+		if (
+			!/^[A-Za-z0-9_-]{16,64}$/.test(token) ||
+			typeof roomKeyEncrypted !== "string" ||
+			roomKeyEncrypted.length === 0
+		) {
 			throw new BadRequestError("Missing token or roomKeyEncrypted");
 		}
 
@@ -22,17 +27,17 @@ routerAdd(
 		let invite;
 		try {
 			invite = $app.findFirstRecordByData("invites", "token", token);
-		} catch (err) {
-			logError(`Error fetching invite: ${err}`);
+		} catch {
+			console.error("[INVITE_JOIN] invite lookup failed");
 			throw new NotFoundError("Invite not found");
 		}
 
-		// Проверка срока жизни
-		if (invite.getDateTime("expires_at").time().unix() > 0) {
-			if (
-				invite.getDateTime("expires_at").time().unix() <
-				Math.floor(Date.now() / 1000)
-			) {
+		// Проверка срока жизни. Повреждённая дата считается недействительным
+		// приглашением, а не бессрочным.
+		const expiresAt = invite.get("expires_at");
+		if (expiresAt) {
+			const expiresAtMs = Date.parse(expiresAt);
+			if (!Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
 				throw new BadRequestError("Invite expired");
 			}
 		}
@@ -40,17 +45,20 @@ routerAdd(
 		// Проверка лимитов
 		const maxUses = invite.getInt("max_uses");
 		const usesCount = invite.getInt("uses_count");
+		if (maxUses < 0 || usesCount < 0) {
+			throw new BadRequestError("Invite limit reached");
+		}
 		if (maxUses > 0 && usesCount >= maxUses) {
 			throw new BadRequestError("Invite limit reached");
 		}
 
 		const roomId = invite.getString("room");
+		if (!roomId) {
+			throw new BadRequestError("Invite is not a room invite");
+		}
 
 		// Транзакция: добавить юзера в room_members, инкрементировать uses_count, добавить ключ в room_keys
 		$app.runInTransaction((txApp) => {
-			invite.set("uses_count", usesCount + 1);
-			txApp.saveNoValidate(invite);
-
 			let existingMember = false;
 			try {
 				const members = txApp.findRecordsByFilter(
@@ -64,9 +72,17 @@ routerAdd(
 				if (members && members.length > 0) {
 					existingMember = true;
 				}
-			} catch (err) {
-                logError(`Error fetching member: ${err}`);
-            }
+			} catch {
+				console.error("[INVITE_JOIN] member lookup failed");
+				throw new Error("Invite join failed");
+			}
+
+			if (!existingMember) {
+				const consumed = consumeInviteAtomically(txApp, invite.id, { room: roomId });
+				if (!consumed) {
+					throw new BadRequestError("Invite limit reached");
+				}
+			}
 
 			if (!existingMember) {
 				const memberCollection = txApp.findCollectionByNameOrId("room_members");
@@ -90,8 +106,9 @@ routerAdd(
 				if (keys && keys.length > 0) {
 					existingKey = true;
 				}
-			} catch (err) {
-				logError(`Error fetching key: ${err}`);
+			} catch {
+				console.error("[INVITE_JOIN] key lookup failed");
+				throw new Error("Invite join failed");
 			}
 
 			if (!existingKey) {
@@ -99,7 +116,7 @@ routerAdd(
 				const newKey = new Record(keysCollection);
 				newKey.set("room", roomId);
 				newKey.set("user", user.id);
-				newKey.set("key", roomKeyEncrypted);
+				newKey.set("encrypted_key", roomKeyEncrypted);
 				txApp.saveNoValidate(newKey);
 			}
 		});

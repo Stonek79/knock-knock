@@ -40,10 +40,19 @@ export const auth = {
             "Failed to send confirmation email. Check server config.",
         rateLimitError:
             "Too many attempts. Please try again in {{seconds}} sec.",
+        unauthorized: "Access denied. Please sign in.",
         unknown: "An unexpected error occurred.",
         loginAfterRegisterFailed:
             "Failed to log in after registration. Please try logging in manually.",
         registerFailed: "Registration failed. Please try again later.",
+        inviteRequired: "Enter an invite code.",
+        invalidInvite: "The invite code is invalid.",
+        inviteExpired: "The invite code has expired.",
+        inviteUsed: "The invite code has already been used.",
+        inviteUnavailable:
+            "The invite code is temporarily unavailable. Try again later.",
+        registrationInviteRequired:
+            "Registration requires a registration invite, not a room invite.",
     },
     emailInvalid: "Invalid email format",
     passwordTooShort: "Min 8 characters",

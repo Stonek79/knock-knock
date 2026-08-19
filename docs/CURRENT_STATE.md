@@ -68,6 +68,34 @@ capability checks; peer-профиль больше не запрашивает�
 Фильтры invite/search и другие изменённые динамические фильтры используют
 parameter binding.
 
+Invite registration локально согласована с snapshot schema вокруг единого
+`invites.token`: регистрационный invite не содержит room, комнатный invite
+содержит room; TTL и max uses проверяются fail-closed. Прямой list/view invites
+закрыт, а проверка room invite выполняется через авторизованный POST DTO
+endpoint с token в body, не в URL.
+Локальные contract tests проходят, но Dev runtime matrix и проверка
+конкурентного расходования invite ещё не выполнены.
+
+Проверка room invite возвращает узкий allowlist DTO `RoomInvitePreviewDto`
+(`id`, `room`, `expand.room`, `expires_at`, `max_uses`, `uses_count`) без
+`token`, `created_by` и прочих внутренних полей; тип используется в repository,
+service и `useJoinRoom`. Добавлены детерминированные local contract-тесты
+validate endpoint (valid, expired, exhausted, без room, несуществующая комната,
+отсутствие `token` в ответе, allowlist полей) без подключения к API.
+
+Конкурентное расходование invite теперь проходит через общий helper
+`invite_consumption.js`: регистрация и room join выполняют условный атомарный
+`UPDATE` в PocketBase SQLite (`uses_count < max_uses`) и принимают решение по
+`rowsAffected()`. Локальный contract-тест проверяет, что первый расход получает
+слот, а следующий получает отказ без over-subscription. Это закрывает прежний
+`get -> check -> save` в коде, но не является доказательством фактического Dev
+runtime: образ PocketBase всё ещё `latest`, поэтому владелец должен закрепить
+версию, применить hook/schema snapshot и прогнать двухпользовательскую
+concurrent matrix на Dev. См. план `docs/plans/p0-4-invite-registration.md`.
+
+Локальная задача конкурентного расходования invite закрыта: дальнейшая работа
+по этому пункту — только ручная Dev runtime-приёмка, а не доработка кода.
+
 Это пока не означает, что срез принят в работающем Dev-контуре: Admin UI rule
 и двухпользовательская authorization matrix должны быть проверены владельцем
 отдельно. Агент к Dev/Prod API или базе не подключался. Release `NO-GO` и

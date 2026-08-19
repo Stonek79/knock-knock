@@ -73,19 +73,6 @@ onRecordAfterCreateSuccess((e) => {
 
 		console.log("⭐ [REG] Избранное успешно создано");
 
-		// Обновляем инвайт
-		const inviteId = user.get("invite_code");
-		if (inviteId) {
-			try {
-				const invite = e.app.findRecordById("invites", inviteId);
-				invite.set("status", "used");
-				invite.set("used_by", user.id);
-				e.app.saveNoValidate(invite);
-			} catch (err) {
-				console.error(`❌ Ошибка обновления инвайта: ${err}`);
-			}
-		}
-
 		// Создание системной комнаты (Nemo)
 		const sysDeterministicId = $security
 			.md5(`${user.id}system`)

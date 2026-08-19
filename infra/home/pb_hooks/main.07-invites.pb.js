@@ -41,17 +41,100 @@ routerAdd(
 			}
 		}
 
-		// Генерация инвайт-кода
+		// Каноническое поле — token. Для регистрации room остаётся пустым;
+		// приглашения в комнату создаются отдельным room-flow с тем же token.
 		const inviteCollection = $app.findCollectionByNameOrId("invites");
 		const record = new Record(inviteCollection);
-		const code = `kk-${$security.randomString(8)}`;
-		record.set("code", code);
+		const token = `kk-${$security.randomString(32)}`;
+		record.set("token", token);
 		record.set("created_by", user.id);
-		record.set("status", "active");
+		record.set("max_uses", 1);
+		record.set("uses_count", 0);
+		const expiresAt = new Date(
+			Date.now() + DB.CONFIG.INVITE_DEFAULT_TTL_MINUTES * 60000,
+		).toISOString();
+		record.set("expires_at", expiresAt);
 
 		$app.save(record);
 
-		return e.json(200, { code: code });
+		// `code` сохраняется только как совместимое имя ответа для текущего UI;
+		// значение всегда равно canonical token, второго поля в schema нет.
+		return e.json(200, { code: token });
+	},
+	$apis.requireAuth(),
+);
+
+/**
+ * Проверка room invite без прямого list/view доступа к invites.
+ * Возвращается только DTO, необходимый экрану присоединения.
+ */
+routerAdd(
+	"POST",
+	"/api/custom/invites/validate",
+	(e) => {
+		const token = e.requestInfo()?.body?.token;
+		if (typeof token !== "string" || !/^[A-Za-z0-9_-]{16,64}$/.test(token)) {
+			return e.json(404, { message: "Invite not found" });
+		}
+
+		const invites = $app.findRecordsByFilter(
+			"invites",
+			"token = {:inviteToken}",
+			"",
+			1,
+			0,
+			{ inviteToken: token },
+		);
+		if (invites.length === 0) {
+			return e.json(404, { message: "Invite not found" });
+		}
+
+		const invite = invites[0];
+		const expiresAt = invite.get("expires_at");
+		const expiresAtMs = expiresAt ? Date.parse(expiresAt) : NaN;
+		if (
+			expiresAt &&
+			(!Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now())
+		) {
+			return e.json(404, { message: "Invite not found" });
+		}
+		const maxUses = Number(invite.get("max_uses") || 0);
+		const usesCount = Number(invite.get("uses_count") || 0);
+		if (
+			!Number.isFinite(maxUses) ||
+			!Number.isFinite(usesCount) ||
+			maxUses < 0 ||
+			usesCount < 0
+		) {
+			return e.json(404, { message: "Invite not found" });
+		}
+		const roomId = invite.get("room");
+		if (!roomId || (maxUses > 0 && usesCount >= maxUses)) {
+			return e.json(404, { message: "Invite not found" });
+		}
+
+		try {
+			const room = $app.findRecordById("rooms", roomId);
+			return e.json(200, {
+				id: invite.id,
+				room: room.id,
+				expand: {
+					room: {
+						id: room.id,
+						name: room.get("name"),
+						type: room.get("type"),
+						visibility: room.get("visibility"),
+						avatar: room.get("avatar"),
+						description: room.get("description"),
+					},
+				},
+				expires_at: expiresAt,
+				max_uses: maxUses,
+				uses_count: usesCount,
+			});
+		} catch {
+			return e.json(404, { message: "Invite not found" });
+		}
 	},
 	$apis.requireAuth(),
 );

@@ -9,8 +9,9 @@
 
 - `npm run lint` — успешно;
 - `npm run build` — успешно;
-- frontend suite после срезов 2.4–2.6, 6a–6c, 7–8 и UI hardening: 35 test
-  files passed, 4 skipped; 186 tests passed, 6 skipped. Unit-сценарии зелёные,
+- frontend suite после срезов 2.4–2.6, 6a–6c, 7–8, UI hardening и invite
+  contract: 37 test files passed, 4 skipped; 196 tests passed, 6 skipped.
+  Unit-сценарии зелёные,
   integration setup на production-like URL безопасно пропускается;
 - после отложенной инициализации `RealtimeGateway` необработанных ошибок нет;
 - PocketBase integration tests пропущены.
@@ -275,15 +276,25 @@ test setup теперь безопасно загружается и в Node int
 
 В hook-модулях `infra/home/pb_hooks/` (проверка `invite_code` в
 `main.02-registration.pb.js`, поиск по `q` в `main.06-user-capabilities.pb.js`)
-фильтры переведены на PocketBase parameter binding. Эти значения больше не
-конкатенируются в filter expression. В том же срезе зафиксирован fail-closed
-registration: ошибка проверки invite больше не проглатывается и не может
-продолжить создание пользователя. Однако текущий hook/schema contract всё ещё
-не согласован для успешного valid invite: hook использует `code/status`, а
-snapshot `invites` содержит `token/expires_at/max_uses/uses_count`. Runtime-
-проверка endpoint’ов добавлена в `src/test/security-parameter-binding.integration.test.ts`;
-её staging/Dev результат и исправление valid/expired/used flow нужно подтвердить
-после deploy.
+фильтры используют PocketBase parameter binding. Invite contract согласован
+вокруг `token`, `room`, `expires_at`, `max_uses`, `uses_count`; прямой list/view
+доступ к `invites` закрыт. Добавлены локальные hook/schema/route tests для
+valid, expired, exhausted, foreign, missing/malformed invite, повреждённые
+лимиты/даты, запись room key в schema-поле `encrypted_key` и проверки
+генерации TTL/one-use token, включая отказ регистрации при невозможности
+расходовать invite. Проверка room invite идёт через узкий allowlist DTO
+`RoomInvitePreviewDto` (без `token`/`created_by`); добавлены детерминированные
+contract-тесты validate endpoint: valid, expired, exhausted, registration invite
+без room, несуществующая комната, отсутствие `token` в ответе, точный allowlist
+полей. Все hook-тесты не подключаются к API.
+
+Конкурентное расходование invite локально исправлено: consume в
+`main.02-registration.pb.js` и room join в `invites.pb.js` используют общий
+`invite_consumption.js` с условным атомарным `UPDATE ... WHERE uses_count <
+max_uses` и проверкой `rowsAffected()`. Активный contract-тест проверяет, что
+первый расход получает слот, а следующий получает отказ без
+over-subscription. Остаётся runtime-gate: закрепить версию PocketBase,
+применить hooks/schema в Dev и прогнать двухпользовательскую concurrent matrix.
 
 **Разбивка PocketBase hooks (монолит удалён).** Единый
 `infra/home/pb_hooks/main.pb.js` разделён на модули `main.01`–`main.08`
@@ -292,8 +303,9 @@ admin broadcast, user capabilities, invites, room-read) и чистые helper-�
 (`db.js`, `users_dto.js`, `task_helpers.js`, `hook_constants.js`,
 `request_utils.js`). Единый файл удалён. Hook static/contract тесты
 (`calls.pb`, `main.users.dto`, `task_helpers`, `pb_schema_auth_options`,
-`request_utils`, `main.hooks.registration`, `main.routes.contract`) — итого
-`42` теста, все зелёные. В route contract также проверяются отсутствие
+`request_utils`, `main.hooks.registration`, `main.routes.contract`) — базовый
+набор decomposition даёт `43` теста; вместе с `invite.contract` текущий hook
+набор даёт `71` тестов, все зелёные. В route contract также проверяются отсутствие
 логирования тела broadcast-запроса и отсутствие затенения route event в
 room-read, а также различение отсутствующего membership и ошибки БД. Тесты
 проверяют единственность регистрации,
