@@ -25,7 +25,8 @@ ID» реализации не соответствует.
 - generic runner и broadcast cron могут конкурировать за pending broadcast;
 - pending selection должен явно учитывать `run_at <= now`;
 - call push создаёт запись без обязательного `type`;
-- формат call subscription не совпадает с gateway;
+- формат subscription теперь нормализован: новые задачи используют вложенный
+  `keys`, gateway сохраняет совместимость со старым плоским форматом;
 - claims/locking требуют проверки при параллельном запуске;
 - payload содержит больше чувствительных данных, чем необходимо;
 - logs и `last_error` требуют redaction/retention.

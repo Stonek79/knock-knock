@@ -5,13 +5,13 @@
 
 ## Текущая база
 
-На снимке от 12 августа 2026 года:
+На снимке от 19 августа 2026 года:
 
 - `npm run lint` — успешно;
 - `npm run build` — успешно;
-- frontend suite после срезов 2.4–2.6 и hardening cleanup: 114 passed, 2 skipped;
-  unit-сценарии зелёные, integration setup на production-like URL безопасно
-  пропускается;
+- frontend suite после срезов 2.4–2.6, 6a–6c, 7–8 и UI hardening: 35 test
+  files passed, 4 skipped; 186 tests passed, 6 skipped. Unit-сценарии зелёные,
+  integration setup на production-like URL безопасно пропускается;
 - после отложенной инициализации `RealtimeGateway` необработанных ошибок нет;
 - PocketBase integration tests пропущены.
 
@@ -62,9 +62,10 @@ Dev/Prod. Отладочные логи помечаются уникальны�
 1. [x] crypto backup/recovery;
 2. [x] room creation и key distribution;
 3. [x] message deletion и local-delete metadata;
-4. [x] auth store и logout cleanup;
+4. [x] store-level auth/logout cleanup;
 5. [x] chat actions/UI;
-6. Outbox и Service Worker.
+6. [ ] Outbox и Service Worker (локальные persistence/retry seams есть, полный
+   browser delivery-cycle не подтверждён).
 
 Для каждого изменённого теста проверяется, что он утверждает продуктовый
 контракт, а не внутреннюю форму устаревшего mock.
@@ -277,9 +278,12 @@ test setup теперь безопасно загружается и в Node int
 фильтры переведены на PocketBase parameter binding. Эти значения больше не
 конкатенируются в filter expression. В том же срезе зафиксирован fail-closed
 registration: ошибка проверки invite больше не проглатывается и не может
-продолжить создание пользователя. Runtime-проверка endpoint’ов добавлена в
-`src/test/security-parameter-binding.integration.test.ts`; её staging/Dev
-результат нужно подтвердить после deploy.
+продолжить создание пользователя. Однако текущий hook/schema contract всё ещё
+не согласован для успешного valid invite: hook использует `code/status`, а
+snapshot `invites` содержит `token/expires_at/max_uses/uses_count`. Runtime-
+проверка endpoint’ов добавлена в `src/test/security-parameter-binding.integration.test.ts`;
+её staging/Dev результат и исправление valid/expired/used flow нужно подтвердить
+после deploy.
 
 **Разбивка PocketBase hooks (монолит удалён).** Единый
 `infra/home/pb_hooks/main.pb.js` разделён на модули `main.01`–`main.08`
@@ -418,8 +422,9 @@ search/contacts/keys. Проверены локально:
 
 - hook/schema DTO и auth-rule tests: `10/10`;
 - repository, room и peer capability tests: `9/9`, `11/11` и `2/2`;
-- полный frontend unit suite без подключения к PocketBase: `27` test files,
-  `118 passed`, `6 skipped`;
+- исторический frontend snapshot среза 7 без подключения к PocketBase:
+  `27` test files, `118 passed`, `6 skipped` (текущий общий snapshot указан в
+  разделе «Текущая база»);
 - `npm run lint`, `npm run build` и `git diff --check` — зелёные.
 
 Двухпользовательская Dev authorization matrix (list/get чужого users, private
@@ -484,3 +489,15 @@ Dev/Prod API и без реальной IndexedDB):
 frontend unit suite зелёные; количество unit-тестов выросло (добавлены guard и
 in-flight logout-сценарии). Покрытие браузером и Dev/Prod-контуром не проверялось
 и не является release readiness.
+
+## Срез 9 (контекст участника в истории и принятии звонка)
+
+План UX/privacy-контракта добавлен в
+`docs/plans/2026-08-19-feature-call-participant-context-ux-plan.md`, но срез пока
+не закрыт. Privacy-safe fallback активного и входящего экранов уже существует;
+в текущем коде `CallsList` не передаёт participant context в `initiateCall`, а
+`acceptCall` создаёт active session с пустыми `displayName/avatarUrl`. Поэтому
+нельзя отмечать public-profile UX или единый контекст истории/accept как
+реализованные. Нужны focused tests для public/private/group/missing-context,
+затем lint/build и owner-run двухклиентская проверка без Dev/Prod API в unit
+контуре.

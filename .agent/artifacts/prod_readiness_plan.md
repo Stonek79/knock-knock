@@ -25,7 +25,7 @@
 - Наличие кода, workflow или ранее установленной галочки не заменяет повторяемую проверку.
 - Любой release-blocker возвращает итоговый статус в `NO-GO`.
 
-### Снимок аудита от 9 августа 2026 года
+### Снимок аудита от 19 августа 2026 года
 
 Текущий статус — `NO-GO`, что ожидаемо для активной разработки. Главные P0:
 
@@ -34,15 +34,25 @@
   build, healthcheck, Nginx syntax, реальная доставка push и выдача LiveKit
   token проверены, но полный звонок между двумя клиентами и повторный security
   review ещё открыты (см. ARCHITECTURE_AUDIT.md §2);
-- слишком широкие PocketBase rules для invites/users/media/presence;
-- fail-open проверка invite при регистрации;
+- слишком широкие PocketBase rules для invites/media/presence/reactions и
+  call-history операций;
+- owner-only users локально реализованы, но Dev authorization matrix ещё не
+  выполнена; invite registration остаётся незавершённой, потому что hook всё
+  ещё не согласован со schema `invites` (`code/status` против
+  `token/expires_at/max_uses/uses_count`);
 - отсутствие управляемых PocketBase migrations/schema drift gate;
 - небезопасный и невоспроизводимый prototype release-export.
 
-Существующие unit tests частично устарели: lint и build проходят, но suite имеет
-13 failed, 50 passed, 2 skipped и 5 unhandled realtime errors. Восстановление
-ведётся отдельными этапами из `docs/TESTING_PLAN.md`; простое удаление падающих
-тестов не считается исправлением.
+Локальный frontend suite после последних срезов: 35 test files passed, 4
+skipped; 186 tests passed, 6 skipped. `npm run lint`, `npm run build` и
+`git diff --check` проходят. Пропуски — integration/browser-контуры без
+разрешённого изолированного окружения; это не evidence Dev/Prod и не release
+readiness.
+
+Последнее локальное evidence привязано к commit `ac968f0` (19 августа 2026):
+команды выполнялись из `app`, без подключения к Dev/Prod API. Runtime claims
+ниже считаются подтверждёнными только там, где отдельно указаны VPS/Dev
+проверки владельца; локальный suite не заменяет их.
 
 ## 3. Зафиксировать production-архитектуру
 
@@ -78,18 +88,29 @@
 - [x] Offline-ветка отправки сохраняет сообщение в Outbox.
 - [x] Service Worker содержит обработку `sync-outbox`.
 - [ ] Проверить идемпотентность: повторная доставка не создаёт дубликат сообщения.
-- [ ] Проверить retry/backoff и переход в явный failed-state.
+- [x] Локальная retry/backoff policy и переход в `failed` покрыты unit-тестами;
+  полный Service Worker delivery-cycle ещё не подтверждён.
 - [ ] Проверить порядок нескольких сообщений после восстановления сети.
 - [ ] Проверить вложения, отмену, logout и смену пользователя при непустом Outbox.
 - [ ] Проверить fallback без Background Sync API.
 
 **Gate:** тесты воспроизводят offline → enqueue → reconnect → однократную доставку и корректный UI-status на Chromium и Safari fallback.
 
+### 4.3. Cache-first список чатов и logout cleanup
+
+- [x] Локальная cache-first стратегия, валидация кеша, запрет показа
+  ciphertext, session generation guard и очистка user-scoped QueryClient/
+  IndexedDB-кеша при logout покрыты unit-тестами.
+- [ ] Подтвердить поведение Dexie/IndexedDB, реальную расшифровку и отмену
+  сетевых запросов в браузере при logout.
+
 ## 5. Realtime и восстановление соединения
 
 В репозиториях используется `RealtimeGateway`, но production-готовность требует проверки поведения при разрывах.
 
 - [x] Репозитории сообщений, комнат, presence и звонков используют общий gateway.
+- [x] `RealtimeGateway` не открывает соединение при импорте; listeners создаются
+  лениво при первой подписке и покрыты seam-тестом.
 - [ ] Проверить отсутствие параллельных legacy subscriptions вне gateway.
 - [ ] Проверить exponential backoff с jitter и верхним пределом.
 - [ ] Проверить отмену reconnect после logout/unmount.
@@ -115,6 +136,15 @@
 - [x] Исправить и покрыть локальными тестами базовое privacy-safe отображение
   профилей в звонках/шапке комнаты, исходящий экран звонка и доступность
   завершения звонка; полный двухклиентский E2E остаётся открытым.
+- [x] Локальная часть P0.3a реализована: owner-only snapshot, capability DTO,
+  parameter binding и миграция frontend consumers; Dev authorization matrix
+  владельца остаётся открытой.
+- [x] Локально подтверждены fail-closed обработка ошибки invite и parameter
+  binding; это не подтверждает успешный valid invite.
+- [ ] Согласовать hook/schema модель `invites` и пройти runtime-сценарии
+  valid/expired/used/foreign invite после deploy.
+- [x] В schema snapshot отключены новые-device login alerts; применение в
+  работающем Dev выполняется владельцем через Admin UI.
 
 **Gate:** все Critical/High findings исправлены или формально приняты с ограничением пилота и сроком устранения.
 

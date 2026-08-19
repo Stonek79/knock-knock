@@ -1,6 +1,7 @@
 # Архитектурный аудит Nemo
 
-> **Дата снимка:** 11 августа 2026 года
+> **Первый снимок:** 11 августа 2026 года
+> **Последняя сверка:** 19 августа 2026 года
 > **Статус:** активный список технических рисков
 > **Решение:** проект продолжает разработку; публичный production-релиз пока
 > имеет статус `NO-GO`.
@@ -12,7 +13,9 @@ production-релиз планировался на текущем этапе.
 ## Что подтверждено
 
 - frontend проходит `npm run lint` и `npm run build`;
-- все Compose-файлы проходят синтаксическую проверку;
+- Compose-конфигурации проходили синтаксическую проверку на deployed-контуре;
+  локальная проверка без operational `.env` не считается текущим deployment
+  evidence;
 - Dev и Prod используют разные PocketBase data directories и разные MinIO
   buckets/service accounts;
 - MinIO слушает loopback-интерфейс домашнего сервера;
@@ -30,6 +33,14 @@ production-релиз планировался на текущем этапе.
 - для одноразовых комнат frontend скрывает действия аудио- и видеозвонка;
 - дублирующее увеличение счётчика непрочитанных сообщений удалено в обработчике
   realtime; отдельный двухклиентский тест счётчика ещё нужен;
+- локальная часть P0.3a реализована: owner-only snapshot, capability DTO,
+  parameter binding и миграция frontend consumers проверены тестами; Dev
+  authorization matrix владельца остаётся открытой;
+- cache-first список чатов, защита от stale logout race, валидация кеша и
+  локальная очистка user-scoped данных покрыты unit-тестами; browser/runtime
+  IndexedDB и реальная crypto interoperability ещё не проверены;
+- retry/backoff policy Outbox и переход в `failed` покрыты unit-тестами; полный
+  Service Worker delivery-cycle остаётся открытым;
 - монолит `infra/home/pb_hooks/main.pb.js` разбит на модули `main.01`–`main.08`;
   единый файл удалён после локальной проверки (`node --check`, hook
   static/contract tests). Каждый callback подключает зависимости локальным
@@ -91,14 +102,17 @@ P0 ещё не закрывается до полного звонка межд�
 
 Открыто:
 
-- [x] локальные unit/integration тесты gateway и хуков: gateway 19/19,
-  PocketBase hooks 10/10;
-- [x] Nginx `nginx -t`, Docker build и gateway healthcheck проверены на VPS;
-- [x] env/Compose-путь секрета для домашнего PocketBase проверен локально;
+- [x] локальные unit/contract тесты gateway и хуков: gateway 19/19,
+  PocketBase hooks 42/42 (локальный срез 19.08.2026);
+- [x] Nginx `nginx -t`, Docker build и gateway healthcheck проверены на VPS
+  (11.08.2026);
+- [x] env/Compose-путь секрета для домашнего PocketBase проверен локально
+  (11.08.2026);
   наличие непустого `PUSH_GATEWAY_SECRET` в VPS gateway подтверждено без вывода
   значения;
-- [x] проверить реальную доставку push;
-- [x] проверить выдачу LiveKit token и запуск исходящего звонка;
+- [x] проверить реальную доставку push (Dev/VPS, 11.08.2026);
+- [x] проверить выдачу LiveKit token и запуск исходящего звонка (Dev/VPS,
+  11.08.2026);
 - [ ] проверить полный аудио- и видеозвонок между двумя клиентами, завершение с
   обеих сторон, корректное отображение закрытых профилей и отсутствие утечек в
   логах;
@@ -136,8 +150,8 @@ exists`; приложение в тот же момент восстановил
 Требуют закрытия или ограничения:
 
 - публичное чтение коллекции `invites` и её token;
-- глобальный auth-доступ к `users`, `media`, `presence_status` и
-  `message_reactions`;
+- остаточные глобальные правила `presence_status` и `message_reactions`, а
+  также широкие правила `media`;
 - изменение чужого presence;
 - изменение чужого message metadata;
 - изменение произвольного `call_logs.status`;
@@ -148,19 +162,24 @@ exists`; приложение в тот же момент восстановил
 общих контактов нужны отдельные серверные DTO endpoints с минимальным набором
 разрешённых полей.
 
-Локальная часть защиты чтения профилей теперь реализована: snapshot содержит owner-only
-`listRule`/`viewRule`, а search/contacts/keys используют отдельные allowlist DTO
-и parameter binding. Прямое чтение чужих `users` из frontend consumer-путей
-убрано. Это ещё не закрывает security gate: фактическое правило в Dev и
-двухпользовательскую authorization matrix владелец проверяет отдельно; crypto
-interoperability и release `NO-GO` остаются открытыми.
+Локальная часть защиты чтения профилей теперь реализована: snapshot содержит
+owner-only `listRule`/`viewRule`, а search/contacts/keys используют отдельные
+allowlist DTO и parameter binding. Эти consumer-пути больше не читают чужие
+`users` напрямую. Отдельный call-history путь всё ещё должен быть проверен:
+`call.repository` запрашивает связанный контекст через `expand`, поэтому это не
+является доказательством privacy-safe DTO для истории звонков. Фактическое
+правило в Dev и двухпользовательскую authorization matrix владелец проверяет
+отдельно; crypto interoperability и release `NO-GO` остаются открытыми.
 
 ### 4. Исправить приглашения и регистрацию
 
-Hook регистрации использует отсутствующие в schema поля `code/status` и
-продолжает регистрацию после ошибки. Необходимо выбрать одну модель `invites`,
-сделать проверку fail-closed и покрыть сценарии valid/expired/used/wrong-user
-интеграционными тестами.
+Локально исправлена только часть границы: ошибки проверки теперь fail-closed и
+фильтр использует parameter binding. Но hook всё ещё ищет поля `code/status`,
+которых нет в текущем schema snapshot (`token`, `expires_at`, `max_uses`,
+`uses_count`), поэтому корректный valid invite не доказан и может быть отвергнут.
+Нужно согласовать одну модель `invites`, исправить hook/schema contract и
+подтвердить runtime-сценарии valid/expired/used/foreign invite. До этого P0 не
+закрывается.
 
 ### 5. Ротировать секреты
 

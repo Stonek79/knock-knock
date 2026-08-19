@@ -58,7 +58,9 @@ PocketBase, IndexedDB, browser/native adapters
 - browser-specific APIs скрываются за adapters, чтобы PWA tests и Tauri build
   могли использовать другие реализации.
 
-Сейчас `RealtimeGateway` нарушает часть этих правил и требует рефакторинга.
+Импортный сетевой side effect `RealtimeGateway` устранён: connection listeners
+создаются лениво при первой подписке. Поведение reconnect, gap recovery и
+очистка после logout всё ещё требуют runtime/E2E-проверки.
 
 ## 4. Постоянные данные
 

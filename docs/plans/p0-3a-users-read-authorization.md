@@ -269,13 +269,13 @@ remaining work; no claim makes P0.3 or release readiness fully closed.
 
 ## Verification Contract
 
-## Текущий статус реализации (2026-08-14)
+## Текущий статус реализации (2026-08-19)
 
 Локальная часть плана реализована и проверена без подключения к Dev/Prod API:
 owner-only snapshot, search/contacts/keys DTO, frontend capability consumers и
-parameter binding. Hook/schema tests — `10/10`, repository/room capability
-tests — `6/6` и `11/11`, полный unit suite — `113 passed`, `6 skipped`, lint,
-build и `git diff --check` — зелёные.
+parameter binding. Hook/schema tests — `10/10`, repository/room/peer capability
+tests — `9/9`, `11/11` и `2/2`, полный frontend suite — `186 passed`, `6 skipped`
+(35 test files passed, 4 skipped), lint, build и `git diff --check` — зелёные.
 
 Это не является runtime-приёмкой: владелец должен отдельно проверить в Dev
 двухпользовательскую matrix из U4 после применения правил через Admin UI.
