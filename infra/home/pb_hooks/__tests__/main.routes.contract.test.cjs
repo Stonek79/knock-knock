@@ -48,6 +48,7 @@ describe("route decomposition contract", () => {
 		const expected = [
 			["POST", "/api/custom/broadcast"],
 			["GET", "/api/custom/broadcast/history"],
+			["GET", "/api/custom/broadcast/media/:id/:filename"],
 			["DELETE", "/api/custom/broadcast/:id"],
 			["POST", "/api/custom/admin/migrate-system-rooms"],
 		];
@@ -100,8 +101,8 @@ describe("route decomposition contract", () => {
 			...loadRoutes("main.07-invites.pb.js"),
 			...loadRoutes("main.08-room-read.pb.js"),
 		];
-		assert.equal(allRoutes.length, 10);
-		assert.equal(new Set(allRoutes.map((r) => r.route)).size, 10);
+		assert.equal(allRoutes.length, 11);
+		assert.equal(new Set(allRoutes.map((r) => r.route)).size, 11);
 		assert.ok(allRoutes.every((r) => r.requireAuth));
 	});
 
@@ -146,6 +147,80 @@ describe("route decomposition contract", () => {
 		);
 		assert.doesNotMatch(src, /JSON\.stringify\(info\?\.body\)/);
 		assert.doesNotMatch(src, /console\.log\([^\n]*(rawBody|bodyData)/);
+	});
+
+	it("broadcast media route не выдаёт обычный media и требует auth", () => {
+		const route = loadRoutes("main.05-admin-broadcast.pb.js").find(
+			(r) => r.route === "/api/custom/broadcast/media/:id/:filename",
+		);
+		const json = (status, payload) => ({ status, payload });
+
+		assert.equal(
+			route.handler({ auth: null, json }).status,
+			401,
+		);
+
+		const original = {
+			get: (field) =>
+				field === "references" ? { isSystemBroadcast: false } : "file.jpg",
+		};
+		globalThis.$app = { findRecordById: () => original };
+		try {
+			const denied = route.handler({
+				auth: { id: "user1" },
+				request: { pathValue: (name) => (name === "id" ? "m1" : "file.jpg") },
+				json,
+			});
+			assert.equal(denied.status, 404);
+		} finally {
+			delete globalThis.$app;
+		}
+	});
+
+	it("broadcast media route принимает server-owned media с user creator", () => {
+		const route = loadRoutes("main.05-admin-broadcast.pb.js").find(
+			(r) => r.route === "/api/custom/broadcast/media/:id/:filename",
+		);
+		let served = false;
+		const media = {
+			get: (field) =>
+				field === "references" ? { isSystemBroadcast: true } : undefined,
+			getString: (field) =>
+				field === "created_by" ? "user1" : "announcement.jpg",
+			baseFilesPath: () => "data/files/media1",
+		};
+		globalThis.$app = {
+			findRecordById: (collection, id) => {
+				if (collection === "media" && id === "media1") {
+					return media;
+				}
+				if (collection === "users" && id === "user1") {
+					return { id };
+				}
+				return null;
+			},
+			newFilesystem: () => ({
+				serve: () => {
+					served = true;
+				},
+				close: () => {},
+			}),
+		};
+		try {
+			const response = route.handler({
+				auth: { id: "recipient" },
+				request: {
+					pathValue: (name) =>
+						name === "id" ? "media1" : "announcement.jpg",
+				},
+				response: {},
+				json: (status, payload) => ({ status, payload }),
+			});
+			assert.equal(response, undefined);
+			assert.equal(served, true);
+		} finally {
+			delete globalThis.$app;
+		}
 	});
 
 	it("invite routes use token only and do not reference legacy fields", () => {

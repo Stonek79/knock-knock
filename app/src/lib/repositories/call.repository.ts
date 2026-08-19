@@ -65,15 +65,18 @@ export const callRepository = {
     },
 
     /**
-     * Получает список всех логов звонков (историю звонков)
-     * @returns Массив записей из коллекции call_logs с раскрытием связей room и initiator
+     * Получает список всех логов звонков (историю звонков).
+     * Privacy-safe: вложен только room (необходим для отображения названия).
+     * initiator не раскрывается как объект профиля, чтобы не утекать
+     * profile fields других участников.
+     * @returns Массив записей из коллекции call_logs с раскрытием только room
      */
     async getCallLogs(): Promise<CallLogsResponse<{ room?: RoomsResponse }>[]> {
         return pb
             .collection(DB_TABLES.CALL_LOGS)
             .getFullList<CallLogsResponse<{ room?: RoomsResponse }>>({
                 sort: "-created",
-                expand: "room,initiator",
+                expand: "room",
             });
     },
 

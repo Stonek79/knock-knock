@@ -40,4 +40,9 @@ export const API_ROUTES = {
     BROADCAST_HISTORY: "/api/custom/broadcast/history",
     BROADCAST_DELETE: (id: string) => `/api/custom/broadcast/${id}`,
     CALLS_TOKEN: "/api/calls/token",
+    PRESENCE_ME: "/api/custom/presence/me",
+    PRESENCE_TYPING: "/api/custom/presence/typing",
+    PRESENCE_ROOM: (roomId: string) =>
+        `/api/custom/presence/room/${encodeURIComponent(roomId)}`,
+    PRESENCE_SHARED: "/api/custom/presence/shared",
 } as const;

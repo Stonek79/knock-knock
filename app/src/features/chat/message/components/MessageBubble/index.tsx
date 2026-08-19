@@ -385,6 +385,7 @@ export function MessageBubble({
                 open={lightboxIndex >= 0}
                 close={handleCloseZoom}
                 index={lightboxIndex}
+                isSystem={isSystem}
             />
         </Flex>
     );

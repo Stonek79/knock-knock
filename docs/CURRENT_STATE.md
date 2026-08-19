@@ -73,7 +73,7 @@ Invite registration локально согласована с snapshot schema �
 содержит room; TTL и max uses проверяются fail-closed. Прямой list/view invites
 закрыт, а проверка room invite выполняется через авторизованный POST DTO
 endpoint с token в body, не в URL.
-Локальные contract tests проходят, но Dev runtime matrix и проверка
+Локальные contract tests проходят, но preprod runtime matrix и проверка
 конкурентного расходования invite ещё не выполнены.
 
 Проверка room invite возвращает узкий allowlist DTO `RoomInvitePreviewDto`
@@ -88,15 +88,33 @@ validate endpoint (valid, expired, exhausted, без room, несуществу�
 `UPDATE` в PocketBase SQLite (`uses_count < max_uses`) и принимают решение по
 `rowsAffected()`. Локальный contract-тест проверяет, что первый расход получает
 слот, а следующий получает отказ без over-subscription. Это закрывает прежний
-`get -> check -> save` в коде, но не является доказательством фактического Dev
+`get -> check -> save` в коде, но не является доказательством фактического
 runtime: образ PocketBase всё ещё `latest`, поэтому владелец должен закрепить
 версию, применить hook/schema snapshot и прогнать двухпользовательскую
-concurrent matrix на Dev. См. план `docs/plans/p0-4-invite-registration.md`.
+concurrent matrix в preprod. См. план `docs/plans/p0-4-invite-registration.md`.
 
 Локальная задача конкурентного расходования invite закрыта: дальнейшая работа
-по этому пункту — только ручная Dev runtime-приёмка, а не доработка кода.
+по этому пункту — только ручная preprod runtime-приёмка, а не доработка кода.
 
-Это пока не означает, что срез принят в работающем Dev-контуре: Admin UI rule
+Локальный срез P0.3b также обновлён после review: прямой доступ к presence
+закрыт, клиент использует server-owned маршруты и безопасный polling вместо
+подписки на закрытую коллекцию; собственный DTO возвращает только id своей
+записи, а shared/typing DTO используют room-scoped `user_id` как correlation
+key, не как auth-доказательство. Media upload читает MIME/размер из multipart
+upload-события и fail-closed отклоняет отсутствующий/некорректный размер,
+основной файл protected и ограничен верхним размером. Room-less broadcast
+media выдаётся только через auth-маршрут с server-owned marker и filesystem
+stream; обычная create/update-загрузка не может подделать этот marker, а frontend загружает
+файл bearer-запросом в Blob URL (включая lightbox, audio и document paths).
+Join звонка проверяет принадлежность `call_log_id` той же комнате, инициатор не
+может принять собственный ringing-call до запроса LiveKit, и допускается только
+ringing/ongoing переход; статусный маршрут проверяет роль
+инициатора/приглашённого участника; call push-задача явно получает тип `push`.
+Contract tests этого среза проходят локально. Это не заменяет runtime
+authorization matrix, проверку реального PocketBase file endpoint и
+двухклиентскую проверку звонков в preprod.
+
+Это пока не означает, что срез принят в работающем preprod-контуре: Admin UI rule
 и двухпользовательская authorization matrix должны быть проверены владельцем
 отдельно. Агент к Dev/Prod API или базе не подключался. Release `NO-GO` и
 остальные P0/P1 остаются открытыми.

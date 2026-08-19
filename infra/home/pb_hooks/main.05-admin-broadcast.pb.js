@@ -163,6 +163,75 @@ routerAdd(
 );
 
 /**
+ * GET /api/custom/broadcast/media/:id/:filename
+ * Серверная выдача системного broadcast-файла.
+ *
+ * Файл media остаётся protected и не получает глобальное viewRule. Этот
+ * маршрут — единственная явная server-owned выдача: он требует auth, находит
+ * только media с неподлежающей подделке клиентом меткой broadcast и отдаёт
+ * файл через PocketBase filesystem (включая MinIO backend).
+ */
+routerAdd(
+	"GET",
+	"/api/custom/broadcast/media/:id/:filename",
+	(e) => {
+		if (!e.auth) {
+			return e.json(401, { code: "UNAUTHORIZED", error: "Не авторизован" });
+		}
+
+		const DB = require(`${__hooks}/db.js`);
+		const mediaId = e.request.pathValue("id");
+		const filename = e.request.pathValue("filename");
+		if (!mediaId || !filename || filename.includes("/")) {
+			return e.json(404, { code: "NOT_FOUND", error: "Файл не найден" });
+		}
+
+		try {
+			const mediaRecord = $app.findRecordById(DB.TABLES.MEDIA, mediaId);
+			if (!mediaRecord) {
+				return e.json(404, { code: "NOT_FOUND", error: "Файл не найден" });
+			}
+
+			let references = mediaRecord.get("references");
+			if (typeof references === "string") {
+				try {
+					references = JSON.parse(references);
+				} catch (_err) {
+					references = null;
+				}
+			}
+			if (!references || references.isSystemBroadcast !== true) {
+				return e.json(404, { code: "NOT_FOUND", error: "Файл не найден" });
+			}
+			const creatorId = mediaRecord.getString("created_by");
+			if (!creatorId || !$app.findRecordById(DB.TABLES.USERS, creatorId)) {
+				return e.json(404, { code: "NOT_FOUND", error: "Файл не найден" });
+			}
+
+			if (mediaRecord.getString("file") !== filename) {
+				return e.json(404, { code: "NOT_FOUND", error: "Файл не найден" });
+			}
+
+			const fs = $app.newFilesystem();
+			try {
+				fs.serve(
+					e.response,
+					e.request,
+					`${mediaRecord.baseFilesPath()}/${filename}`,
+					filename,
+				);
+			} finally {
+				fs.close();
+			}
+		} catch (_err) {
+			console.error("[BROADCAST_MEDIA] Ошибка выдачи файла");
+			return e.json(404, { code: "NOT_FOUND", error: "Файл не найден" });
+		}
+	},
+	$apis.requireAuth(),
+);
+
+/**
  * DELETE /api/custom/broadcast/:id
  * Эндпоинт для отзыва (жесткого удаления) Broadcast-сообщения администратором.
  */

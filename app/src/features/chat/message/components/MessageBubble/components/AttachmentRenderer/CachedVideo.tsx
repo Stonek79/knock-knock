@@ -17,8 +17,8 @@ import {
     OPTIMISTIC_ID_PREFIX,
 } from "@/lib/constants";
 import { useMedia } from "@/lib/mediadb/useMedia";
-import { mediaService } from "@/lib/services/media";
 import type { Attachment } from "@/lib/types";
+import { useSystemMedia } from "../../../../hooks/useSystemMedia";
 import styles from "./attachment-renderer.module.css";
 import { getRatioClass } from "./helpers";
 
@@ -55,23 +55,29 @@ export function CachedVideo({
         initialUrl: att.url,
         downloadOriginal: true,
     });
+    const systemMedia = useSystemMedia(
+        Boolean(isSystem),
+        att.id,
+        att.file_name,
+    );
+    const effectiveObjectUrl = isSystem ? systemMedia.objectUrl : objectUrl;
+    const effectiveLoading = isSystem ? systemMedia.isLoading : isLoading;
+    const effectiveError = isSystem ? systemMedia.error : error;
 
     useEffect(() => {
-        onErrorStateChange?.(att.id, !!error);
-    }, [att.id, error, onErrorStateChange]);
+        onErrorStateChange?.(att.id, !!effectiveError);
+    }, [att.id, effectiveError, onErrorStateChange]);
 
     const isBlob =
         typeof att.url === "string" &&
         att.url.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX);
-    const systemUrl = isSystem
-        ? mediaService.getSystemFileUrl(att.id, att.file_name)
-        : undefined;
-    const displayUrl = isBlob ? att.url : systemUrl || objectUrl;
+    const displayUrl = isBlob ? att.url : effectiveObjectUrl;
 
     const isVideoLoading =
-        (isLoading || att.id.startsWith(OPTIMISTIC_ID_PREFIX)) && !isFailed;
+        (effectiveLoading || att.id.startsWith(OPTIMISTIC_ID_PREFIX)) &&
+        !isFailed;
     const showPlaceholder =
-        !displayUrl && !thumbnailUrl && (!!error || isLoading);
+        !displayUrl && !thumbnailUrl && (!!effectiveError || effectiveLoading);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);

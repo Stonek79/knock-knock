@@ -56,6 +56,74 @@ routerAdd("POST", "/api/calls/token", (e) => {
 			error: "Нет доступа к этой комнате",
 		});
 	}
+	if (is_join && !existing_call_log_id) {
+		return e.json(400, {
+			code: "CALL_LOG_ID_REQUIRED",
+			error: "call_log_id обязателен для присоединения",
+		});
+	}
+
+	// Validate the call log before contacting LiveKit. In particular, the
+	// initiator must not accept its own ringing call through the join path.
+	let joinCallRecord = null;
+	let joinCallStatus = "";
+	if (is_join) {
+		try {
+			joinCallRecord = $app.findRecordById(
+				DB.TABLES.CALL_LOGS,
+				existing_call_log_id,
+			);
+			if (!joinCallRecord) {
+				return e.json(404, {
+					code: "CALL_NOT_FOUND",
+					error: "Звонок не найден",
+				});
+			}
+
+			const callRoomId = joinCallRecord.getString("room");
+			if (callRoomId !== room_id) {
+				return e.json(403, {
+					code: "CALL_ACCESS_DENIED",
+					error: "Нет доступа к звонку",
+				});
+			}
+
+			joinCallStatus =
+				joinCallRecord.getString("status") ||
+				DB.VALUES.CALL_STATUS_RINGING;
+			const initiatorId = joinCallRecord.getString("initiator");
+			if (!initiatorId) {
+				return e.json(500, {
+					code: "CALL_DATA_INVALID",
+					error: "Не удалось проверить звонок",
+				});
+			}
+			if (
+				joinCallStatus === DB.VALUES.CALL_STATUS_RINGING &&
+				initiatorId === userId
+			) {
+				return e.json(403, {
+					code: "CALL_ACTOR_FORBIDDEN",
+					error: "Инициатор не может принять собственный звонок",
+				});
+			}
+			if (
+				joinCallStatus !== DB.VALUES.CALL_STATUS_RINGING &&
+				joinCallStatus !== DB.VALUES.CALL_STATUS_ONGOING
+			) {
+				return e.json(409, {
+					code: "INVALID_TRANSITION",
+					error: "Звонок уже завершён",
+				});
+			}
+		} catch (_err) {
+			console.error("❌ [CALLS_ERROR] Ошибка проверки лога звонка");
+			return e.json(500, {
+				code: "INTERNAL_ERROR",
+				error: "Не удалось проверить звонок",
+			});
+		}
+	}
 
 	// 2. Анонимизированный идентификатор участника (Zero-Knowledge)
 	const anonIdentity = `anon_${$security.md5(`${userId}_${room_id}`)}`;
@@ -114,24 +182,22 @@ routerAdd("POST", "/api/calls/token", (e) => {
 
 	//Если пользователь присоединяется/отвечает на звонок — не создаем новый лог и не слаем пуши
 	if (is_join) {
-		if (existing_call_log_id) {
-			try {
-				const callRecord = $app.findRecordById(
-					DB.TABLES.CALL_LOGS,
-					existing_call_log_id,
-				);
-				if (callRecord) {
-					callRecord.set("status", DB.VALUES.CALL_STATUS_ONGOING);
-					$app.save(callRecord);
-					console.log(
-						`📞 [CALLS_DEBUG] Звонок ${existing_call_log_id} переведен в статус ongoing`,
-					);
-				}
-			} catch (_err) {
-				console.error(
-					"❌ [CALLS_ERROR] Ошибка обновления статуса лога звонка",
+		try {
+			if (joinCallStatus === DB.VALUES.CALL_STATUS_RINGING) {
+				joinCallRecord.set("status", DB.VALUES.CALL_STATUS_ONGOING);
+				$app.save(joinCallRecord);
+				console.log(
+					`📞 [CALLS_DEBUG] Звонок ${existing_call_log_id} переведен в статус ongoing`,
 				);
 			}
+		} catch (_err) {
+			console.error(
+				"❌ [CALLS_ERROR] Ошибка обновления статуса лога звонка",
+			);
+			return e.json(500, {
+				code: "INTERNAL_ERROR",
+				error: "Не удалось обновить статус звонка",
+			});
 		}
 		return e.json(200, { token: token, callLogId: existing_call_log_id });
 	}
@@ -209,6 +275,7 @@ routerAdd("POST", "/api/calls/token", (e) => {
 				);
 				const taskRecord = new Record(taskQueueCollection, {
 					task_key: `call_${Date.now()}_${room_id}`,
+					type: DB.VALUES.TASK_TYPE_PUSH,
 					payload: JSON.stringify(payload),
 					status: DB.VALUES.STATUS_PENDING,
 					attempts: 0,
@@ -230,16 +297,23 @@ routerAdd("POST", "/api/calls/token", (e) => {
 });
 
 /**
- * Серверный эндпоинт безопасного обновления статуса вызова от имени суперпользователя
+ * Серверный эндпоинт безопасного обновления статуса вызова (P0.3b).
+ * Валидирует статус, участника, комнату записи и допустимость перехода.
+ * room берётся из самой записи call_logs, а не из запроса клиента.
  */
 routerAdd("POST", "/api/calls/status", (e) => {
 	const DB = require(`${__hooks}/db.js`);
 	const info = e.requestInfo();
 	const body = info.body || {};
-	const call_log_id = body.call_log_id;
+	const callLogId = body.call_log_id;
 	const status = body.status;
 
-	if (!call_log_id || !status) {
+	if (
+		typeof callLogId !== "string" ||
+		callLogId === "" ||
+		typeof status !== "string" ||
+		status === ""
+	) {
 		return e.json(400, {
 			code: "INVALID_REQUEST",
 			error: "call_log_id и status обязательны",
@@ -250,20 +324,106 @@ routerAdd("POST", "/api/calls/status", (e) => {
 	if (!authRecord) {
 		return e.json(401, { code: "UNAUTHORIZED", error: "Не авторизован" });
 	}
+	const userId = authRecord.id;
+
+	const ALLOWED_STATUSES = new Set([
+		"ringing",
+		"ongoing",
+		"ended",
+		"missed",
+		"rejected",
+	]);
+	if (!ALLOWED_STATUSES.has(status)) {
+		return e.json(400, {
+			code: "INVALID_STATUS",
+			error: "Недопустимый статус звонка",
+		});
+	}
+
+	// Таблица разрешённых переходов из текущего состояния.
+	const ALLOWED_TRANSITIONS = {
+		ringing: ["ongoing", "ended", "missed", "rejected"],
+		ongoing: ["ended"],
+		ended: [],
+		missed: [],
+		rejected: [],
+	};
 
 	try {
-		const callRecord = $app.findRecordById(DB.TABLES.CALL_LOGS, call_log_id);
+		const callRecord = $app.findRecordById(DB.TABLES.CALL_LOGS, callLogId);
 		if (!callRecord) {
 			return e.json(404, { code: "NOT_FOUND", error: "Лог звонка не найден" });
 		}
 
+		// Room consistency: room определяем из записи, а не из запроса клиента.
+		let roomId = "";
+		try {
+			roomId = callRecord.getString("room");
+		} catch (err) {
+			roomId = "";
+		}
+		const members = $app.findRecordsByFilter(
+			DB.TABLES.MEMBERS,
+			"room = {:roomId} && user = {:userId}",
+			"",
+			1,
+			0,
+			{ roomId: roomId, userId: userId },
+		);
+		if (members.length === 0) {
+			return e.json(403, {
+				code: "CALL_ACCESS_DENIED",
+				error: "Нет доступа к звонку",
+			});
+		}
+
+		const currentStatus = callRecord.getString("status") || "ringing";
+		const initiatorId = callRecord.getString("initiator");
+		if (!initiatorId) {
+			return e.json(500, {
+				code: "INTERNAL_ERROR",
+				error: "У звонка отсутствует инициатор",
+			});
+		}
+		const actorIsInitiator = userId === initiatorId;
+
+		if (currentStatus !== status) {
+			const allowedNext = ALLOWED_TRANSITIONS[currentStatus] || [];
+			if (!allowedNext.includes(status)) {
+				return e.json(409, {
+					code: "INVALID_TRANSITION",
+					error: "Недопустимый переход статуса",
+				});
+			}
+		}
+
+		const actorMayChangeStatus =
+			(status === "ongoing" && !actorIsInitiator) ||
+			((status === "rejected" || status === "missed") && !actorIsInitiator) ||
+			(status === "ringing" && actorIsInitiator) ||
+			(status === "ended" &&
+				(currentStatus === "ongoing" || actorIsInitiator));
+		if (!actorMayChangeStatus) {
+			return e.json(403, {
+				code: "CALL_ACTOR_FORBIDDEN",
+				error: "Недопустимое действие для участника звонка",
+			});
+		}
+
 		callRecord.set("status", status);
+		if (
+			status === "ended" ||
+			status === "rejected" ||
+			status === "missed"
+		) {
+			callRecord.set("ended_at", new Date().toISOString());
+		}
 		$app.save(callRecord);
 		console.log(
-			`📞 [CALLS_DEBUG] Статус звонка ${call_log_id} успешно обновлен на ${status}`,
+			`📞 [CALLS_DEBUG] Статус звонка ${callLogId} обновлён на ${status}`,
 		);
 
-		return e.json(200, { success: true, id: call_log_id, status: status });
+		return e.json(200, { success: true, id: callLogId, status: status });
 	} catch (_err) {
 		console.error("❌ [CALLS_ERROR] Ошибка обновления статуса звонка");
 		return e.json(500, {

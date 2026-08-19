@@ -18,7 +18,7 @@ export function usePresence() {
                 return {};
             }
 
-            const result = await presenceRepository.getAllPresence();
+            const result = await presenceRepository.getSharedPresence();
             if (result.isErr()) {
                 return {};
             }
@@ -28,10 +28,11 @@ export function usePresence() {
 
             for (const r of result.value) {
                 // Если пинг был более 60 секунд назад — считаем оффлайн (защита от 'зависших' рекордов)
-                const lastPing = new Date(r.last_ping).getTime();
-                const isStale = now - lastPing > 90000;
+                const lastPing = new Date(r.last_ping || "").getTime();
+                const isStale =
+                    !Number.isFinite(lastPing) || now - lastPing > 90000;
 
-                initialMap[r.encrypted_user_id] =
+                initialMap[r.user_id] =
                     r.is_online && !isStale
                         ? USER_WEB_STATUS.ONLINE
                         : USER_WEB_STATUS.OFFLINE;

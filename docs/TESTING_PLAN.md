@@ -9,8 +9,9 @@
 
 - `npm run lint` — успешно;
 - `npm run build` — успешно;
-- frontend suite после срезов 2.4–2.6, 6a–6c, 7–8, UI hardening и invite
-  contract: 37 test files passed, 4 skipped; 196 tests passed, 6 skipped.
+- frontend suite после срезов 2.4–2.6, 6a–6c, 7–8, UI hardening, invite
+  contract и P0.3b review: 38 test files passed, 4 skipped; 199 tests passed,
+  6 skipped.
   Unit-сценарии зелёные,
   integration setup на production-like URL безопасно пропускается;
 - после отложенной инициализации `RealtimeGateway` необработанных ошибок нет;
@@ -301,17 +302,24 @@ over-subscription. Остаётся runtime-gate: закрепить верси�
 (жизненный цикл пользователя, регистрация, доставка сообщений, scheduled tasks,
 admin broadcast, user capabilities, invites, room-read) и чистые helper-модули
 (`db.js`, `users_dto.js`, `task_helpers.js`, `hook_constants.js`,
-`request_utils.js`). Единый файл удалён. Hook static/contract тесты
-(`calls.pb`, `main.users.dto`, `task_helpers`, `pb_schema_auth_options`,
-`request_utils`, `main.hooks.registration`, `main.routes.contract`) — базовый
-набор decomposition даёт `43` теста; вместе с `invite.contract` текущий hook
-набор даёт `71` тестов, все зелёные. В route contract также проверяются отсутствие
-логирования тела broadcast-запроса и отсутствие затенения route event в
-room-read, а также различение отсутствующего membership и ошибки БД. Тесты
-проверяют единственность регистрации,
-отсутствие дубликатов роутов, отсутствие `publicExport()` на user routes,
-наличие локальных dependency `require` и удаление `main.pb.js`. Dev runtime
-smoke-test двух принципалов остаётся ручной приёмкой владельца.
+`request_utils.js`). Единый файл удалён. Полный hook suite после P0.3b review
+даёт `118` passed тестов в `20` suites. В него входят контракты для owner-only
+presence DTO (включая собственный `id`), fail-closed MIME/size media и
+защиты server-owned broadcast marker на create/update, authenticated broadcast
+media route, call room/actor transitions и обязательного call push `type`.
+Route contract также проверяет отсутствие логирования тела broadcast-запроса и
+отсутствие затенения route event в room-read, а также различение отсутствующего
+membership и ошибки БД. Dev runtime smoke-test двух принципалов остаётся
+ручной приёмкой владельца.
+
+**Срез P0.3b (локальная authorization evidence).** Закрытые коллекции
+`presence_status`, `message_reactions` и media rules проверяются только через
+узкие server-owned операции; frontend не подписывается напрямую на закрытую
+presence-коллекцию. Для broadcast-файлов используется отдельный auth-маршрут
+и bearer-загрузка в Blob URL для image/video/audio/document/lightbox; прямой
+protected file URL не используется. Контрактные тесты не подключаются к
+Dev/Prod API. Реальный schema snapshot, PocketBase file endpoint и
+двухпользовательская authorization matrix остаются preprod-gate.
 
 **Срез 6a (Outbox persistence contract).** Добавлены unit-тесты публичного
 `outboxDb` без подключения к PocketBase или реальной IndexedDB:

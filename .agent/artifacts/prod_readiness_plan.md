@@ -34,17 +34,19 @@
   build, healthcheck, Nginx syntax, реальная доставка push и выдача LiveKit
   token проверены, но полный звонок между двумя клиентами и повторный security
   review ещё открыты (см. ARCHITECTURE_AUDIT.md §2);
-- слишком широкие PocketBase rules для invites/media/presence/reactions и
-  call-history операций;
-- owner-only users локально реализованы, но Dev authorization matrix ещё не
+- открытые остатки P0.3b: message metadata update, call-history DTO/expand и
+  preprod runtime-подтверждение schema/file authorization; локальные
+  broadcast/presence/media/call review-границы закрыты contract-тестами, но это
+  не заменяет runtime-gate;
+- owner-only users локально реализованы, но preprod authorization matrix ещё не
   выполнена; invite registration локально согласована вокруг `invites.token`
-  и закрытого list/view, но Dev runtime matrix и конкурентное расходование ещё
+  и закрытого list/view, но preprod runtime matrix и конкурентное расходование ещё
   не проверены;
 - отсутствие управляемых PocketBase migrations/schema drift gate;
 - небезопасный и невоспроизводимый prototype release-export.
 
-Локальный frontend suite после последних срезов: 37 test files passed, 4
-skipped; 196 tests passed, 6 skipped. `npm run lint`, `npm run build` и
+Локальный frontend suite после последних срезов: 38 test files passed, 4
+skipped; 199 tests passed, 6 skipped (с `--testTimeout=10000`). `npm run lint`, `npm run build` и
 `git diff --check` проходят. Пропуски — integration/browser-контуры без
 разрешённого изолированного окружения; это не evidence Dev/Prod и не release
 readiness.
@@ -137,15 +139,24 @@ readiness.
   профилей в звонках/шапке комнаты, исходящий экран звонка и доступность
   завершения звонка; полный двухклиентский E2E остаётся открытым.
 - [x] Локальная часть P0.3a реализована: owner-only snapshot, capability DTO,
-  parameter binding и миграция frontend consumers; Dev authorization matrix
+  parameter binding и миграция frontend consumers; preprod authorization matrix
   владельца остаётся открытой.
 - [x] Локально подтверждены fail-closed обработка ошибки invite и parameter
   binding; valid/expired/exhausted/foreign contract tests и условный атомарный
   `UPDATE` с проверкой `rowsAffected()` покрывают локальный concurrent-use
-  контракт, но не подтверждают Dev runtime.
+  контракт, но не подтверждают preprod runtime.
+- [x] Локально исправлены выявленные P0.3b review-регрессии: upload MIME/size
+  читается из request upload и fail-closed отклоняет invalid size, основной
+  media-файл protected, обычный create/update не может подделать broadcast
+  marker, а broadcast image/video/audio/document/lightbox загружаются через
+  auth route в Blob URL; presence DTO возвращает `id` только владельцу,
+  presence не использует закрытую realtime-коллекцию, join call проверяет
+  комнату/переход и запрещает initiator join, статусный маршрут проверяет
+  actor role, task queue call push получает обязательный `type`; hook suite
+  `118/118`, frontend suite `199/199` локально проходят.
 - [x] Согласовать hook/schema модель `invites`; локально покрыть
   valid/expired/exhausted/foreign/malformed и прямой list/view denial.
-- [ ] Пройти Dev runtime-сценарии valid/expired/used/foreign invite после
+- [ ] Пройти preprod runtime-сценарии valid/expired/used/foreign invite после
   deploy и проверить конкурентное расходование.
 - [x] В schema snapshot отключены новые-device login alerts; применение в
   работающем Dev выполняется владельцем через Admin UI.

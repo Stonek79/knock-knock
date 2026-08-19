@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/Button";
 import { Image } from "@/components/ui/Image";
 import { ICON_SIZE, MEDIA_SYSTEM_CONSTANTS } from "@/lib/constants";
 import { useMedia } from "@/lib/mediadb/useMedia";
-import { mediaService } from "@/lib/services/media";
 import type { Attachment } from "@/lib/types";
+import { useSystemMedia } from "../../../../hooks/useSystemMedia";
 import styles from "./attachment-renderer.module.css";
 import { getRatioClass } from "./helpers";
 
@@ -50,23 +50,27 @@ export function CachedImage({
         userId,
         initialUrl: att.url,
     });
+    const systemMedia = useSystemMedia(
+        Boolean(isSystem),
+        att.id,
+        att.file_name,
+    );
+    const effectiveObjectUrl = isSystem ? systemMedia.objectUrl : objectUrl;
+    const effectiveLoading = isSystem ? systemMedia.isLoading : isLoading;
+    const effectiveError = isSystem ? systemMedia.error : error;
 
     useEffect(() => {
-        onErrorStateChange?.(att.id, !!error);
-    }, [att.id, error, onErrorStateChange]);
+        onErrorStateChange?.(att.id, !!effectiveError);
+    }, [att.id, effectiveError, onErrorStateChange]);
 
     const isBlob =
         typeof att.url === "string" &&
         att.url.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX);
-    const systemUrl = isSystem
-        ? mediaService.getSystemFileUrl(att.id, att.file_name)
-        : undefined;
-    const displayUrl = isBlob
-        ? att.url
-        : systemUrl || thumbnailUrl || objectUrl;
+    const displayUrl = isBlob ? att.url : effectiveObjectUrl || thumbnailUrl;
 
     const showPlaceholder =
-        !displayUrl && (imageErrors[att.id] || !!error || isLoading);
+        !displayUrl &&
+        (imageErrors[att.id] || !!effectiveError || effectiveLoading);
 
     const ratioClass = getRatioClass(isSingle, metadata);
 

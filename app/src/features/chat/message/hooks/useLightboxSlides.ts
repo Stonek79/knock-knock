@@ -12,6 +12,7 @@ interface UseLightboxSlidesProps {
     userId: string;
     /** Ключ комнаты для расшифровки */
     roomKey?: CryptoKey;
+    isSystem?: boolean;
     /** Флаг активации загрузки (когда лайтбокс открыт) */
     enabled: boolean;
 }
@@ -24,6 +25,7 @@ export function useLightboxSlides({
     attachments,
     userId,
     roomKey,
+    isSystem = false,
     enabled,
 }: UseLightboxSlidesProps) {
     const thumbnails = useLightboxThumbnails({ attachments, userId, enabled });
@@ -32,6 +34,7 @@ export function useLightboxSlides({
         attachments,
         userId,
         roomKey,
+        isSystem,
         enabled,
     });
 

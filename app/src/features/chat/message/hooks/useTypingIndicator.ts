@@ -39,35 +39,13 @@ export function useTypingIndicator({
                 return [];
             }
 
-            const result = await presenceRepository.getTypingUsersByRoom(
-                roomId,
-                pbUser.id,
-            );
+            const result =
+                await presenceRepository.getTypingUsersByRoom(roomId);
 
             if (result.isOk()) {
                 return result.value.map((r) => {
-                    // Здесь record.expand.user — это объект профиля
-                    const userData = r.expand?.user;
-                    let displayName: string | undefined;
-                    let username: string | undefined;
-                    if (userData && typeof userData === "object") {
-                        if (
-                            "display_name" in userData &&
-                            typeof userData.display_name === "string"
-                        ) {
-                            displayName = userData.display_name;
-                        }
-                        if (
-                            "username" in userData &&
-                            typeof userData.username === "string"
-                        ) {
-                            username = userData.username;
-                        }
-                    }
                     return (
-                        displayName ||
-                        username ||
-                        t("chat.unknownUser", "Неизвестный")
+                        r.display_name || t("chat.unknownUser", "Неизвестный")
                     );
                 });
             }
@@ -75,6 +53,7 @@ export function useTypingIndicator({
         },
         enabled: !!roomId && !!pbUser,
         staleTime: 1000 * 5, // Небольшой staleTime, т.к. данные живые
+        refetchInterval: 5000,
     });
 
     /**

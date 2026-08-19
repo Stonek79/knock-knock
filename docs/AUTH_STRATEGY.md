@@ -2,7 +2,7 @@
 
 > **Статус:** локальный hook/schema contract согласован вокруг `invites.token` и
 > проверяется fail-closed; расходование использует условный атомарный `UPDATE`.
-> Dev runtime matrix и проверка конкурентного расходования ещё не выполнены;
+> Preprod runtime matrix и проверка конкурентного расходования ещё не выполнены;
 > release остаётся заблокированным. См.
 > [ARCHITECTURE_AUDIT.md](./ARCHITECTURE_AUDIT.md).
 
@@ -27,13 +27,13 @@ Frontend использует username/password и invitation input. PocketBase 
 endpoint, возвращающий узкий allowlist `RoomInvitePreviewDto` без `token` и
 `created_by` (тип используется в repository/service/`useJoinRoom`). Локальные
 valid/expired/exhausted/foreign/malformed tests и contract-тесты validate
-endpoint проходят, но Dev runtime и конкурентная атомарность расходования ещё
+endpoint проходят, но preprod runtime и конкурентная атомарность расходования ещё
 не подтверждены в развернутом runtime: локальный consume использует общий
 условный атомарный `UPDATE` с проверкой `rowsAffected()`, поэтому конкурентное
 использование одного invite не должно превышать `max_uses`. Образ PocketBase
-не закреплён, а Dev concurrent matrix ещё не выполнена владельцем.
+не закреплён, а preprod concurrent matrix ещё не выполнена владельцем.
 
-До применения snapshot в Dev и runtime-проверки регистрация не готова для
+До применения snapshot в preprod и runtime-проверки регистрация не готова для
 публичного доступа.
 
 Ошибки регистрации не показывают пользователю сырой ответ PocketBase. Известные

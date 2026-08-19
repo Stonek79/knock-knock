@@ -18,7 +18,7 @@ globalThis.routerAdd = (method, route, handler) => {
 };
 require("../calls.pb.js");
 
-let httpStub, appStub, osStub, jsonCalls, httpSendCalls;
+let httpStub, appStub, osStub, jsonCalls, httpSendCalls, callRecord;
 
 beforeEach(() => {
 	httpSendCalls = [];
@@ -32,8 +32,9 @@ beforeEach(() => {
 
 	appStub = {
 		findRecordsByFilter: () => [{ id: "m1" }],
-		findRecordById: () => null,
+		findRecordById: () => callRecord,
 		findCollectionByNameOrId: () => ({}),
+		save: () => {},
 		store: () => ({ has: () => false, set: () => {}, remove: () => {} }),
 	};
 	globalThis.$app = appStub;
@@ -49,6 +50,7 @@ beforeEach(() => {
 	globalThis.$os = osStub;
 
 	globalThis.$security = { md5: () => "md5hash" };
+	callRecord = null;
 
 	jsonCalls = [];
 	globalThis.console = { log: () => {}, error: () => {}, warn: () => {} };
@@ -74,8 +76,21 @@ function makeE(body) {
 
 describe("calls.pb.js → POST /api/calls/token", () => {
 	it("sends exact Authorization header to gateway", () => {
+		callRecord = {
+			getString: (field) =>
+				field === "room"
+					? "room1"
+					: field === "status"
+						? "ringing"
+						: field === "initiator"
+							? "user2"
+							: "",
+			set: () => {},
+		};
 		const handler = handlers["POST /api/calls/token"];
-		const res = handler(makeE({ room_id: "room1", is_join: true }));
+		const res = handler(
+			makeE({ room_id: "room1", is_join: true, call_log_id: "call1" }),
+		);
 
 		assert.strictEqual(res.status, 200);
 		assert.strictEqual(httpSendCalls.length, 1);
@@ -100,13 +115,26 @@ describe("calls.pb.js → POST /api/calls/token", () => {
 	});
 
 	it("returns generic error without url/raw when gateway fails", () => {
+		callRecord = {
+			getString: (field) =>
+				field === "room"
+					? "room1"
+					: field === "status"
+						? "ongoing"
+						: field === "initiator"
+							? "user2"
+							: "",
+			set: () => {},
+		};
 		httpStub.send = () => ({
 			statusCode: 500,
 			raw: "INTERNAL http://secret.example token=abc123",
 			json: {},
 		});
 		const handler = handlers["POST /api/calls/token"];
-		const res = handler(makeE({ room_id: "room1", is_join: true }));
+		const res = handler(
+			makeE({ room_id: "room1", is_join: true, call_log_id: "call1" }),
+		);
 
 		assert.strictEqual(res.status, 500);
 		assert.ok(!res.payload.error.includes("http"));
@@ -117,9 +145,22 @@ describe("calls.pb.js → POST /api/calls/token", () => {
 	});
 
 	it("fails closed when PUSH_GATEWAY_SECRET is missing", () => {
+		callRecord = {
+			getString: (field) =>
+				field === "room"
+					? "room1"
+					: field === "status"
+						? "ongoing"
+						: field === "initiator"
+							? "user2"
+							: "",
+			set: () => {},
+		};
 		osStub.getenv = () => "";
 		const handler = handlers["POST /api/calls/token"];
-		const res = handler(makeE({ room_id: "room1", is_join: true }));
+		const res = handler(
+			makeE({ room_id: "room1", is_join: true, call_log_id: "call1" }),
+		);
 
 		assert.strictEqual(httpSendCalls.length, 0);
 		assert.strictEqual(res.status, 500);
@@ -127,5 +168,93 @@ describe("calls.pb.js → POST /api/calls/token", () => {
 			res.payload.error,
 			"Push gateway secret is not configured",
 		);
+	});
+
+	it("rejects a join token paired with a call log from another room", () => {
+		callRecord = {
+			getString: (field) =>
+				field === "room" ? "room2" : field === "status" ? "ringing" : "",
+		};
+		const handler = handlers["POST /api/calls/token"];
+		const res = handler(
+			makeE({ room_id: "room1", is_join: true, call_log_id: "call2" }),
+		);
+
+		assert.strictEqual(res.status, 403);
+		assert.strictEqual(res.payload.code, "CALL_ACCESS_DENIED");
+	});
+
+	it("requires a call log id when joining", () => {
+		const handler = handlers["POST /api/calls/token"];
+		const res = handler(makeE({ room_id: "room1", is_join: true }));
+
+		assert.strictEqual(res.status, 400);
+		assert.strictEqual(res.payload.code, "CALL_LOG_ID_REQUIRED");
+		assert.strictEqual(httpSendCalls.length, 0);
+	});
+
+	it("rejects a join token for a terminal call log", () => {
+		callRecord = {
+			getString: (field) =>
+				field === "room"
+					? "room1"
+					: field === "status"
+						? "ended"
+						: field === "initiator"
+							? "user2"
+							: "",
+		};
+		const handler = handlers["POST /api/calls/token"];
+		const res = handler(
+			makeE({ room_id: "room1", is_join: true, call_log_id: "call1" }),
+		);
+
+		assert.strictEqual(res.status, 409);
+		assert.strictEqual(res.payload.code, "INVALID_TRANSITION");
+	});
+
+	it("fails closed when accepting the call cannot persist its status", () => {
+		callRecord = {
+			getString: (field) =>
+				field === "room"
+					? "room1"
+					: field === "status"
+						? "ringing"
+						: field === "initiator"
+							? "user2"
+							: "",
+			set: () => {},
+		};
+		appStub.save = () => {
+			throw new Error("save failed");
+		};
+		const handler = handlers["POST /api/calls/token"];
+		const res = handler(
+			makeE({ room_id: "room1", is_join: true, call_log_id: "call1" }),
+		);
+
+		assert.strictEqual(res.status, 500);
+		assert.strictEqual(res.payload.code, "INTERNAL_ERROR");
+	});
+
+	it("rejects the initiator from joining its own ringing call", () => {
+		callRecord = {
+			getString: (field) =>
+				field === "room"
+					? "room1"
+					: field === "status"
+						? "ringing"
+						: field === "initiator"
+							? "user1"
+							: "",
+		};
+		const handler = handlers["POST /api/calls/token"];
+		const res = handler(
+			makeE({ room_id: "room1", is_join: true, call_log_id: "call1" }),
+		);
+
+		assert.strictEqual(res.status, 403);
+		assert.strictEqual(res.payload.code, "CALL_ACTOR_FORBIDDEN");
+		assert.strictEqual(httpSendCalls.length, 0);
 	});
 });

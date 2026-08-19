@@ -454,20 +454,13 @@ export const ChatRealtimeService = {
             _unsubs.push(unsubMsg, unsubMem, unsubRooms, unsubPresence);
 
             // --- 2. АСИНХРОННЫЕ ОПЕРАЦИИ (Presence и Ключи) ---
-            const res = await presenceRepository.getPresenceByUserId(user.id);
+            const res = await presenceRepository.ensureOwnPresence();
             if (res.isOk()) {
                 _presenceRecordId = res.value.id;
                 await presenceRepository.updatePresence(
                     _presenceRecordId,
                     true,
                 );
-            } else {
-                const createRes = await presenceRepository.createPresence(
-                    user.id,
-                );
-                if (createRes.isOk()) {
-                    _presenceRecordId = createRes.value.id;
-                }
             }
 
             syncPublicKeys({ userId: user.id }).catch((err) => {

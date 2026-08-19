@@ -127,7 +127,7 @@ owner-only users и отдельные узкие server DTO.
 ### Rollout Safety
 
 Сначала подготовить и проверить hooks, DTO и frontend-потребителей в рабочем
-дереве. Затем владелец применяет точечное изменение правил `users` в Dev Admin
+дереве. Затем владелец применяет точечное изменение правил `users` в preprod Admin
 UI, экспортирует актуальный `pb_schema.json` и выполняет двухпользовательскую
 проверку. После успешной проверки код и snapshot коммитятся вместе. При ошибке
 код можно вернуть на предыдущий Git commit, а Dev-схему вернуть через Admin UI
@@ -141,7 +141,7 @@ UI, экспортирует актуальный `pb_schema.json` и выпол
 
 **Files:** `infra/home/pb_schema.json`, `infra/home/pb_hooks/__tests__/pb_schema_auth_options.test.cjs`.
 
-1. После локальной проверки server/frontend-пути владелец проверяет Dev/Prod
+1. После локальной проверки server/frontend-пути владелец проверяет preprod
    разделение и в Dev Admin UI меняет только
    `users.listRule` и `users.viewRule` на KTD1. Агент к Admin UI не подключается.
 2. Владелец экспортирует результат в `infra/home/pb_schema.json`; агент
@@ -277,16 +277,16 @@ parameter binding. Hook/schema tests — `10/10`, repository/room/peer capabilit
 tests — `9/9`, `11/11` и `2/2`, полный frontend suite — `186 passed`, `6 skipped`
 (35 test files passed, 4 skipped), lint, build и `git diff --check` — зелёные.
 
-Это не является runtime-приёмкой: владелец должен отдельно проверить в Dev
+Это не является runtime-приёмкой: владелец должен отдельно проверить в preprod
 двухпользовательскую matrix из U4 после применения правил через Admin UI.
 До этого Definition of Done ниже не отмечается как полностью выполненный.
 
 | Layer | Command or evidence | Required result |
 | --- | --- | --- |
-| Dev schema | владелец меняет Admin UI и экспортирует `pb_schema.json`; агент проверяет snapshot и node schema contract test | snapshot aligned; running Dev rules verified владельцем |
+| Preprod schema | владелец меняет Admin UI и экспортирует `pb_schema.json`; агент проверяет snapshot и node schema contract test | snapshot aligned; running preprod rules verified владельцем |
 | Hooks | focused `infra/home/pb_hooks/__tests__/` DTO/route tests | explicit allowlists; no route uses `publicExport()` |
 | App units | `cd app && npm test -- --run src/lib/repositories/user.repository.test.ts src/lib/services/room.test.ts <realtime-test>` | public path works; denied path fail-closed |
-| Security integration | владелец запускает existing Dev integration config for `security-users-authorization.integration.test.ts` and parameter-binding test | two-principal authorization matrix passes; Prod excluded |
+| Security integration | владелец запускает existing preprod integration config for `security-users-authorization.integration.test.ts` and parameter-binding test | two-principal authorization matrix passes; Prod excluded |
 | App quality | `cd app && npm run lint && npm run build && npm test -- --run` (без PB) | report exact pass/fail/skip, do not hide legacy failures |
 | Security review | read-only Semgrep scoped to changed source and hooks | findings reviewed; no automatic suppression |
 | Runtime evidence | ручное выполнение владельцем после Admin UI change | required before marking this slice verified |
@@ -299,7 +299,7 @@ tests — `9/9`, `11/11` и `2/2`, полный frontend suite — `186 passed`,
       no user route serializes `publicExport()`.
 - [ ] Room and realtime consumers no longer depend on direct arbitrary user
       records and deny unavailable private-key capability safely.
-- [ ] Владелец отдельным ручным прогоном подтвердил Dev integration suite с
+- [ ] Владелец отдельным ручным прогоном подтвердил preprod integration suite с
       двумя пользователями и cleanup, учитывающий ownership policy.
 - [ ] ADR and testing/audit/current-state documents contain precise evidence;
       unrelated P0 and release NO-GO items remain open.

@@ -5,6 +5,7 @@ import {
     OPTIMISTIC_ID_PREFIX,
     QUERY_KEYS,
 } from "@/lib/constants";
+import { mediaRepository } from "@/lib/repositories/media.repository";
 import { mediaService } from "@/lib/services/media";
 import type { Attachment } from "@/lib/types";
 
@@ -12,6 +13,7 @@ interface UseLightboxOriginalsProps {
     attachments: Attachment[];
     userId: string;
     roomKey?: CryptoKey;
+    isSystem?: boolean;
     enabled: boolean;
 }
 
@@ -19,6 +21,7 @@ export function useLightboxOriginals({
     attachments,
     userId,
     roomKey,
+    isSystem = false,
     enabled,
 }: UseLightboxOriginalsProps) {
     const urlsRef = useRef<Record<string, string>>({});
@@ -33,8 +36,22 @@ export function useLightboxOriginals({
                     att.url.startsWith(MEDIA_SYSTEM_CONSTANTS.BLOB_PREFIX));
 
             return {
-                queryKey: QUERY_KEYS.media(att.id, userId),
+                queryKey: [
+                    ...QUERY_KEYS.media(att.id, userId),
+                    isSystem ? "system" : "encrypted",
+                ],
                 queryFn: async () => {
+                    if (isSystem) {
+                        const result = await mediaRepository.downloadSystemFile(
+                            att.id,
+                            att.file_name,
+                        );
+                        if (result.isErr()) {
+                            throw result.error;
+                        }
+                        return { original: result.value, thumbnail: null };
+                    }
+
                     const result = await mediaService.ensureOriginal({
                         id: att.id,
                         userId,

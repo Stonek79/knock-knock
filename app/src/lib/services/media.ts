@@ -385,6 +385,12 @@ export const mediaService = {
                 JSON.stringify({ roomId }),
             );
 
+            // room — реальная relation-связь с комнатой (server-visible).
+            // references.roomId остаётся только клиентскими метаданными.
+            if (roomId && !isVault) {
+                formData.append(MEDIA_FIELDS.ROOM, roomId);
+            }
+
             // Объединяем метаданные от воркера и метаданные видео
             const safeMetadata = {
                 ...(metadata || {}),

@@ -147,16 +147,16 @@ exists`; приложение в тот же момент восстановил
 
 ### 3. Исправить PocketBase authorization
 
-Требуют закрытия или ограничения:
+Открытыми остаются только следующие границы:
 
-- публичное чтение коллекции `invites` и её token;
-- остаточные глобальные правила `presence_status` и `message_reactions`, а
-  также широкие правила `media`;
-- изменение чужого presence;
-- изменение чужого message metadata;
-- изменение произвольного `call_logs.status`;
-- media без обязательной room relation, membership rule и server-side
-  size/MIME limits.
+- изменение чужого message metadata — нужен отдельный read-ack/update DTO;
+- call-history `expand` и фактическая runtime authorization matrix;
+- применение schema snapshot и проверка file endpoint в preprod.
+
+Коллекции `invites`, `presence_status` и `message_reactions` закрыты для
+прямого клиентского чтения/изменения; media требует room/owner scope, серверную
+проверку multipart MIME/размера и protected-файлы. Статусы звонка ограничены
+room membership, ролью инициатора/приглашённого участника и таблицей переходов.
 
 Базовое чтение `users` должно быть owner-only. Для поиска открытых профилей и
 общих контактов нужны отдельные серверные DTO endpoints с минимальным набором
@@ -168,8 +168,24 @@ allowlist DTO и parameter binding. Эти consumer-пути больше не �
 `users` напрямую. Отдельный call-history путь всё ещё должен быть проверен:
 `call.repository` запрашивает связанный контекст через `expand`, поэтому это не
 является доказательством privacy-safe DTO для истории звонков. Фактическое
-правило в Dev и двухпользовательскую authorization matrix владелец проверяет
+правило в preprod и двухпользовательскую authorization matrix владелец проверяет
 отдельно; crypto interoperability и release `NO-GO` остаются открытыми.
+
+После review локально закрыты дополнительные границы P0.3b: presence больше не
+подписывается напрямую на коллекцию с `null` rules, собственный DTO возвращает
+id только своей записи, а shared/typing DTO документируют `user_id` как
+room-scoped correlation key; media upload валидирует multipart-файл через
+PocketBase request event и fail-closed отклоняет нечисловой размер, основной
+media-файл protected. Room-less broadcast media не получает ослабленное
+collection rule: его marker нельзя подделать обычным create/update-запросом,
+а выдаёт файл только auth-маршрут через PocketBase filesystem; frontend
+загружает его bearer-запросом в Blob URL.
+Join звонка сверяет `call_log_id` с фактической комнатой и терминальным
+статусом, запрещает инициатору принимать собственный ringing-call до запроса
+токена, статусный маршрут учитывает actor role, а call push task содержит
+обязательный `type`. Это только статическая/schema и contract evidence; runtime
+authorization matrix, проверка реального file endpoint и полный двухклиентский
+call flow остаются открытыми.
 
 ### 4. Исправить приглашения и регистрацию
 
@@ -187,12 +203,12 @@ allowlist DTO и parameter binding. Эти consumer-пути больше не �
 расходующих пути вызывают общий условный SQL `UPDATE` и проверяют
 `rowsAffected()`, поэтому один SQLite writer не может выдать один и тот же
 usage slot двум конкурентным запросам. Остаётся runtime-gate: текущий образ
-PocketBase не закреплён, поэтому Dev concurrent matrix и проверка фактического
+PocketBase не закреплён, поэтому preprod concurrent matrix и проверка фактического
 snapshot ещё обязательны.
 
 Локальное evidence: hook/schema contract tests и route tests проходят; токены не
 попадают в логи. P0.4 всё ещё не закрывается полностью: владелец должен
-применить snapshot в Dev и выполнить runtime valid/expired/used/foreign matrix,
+применить snapshot в preprod и выполнить runtime valid/expired/used/foreign matrix,
 проверить конкурентное повторное использование и подтвердить, что фактические
 rules совпадают со snapshot. Prod не изменяется.
 

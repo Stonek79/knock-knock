@@ -186,6 +186,8 @@ export function AttachmentRenderer({
                     mimeType={att.content_type}
                     userId={userId}
                     initialUrl={att.url}
+                    systemFilename={att.file_name}
+                    isSystem={isSystem}
                 />
             ))}
             {docAttachments.map((att) => (
@@ -195,6 +197,7 @@ export function AttachmentRenderer({
                     userId={userId}
                     roomKey={roomKey}
                     isVault={isVault}
+                    isSystem={isSystem}
                 />
             ))}
         </Flex>

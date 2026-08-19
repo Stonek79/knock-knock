@@ -12,6 +12,7 @@ import {
 } from "@/lib/constants";
 import { formatTime } from "@/lib/utils/time";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
+import { useSystemMedia } from "../../hooks/useSystemMedia";
 import styles from "./AudioMessagePlayer.module.css";
 
 /**
@@ -36,6 +37,9 @@ export type AudioMessagePlayerProps = {
     mimeType?: string;
     /** Начальный URL (для оптимистичных сообщений) */
     initialUrl?: string;
+    /** Имя server-owned broadcast-файла */
+    systemFilename?: string;
+    isSystem?: boolean;
 };
 
 /**
@@ -52,13 +56,21 @@ export function AudioMessagePlayer({
     roomKey,
     mimeType,
     initialUrl,
+    systemFilename,
+    isSystem = false,
 }: AudioMessagePlayerProps) {
+    const systemMedia = useSystemMedia(
+        isSystem,
+        mediaId || "",
+        systemFilename || "",
+    );
     const { state, controls, audioRef } = useAudioPlayer({
-        mediaId,
+        mediaId: isSystem ? undefined : mediaId,
         userId,
         roomKey,
         mimeType,
-        initialUrl,
+        initialUrl: isSystem ? undefined : initialUrl,
+        externalSrc: isSystem ? systemMedia.objectUrl : undefined,
     });
 
     const { currentTime, duration, isPlaying, decryptedSrc } = state;

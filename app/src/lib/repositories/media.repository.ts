@@ -73,8 +73,39 @@ export const mediaRepository = {
      */
     getSystemFileUrl: (id: string, filename: string): string => {
         return pb.buildURL(
-            `/api/files/${STORAGE_CONFIG.MEDIA_COLLECTION}/${id}/${filename}`,
+            `/api/custom/broadcast/media/${encodeURIComponent(id)}/${encodeURIComponent(filename)}`,
         );
+    },
+
+    /** Скачивание server-owned broadcast-файла с auth-заголовком. */
+    downloadSystemFile: async (
+        id: string,
+        filename: string,
+    ): Promise<Result<Blob, Error>> => {
+        try {
+            const token = pb.authStore.token;
+            if (!token) {
+                return err(new Error("Пользователь не авторизован"));
+            }
+            const response = await fetch(
+                mediaRepository.getSystemFileUrl(id, filename),
+                { headers: { Authorization: token } },
+            );
+            if (!response.ok) {
+                return err(
+                    new Error(
+                        `Ошибка скачивания файла: ${response.status} ${response.statusText}`,
+                    ),
+                );
+            }
+            return ok(await response.blob());
+        } catch (error) {
+            return err(
+                error instanceof Error
+                    ? error
+                    : new Error("Неизвестная ошибка при скачивании файла"),
+            );
+        }
     },
 
     /**
@@ -85,12 +116,16 @@ export const mediaRepository = {
     downloadFile: async (url: string): Promise<Result<Blob, Error>> => {
         try {
             const token = pb.authStore.token;
+            const fileToken = await pb.files.getToken();
 
             const headers: Record<string, string> = {};
             if (token) {
                 headers.Authorization = token;
             }
-            const response = await fetch(url, { headers });
+            const authenticatedUrl = fileToken
+                ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(fileToken)}`
+                : url;
+            const response = await fetch(authenticatedUrl, { headers });
 
             if (!response.ok) {
                 return err(

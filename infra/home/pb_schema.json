@@ -808,11 +808,11 @@
 			"CREATE UNIQUE INDEX `idx_pres_user` ON `presence_status` (`encrypted_user_id`)",
 			"CREATE INDEX `idx_pres_ping` ON `presence_status` (`last_ping`)"
 		],
-		"listRule": "@request.auth.id != ''",
-		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != ''",
-		"updateRule": "@request.auth.id != ''",
-		"deleteRule": "@request.auth.id != ''"
+		"listRule": null,
+		"viewRule": null,
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null
 	},
 	{
 		"id": "pbc_reac_tab_id",
@@ -882,10 +882,10 @@
 		"indexes": [
 			"CREATE UNIQUE INDEX `idx_msg_user_emoji` ON `message_reactions` (`message`, `user`, `emoji`)"
 		],
-		"listRule": "@request.auth.id != ''",
-		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != '' && user = @request.auth.id",
-		"updateRule": "@request.auth.id = user",
+		"listRule": null,
+		"viewRule": null,
+		"createRule": "@request.auth.id != \"\" && user = @request.auth.id && message.room.room_members_via_room.user ?= @request.auth.id",
+		"updateRule": null,
 		"deleteRule": "@request.auth.id = user"
 	},
 	{
@@ -1138,7 +1138,11 @@
 				"type": "file",
 				"system": false,
 				"required": true,
-				"maxSelect": 1
+				"maxSelect": 1,
+				"maxSize": 52428800,
+				"mimeTypes": [],
+				"thumbs": [],
+				"protected": true
 			},
 			{
 				"id": "med_cb_id",
@@ -1232,9 +1236,9 @@
 		"indexes": [
 			"CREATE INDEX `idx_media_created_by` ON `media` (`created_by`)"
 		],
-		"listRule": "@request.auth.id != ''",
-		"viewRule": "@request.auth.id != ''",
-		"createRule": "@request.auth.id != '' && created_by = @request.auth.id",
+		"listRule": "@request.auth.id != \"\" && (created_by = @request.auth.id || room.room_members_via_room.user ?= @request.auth.id)",
+		"viewRule": "@request.auth.id != \"\" && (created_by = @request.auth.id || room.room_members_via_room.user ?= @request.auth.id)",
+		"createRule": "@request.auth.id != \"\" && created_by = @request.auth.id && room.room_members_via_room.user ?= @request.auth.id",
 		"updateRule": "@request.auth.id = created_by",
 		"deleteRule": "@request.auth.id = created_by"
 	},

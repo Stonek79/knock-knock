@@ -7,6 +7,7 @@ import { FILE_EXTENSIONS, ICON_SIZE } from "@/lib/constants";
 import { useMedia } from "@/lib/mediadb/useMedia";
 import type { Attachment } from "@/lib/types";
 import { formatBytes } from "@/lib/utils/format";
+import { useSystemMedia } from "../../../../hooks/useSystemMedia";
 import styles from "./documentattachmentcard.module.css";
 
 export interface DocumentAttachmentCardProps {
@@ -14,6 +15,7 @@ export interface DocumentAttachmentCardProps {
     userId: string;
     roomKey?: CryptoKey;
     isVault?: boolean;
+    isSystem?: boolean;
 }
 
 function getFileIcon(name: string) {
@@ -45,15 +47,24 @@ export function DocumentAttachmentCard({
     userId,
     roomKey,
     isVault,
+    isSystem = false,
 }: DocumentAttachmentCardProps) {
-    const { objectUrl, isLoading, error } = useMedia({
-        mediaId: attachment.id,
+    const systemMedia = useSystemMedia(
+        isSystem,
+        attachment.id,
+        attachment.file_name,
+    );
+    const media = useMedia({
+        mediaId: isSystem ? undefined : attachment.id,
         roomKey,
         isVault,
         userId,
         initialUrl: attachment.url,
         downloadOriginal: true,
     });
+    const objectUrl = isSystem ? systemMedia.objectUrl : media.objectUrl;
+    const isLoading = isSystem ? systemMedia.isLoading : media.isLoading;
+    const error = isSystem ? systemMedia.error : media.error;
 
     const handleDownload = (e: React.MouseEvent) => {
         e.stopPropagation();

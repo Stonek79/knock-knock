@@ -19,6 +19,7 @@ interface ZoomBlockProps {
     close: () => void;
     index: number;
     isDeleted: boolean;
+    isSystem?: boolean;
 }
 
 /**
@@ -32,6 +33,7 @@ export const ZoomBlock = ({
     open,
     close,
     index,
+    isSystem = false,
 }: ZoomBlockProps) => {
     const { t } = useTranslation();
 
@@ -39,6 +41,7 @@ export const ZoomBlock = ({
         attachments: mediaAttachments,
         userId,
         roomKey,
+        isSystem,
         enabled: index >= 0,
     });
 

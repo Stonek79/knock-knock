@@ -35,6 +35,7 @@ export type UseAudioPlayerParams = {
     mimeType?: string;
     /** Начальный URL */
     initialUrl?: string;
+    externalSrc?: string;
 };
 
 /**
@@ -45,6 +46,7 @@ export function useAudioPlayer({
     userId,
     roomKey,
     initialUrl,
+    externalSrc,
 }: UseAudioPlayerParams): {
     state: AudioPlayerState;
     controls: AudioPlayerControls;
@@ -56,12 +58,13 @@ export function useAudioPlayer({
     const [duration, setDuration] = useState(0);
 
     // Используем новый хук для прозрачной расшифровки и кеширования
-    const { objectUrl: decryptedSrc } = useMedia({
+    const { objectUrl: mediaSrc } = useMedia({
         mediaId,
         userId,
         roomKey,
         initialUrl,
     });
+    const decryptedSrc = externalSrc || mediaSrc;
 
     // Подписка на события аудио
     useEffect(() => {
