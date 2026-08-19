@@ -72,7 +72,7 @@ export function TermsPage() {
                                 <Text>{t("auth.terms.sec3Desc")}</Text>
                             </Flex>
 
-                            <Text size="xs" color="muted">
+                            <Text size="xs" intent="secondary">
                                 {t("auth.terms.lastUpdate", {
                                     date: new Date().toLocaleDateString(),
                                 })}

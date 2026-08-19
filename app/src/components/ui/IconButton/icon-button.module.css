@@ -22,13 +22,13 @@
     color: var(--foreground);
     background: transparent;
     flex-shrink: 0;
+    /* Контекст для абсолютно позиционируемого псевдоэлемента hit-area */
+    position: relative;
 }
 
-.iconButton:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    pointer-events: none;
-}
+/* =========================================== */
+/* Размеры */
+/* =========================================== */
 
 /** Маленький — для чипов, мелких элементов */
 .xs {
@@ -60,18 +60,19 @@
     height: var(--size-btn-h-4);
 }
 
+/** Максимальный размер */
+.xxl {
+    width: calc(var(--size-btn-h-4) * 1.25);
+    height: calc(var(--size-btn-h-4) * 1.25);
+}
+
 /* =========================================== */
-/* Варианты (variant) */
+/* Варианты */
 /* =========================================== */
 
 /** Прозрачный — только иконка */
 .ghost {
     background: transparent;
-}
-
-.ghost:hover {
-    background: var(--glass-hover-bg);
-    color: var(--accent-primary);
 }
 
 /** Мягкий — полупрозрачный фон */
@@ -80,43 +81,33 @@
     border: var(--border-width-base) solid var(--glass-border);
 }
 
-.soft:hover {
-    background: var(--glass-hover-bg);
-}
-
 /** Акцентный — заливка */
 .solid {
     background: var(--accent-primary);
     color: var(--bubble-out-fg);
 }
 
-.solid:hover {
-    opacity: 0.85;
+.outline {
+    background: transparent;
+    color: var(--accent-primary);
+    border: var(--border-width-base) solid var(--accent-primary);
+}
+
+.surface {
+    background: var(--surface);
+    color: var(--foreground);
+    border: var(--border-width-base) solid var(--border);
+}
+
+.glass {
+    background: var(--glass-bg);
+    color: var(--foreground);
+    border: var(--border-width-base) solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
 }
 
 /* =========================================== */
-/* Интенты (intent) */
-/* =========================================== */
-
-.danger.ghost {
-    color: var(--intent-error-main);
-}
-.danger.ghost:hover {
-    background: var(--intent-error-alpha);
-    color: var(--bubble-out-fg);
-}
-
-.danger.solid {
-    background: var(--intent-error-main);
-    color: white;
-}
-
-.success.ghost {
-    color: var(--intent-success-main);
-}
-
-/* =========================================== */
-/* Форма (shape) */
+/* Форма */
 /* =========================================== */
 
 .round {
@@ -125,4 +116,102 @@
 
 .square {
     border-radius: var(--kk-radius-sm);
+}
+
+.pill {
+    border-radius: var(--kk-radius-full);
+}
+
+.circle {
+    border-radius: 50%;
+}
+
+/* =========================================== */
+/* Интенты */
+/* =========================================== */
+
+.danger.ghost {
+    color: var(--intent-error-main);
+}
+
+.danger.solid {
+    background: var(--intent-error-main);
+    color: var(--color-white);
+}
+
+.success.ghost {
+    color: var(--intent-success-main);
+}
+
+/* =========================================== */
+/* Hover */
+/* =========================================== */
+
+.ghost:hover {
+    background: var(--glass-hover-bg);
+    color: var(--accent-primary);
+}
+
+.soft:hover {
+    background: var(--glass-hover-bg);
+}
+
+.solid:hover {
+    opacity: 0.85;
+}
+
+.outline:hover {
+    background: var(--accent-primary);
+    color: var(--bubble-out-fg);
+}
+
+.surface:hover {
+    background: var(--glass-hover-bg);
+}
+
+.glass:hover {
+    background: var(--glass-hover-bg);
+}
+
+/* =========================================== */
+/* Состояния и hit-area */
+/* =========================================== */
+
+.iconButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.iconButton:focus-visible {
+    box-shadow: 0 0 0 var(--border-width-focus) var(--accent-primary);
+}
+
+/*
+ * Единый механизм расширения hit-area до --size-touch для малых/средних
+ * размеров иконок (xs/sm/md). В плотных раскладках его можно отключить:
+ * <IconButton data-hit-area="none" .../>.
+ */
+.iconButton[data-hit-area]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: var(--size-touch);
+    height: var(--size-touch);
+}
+
+.iconButton[data-hit-area="none"]::before {
+    content: none;
+}
+
+/* Состояния интента должны переопределять общие hover-правила вариантов. */
+.danger.ghost:hover {
+    background: var(--intent-error-alpha);
+    color: var(--bubble-out-fg);
+}
+
+.danger.solid:hover {
+    background: var(--intent-error-main);
+    opacity: 0.85;
 }

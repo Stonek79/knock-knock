@@ -54,18 +54,18 @@ export function CallAvatarView({
                 gap="1"
                 className={styles.statusText}
             >
-                <Text size="sm" color="muted">
+                <Text size="sm" intent="secondary">
                     {statusText}
                 </Text>
                 {isConnecting && (
                     <Box as="span" className={styles.pulseDots}>
-                        <Text as="span" color="muted">
+                        <Text as="span" intent="secondary">
                             •
                         </Text>
-                        <Text as="span" color="muted">
+                        <Text as="span" intent="secondary">
                             •
                         </Text>
-                        <Text as="span" color="muted">
+                        <Text as="span" intent="secondary">
                             •
                         </Text>
                     </Box>

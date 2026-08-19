@@ -9,16 +9,16 @@ export const logger = {
     info: (message: string, data?: unknown) => {
         const isDev = import.meta.env.DEV;
         if (isDev) {
-            console.info(`%c ℹ️ ${message}`, "color: #3b82f6", data || "");
+            console.info(`ℹ️ ${message}`, data || "");
         }
     },
 
     warn: (message: string, data?: unknown) => {
-        console.warn(`%c ⚠️ ${message}`, "color: #eab308", data || "");
+        console.warn(`⚠️ ${message}`, data || "");
     },
 
     error: (message: string, error?: unknown) => {
-        console.error(`%c ❌ ${message}`, "color: #ef4444; font-weight: bold");
+        console.error(`❌ ${message}`);
         if (error) {
             console.error(error);
         }
@@ -27,7 +27,7 @@ export const logger = {
     debug: (message: string, data?: unknown) => {
         const isDev = import.meta.env.DEV;
         if (isDev) {
-            console.debug(`%c 🐞 ${message}`, "color: #a855f7", data || "");
+            console.debug(`🐞 ${message}`, data || "");
         }
     },
 };

@@ -109,7 +109,7 @@ export function UserList() {
                                         <DropdownMenu.Content>
                                             {isBanned ? (
                                                 <DropdownMenu.Item
-                                                    color="green"
+                                                    intent="success"
                                                     onSelect={() =>
                                                         unbanUser(user.id)
                                                     }

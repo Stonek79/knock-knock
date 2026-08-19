@@ -44,6 +44,7 @@
 .icon {
     width: var(--size-icon-sm);
     height: var(--size-icon-sm);
+    color: var(--muted);
     stroke-width: 2.5px; /* Чуть толще для читаемости */
 }
 

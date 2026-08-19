@@ -29,7 +29,7 @@ Content.displayName = DropdownMenuPrimitive.Content.displayName;
 export const Item = forwardRef<
     ComponentRef<typeof DropdownMenuPrimitive.Item>,
     ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
-        intent?: "danger" | "neutral" | "primary";
+        intent?: "danger" | "neutral" | "primary" | "success";
     }
 >(({ className, intent = "neutral", ...props }, ref) => (
     <DropdownMenuPrimitive.Item

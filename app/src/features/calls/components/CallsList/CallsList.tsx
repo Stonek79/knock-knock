@@ -166,6 +166,7 @@ export function CallsList() {
                                                         ? "error"
                                                         : "primary"
                                                 }
+                                                className={styles.callTypeBadge}
                                             >
                                                 {log.type ===
                                                 CALL_TYPE.VIDEO ? (

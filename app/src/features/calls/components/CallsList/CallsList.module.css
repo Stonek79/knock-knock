@@ -91,6 +91,10 @@
     color: var(--foreground);
 }
 
+.callTypeBadge {
+    border-radius: var(--radius-md);
+}
+
 .callActionButton {
     color: var(--muted);
     border-radius: var(--radius-full);

@@ -87,7 +87,7 @@ export function DocumentAttachmentCard({
                 >
                     {attachment.file_name || "Unknown File"}
                 </Text>
-                <Text size="xs" color="muted">
+                <Text size="xs" intent="secondary">
                     {formatBytes(attachment.file_size || 0)} • {extension}
                 </Text>
             </Flex>

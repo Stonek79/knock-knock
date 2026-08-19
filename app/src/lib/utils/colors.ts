@@ -3,10 +3,11 @@ import { USER_COLORS } from "../constants";
 export type UserColor = (typeof USER_COLORS)[number];
 
 /**
- * Генерирует детерминированный цвет Radix UI на основе строки (имени или ID).
+ * Генерирует детерминированный цвет из токенизированной палитры темы
+ * на основе строки (имени или ID).
  *
  * @param input - Входная строка (имя пользователя или ID)
- * @returns Название цвета из палитры Radix UI (например, 'crimson')
+ * @returns CSS-значение, ссылающееся на токен цвета активной темы
  */
 export function getUserColor(input: string): UserColor {
     let hash = 0;

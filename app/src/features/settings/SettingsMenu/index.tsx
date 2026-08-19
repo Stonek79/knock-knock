@@ -49,10 +49,7 @@ export function SettingsMenu() {
                                             )}
                                         </Text>
                                     </Flex>
-                                    <ChevronRight
-                                        color="gray"
-                                        className={styles.icon}
-                                    />
+                                    <ChevronRight className={styles.icon} />
                                 </Flex>
                             </Card>
                         </Link>

@@ -49,6 +49,15 @@
     background-color: var(--glow-soft);
 }
 
+.item.intent-success {
+    color: var(--intent-success-main);
+}
+
+.item.intent-success[data-highlighted] {
+    background-color: var(--intent-success-alpha);
+    color: var(--intent-success-text);
+}
+
 .item[data-disabled] {
     opacity: 0.5;
     pointer-events: none;

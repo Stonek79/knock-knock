@@ -56,6 +56,7 @@ export function GroupMembersList({
                         variant="ghost"
                         intent="primary"
                         size="sm"
+                        data-hit-area="none"
                         onClick={onAddMember}
                         title={t("chat.group.addMember", "Добавить участника")}
                     >

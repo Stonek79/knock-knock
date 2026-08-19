@@ -62,7 +62,7 @@ export function CallPiP({
                         </Text>
                         <Text
                             size="xs"
-                            color="muted"
+                            intent="secondary"
                             className={styles.pipStatus}
                         >
                             {statusText}

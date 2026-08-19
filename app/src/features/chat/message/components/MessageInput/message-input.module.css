@@ -225,7 +225,7 @@
     height: var(--size-video-circle-record);
     border-radius: var(--kk-radius-full, 50%);
     overflow: hidden;
-    box-shadow: var(--shadow-premium, 0 4px 20px rgba(0, 0, 0, 0.3));
+    box-shadow: var(--shadow-premium);
     z-index: 100;
     background: var(--surface);
     display: flex;

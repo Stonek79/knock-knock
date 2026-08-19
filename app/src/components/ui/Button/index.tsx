@@ -15,6 +15,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     intent?: ComponentIntent;
 }
 
+/**
+ * Размеры кнопок меньше токена `--size-touch`, для которых hit-area расширяется
+ * до комфортного сенсорного размера невидимым `::before`. Применяем только к
+ * квадратной icon-кнопке: у текстовых кнопок (xs/sm/md) расширение высоты через
+ * `::before` перекрывало бы соседние интерактивные контролы (например, слайдер
+ * прогресса у аудио-плеера) в плотных stacked-раскладках.
+ */
+const HIT_AREA_SIZES: ReadonlySet<ComponentSize | "icon"> = new Set(["icon"]);
+
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     (
         {
@@ -37,7 +46,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             className,
         );
 
-        return <Comp className={buttonClasses} ref={ref} {...props} />;
+        return (
+            <Comp
+                className={buttonClasses}
+                ref={ref}
+                data-hit-area={HIT_AREA_SIZES.has(size) ? size : undefined}
+                {...props}
+            />
+        );
     },
 );
 

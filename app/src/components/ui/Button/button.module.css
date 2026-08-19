@@ -17,16 +17,8 @@
     outline: none;
     font-family: inherit;
     text-decoration: none;
-}
-
-.button:focus-visible {
-    box-shadow: 0 0 0 var(--border-width-focus) var(--btn-color-main);
-}
-
-.button:disabled {
-    opacity: var(--opacity-disabled);
-    cursor: not-allowed;
-    pointer-events: none;
+    /* Контекст для абсолютно позиционируемого псевдоэлемента hit-area */
+    position: relative;
 }
 
 /* ============================================= */
@@ -101,23 +93,12 @@
     border-color: transparent;
 }
 
-.solid:hover {
-    filter: brightness(1.1);
-    box-shadow: var(--shadow-glow) var(--btn-color-alpha);
-}
-
 /* Glass - стеклянная кнопка */
 .glass {
     background: var(--glass-bg);
     color: var(--foreground);
     border-color: var(--glass-border);
     backdrop-filter: var(--glass-blur);
-}
-
-.glass:hover {
-    background: var(--btn-color-main);
-    color: var(--btn-color-text-on-main);
-    border-color: transparent;
 }
 
 /* Ghost - прозрачная кнопка */
@@ -127,20 +108,11 @@
     border-color: transparent;
 }
 
-.ghost:hover {
-    background: var(--btn-color-alpha);
-}
-
 /* Outline - кнопка с обводкой */
 .outline {
     background: transparent;
     color: var(--btn-color-text-on-clear);
     border-color: var(--btn-color-main);
-}
-
-.outline:hover {
-    background: var(--btn-color-main);
-    color: var(--btn-color-text-on-main);
 }
 
 /* Soft - мягкая кнопка */
@@ -150,24 +122,11 @@
     border-color: transparent;
 }
 
-.soft:hover {
-    background: color-mix(in srgb, var(--btn-color-alpha) 80%, black);
-}
-
 .surface {
     background: var(--surface);
     color: var(--btn-color-text-on-clear);
     border-color: var(--border);
 }
-
-.surface:hover {
-    background: var(--btn-color-alpha);
-    border-color: var(--btn-color-main);
-}
-
-/* ============================================= */
-/* Размеры (sizes) */
-/* ============================================= */
 
 .xs {
     height: var(--size-btn-h-1);
@@ -204,4 +163,72 @@
     height: var(--size-btn-h-3);
     width: var(--size-btn-h-3);
     padding: 0;
+}
+
+/* ============================================= */
+/* Hover */
+/* ============================================= */
+
+.solid:hover {
+    filter: brightness(1.1);
+    box-shadow: var(--shadow-glow) var(--btn-color-alpha);
+}
+
+.glass:hover {
+    background: var(--btn-color-main);
+    color: var(--btn-color-text-on-main);
+    border-color: transparent;
+}
+
+.ghost:hover {
+    background: var(--btn-color-alpha);
+}
+
+.outline:hover {
+    background: var(--btn-color-main);
+    color: var(--btn-color-text-on-main);
+}
+
+.soft:hover {
+    background: color-mix(
+        in srgb,
+        var(--btn-color-alpha) 80%,
+        var(--color-black)
+    );
+}
+
+.surface:hover {
+    background: var(--btn-color-alpha);
+    border-color: var(--btn-color-main);
+}
+
+.button:disabled {
+    opacity: var(--opacity-disabled);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Не даём hover-тени заменить видимый фокус клавиатуры. */
+.button:focus-visible {
+    box-shadow: 0 0 0 var(--border-width-focus) var(--btn-color-main);
+}
+
+/*
+ * Единый механизм расширения hit-area до --size-touch для малых/средних
+ * размеров кнопок (xs/sm/md/icon). Невидимый ::before центрируется поверх фона
+ * кнопки, расширяя кликабельную область без изменения визуальных размеров и
+ * без влияния на disabled/focus. В плотных раскладках расширение можно
+ * отключить: <Button data-hit-area="none" .../>.
+ */
+.button[data-hit-area]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: var(--size-touch);
+    height: var(--size-touch);
+}
+
+.button[data-hit-area="none"]::before {
+    content: none;
 }

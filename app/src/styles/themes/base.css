@@ -21,6 +21,8 @@
     --glass-blur-sm: blur(10px);
     --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     --shadow-bubble: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --shadow-badge: 0 2px 4px
+        color-mix(in srgb, var(--color-black) 20%, transparent);
     --shadow-glow: 0 0 10px;
 
     /* =========================================== */

@@ -1,8 +1,13 @@
 /**
  * CSS-модуль компонента рендеринга вложений.
+ *
+ * Порядок правил намеренный: сначала базовые селекторы, затем состояния,
+ * правила галереи и в конце — самые специфичные варианты data-count. Это
+ * сохраняет каскад предсказуемым и не создаёт descending-specificity для
+ * правил, которые должны переопределять базовые стили.
  */
 
-/* Список вложений */
+/* Базовые контейнеры */
 .attachments {
     display: flex;
     flex-direction: column;
@@ -11,7 +16,6 @@
     width: 100%;
 }
 
-/* Галерея медиа (фото/видео) */
 .mediaGallery {
     display: grid;
     gap: calc(var(--space-1) / 2);
@@ -21,6 +25,178 @@
     overflow: hidden;
 }
 
+/* Базовые интерактивные элементы */
+.imageButton {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    outline: none;
+    border-radius: var(--kk-radius-sm);
+    transition: transform var(--transition-fast);
+}
+
+.videoThumbnailContainer {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+    border-radius: var(--kk-radius-sm);
+    overflow: hidden;
+    transition: transform var(--transition-fast);
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.attachmentImage {
+    display: block;
+    max-width: 100%;
+    max-height: var(--max-h-attachment-img);
+    border-radius: var(--kk-radius-sm);
+    object-fit: cover;
+}
+
+.imagePlaceholder {
+    min-width: var(--space-48);
+    min-height: var(--space-32);
+    width: 100%;
+    background: var(--glass-bg);
+    border: var(--border-width-base) dashed var(--glass-border);
+    border-radius: var(--kk-radius-sm);
+    color: var(--muted);
+    transition: background-color var(--transition-fast);
+}
+
+.placeholderIcon {
+    opacity: 0.5;
+}
+
+/* Оверлеи медиа */
+.moreOverlayWrapper {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.moreOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--color-black) 50%, transparent);
+    color: var(--color-white);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    pointer-events: none;
+}
+
+.playOverlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2);
+    transform: translate(-50%, -50%);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--space-1));
+    color: var(--foreground);
+    border-radius: 50%;
+    transition: background-color var(--transition-fast);
+}
+
+.loadingOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--color-black) 40%, transparent);
+    color: var(--color-white);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Пропорции для одиночного медиа и служебные классы ratio_* */
+.ratio_1_2 {
+    aspect-ratio: 1 / 2;
+}
+
+.ratio_2_3 {
+    aspect-ratio: 2 / 3;
+}
+
+.ratio_3_4 {
+    aspect-ratio: 3 / 4;
+}
+
+.ratio_1_1 {
+    aspect-ratio: 1 / 1;
+}
+
+.ratio_4_3 {
+    aspect-ratio: 4 / 3;
+}
+
+.ratio_3_2 {
+    aspect-ratio: 3 / 2;
+}
+
+.ratio_16_9 {
+    aspect-ratio: 16 / 9;
+}
+
+.ratio_2_1 {
+    aspect-ratio: 2 / 1;
+}
+
+/* Базовые состояния — до более специфичных правил галереи */
+.imageButton:hover {
+    transform: scale(1.02);
+}
+
+.imageButton:focus-visible {
+    box-shadow: 0 0 0 var(--space-1) var(--accent-primary);
+}
+
+.videoThumbnailContainer:hover {
+    transform: scale(1.02);
+}
+
+/* Общие правила содержимого галереи */
+.mediaGallery .imageButton,
+.mediaGallery .videoThumbnailContainer {
+    height: 100%;
+    border-radius: 0;
+}
+
+.mediaGallery .attachmentImage {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+}
+
+.mediaGallery .imagePlaceholder {
+    min-width: auto;
+    min-height: auto;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+}
+
+/* Сетки галереи */
 .mediaGallery[data-count="1"] {
     grid-template-columns: 1fr;
 }
@@ -34,24 +210,27 @@
     grid-template-rows: auto auto;
 }
 
-.mediaGallery[data-count="3"] > *:first-child {
-    grid-column: 1 / -1;
-}
-
 .mediaGallery[data-count="4"],
 .mediaGallery[data-count="many"] {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
 }
 
-/* Внутри галереи сбрасываем радиусы, так как обёртка режет их через overflow: hidden */
-.mediaGallery .imageButton,
-.mediaGallery .videoThumbnailContainer {
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
+/* Пропорции сеток задаются на ячейке и переиспользуются содержимым */
+.mediaGallery[data-count="2"] {
+    --gallery-ratio: 1;
 }
 
+.mediaGallery[data-count="4"],
+.mediaGallery[data-count="many"] {
+    --gallery-ratio: 1;
+}
+
+.mediaGallery[data-count="3"] > *:first-child {
+    grid-column: 1 / -1;
+}
+
+/* Одиночное медиа: ограничение высоты без изменения пропорций картинки */
 .mediaGallery[data-count="1"] .imageButton,
 .mediaGallery[data-count="1"] .videoThumbnailContainer {
     width: 100%;
@@ -60,21 +239,6 @@
     height: auto;
 }
 
-/* Отменяем эффект увеличения для плиток, чтобы не ломать сетку */
-.mediaGallery:not([data-count="1"]) .imageButton:hover,
-.mediaGallery:not([data-count="1"]) .videoThumbnailContainer:hover {
-    transform: none;
-}
-
-.mediaGallery .attachmentImage {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 0;
-    display: block;
-}
-
-/* Пропорции для разных сеток */
 .mediaGallery[data-count="1"] .attachmentImage {
     width: 100%;
     height: 100%;
@@ -82,122 +246,7 @@
     object-fit: cover;
 }
 
-.mediaGallery[data-count="2"] .attachmentImage {
-    aspect-ratio: 1;
-}
-
-.mediaGallery[data-count="3"] > *:first-child .attachmentImage {
-    aspect-ratio: 2 / 1;
-}
-
-.mediaGallery[data-count="3"] > *:not(:first-child) .attachmentImage {
-    aspect-ratio: 1;
-}
-
-.mediaGallery[data-count="4"] .attachmentImage,
-.mediaGallery[data-count="many"] .attachmentImage {
-    aspect-ratio: 1;
-}
-
-/* Обёртка для "+N" */
-.moreOverlayWrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-}
-
-.moreOverlay {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, var(--color-black) 50%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-white);
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    pointer-events: none;
-    z-index: 10;
-}
-
-/* Кнопка-обёртка для изображения */
-.imageButton {
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    cursor: pointer;
-    display: flex;
-    justify-content: flex-start;
-    outline: none;
-    border-radius: var(--kk-radius-sm);
-    transition: transform var(--transition-fast);
-}
-
-.imageButton:hover {
-    transform: scale(1.02);
-}
-
-.imageButton:focus-visible {
-    box-shadow: 0 0 0 var(--space-1) var(--accent-primary);
-}
-
-/* Изображение в сообщении */
-.attachmentImage {
-    max-width: 100%;
-    border-radius: var(--kk-radius-sm);
-    object-fit: cover;
-    max-height: var(--max-h-attachment-img);
-}
-
-/* Аудио-плеер */
-.attachmentAudio {
-    width: 100%;
-    min-width: var(--space-48);
-    height: var(--size-touch);
-}
-
-/* Документ / файл */
-.attachmentDoc {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-2);
-    background: var(--glass-bg);
-    border: var(--border-width-base) solid var(--glass-border);
-    border-radius: var(--kk-radius-sm);
-    font-size: var(--text-sm);
-    color: var(--foreground);
-    text-decoration: none;
-    transition: background-color var(--transition-base);
-}
-
-.attachmentDoc:hover {
-    background: var(--glow-soft);
-}
-
-/* Заглушка для битой или загружаемой картинки */
-.imagePlaceholder {
-    min-width: var(--space-48);
-    min-height: var(--space-32);
-    width: 100%;
-    background: var(--glass-bg);
-    border: var(--border-width-base) dashed var(--glass-border);
-    border-radius: var(--kk-radius-sm);
-    color: var(--muted);
-    transition: background-color var(--transition-fast);
-}
-
-.mediaGallery .imagePlaceholder {
-    min-width: auto;
-    min-height: auto;
-    height: 100%;
-    border-radius: 0;
-    border: none;
-}
-
-/* Плейсхолдер одиночного медиа — резервируем место с aspect-ratio 16/9 */
+/* Плейсхолдер одиночного медиа резервирует место через 16 / 9 */
 .mediaGallery[data-count="1"] .imagePlaceholder {
     width: 100%;
     max-width: var(--max-w-attachment-single);
@@ -206,126 +255,54 @@
     height: auto;
 }
 
-/* Плейсхолдер для 2 элементов — квадратный, как картинка */
-.mediaGallery[data-count="2"] .imagePlaceholder {
-    aspect-ratio: 1;
-    height: auto;
-    min-height: auto;
+.mediaGallery[data-count="3"] > *:first-child {
+    --gallery-ratio: 2 / 1;
 }
 
-/* Плейсхолдер для 3 элементов — первый 2:1, остальные квадратные */
-.mediaGallery[data-count="3"] > *:first-child .imagePlaceholder {
-    aspect-ratio: 2 / 1;
-    height: auto;
-    min-height: auto;
+.mediaGallery[data-count="3"] > *:not(:first-child) {
+    --gallery-ratio: 1;
 }
 
-.mediaGallery[data-count="3"] > *:not(:first-child) .imagePlaceholder {
-    aspect-ratio: 1;
-    height: auto;
-    min-height: auto;
-}
-
-/* Плейсхолдер для 4+ элементов — квадратный */
+.mediaGallery[data-count="2"] .attachmentImage,
+.mediaGallery[data-count="3"] .attachmentImage,
+.mediaGallery[data-count="4"] .attachmentImage,
+.mediaGallery[data-count="many"] .attachmentImage,
+.mediaGallery[data-count="2"] .imagePlaceholder,
+.mediaGallery[data-count="3"] .imagePlaceholder,
 .mediaGallery[data-count="4"] .imagePlaceholder,
 .mediaGallery[data-count="many"] .imagePlaceholder {
-    aspect-ratio: 1;
+    aspect-ratio: var(--gallery-ratio);
+}
+
+.mediaGallery[data-count="2"] .imagePlaceholder,
+.mediaGallery[data-count="3"] .imagePlaceholder,
+.mediaGallery[data-count="4"] .imagePlaceholder,
+.mediaGallery[data-count="many"] .imagePlaceholder {
     height: auto;
     min-height: auto;
 }
 
-.placeholderIcon {
-    opacity: 0.5;
-}
-
+/* Состояния вложенных элементов после базовых и count-правил */
 .imageButton:hover .imagePlaceholder {
     background: var(--glass-hover-bg);
-}
-
-/* Контейнер для превью видео */
-.videoThumbnailContainer {
-    position: relative;
-    cursor: pointer;
-    border-radius: var(--kk-radius-sm);
-    overflow: hidden;
-    transition: transform var(--transition-fast);
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-}
-
-.videoThumbnailContainer:hover {
-    transform: scale(1.02);
-}
-
-/* Оверлей с кнопкой Play для видео */
-.playOverlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--space-1));
-    color: var(--foreground);
-    padding: var(--space-2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color var(--transition-fast);
 }
 
 .videoThumbnailContainer:hover .playOverlay {
     background: var(--glass-hover-bg);
 }
 
-.loadingOverlay {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, var(--color-black) 40%, transparent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-white);
-    z-index: 5;
-}
-
-.spinner {
-    animation: spin 1s linear infinite;
+/* В плитках отключаем увеличение, чтобы не ломать сетку */
+.mediaGallery:not([data-count="1"]) .imageButton:hover,
+.mediaGallery:not([data-count="1"]) .videoThumbnailContainer:hover {
+    transform: none;
 }
 
 @keyframes spin {
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
-}
-
-.ratio_1_2 {
-    aspect-ratio: 1 / 2;
-}
-.ratio_2_3 {
-    aspect-ratio: 2 / 3;
-}
-.ratio_3_4 {
-    aspect-ratio: 3 / 4;
-}
-.ratio_1_1 {
-    aspect-ratio: 1 / 1;
-}
-.ratio_4_3 {
-    aspect-ratio: 4 / 3;
-}
-.ratio_3_2 {
-    aspect-ratio: 3 / 2;
-}
-.ratio_16_9 {
-    aspect-ratio: 16 / 9;
-}
-.ratio_2_1 {
-    aspect-ratio: 2 / 1;
 }

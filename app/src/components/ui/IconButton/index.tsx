@@ -11,8 +11,11 @@ import type {
 import styles from "./icon-button.module.css";
 
 /**
- * Пропсы кастомного компонента IconButton.
+ * Размеры иконок меньше токена `--size-touch`, для которых hit-area расширяется
+ * до комфортного сенсорного размера невидимым `::before`.
  */
+const HIT_AREA_SIZES: ReadonlySet<ComponentSize> = new Set(["xs", "sm", "md"]);
+
 export interface IconButtonProps
     extends ButtonHTMLAttributes<HTMLButtonElement> {
     /** Размер кнопки */
@@ -60,6 +63,9 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
                 ref={ref}
                 // Для полиморфного компонента (Slot) атрибут type может быть вреден
                 type={asChild ? undefined : type}
+                // Единый механизм расширения hit-area: атрибут для JSX-теста и
+                // опт-аут через data-hit-area="none" в плотных раскладках.
+                data-hit-area={HIT_AREA_SIZES.has(size) ? size : undefined}
                 className={clsx(
                     styles.iconButton,
                     styles[size],

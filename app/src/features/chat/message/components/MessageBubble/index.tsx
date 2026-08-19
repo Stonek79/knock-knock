@@ -299,9 +299,8 @@ export function MessageBubble({
                         groupPosition === MESSAGE_POSITION.START) && (
                         <Text
                             as="span"
-                            className={clsx(styles.senderName, {
-                                color: userColor,
-                            })}
+                            className={styles.senderName}
+                            style={userColor ? { color: userColor } : undefined}
                         >
                             {finalSenderName}
                         </Text>

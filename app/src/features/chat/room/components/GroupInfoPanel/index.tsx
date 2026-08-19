@@ -247,6 +247,7 @@ export function GroupInfoPanel({
                             variant="ghost"
                             intent="neutral"
                             size="sm"
+                            data-hit-area="none"
                             onClick={() => onOpenChange(false)}
                             className={styles.backButton}
                         >

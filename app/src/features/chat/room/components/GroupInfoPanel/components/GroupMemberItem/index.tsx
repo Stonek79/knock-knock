@@ -98,6 +98,7 @@ export function GroupMemberItem({
                             variant="ghost"
                             intent="neutral"
                             size="sm"
+                            data-hit-area="none"
                             onClick={() =>
                                 onUpdateRole(member.user_id, member.role)
                             }
@@ -113,6 +114,7 @@ export function GroupMemberItem({
                             variant="ghost"
                             intent="danger"
                             size="sm"
+                            data-hit-area="none"
                             onClick={() => onRemove(member.user_id)}
                             title={t(
                                 "chat.group.removeMember",
